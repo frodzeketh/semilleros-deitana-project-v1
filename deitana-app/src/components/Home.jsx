@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react"
 import { MessageSquare, Video, Send, ChevronDown } from "lucide-react"
 import "../global.css"
 
+// CAMBIA esta URL según si estás en local o en producción
+const API_URL = "http://localhost:3001"
+// const API_URL = "https://semilleros-deitana-project-v1.onrender.com"
+
 const Home = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [message, setMessage] = useState("")
@@ -14,9 +18,7 @@ const Home = () => {
   const chatContainerRef = useRef(null)
   const mainContentRef = useRef(null)
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -33,7 +35,7 @@ const Home = () => {
     setIsTyping(true)
 
     try {
-      const response = await fetch("http://localhost:3001/chat", {
+      const response = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,14 +83,9 @@ const Home = () => {
     }
 
     chatContainer.addEventListener("scroll", handleScroll)
+    setTimeout(() => handleScroll(), 500)
 
-    setTimeout(() => {
-      handleScroll()
-    }, 500)
-
-    return () => {
-      chatContainer.removeEventListener("scroll", handleScroll)
-    }
+    return () => chatContainer.removeEventListener("scroll", handleScroll)
   }, [chatMessages])
 
   const scrollToBottom = () => {
@@ -99,13 +96,12 @@ const Home = () => {
 
   const getScrollButtonStyle = () => {
     if (!mainContentRef.current) return {}
-
     const mainContentRect = mainContentRef.current.getBoundingClientRect()
     const centerX = mainContentRect.left + mainContentRect.width / 2
-
     return {
       left: `${centerX}px`,
       transform: "translateX(-50%)",
+
     }
   }
 
@@ -114,71 +110,44 @@ const Home = () => {
   return (
     <div className="ds-home-container">
       {/* Sidebar */}
-      <div
-        className={`ds-sidebar ${
-          sidebarOpen ? "ds-sidebar-expanded" : "ds-sidebar-collapsed"
-        }`}
-      >
+      <div className={`ds-sidebar ${sidebarOpen ? "ds-sidebar-expanded" : "ds-sidebar-collapsed"}`}>
         {sidebarOpen ? (
           <>
             <div className="ds-sidebar-header">
-              <div
-                className="ds-logo-sidebar-container"
-                onClick={toggleSidebar}
-              >
-                <img
-                  src="/logo-crop.png"
-                  alt="Logo"
-                  className="logo-sidebar-open"
-                />
+              <div className="ds-logo-sidebar-container" onClick={toggleSidebar}>
+                <img src="/logo-crop.png" alt="Logo" className="logo-sidebar-open" />
               </div>
             </div>
-
             <div className="ds-sidebar-content">
               <button className="ds-video-button" onClick={toggleSidebar}>
                 <Video size={25} />
                 <span className="options-sidebar">Toggle Sidebar</span>
               </button>
-
               <button className="ds-new-chat-button">
                 <MessageSquare size={25} />
                 <span className="options-sidebar">New chat</span>
               </button>
             </div>
-
             <div className="ds-sidebar-footer"></div>
           </>
         ) : (
-          <>
-            <div className="ds-sidebar-collapsed-content">
-              <div
-                className="ds-collapsed-item ds-collapsed-logo"
-                onClick={toggleSidebar}
-              >
-                <img
-                  src="/logo-crop.png"
-                  alt="Logo"
-                  className="ds-collapsed-logo-img"
-                />
-              </div>
-
-              <div className="ds-collapsed-item" onClick={toggleSidebar}>
-                <Video size={25} />
-              </div>
-
-              <div className="ds-collapsed-item">
-                <MessageSquare size={25} />
-              </div>
-
-              <div className="ds-collapsed-spacer"></div>
-
-              <div className="ds-collapsed-item ds-collapsed-user">
-                <div className="ds-user-circle">
-                  <span>F</span>
-                </div>
+          <div className="ds-sidebar-collapsed-content">
+            <div className="ds-collapsed-item ds-collapsed-logo" onClick={toggleSidebar}>
+              <img src="/logo-crop.png" alt="Logo" className="ds-collapsed-logo-img" />
+            </div>
+            <div className="ds-collapsed-item" onClick={toggleSidebar}>
+              <Video size={25} />
+            </div>
+            <div className="ds-collapsed-item">
+              <MessageSquare size={25} />
+            </div>
+            <div className="ds-collapsed-spacer"></div>
+            <div className="ds-collapsed-item ds-collapsed-user">
+              <div className="ds-user-circle">
+                <span>F</span>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -200,18 +169,11 @@ const Home = () => {
               </div>
             </div>
           ) : (
-            <div
-              className="ds-chat-messages-container"
-              ref={chatContainerRef}
-            >
+            <div className="ds-chat-messages-container" ref={chatContainerRef}>
               <div className="ds-chat-messages">
                 <div className="ds-message ds-bot-message">
                   <div className="ds-message-avatar">
-                    <img
-                      src="/logo-crop.png"
-                      alt="Logo"
-                      className="ds-avatar-image"
-                    />
+                    <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
                   </div>
                   <div className="ds-message-content">
                     <h2>Hola, soy Deitana IA.</h2>
@@ -222,19 +184,11 @@ const Home = () => {
                 {chatMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`ds-message ${
-                      msg.sender === "bot"
-                        ? "ds-bot-message"
-                        : "ds-user-message"
-                    }`}
+                    className={`ds-message ${msg.sender === "bot" ? "ds-bot-message" : "ds-user-message"}`}
                   >
                     {msg.sender === "bot" && (
                       <div className="ds-message-avatar">
-                        <img
-                          src="/logo-crop.png"
-                          alt="Logo"
-                          className="ds-avatar-image"
-                        />
+                        <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
                       </div>
                     )}
                     <div className="ds-message-content">
@@ -246,16 +200,10 @@ const Home = () => {
                 {isTyping && (
                   <div className="ds-message ds-bot-message">
                     <div className="ds-message-avatar">
-                      <img
-                        src="/logo-crop.png"
-                        alt="Logo"
-                        className="ds-avatar-image"
-                      />
+                      <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
                     </div>
                     <div className="ds-typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
+                      <span></span><span></span><span></span>
                     </div>
                   </div>
                 )}
@@ -266,10 +214,7 @@ const Home = () => {
           )}
 
           {showScrollButton && !isChatEmpty && (
-            <div
-              className="ds-scroll-button-container"
-              style={getScrollButtonStyle()}
-            >
+            <div className="ds-scroll-button-container" style={getScrollButtonStyle()}>
               <button className="ds-scroll-to-bottom" onClick={scrollToBottom}>
                 <ChevronDown size={16} />
               </button>
@@ -286,11 +231,7 @@ const Home = () => {
                   onChange={(e) => setMessage(e.target.value)}
                   className="ds-chat-input"
                 />
-                <button
-                  type="submit"
-                  className="ds-send-button"
-                  disabled={!message.trim()}
-                >
+                <button type="submit" className="ds-send-button" disabled={!message.trim()}>
                   <Send size={20} />
                 </button>
               </div>
