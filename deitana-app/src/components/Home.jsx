@@ -281,7 +281,7 @@ const Home = () => {
               <div className="ds-input-wrapper">
                 <input
                   type="text"
-                  placeholder="Message DeepSeek"
+                  placeholder="Mensaje Deitana IA"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="ds-chat-input"
