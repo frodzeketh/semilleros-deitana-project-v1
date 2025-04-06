@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const axios = require("axios");
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001; // Usa el puerto proporcionado por Render o el 3001 por defecto
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -67,6 +67,11 @@ app.post("/chat", async (req, res) => {
     console.error("Error en la API de Gemini:", error.response?.data || error.message);
     res.status(500).json({ error: "Error al generar respuesta con Gemini" });
   }
+});
+
+// Ruta GET para la raíz que confirma que el servidor está funcionando
+app.get("/", (req, res) => {
+  res.send("Servidor de Semilleros Deitana funcionando correctamente ✅");
 });
 
 app.listen(port, () => {
