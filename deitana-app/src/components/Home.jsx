@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MessageSquare, Video, Send, ChevronDown } from "lucide-react"
+import { MessageSquare, PanelLeftClose, Send, ChevronDown } from "lucide-react"
+
 import "../global.css"
 
 // CAMBIA esta URL según si estás en local o en producción
@@ -121,8 +122,8 @@ const Home = () => {
             </div>
             <div className="ds-sidebar-content">
               <button className="ds-video-button" onClick={toggleSidebar}>
-                <Video size={25} />
-                <span className="options-sidebar">Toggle Sidebar</span>
+              <PanelLeftClose size={25} />
+                <span className="options-sidebar">Close</span>
               </button>
               <button className="ds-new-chat-button">
                 <MessageSquare size={25} />
@@ -137,7 +138,7 @@ const Home = () => {
               <img src="/logo-crop.png" alt="Logo" className="ds-collapsed-logo-img" />
             </div>
             <div className="ds-collapsed-item" onClick={toggleSidebar}>
-              <Video size={25} />
+            <PanelLeftClose size={25} />
             </div>
             <div className="ds-collapsed-item">
               <MessageSquare size={25} />
