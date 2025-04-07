@@ -6,7 +6,10 @@ import { MessageSquare, PanelLeftClose, Send, ChevronDown } from "lucide-react"
 import "../global.css"
 
 // CAMBIA esta URL según si estás en local o en producción
-const API_URL = "https://semilleros-deitana-project-v1.onrender.com"
+const API_URL = process.env.NODE_ENV === 'development' 
+  ? "http://localhost:3001" // Cambia a tu puerto si es diferente
+  : "https://semilleros-deitana-project-v1.onrender.com"; // Producción
+// Producción
 
 // const API_URL = "https://semilleros-deitana-project-v1.onrender.com"
 
