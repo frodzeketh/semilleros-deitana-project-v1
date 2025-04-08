@@ -11,15 +11,27 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(bodyParser.json());
 
-// 🔹 Importar rutas de stock (si se usan)
+// 🔹 Rutas opcionales
 const stockRoutes = require('./routes/stock');
 app.use('/stock', stockRoutes);
 
-// 🔹 Contexto/PROMPT actualizado para Gemini
+// 🔹 Prompt personalizado para Deitana IA
 const contextoDeitana = `
 Eres Deitana IA, el asistente oficial de Semilleros Deitana S.L., una empresa agrícola ubicada en Totana, Murcia, España.
 
-Tienes acceso directo a una base de datos MySQL con las siguientes tablas importantes: abonos, articulos, clientes, especies, inventario y p-inj-sandia.
+Tienes acceso directo a una base de datos MySQL con las siguientes tablas y columnas importantes:
+
+🔸 clientes:
+- CL_DENO (nombre completo o razón social del cliente)
+- CL_DOM (domicilio o dirección registrada)
+- CL_POB (población o ciudad)
+- CL_PROV (provincia)
+- CL_TEL (teléfono de contacto)
+
+🔸 abonos, articulos, especies, inventario y p-inj-sandia (estructura detallada disponible bajo demanda).
+
+Siempre usa estos nombres exactos de columnas. No inventes columnas como “nombre_fiscal” o “direccion”. Si necesitas mostrar el nombre del cliente, usa CL_DENO. Si tienes dudas, responde: “No tengo acceso a esa columna.”
+
 
 Tu tarea es interpretar preguntas del usuario relacionadas con Semilleros Deitana y responder generando directamente consultas SQL SEGURAS (únicamente de lectura) que puedas ejecutar en la base de datos. Luego, debes devolver los resultados de esas consultas como respuesta.
 
@@ -66,13 +78,24 @@ app.post("/chat", async (req, res) => {
 
     const geminiResponse = response.data.candidates[0].content.parts[0].text.trim();
 
-    // Si Gemini generó una consulta SQL segura (SELECT), la ejecutamos
+    // Si Gemini devuelve una consulta SQL
     if (/^SELECT/i.test(geminiResponse)) {
       const [rows] = await db.query(geminiResponse);
+
+      // 🔸 Si es consulta a clientes, formatear respuesta
+      if (/FROM clientes/i.test(geminiResponse)) {
+        const clientesFormateados = rows.map((cliente, index) => {
+          return `${index + 1}. ${cliente.CL_DENO} – ${cliente.CL_DOM}, ${cliente.CL_POB} (${cliente.CL_PROV}) – Tel: ${cliente.CL_TEL}`;
+        });
+
+        return res.json({ response: clientesFormateados.join("\n") });
+      }
+
+      // 🔹 Otras tablas → retornar JSON
       return res.json({ response: rows });
     }
 
-    // Si NO es una consulta SQL, simplemente devolvemos el texto generado
+    // Si NO es una consulta SQL, solo devolvemos el texto
     res.json({ response: geminiResponse });
 
   } catch (error) {
