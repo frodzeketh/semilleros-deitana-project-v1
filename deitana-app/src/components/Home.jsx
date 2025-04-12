@@ -3,15 +3,10 @@
 import { useState, useRef, useEffect } from "react"
 import { MessageSquare, PanelLeftClose, Send, ChevronDown } from "lucide-react"
 
-import "../global.css"
-
-// CAMBIA esta URL según si estás en local o en producción
-const API_URL = process.env.NODE_ENV === 'development' 
-  ? "http://localhost:3001" // Cambia a tu puerto si es diferente
-  : "https://semilleros-deitana-project-v1.onrender.com"; // Producción
-// Producción
-
-// const API_URL = "https://semilleros-deitana-project-v1.onrender.com"
+const API_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3001"
+    : "https://semilleros-deitana-project-v1.onrender.com"
 
 const Home = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -25,9 +20,16 @@ const Home = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
+  // Modificar la función handleSubmit para enviar y mantener un ID de sesión
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!message.trim()) return
+
+    // Generar un ID de sesión si no existe (en una aplicación real, esto podría ser un token JWT)
+    if (!localStorage.getItem("sessionId")) {
+      localStorage.setItem("sessionId", `session-${Date.now()}`)
+    }
+    const sessionId = localStorage.getItem("sessionId")
 
     const userMessage = {
       id: Date.now(),
@@ -44,6 +46,7 @@ const Home = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Session-Id": sessionId, // Enviar el ID de sesión en los headers
         },
         body: JSON.stringify({ message }),
       })
@@ -81,9 +84,7 @@ const Home = () => {
     if (!chatContainer) return
 
     const handleScroll = () => {
-      const isScrolledUp =
-        chatContainer.scrollTop <
-        chatContainer.scrollHeight - chatContainer.clientHeight - 20
+      const isScrolledUp = chatContainer.scrollTop < chatContainer.scrollHeight - chatContainer.clientHeight - 20
       setShowScrollButton(isScrolledUp && chatMessages.length > 0)
     }
 
@@ -106,7 +107,6 @@ const Home = () => {
     return {
       left: `${centerX}px`,
       transform: "translateX(-50%)",
-
     }
   }
 
@@ -125,7 +125,7 @@ const Home = () => {
             </div>
             <div className="ds-sidebar-content">
               <button className="ds-video-button" onClick={toggleSidebar}>
-              <PanelLeftClose size={25} />
+                <PanelLeftClose size={25} />
                 <span className="options-sidebar">Close</span>
               </button>
               <button className="ds-new-chat-button">
@@ -141,7 +141,7 @@ const Home = () => {
               <img src="/logo-crop.png" alt="Logo" className="ds-collapsed-logo-img" />
             </div>
             <div className="ds-collapsed-item" onClick={toggleSidebar}>
-            <PanelLeftClose size={25} />
+              <PanelLeftClose size={25} />
             </div>
             <div className="ds-collapsed-item">
               <MessageSquare size={25} />
@@ -208,7 +208,9 @@ const Home = () => {
                       <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
                     </div>
                     <div className="ds-typing-indicator">
-                      <span></span><span></span><span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
                     </div>
                   </div>
                 )}
