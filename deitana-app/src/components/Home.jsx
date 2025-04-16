@@ -20,12 +20,12 @@ const Home = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
-  // Modificar la función handleSubmit para enviar y mantener un ID de sesión
+  // Modificar la función handleSubmit para soportar streaming de texto
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!message.trim()) return
 
-    // Generar un ID de sesión si no existe (en una aplicación real, esto podría ser un token JWT)
+    // Generar un ID de sesión si no existe
     if (!localStorage.getItem("sessionId")) {
       localStorage.setItem("sessionId", `session-${Date.now()}`)
     }
@@ -41,33 +41,65 @@ const Home = () => {
     setMessage("")
     setIsTyping(true)
 
+    // Crear un ID único para el mensaje del bot
+    const botMessageId = Date.now() + 1
+
+    // Añadir un mensaje vacío del bot que se irá llenando
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: botMessageId,
+        text: "",
+        sender: "bot",
+        isStreaming: true,
+      },
+    ])
+
     try {
       const response = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Session-Id": sessionId, // Enviar el ID de sesión en los headers
+          "Session-Id": sessionId,
         },
         body: JSON.stringify({ message }),
       })
 
       const data = await response.json()
 
-      const botMessage = {
-        id: Date.now() + 1,
-        text: data.response || "Hubo un problema al obtener respuesta.",
-        sender: "bot",
-      }
+      // Simular el efecto de streaming de texto
+      const fullText = data.response || "Hubo un problema al obtener respuesta."
+      let displayedText = ""
 
-      setChatMessages((prev) => [...prev, botMessage])
+      // Determinar la velocidad de escritura basada en la longitud del texto
+      const chunkSize = Math.max(1, Math.floor(fullText.length / 100))
+      const delay = fullText.length > 500 ? 10 : 20 // Más rápido para textos largos
+
+      for (let i = 0; i < fullText.length; i += chunkSize) {
+        const nextChunk = fullText.slice(i, i + chunkSize)
+        displayedText += nextChunk
+
+        // Actualizar el mensaje del bot con el texto acumulado
+        setChatMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMessageId
+              ? { ...msg, text: displayedText, isStreaming: i + chunkSize < fullText.length }
+              : msg,
+          ),
+        )
+
+        // Esperar un poco antes de mostrar el siguiente fragmento
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      }
     } catch (error) {
       console.error("Error al conectar con el backend:", error)
-      const errorMessage = {
-        id: Date.now() + 1,
-        text: "Hubo un error al conectarse con el servidor.",
-        sender: "bot",
-      }
-      setChatMessages((prev) => [...prev, errorMessage])
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId
+            ? { ...msg, text: "Hubo un error al conectarse con el servidor.", isStreaming: false }
+            : msg,
+        ),
+      )
     } finally {
       setIsTyping(false)
     }
@@ -111,6 +143,69 @@ const Home = () => {
   }
 
   const isChatEmpty = chatMessages.length === 0 && !isTyping
+
+  // Añadir estilos CSS para el indicador de escritura en línea
+  const [styleAdded, setStyleAdded] = useState(false)
+
+  useEffect(() => {
+    if (!styleAdded) {
+      // Añadir estilos CSS para el indicador de escritura en línea
+      const style = document.createElement("style")
+      style.innerHTML = `
+      .ds-typing-indicator-inline {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 5px;
+      }
+      
+      .ds-typing-indicator-inline span {
+        height: 6px;
+        width: 6px;
+        background-color: #333;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 2px;
+        opacity: 0.6;
+        animation: ds-typing 1s infinite;
+      }
+      
+      .ds-typing-indicator-inline span:nth-child(1) {
+        animation-delay: 0s;
+      }
+      
+      .ds-typing-indicator-inline span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      
+      .ds-typing-indicator-inline span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      
+      @keyframes ds-typing {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .ds-message-content p {
+        margin: 0;
+        line-height: 1.5;
+      }
+    `
+      document.head.appendChild(style)
+      setStyleAdded(true)
+
+      return () => {
+        document.head.removeChild(style)
+      }
+    }
+  }, [styleAdded])
 
   return (
     <div className="ds-home-container">
@@ -197,23 +292,19 @@ const Home = () => {
                       </div>
                     )}
                     <div className="ds-message-content">
-                      <p>{msg.text}</p>
+                      <p style={{ whiteSpace: "pre-line" }}>
+                        {msg.text}
+                        {msg.isStreaming && (
+                          <span className="ds-typing-indicator-inline">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </span>
+                        )}
+                      </p>
                     </div>
                   </div>
                 ))}
-
-                {isTyping && (
-                  <div className="ds-message ds-bot-message">
-                    <div className="ds-message-avatar">
-                      <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
-                    </div>
-                    <div className="ds-typing-indicator">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                  </div>
-                )}
 
                 <div ref={messagesEndRef} />
               </div>
