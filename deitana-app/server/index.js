@@ -2965,7 +2965,7 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
       case "bandejas_query":
         try {
           // Intentar primero con la función analítica para bandejas
-          const response = await getAnalyticalResponse(message)
+          const response = await getAnalyticalResponse(message);
 
           // Si tenemos una respuesta, la devolvemos
           if (response) {
@@ -2973,57 +2973,114 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
             context.conversationHistory.push({
               role: "assistant",
               content: response,
-            })
+            });
 
-            return res.json({ response })
+            return res.json({ response });
           }
 
-          // Si no, usar la consulta tradicional
-          const [results] = await pool.query("SELECT * FROM bandejas LIMIT 10")
+          // Si no hay respuesta analítica, proceder con la consulta SQL
+          const sqlQuery = await getQueryFromIA(message);
+          
+          // Si la respuesta es conversacional, la devolvemos directamente
+          if (sqlQuery.includes("'CONVERSACIONAL'")) {
+            const match = sqlQuery.match(/SELECT 'CONVERSACIONAL' as response_type, "(.*)" as message/);
+            if (match && match[1]) {
+              const respuesta = match[1].replace(/\\n/g, "\n");
+              
+              // Guardar la respuesta en el historial
+              context.conversationHistory.push({
+                role: "assistant",
+                content: respuesta,
+              });
 
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                return `${i + 1}. ${row.BN_DENO || "Sin nombre"} - Alvéolos: ${row.BN_ALV || "N/A"} - Retornable: ${row.BN_RET === "S" ? "Sí" : "No"} - Código: ${row.id}`
-              })
-              .join("\n")
+              return res.json({ response: respuesta });
+            }
+          }
 
-            const respuesta = `Aquí tienes información sobre las bandejas:\n\n${formatted}`
+          // Si es una consulta SQL válida, la ejecutamos
+          if (!sqlQuery.includes("'TEXT'") && !sqlQuery.includes("'No se pudo generar'")) {
+            try {
+              const [results] = await db.query(sqlQuery);
+              
+              // Si tenemos resultados, formateamos una respuesta amigable
+              if (results.length > 0) {
+                // Generar un prompt para que la IA interprete los resultados
+                const interpretPrompt = {
+                  system: `Eres un asistente experto de Semilleros Deitana. Te proporcionaré los resultados de una consulta SQL basada en la pregunta del usuario. 
+                  Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+                  Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.`,
+                  user: `Pregunta original: "${message}"\n\nResultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+                }
 
-            // Save the response in conversation history
+                const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+                const respuesta = interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+                
+                // Guardar la respuesta en el historial
+                context.conversationHistory.push({
+                  role: "assistant",
+                  content: respuesta,
+                });
+
+                return res.json({ response: respuesta });
+              } else {
+                const respuesta = "No encontré información que coincida con tu consulta en nuestra base de datos. ¿Podrías reformular tu pregunta?";
+                
+                // Guardar la respuesta en el historial
+                context.conversationHistory.push({
+                  role: "assistant",
+                  content: respuesta,
+                });
+
+                return res.json({ response: respuesta });
+              }
+            } catch (error) {
+              console.error("Error ejecutando consulta SQL:", error);
+              const respuesta = "Lo siento, hubo un error al procesar tu consulta. ¿Podrías reformularla?";
+              
+              // Guardar la respuesta en el historial
+              context.conversationHistory.push({
+                role: "assistant",
+                content: respuesta,
+              });
+
+              return res.json({ response: respuesta });
+            }
+          }
+
+          // Si llegamos aquí, es porque la IA generó una respuesta textual
+          const match = sqlQuery.match(/SELECT 'TEXT' as response_type, "(.*)" as message/);
+          if (match && match[1]) {
+            const respuesta = match[1].replace(/\\n/g, "\n");
+            
+            // Guardar la respuesta en el historial
             context.conversationHistory.push({
               role: "assistant",
               content: respuesta,
-            })
+            });
 
-            return res.json({ response: respuesta })
-          } else {
-            // If no results, try using the AI to explain what bandejas are
-            const promptBase = require("./promptBase")
-            const prompt = promptBase("¿Qué son las bandejas en un semillero?")
-            const { sendToDeepSeek } = require("./utils/deepseek")
-
-            const aiResponse = await sendToDeepSeek(prompt)
-
-            // Clean up the response if needed
-            let cleanResponse = aiResponse
-            if (aiResponse.startsWith("CONVERSACIONAL:")) {
-              cleanResponse = aiResponse.substring(15).trim()
-            }
-
-            // Save the response in conversation history
-            context.conversationHistory.push({
-              role: "assistant",
-              content: cleanResponse,
-            })
-
-            return res.json({ response: cleanResponse })
+            return res.json({ response: respuesta });
           }
+
+          const respuesta = "Lo siento, no pude procesar tu consulta. ¿Podrías reformularla?";
+          
+          // Guardar la respuesta en el historial
+          context.conversationHistory.push({
+            role: "assistant",
+            content: respuesta,
+          });
+
+          return res.json({ response: respuesta });
         } catch (error) {
-          console.error("Error al procesar consulta de bandejas:", error)
-          return res.json({
-            response: "Lo siento, no pude obtener información sobre bandejas. ¿Podrías reformular tu consulta?",
-          })
+          console.error("Error al procesar consulta de bandejas:", error);
+          const respuesta = "Lo siento, hubo un error al procesar tu consulta. ¿Podrías reformularla?";
+          
+          // Guardar la respuesta en el historial
+          context.conversationHistory.push({
+            role: "assistant",
+            content: respuesta,
+          });
+
+          return res.json({ response: respuesta });
         }
 
       case "greeting":
