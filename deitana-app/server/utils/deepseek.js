@@ -43,7 +43,7 @@ const sendToDeepSeek = async (prompt) => {
 
 // Function to get SQL query from AI
 const getQueryFromIA = async (userMessage) => {
-  const promptBase = require("../promptBase")
+  const { promptBase } = require("../promptBase")
   const prompt = promptBase(userMessage)
 
   const aiResponse = await sendToDeepSeek(prompt)

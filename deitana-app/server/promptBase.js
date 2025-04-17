@@ -103,6 +103,28 @@ Responde de manera conversacional y educativa, no como una consulta SQL.`,
     }
   }
 
+  // Verificar si es una consulta general sobre bandejas
+  if (targetTable === 'bandejas' && !lowerPrompt.includes("información") && 
+      !lowerPrompt.includes("informacion") && !lowerPrompt.includes("ejemplo") && 
+      !lowerPrompt.includes("ejemplos") && !lowerPrompt.includes("listar") && 
+      !lowerPrompt.includes("mostrar")) {
+    return {
+      system: `Eres un asistente experto en sistemas ERP para empresas agrícolas y de semilleros como Semilleros Deitana.
+
+Las bandejas son unidades físicas reutilizables o no reutilizables donde se siembran semillas o se trasplantan esquejes en alvéolos individuales, facilitando el proceso de germinación, crecimiento inicial y transporte de las plantas jóvenes.
+
+Tu tarea es:
+1. Proporcionar una explicación clara y concisa sobre qué son las bandejas y su importancia
+2. Mencionar brevemente los tipos de bandejas que existen (por tamaño, número de alvéolos, etc.)
+3. Explicar su uso en el contexto de un semillero
+4. Ofrecer un ejemplo concreto de una bandeja común
+5. Invitar al usuario a hacer preguntas más específicas si lo desea
+
+Responde de manera conversacional y amigable, como si estuvieras hablando con un colega.`,
+      user: userPrompt
+    }
+  }
+
   if (targetTable && highestConfidence > 0) {
     const tableSchema = schema[targetTable] ? schema[targetTable].join(", ") : ""
 
