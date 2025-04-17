@@ -127,6 +127,84 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
     }
   }
 
+  // Si es una consulta sobre número de alvéolos
+  if (lowerMessage.includes("alvéolo") || lowerMessage.includes("alveolo")) {
+    // Si pregunta por la bandeja con más alvéolos
+    if (lowerMessage.includes("más") || lowerMessage.includes("mayor")) {
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_ALV IS NOT NULL AND BN_ALV != ''
+        ORDER BY CAST(BN_ALV AS UNSIGNED) DESC 
+        LIMIT 1
+      `);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre la bandeja con más alvéolos.
+          Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+          
+          IMPORTANTE:
+          1. Menciona el número exacto de alvéolos según los datos de la base de datos
+          2. Incluye la denominación de la bandeja y su código
+          3. Si la bandeja es retornable, menciónalo
+          4. No inventes información que no esté en los datos
+          5. Mantén un tono profesional y amigable
+          6. No agregues información adicional sobre usos o tamaños que no estén en los datos
+          7. Si el usuario quiere más información, invítalo a preguntar`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      }
+    }
+    
+    // Si pregunta por bandejas con un número específico de alvéolos
+    const alveolosMatch = userMessage.match(/(\d+)\s*(?:alvéolo|alveolo|alveolos|alvéolos)/i);
+    if (alveolosMatch && alveolosMatch[1]) {
+      const numAlveolos = Number.parseInt(alveolosMatch[1]);
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_ALV = ? 
+        ORDER BY id
+      `, [numAlveolos]);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre bandejas con ${numAlveolos} alvéolos.
+          Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+          
+          IMPORTANTE:
+          1. Menciona todas las bandejas encontradas con ese número de alvéolos
+          2. Incluye la denominación y código de cada bandeja
+          3. Si alguna bandeja es retornable, menciónalo
+          4. No inventes información que no esté en los datos
+          5. Mantén un tono profesional y amigable
+          6. No agregues información adicional sobre usos o tamaños que no estén en los datos
+          7. Si el usuario quiere más información, invítalo a preguntar`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      } else {
+        return `No encontré bandejas con ${numAlveolos} alvéolos en nuestra base de datos. ¿Te gustaría ver qué bandejas tenemos disponibles?`;
+      }
+    }
+  }
+
   // Si es una consulta sobre bandejas con tamaño en CM
   if (lowerMessage.includes("bandeja") && lowerMessage.includes("cm")) {
     const [results] = await db.query(`
