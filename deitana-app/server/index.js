@@ -2567,42 +2567,59 @@ app.post("/chat", async (req, res) => {
 
       case "bandejas_examples":
         try {
-          // Extraer la cantidad solicitada
-          const cantidadMatch = message.match(/(\d+)\s*(?:ejemplos?)/i)
-          const cantidad = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 2 // Por defecto 2 ejemplos
-
-          // Consultar la base de datos limitando al número exacto solicitado
-          const [results] = await db.query(`SELECT * FROM bandejas ORDER BY RAND() LIMIT ${cantidad}`)
-
-          if (results.length > 0) {
-            let respuesta = `Aquí tienes ${cantidad === 1 ? "un ejemplo de bandeja" : `${cantidad} ejemplos de bandejas`} de nuestro inventario:\n\n`
-
-            results.forEach((bandeja, i) => {
-              respuesta += `${i + 1}. ${bandeja.BN_DENO}: ${bandeja.BN_ALV} alvéolos${bandeja.BN_RET === "S" ? " (retornable)" : ""}, Código: ${bandeja.id}\n`
-            })
-
+          // Intentar con la función analítica que maneja el contexto
+          const response = await getAnalyticalResponse(message)
+          
+          if (response) {
             // Guardar la respuesta en el historial
             context.conversationHistory.push({
               role: "assistant",
-              content: respuesta,
+              content: response,
             })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "Lo siento, no pude encontrar ejemplos de bandejas en nuestra base de datos."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
+            return res.json({ response })
           }
-        } catch (error) {
-          console.error("Error al procesar ejemplos de bandejas:", error)
+
+          // Si no hay respuesta analítica, intentar con una consulta SQL
+          const sqlQuery = await getQueryFromIA(message)
+          const [results] = await db.query(sqlQuery)
+          
+          if (results && results.length > 0) {
+            // Generar un prompt para que la IA interprete los resultados
+            const interpretPrompt = {
+              system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre bandejas.
+              Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+              
+              IMPORTANTE:
+              1. Proporciona una explicación clara sobre qué son las bandejas y su importancia
+              2. Menciona los tipos de bandejas que existen (por tamaño, número de alvéolos, etc.)
+              3. Explica su uso en el contexto de un semillero
+              4. Ofrece un ejemplo concreto de una bandeja común
+              5. Invita al usuario a hacer preguntas más específicas si lo desea
+              
+              Responde de manera conversacional y amigable, como si estuvieras hablando con un colega.`,
+              user: `Pregunta original: "${message}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+            }
+            
+            const interpretedResponse = await sendToDeepSeek(interpretPrompt)
+            const finalResponse = interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "")
+            
+            // Guardar la respuesta en el historial
+            context.conversationHistory.push({
+              role: "assistant",
+              content: finalResponse,
+            })
+            
+            return res.json({ response: finalResponse })
+          }
+
           return res.json({
-            response: "Lo siento, hubo un error al buscar ejemplos de bandejas. ¿Podrías reformular tu consulta?",
+            response: "Lo siento, no pude encontrar información sobre bandejas. ¿Podrías reformular tu consulta?",
+          })
+        } catch (error) {
+          console.error("Error al procesar consulta de bandejas:", error)
+          return res.json({
+            response: "Lo siento, hubo un error al buscar información sobre bandejas. ¿Podrías reformular tu consulta?",
           })
         }
 
