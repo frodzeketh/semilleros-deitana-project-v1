@@ -2,6 +2,14 @@ const axios = require("axios")
 const db = require("../db")
 const { conversationContext } = require("../promptBase")
 
+
+
+
+
+// =====================================================
+// SECCIÓN: CONFIGURACIÓN Y CONEXIÓN CON DEEPSEEK
+// Esta sección maneja la conexión y comunicación con la API de DeepSeek
+// =====================================================
 const sendToDeepSeek = async (prompt) => {
   const apiKey = process.env.DEEPSEEK_API_KEY
 
@@ -41,6 +49,11 @@ const sendToDeepSeek = async (prompt) => {
   }
 }
 
+
+// =====================================================
+// SECCIÓN: GENERACIÓN DE CONSULTAS SQL
+// Esta sección se encarga de generar consultas SQL a partir de preguntas en lenguaje natural
+// =====================================================
 // Function to get SQL query from AI
 const getQueryFromIA = async (userMessage) => {
   const { promptBase } = require("../promptBase")
@@ -67,10 +80,33 @@ const getQueryFromIA = async (userMessage) => {
   return "SELECT 'No se pudo generar una consulta SQL válida' as error"
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =====================================================
+// SECCIÓN: MANEJO DE CONSULTAS SOBRE BANDEJAS
+// Esta sección maneja todas las consultas relacionadas con la tabla "bandejas"
+// que contiene información sobre bandejas, macetas y sus características
+// =====================================================
+
 // Función para manejar consultas sobre bandejas con contexto
 const handleBandejasQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
-  
+  // =====================================================
+// SUBSECCIÓN: CONSULTAS DE TAMAÑO EN CM
+// Maneja consultas sobre el tamaño de bandejas en centímetros
+// Ejemplo: "¿Cuál es la bandeja más grande en CM?"
+// =====================================================
   // Si hay contexto previo de bandejas y se pregunta por tamaños
   if (conversationContext.lastTopic === 'bandejas' && 
       (lowerMessage.includes('más grande') || 
@@ -84,6 +120,15 @@ const handleBandejasQuery = async (userMessage) => {
     const isCmQuery = lowerMessage.includes('cm') || 
                      (conversationContext.lastQuery && conversationContext.lastQuery.toLowerCase().includes('cm'));
     
+
+
+
+
+// =====================================================
+// SUBSECCIÓN: CONSULTAS DE NÚMERO DE ALVÉOLOS
+// Maneja consultas sobre el número de alvéolos de bandejas específicas
+// Ejemplo: "¿Cuántos alvéolos tiene la maceta de 12 cm?"
+// =====================================================
     if (isCmQuery) {
       // Buscar la bandeja con mayor o menor tamaño en CM según la consulta
       const orderDirection = (lowerMessage.includes('más grande') || 
@@ -389,18 +434,129 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
   }
 
   return null;
+
+
 };
 
+
+
+
+
+
+
+
+
+
+
+// Función para manejar consultas sobre casas comerciales
+const handleCasasComercialesQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+
+  // Detectar si es una consulta sobre casas comerciales
+  const isCasasComQuery = 
+    lowerMessage.includes("casa comercial") ||
+    lowerMessage.includes("casas comerciales") ||
+    lowerMessage.includes("casas_com") ||
+    lowerMessage.includes("proveedor principal") ||
+    lowerMessage.includes("proveedores principales");
+
+  if (!isCasasComQuery) {
+    return null;
+  }
+
+  // Extraer el número de ejemplos si se solicita
+  const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo|casas)/i);
+  const cantidad = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 10;
+
+  // Extraer la provincia si se menciona
+  const provinciaMatch = userMessage.match(/(?:de|en)\s+([A-Za-záéíóúüñ]+)/i);
+  const provincia = provinciaMatch ? provinciaMatch[1].trim() : null;
+
+  // Construir la consulta SQL
+  let query = "SELECT * FROM casas_com";
+  let params = [];
+
+  if (provincia) {
+    // Normalizar el nombre de la provincia para la búsqueda
+    const provinciaNormalizada = provincia.toUpperCase()
+      .replace(/[ÁÀÂÄ]/g, 'A')
+      .replace(/[ÉÈÊË]/g, 'E')
+      .replace(/[ÍÌÎÏ]/g, 'I')
+      .replace(/[ÓÒÔÖ]/g, 'O')
+      .replace(/[ÚÙÛÜ]/g, 'U')
+      .replace(/[Ñ]/g, 'N');
+    
+    query += " WHERE UPPER(CC_PROV) LIKE ?";
+    params.push(`%${provinciaNormalizada}%`);
+  }
+
+  query += " ORDER BY CC_DENO LIMIT ?";
+  params.push(cantidad);
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre casas comerciales.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. Si el usuario pidió un número específico de ejemplos, muestra EXACTAMENTE ese número
+      2. Si el usuario preguntó por una provincia específica, muestra SOLO las casas comerciales de esa provincia
+      3. Si no hay suficientes casas comerciales en la provincia solicitada, indica cuántas encontraste
+      4. Incluye todos los datos relevantes de cada casa comercial (nombre, ubicación, contacto)
+      5. Si hay información faltante (como email o web), no la menciones
+      6. Mantén un tono profesional pero amigable
+      7. Si el usuario quiere más información, invítalo a preguntar
+      8. Si el usuario pidió casas comerciales de múltiples provincias, agrupa los resultados por provincia
+      
+      Por ejemplo, si el usuario pide "5 casas comerciales de Murcia y 5 de Valencia", debes mostrar:
+      - Primero las 5 de Murcia (o menos si no hay tantas)
+      - Luego las 5 de Valencia (o menos si no hay tantas)
+      - Indicar claramente cuántas encontraste de cada provincia`,
+      user: `Pregunta original: "${userMessage}"
+Cantidad solicitada: ${cantidad}
+Provincia solicitada: ${provincia || 'Todas'}
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    return `No encontré casas comerciales${provincia ? ` en ${provincia}` : ''}. ¿Te gustaría ver las casas comerciales disponibles?`;
+  }
+};
+
+// =====================================================
+// SECCIÓN: RESPUESTAS ANALÍTICAS
+// Esta sección maneja respuestas analíticas para diferentes tipos de consultas
+// incluyendo clientes, casas comerciales, categorías, dispositivos, etc.
+// =====================================================
 // Modificar la función getAnalyticalResponse para mejorar el manejo de bandejas y macetas
 const getAnalyticalResponse = async (userMessage) => {
   try {
     console.log("Iniciando getAnalyticalResponse para:", userMessage)
     console.log("Contexto actual:", conversationContext)
 
+
+
+
+// =====================================================
+// SUBSECCIÓN: DETECCIÓN DE CONSULTAS SOBRE BANDEJAS
+// Detecta si la consulta está relacionada con bandejas o macetas
+// =====================================================
     // Intentar manejar la consulta con contexto primero
     const contextualResponse = await handleBandejasQuery(userMessage)
     if (contextualResponse) {
       return contextualResponse
+    }
+
+    // Intentar manejar consultas sobre casas comerciales
+    const casasComResponse = await handleCasasComercialesQuery(userMessage);
+    if (casasComResponse) {
+      return casasComResponse;
     }
 
     // Detectar si es una consulta simple sobre clientes
@@ -534,12 +690,12 @@ const getAnalyticalResponse = async (userMessage) => {
     if (
       isCategoriasQuery &&
       (userMessage.toLowerCase().includes("información") ||
-        userMessage.toLowerCase().includes("informacion") ||
-        userMessage.toLowerCase().includes("todas") ||
-        userMessage.toLowerCase().includes("listar") ||
-        userMessage.toLowerCase().includes("mostrar") ||
-        userMessage.toLowerCase().includes("dame") ||
-        userMessage.toLowerCase().includes("dime"))
+        userMessage.includes("informacion") ||
+        userMessage.includes("todas") ||
+        userMessage.includes("listar") ||
+        userMessage.includes("mostrar") ||
+        userMessage.includes("dame") ||
+        userMessage.includes("dime"))
     ) {
       console.log("Ejecutando consulta para listar categorías")
       try {
