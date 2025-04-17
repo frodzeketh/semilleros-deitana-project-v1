@@ -141,12 +141,12 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
 
       if (results.length > 0) {
         const interpretPrompt = {
-          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de alvéolos de una maceta específica.
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de alvéolos de una bandeja específica.
           Tu tarea es interpretar estos resultados y responder de manera clara y concisa.
           
           IMPORTANTE:
           1. Menciona el número exacto de alvéolos según los datos de la base de datos
-          2. Incluye la denominación exacta de la maceta
+          2. Incluye la denominación exacta de la bandeja
           3. No agregues información adicional que no esté en los datos
           4. Mantén un tono profesional y directo`,
           user: `Pregunta original: "${userMessage}"
@@ -164,7 +164,7 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
     }
 
     // Si no se encontró por tamaño, intentar por denominación
-    const bandejaMatch = userMessage.match(/(?:tiene|tienen)\s+([A-Za-z0-9\s\.]+)/i);
+    const bandejaMatch = userMessage.match(/(?:tiene|tienen)\s+([A-Za-z0-9\s\.\(\)]+)/i);
     if (bandejaMatch && bandejaMatch[1]) {
       const nombreBandeja = bandejaMatch[1].trim();
       const [results] = await db.query(`
@@ -197,8 +197,42 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
       }
     }
 
+    // Si no se encontró ni por tamaño ni por denominación, intentar buscar directamente el nombre
+    const directNameMatch = userMessage.match(/(\d+\s*ALV\.?\s*[A-Za-z0-9\s\.\(\)]+)/i);
+    if (directNameMatch && directNameMatch[1]) {
+      const nombreBandeja = directNameMatch[1].trim();
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_DENO LIKE ? AND BN_ALV IS NOT NULL
+        ORDER BY id
+      `, [`%${nombreBandeja}%`]);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de alvéolos de una bandeja específica.
+          Tu tarea es interpretar estos resultados y responder de manera clara y concisa.
+          
+          IMPORTANTE:
+          1. Menciona el número exacto de alvéolos según los datos de la base de datos
+          2. Incluye la denominación exacta de la bandeja
+          3. No agregues información adicional que no esté en los datos
+          4. Mantén un tono profesional y directo`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      }
+    }
+
     // Si no se encontró ni por tamaño ni por denominación
-    return "No encontré información sobre la bandeja o maceta solicitada en nuestra base de datos. ¿Te gustaría ver qué bandejas tenemos disponibles?";
+    return "No encontré información sobre la bandeja solicitada en nuestra base de datos. ¿Te gustaría ver qué bandejas tenemos disponibles?";
   }
 
   // Si es una consulta sobre número de alvéolos
