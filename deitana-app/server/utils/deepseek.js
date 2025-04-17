@@ -465,6 +465,49 @@ const handleCasasComercialesQuery = async (userMessage) => {
     return null;
   }
 
+  // Detectar si es una consulta por ID específico
+  const idMatch = userMessage.match(/(?:id|código|codigo)\s*[:\s-]?\s*(\d{3})/i);
+  if (idMatch) {
+    const id = idMatch[1].padStart(3, '0'); // Asegurar que el ID tenga 3 dígitos
+    const [results] = await db.query("SELECT * FROM casas_com WHERE id = ?", [id]);
+    
+    if (results.length > 0) {
+      const casa = results[0];
+      let respuesta = `Información de la casa comercial con ID ${id}:\n\n`;
+      respuesta += `Denominación: ${casa.CC_DENO || "No disponible"}\n`;
+      if (casa.CC_NOM && casa.CC_NOM.trim() !== "") {
+        respuesta += `Nombre comercial: ${casa.CC_NOM}\n`;
+      }
+      respuesta += `Dirección: ${casa.CC_DOM || "No disponible"}\n`;
+      respuesta += `Población: ${casa.CC_POB || "No disponible"}\n`;
+      respuesta += `Provincia: ${casa.CC_PROV || "No disponible"}\n`;
+      if (casa.CC_CDP && casa.CC_CDP.trim() !== "") {
+        respuesta += `Código postal: ${casa.CC_CDP}\n`;
+      }
+      if (casa.CC_TEL && casa.CC_TEL.trim() !== "") {
+        respuesta += `Teléfono: ${casa.CC_TEL}\n`;
+      }
+      if (casa.CC_FAX && casa.CC_FAX.trim() !== "") {
+        respuesta += `Fax: ${casa.CC_FAX}\n`;
+      }
+      if (casa.CC_CIF && casa.CC_CIF.trim() !== "") {
+        respuesta += `CIF: ${casa.CC_CIF}\n`;
+      }
+      if (casa.CC_EMA && casa.CC_EMA.trim() !== "") {
+        respuesta += `Email: ${casa.CC_EMA}\n`;
+      }
+      if (casa.CC_WEB && casa.CC_WEB.trim() !== "") {
+        respuesta += `Web: ${casa.CC_WEB}\n`;
+      }
+      if (casa.CC_PAIS && casa.CC_PAIS.trim() !== "") {
+        respuesta += `País: ${casa.CC_PAIS}\n`;
+      }
+      return respuesta;
+    } else {
+      return `No encontré una casa comercial con el ID ${id}. ¿Te gustaría ver las casas comerciales disponibles?`;
+    }
+  }
+
   // Extraer el número de ejemplos si se solicita
   const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo|casas|muestra|dame|dime|listar|mostrar)/i);
   const cantidad = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 10;
