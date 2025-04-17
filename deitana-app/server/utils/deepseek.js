@@ -451,6 +451,7 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
 // Función para manejar consultas sobre casas comerciales
 const handleCasasComercialesQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
 
   // Detectar si es una consulta sobre casas comerciales
   const isCasasComQuery = 
@@ -465,29 +466,58 @@ const handleCasasComercialesQuery = async (userMessage) => {
   }
 
   // Extraer el número de ejemplos si se solicita
-  const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo|casas)/i);
+  const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo|casas|muestra|dame|dime|listar|mostrar)/i);
   const cantidad = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 10;
 
-  // Extraer la provincia si se menciona
-  const provinciaMatch = userMessage.match(/(?:de|en)\s+([A-Za-záéíóúüñ]+)/i);
-  const provincia = provinciaMatch ? provinciaMatch[1].trim() : null;
-
-  // Construir la consulta SQL
+  // Construir la consulta SQL base
   let query = "SELECT * FROM casas_com";
   let params = [];
+  let whereConditions = [];
 
-  if (provincia) {
-    // Normalizar el nombre de la provincia para la búsqueda
-    const provinciaNormalizada = provincia.toUpperCase()
-      .replace(/[ÁÀÂÄ]/g, 'A')
-      .replace(/[ÉÈÊË]/g, 'E')
-      .replace(/[ÍÌÎÏ]/g, 'I')
-      .replace(/[ÓÒÔÖ]/g, 'O')
-      .replace(/[ÚÙÛÜ]/g, 'U')
-      .replace(/[Ñ]/g, 'N');
-    
-    query += " WHERE UPPER(CC_PROV) LIKE ?";
-    params.push(`%${provinciaNormalizada}%`);
+  // Detectar filtros específicos
+  if (lowerMessage.includes("valencia") || lowerMessage.includes("barcelona") || 
+      lowerMessage.includes("murcia") || lowerMessage.includes("almeria") || 
+      lowerMessage.includes("alicante") || lowerMessage.includes("sevilla")) {
+    const provincia = lowerMessage.match(/(?:valencia|barcelona|murcia|almeria|alicante|sevilla)/i)[0];
+    whereConditions.push("UPPER(CC_PROV) LIKE ?");
+    params.push(`%${provincia.toUpperCase()}%`);
+  }
+
+  if (lowerMessage.includes("email") || lowerMessage.includes("correo")) {
+    whereConditions.push("CC_EMA IS NOT NULL AND CC_EMA != ''");
+  }
+
+  if (lowerMessage.includes("teléfono") || lowerMessage.includes("telefono")) {
+    whereConditions.push("CC_TEL IS NOT NULL AND CC_TEL != ''");
+  }
+
+  if (lowerMessage.includes("web") || lowerMessage.includes("sitio web")) {
+    whereConditions.push("CC_WEB IS NOT NULL AND CC_WEB != ''");
+  }
+
+  if (lowerMessage.includes("fax")) {
+    whereConditions.push("CC_FAX IS NOT NULL AND CC_FAX != ''");
+  }
+
+  if (lowerMessage.includes("cif")) {
+    whereConditions.push("CC_CIF IS NOT NULL AND CC_CIF != ''");
+  }
+
+  if (lowerMessage.includes("tarifas activas") || lowerMessage.includes("validez")) {
+    whereConditions.push("(CC_DFEC IS NOT NULL OR CC_HFEC IS NOT NULL)");
+  }
+
+  if (lowerMessage.includes("código postal") || lowerMessage.includes("codigo postal")) {
+    const cpMatch = userMessage.match(/(\d{5})/);
+    if (cpMatch) {
+      whereConditions.push("CC_CDP = ?");
+      params.push(cpMatch[1]);
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query += " WHERE " + whereConditions.join(" AND ");
   }
 
   query += " ORDER BY CC_DENO LIMIT ?";
@@ -503,29 +533,27 @@ const handleCasasComercialesQuery = async (userMessage) => {
       Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
       
       IMPORTANTE:
-      1. Si el usuario pidió un número específico de ejemplos, muestra EXACTAMENTE ese número
-      2. Si el usuario preguntó por una provincia específica, muestra SOLO las casas comerciales de esa provincia
-      3. Si no hay suficientes casas comerciales en la provincia solicitada, indica cuántas encontraste
-      4. Incluye todos los datos relevantes de cada casa comercial (nombre, ubicación, contacto)
-      5. Si hay información faltante (como email o web), no la menciones
-      6. Mantén un tono profesional pero amigable
-      7. Si el usuario quiere más información, invítalo a preguntar
-      8. Si el usuario pidió casas comerciales de múltiples provincias, agrupa los resultados por provincia
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió un número específico de ejemplos, muestra EXACTAMENTE ese número
+      3. Si el usuario preguntó por una provincia específica, muestra SOLO las casas comerciales de esa provincia
+      4. Si no hay suficientes casas comerciales en la provincia solicitada, indica cuántas encontraste
+      5. Incluye todos los datos relevantes de cada casa comercial (nombre, ubicación, contacto)
+      6. Si hay información faltante (como email o web), no la menciones
+      7. Mantén un tono profesional pero amigable
+      8. Si el usuario quiere más información, invítalo a preguntar
+      9. Verifica cuidadosamente la ubicación de cada casa comercial antes de responder
+      10. Si una casa comercial está en el extranjero, indícalo claramente
       
-      Por ejemplo, si el usuario pide "5 casas comerciales de Murcia y 5 de Valencia", debes mostrar:
-      - Primero las 5 de Murcia (o menos si no hay tantas)
-      - Luego las 5 de Valencia (o menos si no hay tantas)
-      - Indicar claramente cuántas encontraste de cada provincia`,
+      Por ejemplo, si el usuario pide casas comerciales en Valencia, asegúrate de que realmente estén en Valencia y no en otra provincia o país.`,
       user: `Pregunta original: "${userMessage}"
 Cantidad solicitada: ${cantidad}
-Provincia solicitada: ${provincia || 'Todas'}
 Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
     };
 
     const interpretedResponse = await sendToDeepSeek(interpretPrompt);
     return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
   } else {
-    return `No encontré casas comerciales${provincia ? ` en ${provincia}` : ''}. ¿Te gustaría ver las casas comerciales disponibles?`;
+    return `No encontré casas comerciales que coincidan con tu búsqueda. ¿Te gustaría ver las casas comerciales disponibles?`;
   }
 };
 
