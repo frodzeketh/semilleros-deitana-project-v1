@@ -71,47 +71,59 @@ const getQueryFromIA = async (userMessage) => {
 const handleBandejasQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
   
-  // Si hay contexto previo de bandejas y se pregunta por "la más grande"
+  // Si hay contexto previo de bandejas y se pregunta por tamaños
   if (conversationContext.lastTopic === 'bandejas' && 
       (lowerMessage.includes('más grande') || 
        lowerMessage.includes('mas grande') || 
-       lowerMessage.includes('mayor'))) {
+       lowerMessage.includes('mayor') ||
+       lowerMessage.includes('más pequeño') ||
+       lowerMessage.includes('mas pequeño') ||
+       lowerMessage.includes('menor'))) {
     
-    // Buscar la bandeja con mayor tamaño en CM
-    const [results] = await db.query(`
-      SELECT * FROM bandejas 
-      WHERE BN_DENO LIKE '%CM%' 
-      ORDER BY CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(BN_DENO, 'CM', 1), ' ', -1) AS DECIMAL(10,2)) DESC 
-      LIMIT 1
-    `);
+    // Determinar si la consulta es sobre CM
+    const isCmQuery = lowerMessage.includes('cm') || 
+                     (conversationContext.lastQuery && conversationContext.lastQuery.toLowerCase().includes('cm'));
+    
+    if (isCmQuery) {
+      // Buscar la bandeja con mayor o menor tamaño en CM según la consulta
+      const orderDirection = (lowerMessage.includes('más grande') || 
+                            lowerMessage.includes('mas grande') || 
+                            lowerMessage.includes('mayor')) ? 'DESC' : 'ASC';
+      
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_DENO LIKE '%CM%' 
+        ORDER BY CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(BN_DENO, 'CM', 1), ' ', -1) AS DECIMAL(10,2)) ${orderDirection}
+        LIMIT 1
+      `);
 
-    if (results.length > 0) {
-      // Generar un prompt para que la IA interprete los resultados
-      const interpretPrompt = {
-        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre la bandeja más grande.
-        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
-        
-        IMPORTANTE: 
-        1. Analiza cuidadosamente el tamaño en centímetros de cada bandeja en el campo BN_DENO
-        2. Compara los tamaños numéricos para identificar la más grande
-        3. Si hay bandejas con el mismo tamaño, menciona todas las opciones
-        4. Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender
-        5. Mantén el contexto de la conversación anterior sobre bandejas
-        
-        Por ejemplo, si en la conversación anterior se mencionaron:
-        - "MACETA 25 CM" (código 028)
-        - "MACETA 40 CM" (código 033)
-        
-        Y ahora preguntan por "la más grande", debes identificar que la de 40 cm es la más grande, no la de 25 cm.
-        
-        Recuerda que debes usar el contexto de la conversación anterior para dar una respuesta coherente.`,
-        user: `Contexto anterior: ${conversationContext.lastQuery}
+      if (results.length > 0) {
+        // Generar un prompt para que la IA interprete los resultados
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario está en una conversación sobre tamaños de bandejas en centímetros.
+          Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+          
+          IMPORTANTE: 
+          1. Mantén el contexto de la conversación anterior sobre tamaños de bandejas
+          2. No saludes de nuevo si ya estabas en una conversación
+          3. Responde de manera natural y continua a la conversación
+          4. Si el usuario pregunta por "la más grande" o "la más pequeña" sin especificar CM, asume que se refiere a CM por el contexto anterior
+          5. Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender
+          
+          Por ejemplo, si en la conversación anterior se habló de tamaños en CM y ahora preguntan por "la más pequeña", debes entender que se refiere a la más pequeña en CM.`,
+          user: `Contexto anterior: ${conversationContext.lastQuery}
 Resultados anteriores: ${JSON.stringify(conversationContext.lastResults, null, 2)}
 Pregunta actual: ${userMessage}
 Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto después de la consulta
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
       }
-      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
-      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
     }
   }
 
@@ -130,6 +142,52 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
         Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
         Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.
         Mantén el contexto de la conversación para poder responder preguntas de seguimiento.`,
+        user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      }
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      
+      // Actualizar el contexto después de la consulta
+      conversationContext.lastTopic = 'bandejas';
+      conversationContext.lastQuery = userMessage;
+      conversationContext.lastResults = results;
+      
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+
+  // Si es una consulta sobre ejemplos de bandejas
+  if (lowerMessage.includes("bandeja") && 
+      (lowerMessage.includes("ejemplo") || 
+       lowerMessage.includes("ejemplos") || 
+       lowerMessage.includes("mostrar") || 
+       lowerMessage.includes("listar"))) {
+    
+    // Extraer el número de ejemplos solicitados
+    const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo)/i);
+    const limit = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 10;
+    
+    const [results] = await db.query(`
+      SELECT * FROM bandejas 
+      ORDER BY BN_ALV DESC 
+      LIMIT ${limit}
+    `);
+
+    if (results.length > 0) {
+      // Generar un prompt para que la IA interprete los resultados
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado ver ejemplos de bandejas.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+        
+        IMPORTANTE:
+        1. Presenta la información de forma natural y organizada
+        2. Incluye todos los datos relevantes (denominación, número de alvéolos, si es retornable, código)
+        3. Si hay bandejas especiales (como las de aromáticas), destácalas
+        4. Mantén un tono amigable y profesional
+        5. Invita al usuario a hacer preguntas de seguimiento si lo desea
+        
+        Por ejemplo, si hay una bandeja con 1066 alvéolos, puedes mencionar que es una de las más grandes y explicar su uso común.
+        Si hay bandejas específicas para aromáticas, puedes explicar sus características especiales.`,
         user: `Pregunta original: "${userMessage}"
 Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
       }
