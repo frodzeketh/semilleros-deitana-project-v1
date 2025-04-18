@@ -407,12 +407,14 @@ const Home = () => {
                           >
                             {msg.text}
                           </ReactMarkdown>
-                          {msg.isStreaming && (
-                            <span className="ds-typing-indicator-inline">
-                              <span></span>
-                              <span></span>
-                              <span></span>
-                            </span>
+                          {msg.isStreaming && !msg.text && (
+                            <div className="ds-typing-container">
+                              <div className="ds-typing-indicator-inline">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                              </div>
+                            </div>
                           )}
                         </>
                       ) : (
@@ -459,4 +461,3 @@ const Home = () => {
 }
 
 export default Home
-
