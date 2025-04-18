@@ -195,37 +195,38 @@ const Home = () => {
 
       .ds-message-content p {
         margin: 0;
-        line-height: 1.5;
+        line-height: 1.6;
+        color: #333;
+        font-size: 15px;
+        margin-bottom: 12px;
       }
 
       /* Estilos mejorados para Markdown */
       .ds-message-content strong {
-        font-weight: 700;
-        font-size: 16px;
+        font-weight: 600;
+        font-size: 15px;
         color: #333;
-        display: block;
-        margin-bottom: 8px;
+        display: inline;
+        margin-right: 4px;
       }
 
       .ds-message-content em {
         font-style: italic;
-        color: #666;
+        color: #333;
+        font-size: 15px;
       }
 
       .ds-message-content ul, .ds-message-content ol {
         margin: 8px 0;
         padding-left: 20px;
-        color: #666;
+        color: #333;
+        font-size: 15px;
       }
 
       .ds-message-content li {
         margin: 5px 0;
-        color: #666;
-      }
-
-      .ds-message-content p {
-        color: #666;
-        line-height: 1.6;
+        color: #333;
+        font-size: 15px;
       }
     `
       document.head.appendChild(style)
@@ -326,28 +327,41 @@ const Home = () => {
                         <>
                           <ReactMarkdown
                             components={{
-                              p: ({ children }) => <p style={{ whiteSpace: "pre-line", color: '#666' }}>{children}</p>,
-                              strong: ({ children }) => <strong style={{ 
-                                fontWeight: 700, 
-                                fontSize: '16px', 
+                              p: ({ children }) => <p style={{ 
+                                whiteSpace: "pre-line", 
                                 color: '#333',
-                                display: 'block',
-                                marginBottom: '8px'
+                                fontSize: '15px',
+                                lineHeight: '1.6',
+                                marginBottom: '12px'
+                              }}>{children}</p>,
+                              strong: ({ children }) => <strong style={{ 
+                                fontWeight: 600, 
+                                fontSize: '15px', 
+                                color: '#333',
+                                display: 'inline',
+                                marginRight: '4px'
                               }}>{children}</strong>,
-                              em: ({ children }) => <em style={{ fontStyle: "italic", color: '#666' }}>{children}</em>,
+                              em: ({ children }) => <em style={{ 
+                                fontStyle: "italic", 
+                                color: '#333',
+                                fontSize: '15px'
+                              }}>{children}</em>,
                               ul: ({ children }) => <ul style={{ 
                                 margin: "8px 0", 
                                 paddingLeft: "20px",
-                                color: '#666'
+                                color: '#333',
+                                fontSize: '15px'
                               }}>{children}</ul>,
                               ol: ({ children }) => <ol style={{ 
                                 margin: "8px 0", 
                                 paddingLeft: "20px",
-                                color: '#666'
+                                color: '#333',
+                                fontSize: '15px'
                               }}>{children}</ol>,
                               li: ({ children }) => <li style={{ 
                                 margin: "5px 0",
-                                color: '#666'
+                                color: '#333',
+                                fontSize: '15px'
                               }}>{children}</li>
                             }}
                           >
