@@ -228,6 +228,21 @@ const Home = () => {
         color: #333;
         font-size: 15px;
       }
+
+      /* Estilos para enlaces */
+      .ds-message-content a {
+        color: #2964aa;
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 1px solid #2964aa;
+        padding-bottom: 1px;
+        transition: all 0.2s ease;
+      }
+
+      .ds-message-content a:hover {
+        color: #1a4b8c;
+        border-bottom-color: #1a4b8c;
+      }
     `
       document.head.appendChild(style)
       setStyleAdded(true)
@@ -362,7 +377,32 @@ const Home = () => {
                                 margin: "5px 0",
                                 color: '#333',
                                 fontSize: '15px'
-                              }}>{children}</li>
+                              }}>{children}</li>,
+                              a: ({ href, children }) => (
+                                <a 
+                                  href={href} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    color: '#2964aa',
+                                    textDecoration: 'none',
+                                    fontWeight: 500,
+                                    borderBottom: '1px solid #2964aa',
+                                    paddingBottom: '1px',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.color = '#1a4b8c';
+                                    e.target.style.borderBottomColor = '#1a4b8c';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.color = '#2964aa';
+                                    e.target.style.borderBottomColor = '#2964aa';
+                                  }}
+                                >
+                                  {children}
+                                </a>
+                              )
                             }}
                           >
                             {msg.text}
@@ -419,3 +459,4 @@ const Home = () => {
 }
 
 export default Home
+
