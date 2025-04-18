@@ -611,13 +611,6 @@ const getAnalyticalResponse = async (userMessage) => {
     console.log("Iniciando getAnalyticalResponse para:", userMessage)
     console.log("Contexto actual:", conversationContext)
 
-
-
-
-// =====================================================
-// SUBSECCIÓN: DETECCIÓN DE CONSULTAS SOBRE BANDEJAS
-// Detecta si la consulta está relacionada con bandejas o macetas
-// =====================================================
     // Intentar manejar la consulta con contexto primero
     const contextualResponse = await handleBandejasQuery(userMessage)
     if (contextualResponse) {
@@ -751,8 +744,6 @@ const getAnalyticalResponse = async (userMessage) => {
       userMessage.toLowerCase().includes("categorias") ||
       userMessage.toLowerCase().includes("categoría laboral") ||
       userMessage.toLowerCase().includes("categoria laboral") ||
-      userMessage.toLowerCase().includes("categorías laborales") ||
-      userMessage.toLowerCase().includes("categorias laborales") ||
       userMessage.toLowerCase().includes("salario") ||
       userMessage.toLowerCase().includes("coste laboral") ||
       userMessage.toLowerCase().includes("horas laborales")
@@ -998,6 +989,12 @@ const getAnalyticalResponse = async (userMessage) => {
       }
     }
 
+    // Intentar manejar consultas sobre dispositivos
+    const dispositivosResponse = await handleDispositivosQuery(userMessage);
+    if (dispositivosResponse) {
+      return dispositivosResponse;
+    }
+
     // Detectar si es una consulta sobre dispositivos
     const isDispositivosQuery =
       userMessage.toLowerCase().includes("dispositivo") ||
@@ -1010,62 +1007,6 @@ const getAnalyticalResponse = async (userMessage) => {
       userMessage.toLowerCase().includes("moviles") ||
       userMessage.toLowerCase().includes("terminal") ||
       userMessage.toLowerCase().includes("terminales")
-
-    // Consulta para listar dispositivos
-    if (
-      isDispositivosQuery &&
-      (userMessage.toLowerCase().includes("información") ||
-        userMessage.toLowerCase().includes("informacion") ||
-        userMessage.toLowerCase().includes("todos") ||
-        userMessage.toLowerCase().includes("listar") ||
-        userMessage.toLowerCase().includes("mostrar") ||
-        userMessage.toLowerCase().includes("dame") ||
-        userMessage.toLowerCase().includes("dime"))
-    ) {
-      console.log("Ejecutando consulta para listar dispositivos")
-      try {
-        // Limitar la cantidad si es solicitada específicamente
-        const limit = cantidadEspecifica ? cantidadEspecifica : 10
-
-        // Esta consulta obtiene los dispositivos con su última observación si existe
-        const [results] = await db.query(`
-          SELECT d.id, d.DIS_DENO, d.DIS_MARCA, d.DIS_MOD, d.DIS_BAJA, o.C0 as UltimaObservacion
-          FROM dispositivos d
-          LEFT JOIN (
-            SELECT id, MAX(id2) as max_id2
-            FROM dispositivos_dis_obs
-            GROUP BY id
-          ) latest ON d.id = latest.id
-          LEFT JOIN dispositivos_dis_obs o ON latest.id = o.id AND latest.max_id2 = o.id2
-          ORDER BY d.id
-          LIMIT ${limit}
-        `)
-
-        if (results.length > 0) {
-          let respuesta = "Aquí tienes información sobre los dispositivos registrados:\n\n"
-
-          results.forEach((dispositivo, index) => {
-            // Determinar estado
-            const estado = dispositivo.DIS_BAJA === 0 ? "Activo" : "Inactivo"
-
-            respuesta += `${index + 1}. ${dispositivo.DIS_DENO || "Sin nombre"} (${dispositivo.DIS_MARCA || "Sin marca"} ${dispositivo.DIS_MOD || "Sin modelo"})\n`
-            respuesta += `   Código: ${dispositivo.id}\n`
-            respuesta += `   Estado: ${estado}\n`
-
-            if (dispositivo.UltimaObservacion) {
-              respuesta += `   Observación: ${dispositivo.UltimaObservacion}\n`
-            }
-
-            respuesta += "\n"
-          })
-
-          return respuesta
-        }
-      } catch (error) {
-        console.error("Error al consultar dispositivos:", error)
-        // Si hay un error, continuamos con el flujo normal
-      }
-    }
 
     // Consulta para dispositivo específico por código o nombre
     if (
@@ -1237,5 +1178,605 @@ function obtenerNombreMes(numeroMes) {
   ]
   return meses[numeroMes - 1] || `Mes ${numeroMes}`
 }
+
+// Función para manejar consultas sobre categorías laborales
+const handleCategoriasQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre categorías
+  const isCategoriasQuery = 
+    lowerMessage.includes("categoría") ||
+    lowerMessage.includes("categoria") ||
+    lowerMessage.includes("categorías") ||
+    lowerMessage.includes("categorias") ||
+    lowerMessage.includes("categoría laboral") ||
+    lowerMessage.includes("categoria laboral") ||
+    lowerMessage.includes("salario") ||
+    lowerMessage.includes("coste laboral") ||
+    lowerMessage.includes("horas laborales");
+
+  if (!isCategoriasQuery) {
+    return null;
+  }
+
+  // Detectar si es una consulta por ID específico
+  const idMatch = userMessage.match(/(?:id|código|codigo)\s*[:\s-]?\s*(\d{2})/i);
+  if (idMatch) {
+    const id = idMatch[1].padStart(2, '0');
+    return await getCategoriaDetallada(id);
+  }
+
+  // Detectar si es una consulta por nombre de categoría
+  const nombreMatch = userMessage.match(/(?:categoría|categoria)\s+"([^"]+)"/i);
+  if (nombreMatch) {
+    const nombre = nombreMatch[1];
+    const [categoria] = await db.query("SELECT * FROM categorias WHERE CG_DENO LIKE ?", [`%${nombre}%`]);
+    if (categoria.length > 0) {
+      return await getCategoriaDetallada(categoria[0].id);
+    }
+  }
+
+  // Construir la consulta SQL base
+  let query = "SELECT * FROM categorias";
+  let params = [];
+  let whereConditions = [];
+
+  // Detectar filtros específicos
+  if (lowerMessage.includes("salario") || lowerMessage.includes("sueldo")) {
+    if (lowerMessage.includes("mayor") || lowerMessage.includes("más alto")) {
+      query = "SELECT * FROM categorias WHERE CG_SALDIA IS NOT NULL ORDER BY CG_SALDIA DESC LIMIT 1";
+    } else if (lowerMessage.includes("mayor a") || lowerMessage.includes("más de")) {
+      const valorMatch = userMessage.match(/(\d+)\s*€/);
+      if (valorMatch) {
+        whereConditions.push("CG_SALDIA > ?");
+        params.push(valorMatch[1]);
+      }
+    }
+  }
+
+  if (lowerMessage.includes("dieta")) {
+    if (lowerMessage.includes("mayor a") || lowerMessage.includes("más de")) {
+      const valorMatch = userMessage.match(/(\d+)\s*€/);
+      if (valorMatch) {
+        whereConditions.push("CG_DIETA > ?");
+        params.push(valorMatch[1]);
+      }
+    }
+  }
+
+  if (lowerMessage.includes("coste por hora")) {
+    if (lowerMessage.includes("mayor") || lowerMessage.includes("más alto")) {
+      query = "SELECT * FROM categorias WHERE CG_COSHOR IS NOT NULL ORDER BY CG_COSHOR DESC LIMIT 1";
+    }
+  }
+
+  if (lowerMessage.includes("horas extra")) {
+    if (lowerMessage.includes("sábado") || lowerMessage.includes("sabado")) {
+      whereConditions.push("CG_HES IS NOT NULL");
+    }
+    if (lowerMessage.includes("domingo")) {
+      whereConditions.push("CG_HED IS NOT NULL");
+    }
+  }
+
+  if (lowerMessage.includes("horas festivas")) {
+    if (lowerMessage.includes("mayor") || lowerMessage.includes("más")) {
+      query = "SELECT * FROM categorias WHERE CG_HORF IS NOT NULL ORDER BY CG_HORF DESC LIMIT 1";
+    }
+  }
+
+  if (lowerMessage.includes("horas por día") || lowerMessage.includes("horas diarias")) {
+    if (lowerMessage.includes("más de")) {
+      const valorMatch = userMessage.match(/(\d+)\s*horas/);
+      if (valorMatch) {
+        whereConditions.push("CG_HORL > ?");
+        params.push(valorMatch[1]);
+      }
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query = "SELECT * FROM categorias WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre categorías laborales.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (salarios, dietas, horas), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada categoría
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Si mencionas salarios o costes, incluye siempre la unidad monetaria (€)
+      8. Si mencionas horas, especifica si son diarias, semanales o mensuales
+      9. Si se pregunta por el mayor o menor valor, destaca ese dato específicamente
+      10. Si se pregunta por comparaciones, muestra los valores relevantes para la comparación
+      
+      Por ejemplo, si el usuario pregunta por categorías con dieta superior a 10€, menciona el valor exacto de la dieta para cada categoría que cumpla ese criterio.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    return `No encontré categorías que coincidan con tu búsqueda. ¿Te gustaría ver las categorías disponibles?`;
+  }
+};
+
+// Función auxiliar para obtener información detallada de una categoría
+async function getCategoriaDetallada(id) {
+  // Consulta principal de la categoría
+  const [categoria] = await db.query("SELECT * FROM categorias WHERE id = ?", [id]);
+  
+  if (categoria.length > 0) {
+    const cat = categoria[0];
+    
+    // Consultar horas mensuales
+    const [horasMensuales] = await db.query(
+      "SELECT * FROM categorias_cg_hormes WHERE id_categoria = ? ORDER BY anio, mes",
+      [id]
+    );
+    
+    // Consultar costes mensuales
+    const [costesMensuales] = await db.query(
+      "SELECT * FROM categorias_cg_cosmes WHERE id_categoria = ? ORDER BY anio, mes",
+      [id]
+    );
+    
+    // Consultar horas por día
+    const [horasDia] = await db.query(
+      "SELECT * FROM categorias_cg_horas WHERE id_categoria = ? ORDER BY id2",
+      [id]
+    );
+
+    let respuesta = `Información de la categoría ${id}:\n\n`;
+    respuesta += `Denominación: ${cat.CG_DENO || "No disponible"}\n`;
+    
+    if (cat.CG_SALDIA) {
+      respuesta += `Salario diario: ${cat.CG_SALDIA}€\n`;
+    }
+    
+    if (cat.CG_COSHOR) {
+      respuesta += `Coste por hora: ${cat.CG_COSHOR}€\n`;
+    }
+    
+    if (cat.CG_DIETA) {
+      respuesta += `Dieta diaria: ${cat.CG_DIETA}€\n`;
+    }
+    
+    if (cat.CG_HORL) {
+      respuesta += `Horas laborales totales: ${cat.CG_HORL}\n`;
+    }
+    
+    if (cat.CG_HORF) {
+      respuesta += `Horas festivas: ${cat.CG_HORF}\n`;
+    }
+    
+    if (cat.CG_HOREXT) {
+      respuesta += `Horas extra previstas: ${cat.CG_HOREXT}\n`;
+    }
+    
+    // Horas por día de la semana
+    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    const horasDiaMap = {};
+    horasDia.forEach(h => {
+      horasDiaMap[h.id2] = h.valor;
+    });
+    
+    respuesta += "\nHorario semanal:\n";
+    dias.forEach((dia, index) => {
+      const horas = horasDiaMap[index + 1] || 0;
+      respuesta += `${dia}: ${horas}h\n`;
+    });
+    
+    // Información mensual
+    if (horasMensuales.length > 0) {
+      respuesta += "\nHoras mensuales por año:\n";
+      const horasPorAnio = {};
+      horasMensuales.forEach(h => {
+        if (!horasPorAnio[h.anio]) {
+          horasPorAnio[h.anio] = [];
+        }
+        horasPorAnio[h.anio].push(`${h.mes}: ${h.valor}h`);
+      });
+      
+      Object.entries(horasPorAnio).forEach(([anio, meses]) => {
+        respuesta += `${anio}: ${meses.join(", ")}\n`;
+      });
+    }
+    
+    if (costesMensuales.length > 0) {
+      respuesta += "\nCostes mensuales por año:\n";
+      const costesPorAnio = {};
+      costesMensuales.forEach(c => {
+        if (!costesPorAnio[c.anio]) {
+          costesPorAnio[c.anio] = [];
+        }
+        costesPorAnio[c.anio].push(`${c.mes}: ${c.valor}€`);
+      });
+      
+      Object.entries(costesPorAnio).forEach(([anio, meses]) => {
+        respuesta += `${anio}: ${meses.join(", ")}\n`;
+      });
+    }
+    
+    return respuesta;
+  } else {
+    return `No encontré una categoría con el ID ${id}. ¿Te gustaría ver las categorías disponibles?`;
+  }
+}
+
+// Función para manejar consultas sobre dispositivos móviles
+const handleDispositivosQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre dispositivos
+  const isDispositivosQuery = 
+    lowerMessage.includes("dispositivo") ||
+    lowerMessage.includes("dispositivos") ||
+    lowerMessage.includes("pda") ||
+    lowerMessage.includes("terminal") ||
+    lowerMessage.includes("móvil") ||
+    lowerMessage.includes("movil");
+
+  if (!isDispositivosQuery) {
+    return null;
+  }
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Consulta para obtener el conteo total
+    const [total] = await db.query("SELECT COUNT(*) as total FROM dispositivos");
+    const [activos] = await db.query("SELECT COUNT(*) as activos FROM dispositivos WHERE DIS_BAJA = 0");
+    const [inactivos] = await db.query("SELECT COUNT(*) as inactivos FROM dispositivos WHERE DIS_BAJA = 1");
+    
+    return `Actualmente tenemos un total de ${total[0].total} dispositivos móviles en el inventario:\n` +
+           `- Dispositivos activos: ${activos[0].activos}\n` +
+           `- Dispositivos inactivos: ${inactivos[0].inactivos}`;
+  }
+
+  // Construir la consulta SQL base con JOIN para observaciones
+  let query = `
+    SELECT d.*, o.C0 as UltimaObservacion
+    FROM dispositivos d
+    LEFT JOIN (
+      SELECT id, MAX(id2) as max_id2
+      FROM dispositivos_dis_obs
+      GROUP BY id
+    ) latest ON d.id = latest.id
+    LEFT JOIN dispositivos_dis_obs o ON latest.id = o.id AND latest.max_id2 = o.id2
+  `;
+  let params = [];
+  let whereConditions = [];
+
+  // Detectar filtros específicos
+  if (lowerMessage.includes("activo") || lowerMessage.includes("activos")) {
+    whereConditions.push("d.DIS_BAJA = 0");
+  }
+
+  if (lowerMessage.includes("inactivo") || lowerMessage.includes("inactivos") || lowerMessage.includes("baja")) {
+    whereConditions.push("d.DIS_BAJA = 1");
+  }
+
+  // Filtros por marca y modelo
+  if (lowerMessage.includes("marca")) {
+    const marcaMatch = userMessage.match(/(?:marca)\s+"([^"]+)"/i);
+    if (marcaMatch) {
+      whereConditions.push("UPPER(d.DIS_MARCA) = UPPER(?)");
+      params.push(marcaMatch[1]);
+    }
+  }
+
+  if (lowerMessage.includes("modelo")) {
+    const modeloMatch = userMessage.match(/(?:modelo)\s+"([^"]+)"/i);
+    if (modeloMatch) {
+      whereConditions.push("UPPER(d.DIS_MOD) = UPPER(?)");
+      params.push(modeloMatch[1]);
+    }
+  }
+
+  // Filtros por características técnicas
+  if (lowerMessage.includes("ip") || lowerMessage.includes("dirección ip")) {
+    whereConditions.push("d.DIS_IP IS NOT NULL AND d.DIS_IP != ''");
+  }
+
+  if (lowerMessage.includes("mac") || lowerMessage.includes("dirección mac")) {
+    whereConditions.push("d.DIS_MAC IS NOT NULL AND d.DIS_MAC != ''");
+  }
+
+  if (lowerMessage.includes("clave") || lowerMessage.includes("dis_key")) {
+    whereConditions.push("d.DIS_KEY IS NOT NULL AND d.DIS_KEY != ''");
+  }
+
+  // Filtros por observaciones
+  if (lowerMessage.includes("observacion") || lowerMessage.includes("observación")) {
+    if (lowerMessage.includes("sin") || lowerMessage.includes("ninguna")) {
+      whereConditions.push("o.C0 IS NULL");
+    } else {
+      whereConditions.push("o.C0 IS NOT NULL");
+    }
+  }
+
+  if (lowerMessage.includes("quemada") || lowerMessage.includes("quemado")) {
+    whereConditions.push("o.C0 LIKE ?");
+    params.push("%QUEMADA%");
+  }
+
+  if (lowerMessage.includes("aplicación") || lowerMessage.includes("aplicacion")) {
+    whereConditions.push("o.C0 LIKE ?");
+    params.push("%APLICACIÓN%");
+  }
+
+  // Filtros por denominación
+  if (lowerMessage.includes("pda")) {
+    whereConditions.push("d.DIS_DENO LIKE ?");
+    params.push("PDA%");
+  }
+
+  // Filtros por fecha de compra
+  if (lowerMessage.includes("2018")) {
+    whereConditions.push("YEAR(d.DIS_FCOM) = 2018");
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query += " WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ordenar por ID y ajustar el límite según el tipo de consulta
+  let limit = 50; // Aumentamos el límite por defecto
+  query += ` ORDER BY d.id LIMIT ${limit}`;
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre dispositivos móviles.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (marca, modelo, estado, observaciones), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada dispositivo
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Si un dispositivo está inactivo (DIS_BAJA = 1), indícalo claramente
+      8. Si hay observaciones, inclúyelas en la descripción del dispositivo
+      9. Usa el formato: "Nombre (Marca Modelo) - Estado: [observación]"
+      10. Si se pregunta por una marca específica, muestra TODOS los dispositivos de esa marca
+      11. Si hay muchos resultados, agrupa los dispositivos por modelo cuando sea posible
+      12. Si se pregunta por características técnicas (IP, MAC, clave), destaca esa información
+      13. Si se pregunta por observaciones específicas, incluye el texto exacto de la observación
+      
+      Por ejemplo, si se pregunta por dispositivos con IP, muestra la dirección IP de cada dispositivo.
+      Si se pregunta por observaciones, incluye el texto exacto de la observación.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    return `No encontré dispositivos que coincidan con tu búsqueda. ¿Te gustaría ver los dispositivos disponibles?`;
+  }
+};
+
+// Función auxiliar para obtener información detallada de un dispositivo
+async function getDispositivoDetallado(id) {
+  // Consulta principal del dispositivo
+  const [dispositivo] = await db.query("SELECT * FROM dispositivos WHERE id = ?", [id]);
+  
+  if (dispositivo.length > 0) {
+    const disp = dispositivo[0];
+    
+    // Consultar observaciones
+    const [observaciones] = await db.query(
+      "SELECT * FROM dispositivos_dis_obs WHERE id = ? ORDER BY id2",
+      [id]
+    );
+
+    let respuesta = `Información del dispositivo ${id}:\n\n`;
+    respuesta += `Denominación: ${disp.DIS_DENO || "No disponible"}\n`;
+    respuesta += `Marca: ${disp.DIS_MARCA || "No disponible"}\n`;
+    respuesta += `Modelo: ${disp.DIS_MOD || "No disponible"}\n`;
+    
+    if (disp.DIS_FCOM) {
+      const fecha = new Date(disp.DIS_FCOM);
+      respuesta += `Fecha de compra: ${fecha.toLocaleDateString()}\n`;
+    }
+    
+    if (disp.DIS_MAC) {
+      respuesta += `MAC Address: ${disp.DIS_MAC}\n`;
+    }
+    
+    if (disp.DIS_IP) {
+      respuesta += `Dirección IP: ${disp.DIS_IP}\n`;
+    }
+    
+    if (disp.DIS_KEY) {
+      respuesta += `Clave: ${disp.DIS_KEY}\n`;
+    }
+    
+    if (disp.DIS_OBS) {
+      respuesta += `Observaciones principales: ${disp.DIS_OBS}\n`;
+    }
+    
+    respuesta += `Estado: ${disp.DIS_BAJA === 0 ? "Activo" : "Inactivo"}\n`;
+    
+    if (observaciones.length > 0) {
+      respuesta += "\nObservaciones adicionales:\n";
+      observaciones.forEach(obs => {
+        respuesta += `- ${obs.C0}\n`;
+      });
+    }
+    
+    return respuesta;
+  } else {
+    return `No encontré un dispositivo con el ID ${id}. ¿Te gustaría ver los dispositivos disponibles?`;
+  }
+}
+
+// Función para manejar consultas sobre envases de venta
+const handleEnvasesVtaQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre envases de venta
+  const isEnvasesVtaQuery = 
+    lowerMessage.includes("envase") ||
+    lowerMessage.includes("envases") ||
+    lowerMessage.includes("sobre") ||
+    lowerMessage.includes("sobres") ||
+    lowerMessage.includes("envases_vta") ||
+    lowerMessage.includes("envases de venta");
+
+  if (!isEnvasesVtaQuery) {
+    return null;
+  }
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Consulta para obtener el conteo total
+    const [total] = await db.query("SELECT COUNT(*) as total FROM envases_vta");
+    return `Actualmente tenemos un total de ${total[0].total} envases de venta registrados en el sistema.`;
+  }
+
+  // Construir la consulta SQL base
+  let query = "SELECT * FROM envases_vta";
+  let params = [];
+  let whereConditions = [];
+
+  // Filtros por tipo de envase
+  if (lowerMessage.includes("hortícola") || lowerMessage.includes("horticola")) {
+    whereConditions.push("EV_DENO LIKE ?");
+    params.push("%HORTÍCOLA%");
+  }
+
+  if (lowerMessage.includes("flor") || lowerMessage.includes("flores")) {
+    whereConditions.push("EV_DENO LIKE ?");
+    params.push("%FLOR%");
+  }
+
+  if (lowerMessage.includes("tubo") || lowerMessage.includes("tubos")) {
+    whereConditions.push("EV_DENO LIKE ?");
+    params.push("%TUBO%");
+  }
+
+  // Filtros por características específicas
+  if (lowerMessage.includes("conversión") || lowerMessage.includes("conversion")) {
+    whereConditions.push("EV_CONV > 0");
+  }
+
+  if (lowerMessage.includes("precio") || lowerMessage.includes("pvp")) {
+    if (lowerMessage.includes("mayor") || lowerMessage.includes("más caro")) {
+      query = "SELECT * FROM envases_vta WHERE EV_PVP IS NOT NULL ORDER BY EV_PVP DESC LIMIT 1";
+    } else if (lowerMessage.includes("menor") || lowerMessage.includes("más barato")) {
+      query = "SELECT * FROM envases_vta WHERE EV_PVP IS NOT NULL ORDER BY EV_PVP ASC LIMIT 1";
+    } else if (lowerMessage.includes("mayor a") || lowerMessage.includes("más de")) {
+      const precioMatch = userMessage.match(/(\d+(?:\.\d+)?)\s*€/);
+      if (precioMatch) {
+        whereConditions.push("EV_PVP > ?");
+        params.push(precioMatch[1]);
+      }
+    }
+  }
+
+  if (lowerMessage.includes("cantidad") || lowerMessage.includes("uds")) {
+    if (lowerMessage.includes("mayor") || lowerMessage.includes("más")) {
+      const cantidadMatch = userMessage.match(/(\d+)\s*(?:unidades|uds|sobres)/i);
+      if (cantidadMatch) {
+        whereConditions.push("EV_CANT > ?");
+        params.push(cantidadMatch[1]);
+      }
+    }
+  }
+
+  if (lowerMessage.includes("m²") || lowerMessage.includes("metro cuadrado")) {
+    whereConditions.push("EV_EM2 IS NOT NULL AND EV_EM2 > 0");
+  }
+
+  // Filtros por observaciones/consumos
+  if (lowerMessage.includes("observacion") || lowerMessage.includes("observación") || 
+      lowerMessage.includes("consumo") || lowerMessage.includes("consumos")) {
+    if (lowerMessage.includes("sin") || lowerMessage.includes("ninguna")) {
+      whereConditions.push("EV_CONS IS NULL");
+    } else {
+      whereConditions.push("EV_CONS IS NOT NULL");
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query = "SELECT * FROM envases_vta WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ordenar por ID y ajustar el límite según el tipo de consulta
+  let limit = 10;
+  if (lowerMessage.includes("todos") || lowerMessage.includes("listar") || lowerMessage.includes("mostrar")) {
+    limit = 50;
+  }
+  query += ` ORDER BY id LIMIT ${limit}`;
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre envases de venta.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (precio, cantidad, tipo), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada envase
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Usa el formato: "Código - Denominación (Nem.) – Cantidad sobres x Unidades por sobre – PVP: X€ – Y envases/m²"
+      8. Si se pregunta por precios, incluye siempre la unidad monetaria (€)
+      9. Si se pregunta por cantidades, especifica las unidades (sobres, unidades)
+      10. Si se pregunta por conversión o consumos, destaca esa información
+      11. Si hay muchos resultados, agrupa los envases por tipo cuando sea posible
+      
+      Por ejemplo, si se pregunta por sobres hortícolas, agrupa todos los que son de ese tipo.
+      Si se pregunta por precios, destaca el valor del PVP.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    return `No encontré envases que coincidan con tu búsqueda. ¿Te gustaría ver los envases disponibles?`;
+  }
+};
 
 module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse }
