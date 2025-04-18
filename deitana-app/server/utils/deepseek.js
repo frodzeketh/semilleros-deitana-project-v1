@@ -453,6 +453,48 @@ const handleCasasComercialesQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
   console.log("Mensaje recibido:", userMessage);
 
+  // Verificar si es una consulta específica sobre una casa comercial del contexto anterior
+  if (casasComercialesContext.lastResults.length > 0) {
+    const specificQuery = lowerMessage.match(/(?:cif|telefono|teléfono|fax|email|correo|web|dirección|direccion)\s+(?:de\s+)?(.+)/i);
+    if (specificQuery) {
+      const nombreBuscado = specificQuery[1].toLowerCase();
+      const casaEncontrada = casasComercialesContext.lastResults.find(casa => 
+        casa.CC_DENO.toLowerCase().includes(nombreBuscado) || 
+        (casa.CC_NOM && casa.CC_NOM.toLowerCase().includes(nombreBuscado))
+      );
+
+      if (casaEncontrada) {
+        let respuesta = '';
+        if (lowerMessage.includes('cif')) {
+          respuesta = casaEncontrada.CC_CIF ? 
+            `El CIF de ${casaEncontrada.CC_DENO} es: ${casaEncontrada.CC_CIF}` :
+            `Lo siento, no tengo registrado el CIF de ${casaEncontrada.CC_DENO}.`;
+        } else if (lowerMessage.includes('telefono') || lowerMessage.includes('teléfono')) {
+          respuesta = casaEncontrada.CC_TEL ?
+            `El teléfono de ${casaEncontrada.CC_DENO} es: ${casaEncontrada.CC_TEL}` :
+            `Lo siento, no tengo registrado el teléfono de ${casaEncontrada.CC_DENO}.`;
+        } else if (lowerMessage.includes('fax')) {
+          respuesta = casaEncontrada.CC_FAX ?
+            `El fax de ${casaEncontrada.CC_DENO} es: ${casaEncontrada.CC_FAX}` :
+            `Lo siento, no tengo registrado el fax de ${casaEncontrada.CC_DENO}.`;
+        } else if (lowerMessage.includes('email') || lowerMessage.includes('correo')) {
+          respuesta = casaEncontrada.CC_EMA ?
+            `El email de ${casaEncontrada.CC_DENO} es: ${casaEncontrada.CC_EMA}` :
+            `Lo siento, no tengo registrado el email de ${casaEncontrada.CC_DENO}.`;
+        } else if (lowerMessage.includes('web')) {
+          respuesta = casaEncontrada.CC_WEB ?
+            `La página web de ${casaEncontrada.CC_DENO} es: ${casaEncontrada.CC_WEB}` :
+            `Lo siento, no tengo registrada la página web de ${casaEncontrada.CC_DENO}.`;
+        } else if (lowerMessage.includes('direccion') || lowerMessage.includes('dirección')) {
+          respuesta = casaEncontrada.CC_DOM ?
+            `La dirección de ${casaEncontrada.CC_DENO} es: ${casaEncontrada.CC_DOM}` :
+            `Lo siento, no tengo registrada la dirección de ${casaEncontrada.CC_DENO}.`;
+        }
+        return respuesta;
+      }
+    }
+  }
+
   // Detectar si es una consulta sobre casas comerciales
   const isCasasComQuery = 
     lowerMessage.includes("casa comercial") ||
@@ -580,7 +622,7 @@ const handleCasasComercialesQuery = async (userMessage) => {
       2. Si el usuario pidió un número específico de ejemplos, muestra EXACTAMENTE ese número
       3. Si el usuario preguntó por una provincia específica, muestra SOLO las casas comerciales de esa provincia
       4. Si no hay suficientes casas comerciales en la provincia solicitada, indica cuántas encontraste
-      5. Incluye todos los datos relevantes de cada casa comercial (nombre, ubicación, contacto)
+      5. Incluye TODOS los datos disponibles de cada casa comercial (nombre, ubicación, contacto, CIF)
       6. Si hay información faltante (como email o web), no la menciones
       7. Mantén un tono profesional pero amigable
       8. Si el usuario quiere más información, invítalo a preguntar
@@ -1777,6 +1819,12 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
   } else {
     return `No encontré envases que coincidan con tu búsqueda. ¿Te gustaría ver los envases disponibles?`;
   }
+};
+
+// Variable para mantener el contexto de las casas comerciales
+let casasComercialesContext = {
+  lastResults: [],
+  lastQuery: null
 };
 
 module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse }
