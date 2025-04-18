@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { MessageSquare, PanelLeftClose, Send, ChevronDown } from "lucide-react"
+import ReactMarkdown from 'react-markdown'
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -149,7 +150,6 @@ const Home = () => {
 
   useEffect(() => {
     if (!styleAdded) {
-      // Añadir estilos CSS para el indicador de escritura en línea
       const style = document.createElement("style")
       style.innerHTML = `
       .ds-typing-indicator-inline {
@@ -196,6 +196,36 @@ const Home = () => {
       .ds-message-content p {
         margin: 0;
         line-height: 1.5;
+      }
+
+      /* Estilos mejorados para Markdown */
+      .ds-message-content strong {
+        font-weight: 700;
+        font-size: 16px;
+        color: #333;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .ds-message-content em {
+        font-style: italic;
+        color: #666;
+      }
+
+      .ds-message-content ul, .ds-message-content ol {
+        margin: 8px 0;
+        padding-left: 20px;
+        color: #666;
+      }
+
+      .ds-message-content li {
+        margin: 5px 0;
+        color: #666;
+      }
+
+      .ds-message-content p {
+        color: #666;
+        line-height: 1.6;
       }
     `
       document.head.appendChild(style)
@@ -292,16 +322,48 @@ const Home = () => {
                       </div>
                     )}
                     <div className="ds-message-content">
-                      <p style={{ whiteSpace: "pre-line" }}>
-                        {msg.text}
-                        {msg.isStreaming && (
-                          <span className="ds-typing-indicator-inline">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                          </span>
-                        )}
-                      </p>
+                      {msg.sender === "bot" ? (
+                        <>
+                          <ReactMarkdown
+                            components={{
+                              p: ({ children }) => <p style={{ whiteSpace: "pre-line", color: '#666' }}>{children}</p>,
+                              strong: ({ children }) => <strong style={{ 
+                                fontWeight: 700, 
+                                fontSize: '16px', 
+                                color: '#333',
+                                display: 'block',
+                                marginBottom: '8px'
+                              }}>{children}</strong>,
+                              em: ({ children }) => <em style={{ fontStyle: "italic", color: '#666' }}>{children}</em>,
+                              ul: ({ children }) => <ul style={{ 
+                                margin: "8px 0", 
+                                paddingLeft: "20px",
+                                color: '#666'
+                              }}>{children}</ul>,
+                              ol: ({ children }) => <ol style={{ 
+                                margin: "8px 0", 
+                                paddingLeft: "20px",
+                                color: '#666'
+                              }}>{children}</ol>,
+                              li: ({ children }) => <li style={{ 
+                                margin: "5px 0",
+                                color: '#666'
+                              }}>{children}</li>
+                            }}
+                          >
+                            {msg.text}
+                          </ReactMarkdown>
+                          {msg.isStreaming && (
+                            <span className="ds-typing-indicator-inline">
+                              <span></span>
+                              <span></span>
+                              <span></span>
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <p style={{ whiteSpace: "pre-line" }}>{msg.text}</p>
+                      )}
                     </div>
                   </div>
                 ))}
