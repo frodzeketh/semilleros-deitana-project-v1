@@ -76,18 +76,22 @@ const Home = () => {
       const chunkSize = Math.max(1, Math.floor(fullText.length / 100))
       const delay = fullText.length > 500 ? 10 : 20 // Más rápido para textos largos
 
+      const updateMessageText = (text, isStreaming) => {
+        setChatMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMessageId
+              ? { ...msg, text, isStreaming }
+              : msg,
+          ),
+        )
+      }
+
       for (let i = 0; i < fullText.length; i += chunkSize) {
         const nextChunk = fullText.slice(i, i + chunkSize)
         displayedText += nextChunk
 
         // Actualizar el mensaje del bot con el texto acumulado
-        setChatMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessageId
-              ? { ...msg, text: displayedText, isStreaming: i + chunkSize < fullText.length }
-              : msg,
-          ),
-        )
+        updateMessageText(displayedText, i + chunkSize < fullText.length)
 
         // Esperar un poco antes de mostrar el siguiente fragmento
         await new Promise((resolve) => setTimeout(resolve, delay))
