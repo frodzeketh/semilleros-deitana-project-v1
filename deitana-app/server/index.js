@@ -10,8 +10,23 @@ const { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse } = require("./uti
 dotenv.config()
 
 const app = express()
-app.use(cors())
+
+// Configuración específica de CORS
+app.use(cors({
+  origin: [
+    'https://semilleros-deitana-project-v1.vercel.app',
+    'http://localhost:3000'
+  ],
+  methods: ['GET', 'POST'],
+  credentials: true
+}))
+
 app.use(express.json())
+
+// Ruta raíz
+app.get('/', (req, res) => {
+  res.json({ message: 'API de Semilleros Deitana funcionando correctamente' })
+})
 
 const port = process.env.PORT || 3001
 
@@ -24,6 +39,16 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
 })
+
+// Verificar conexión a la base de datos
+pool.getConnection()
+  .then(connection => {
+    console.log('Conexión a la base de datos establecida correctamente');
+    connection.release();
+  })
+  .catch(error => {
+    console.error('Error al conectar con la base de datos:', error);
+  });
 
 // Almacén simple para mantener el contexto de las conversaciones
 const conversationContexts = new Map()
@@ -1113,11 +1138,20 @@ async function obtenerListaProveedores(cantidad, mostrarDatos = false) {
 // Función para obtener una lista de casas comerciales
 async function obtenerListaCasasComerciales(cantidad, mostrarDatos = false) {
   try {
+    console.log('Iniciando obtenerListaCasasComerciales con cantidad:', cantidad);
+    
     let query = "SELECT * FROM casas_com"
     query += ` LIMIT ${cantidad}`
 
     console.log("Ejecutando consulta para lista de casas comerciales:", query)
-    const [results] = await pool.query(query)
+    
+    // Verificar conexión antes de la consulta
+    const connection = await pool.getConnection();
+    console.log('Conexión obtenida para consulta de casas comerciales');
+    
+    const [results] = await connection.query(query);
+    connection.release();
+    console.log('Resultados obtenidos:', results.length, 'casas comerciales');
 
     if (results.length === 0) {
       return "No se encontraron casas comerciales que cumplan con los criterios."
