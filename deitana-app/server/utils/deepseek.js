@@ -648,559 +648,103 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
 // incluyendo clientes, casas comerciales, categorías, dispositivos, etc.
 // =====================================================
 // Modificar la función getAnalyticalResponse para mejorar el manejo de bandejas y macetas
-const getAnalyticalResponse = async (userMessage) => {
+const getAnalyticalResponse = async (userMessage, conversationContext) => {
   try {
-    console.log("Iniciando getAnalyticalResponse para:", userMessage)
-    console.log("Contexto actual:", conversationContext)
-
-    // Intentar manejar la consulta con contexto primero
-    const contextualResponse = await handleBandejasQuery(userMessage)
-    if (contextualResponse) {
-      return contextualResponse
+    // Primero intentar manejar consultas específicas
+    const bandejasResponse = await handleBandejasQuery(userMessage);
+    if (bandejasResponse) {
+      return bandejasResponse;
     }
 
-    // Intentar manejar consultas sobre casas comerciales
-    const casasComResponse = await handleCasasComercialesQuery(userMessage);
-    if (casasComResponse) {
-      return casasComResponse;
+    const casasComercialesResponse = await handleCasasComercialesQuery(userMessage);
+    if (casasComercialesResponse) {
+      return casasComercialesResponse;
     }
 
-    // Detectar si es una consulta simple sobre clientes
-    const isClientQuery =
-      userMessage.toLowerCase().includes("cliente") ||
-      userMessage.toLowerCase().includes("clientes") ||
-      /^(?:dame|dime|muestra|lista|listar|mostrar|ver|obtener|necesito|quiero|podrías|podrias|puedes)\s+(?:los|las|unos|unas)?\s*clientes/i.test(
-        userMessage,
-      )
-
-    // Detectar solicitud específica de cantidad
-    const cantidadMatch = userMessage.match(/(\d+)\s+(?:ejemplo|información|informacion|datos)/i)
-    const cantidadEspecifica = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : null
-
-    if (
-      isClientQuery &&
-      !userMessage.toLowerCase().includes("casa") &&
-      !userMessage.toLowerCase().includes("comercial")
-    ) {
-      console.log("Detectada consulta simple sobre clientes")
-      // Para consultas simples sobre clientes, delegamos al sistema existente
-      return null // Retornamos null para que el sistema use el fallback tradicional
+    const invernaderosResponse = await handleInvernaderosQuery(userMessage);
+    if (invernaderosResponse) {
+      return invernaderosResponse;
     }
 
-    // Detectar si es una consulta múltiple (cliente y casa comercial)
-    const isMultipleQuery =
-      (userMessage.toLowerCase().includes("cliente") &&
-        (userMessage.toLowerCase().includes("casa comercial") ||
-          userMessage.toLowerCase().includes("casas comerciales"))) ||
-      (userMessage.toLowerCase().includes("cliente") && userMessage.toLowerCase().includes("proveedor")) ||
-      (userMessage.toLowerCase().includes("artículo") && userMessage.toLowerCase().includes("proveedor")) ||
-      (userMessage.toLowerCase().includes("articulo") && userMessage.toLowerCase().includes("proveedor"))
-
-    if (isMultipleQuery) {
-      console.log("Detectada consulta múltiple")
-
-      let respuesta = ""
-
-      // Procesar parte de cliente
-      if (userMessage.toLowerCase().includes("cliente")) {
-        try {
-          const [clientResults] = await db.query("SELECT * FROM clientes ORDER BY RAND() LIMIT 1")
-          if (clientResults.length > 0) {
-            const cliente = clientResults[0]
-            respuesta += `Cliente encontrado:\n\nNombre: ${cliente.CL_DENO || "No disponible"}\n`
-            respuesta += `Ubicación: ${[cliente.CL_DOM, cliente.CL_POB, cliente.CL_PROV].filter((v) => v && v !== "").join(", ") || "No disponible"}\n`
-            respuesta += `Teléfono: ${cliente.CL_TEL || "No disponible"}\n`
-            respuesta += `Email: ${cliente.CL_EMA || "No disponible"}\n\n`
-          }
-        } catch (error) {
-          console.error("Error al obtener cliente aleatorio:", error)
-        }
-      }
-
-      // Procesar parte de casa comercial
-      if (
-        userMessage.toLowerCase().includes("casa comercial") ||
-        userMessage.toLowerCase().includes("casas comerciales")
-      ) {
-        try {
-          const [ccResults] = await db.query("SELECT * FROM casas_com ORDER BY RAND() LIMIT 1")
-          if (ccResults.length > 0) {
-            const cc = ccResults[0]
-            respuesta += `Casa comercial encontrada:\n\n`
-            respuesta += `Nombre: ${cc.CC_DENO || "No disponible"}\n`
-            respuesta += `ID: ${cc.id || "No disponible"}\n`
-            respuesta += `Ubicación: ${[cc.CC_DOM, cc.CC_POB, cc.CC_PROV].filter((v) => v && v !== "").join(", ") || "No disponible"}\n`
-            respuesta += `Teléfono: ${cc.CC_TEL || "No disponible"}\n`
-            respuesta += `Email: ${cc.CC_EMA || "No disponible"}\n`
-          }
-        } catch (error) {
-          console.error("Error al obtener casa comercial aleatoria:", error)
-        }
-      }
-
-      // Procesar parte de proveedor
-      if (userMessage.toLowerCase().includes("proveedor")) {
-        try {
-          const [provResults] = await db.query("SELECT * FROM proveedores ORDER BY RAND() LIMIT 1")
-          if (provResults.length > 0) {
-            const prov = provResults[0]
-            respuesta += `Proveedor encontrado:\n\n`
-            respuesta += `Nombre: ${prov.PR_DENO || "No disponible"}\n`
-            respuesta += `Ubicación: ${[prov.PR_DOM, prov.PR_POB, prov.PR_PRO].filter((v) => v && v !== "").join(", ") || "No disponible"}\n`
-            respuesta += `Teléfono: ${prov.PR_TEL || "No disponible"}\n`
-            respuesta += `Email: ${prov.PR_EMA || "No disponible"}\n\n`
-          }
-        } catch (error) {
-          console.error("Error al obtener proveedor aleatorio:", error)
-        }
-      }
-
-      // Procesar parte de artículo
-      if (userMessage.toLowerCase().includes("artículo") || userMessage.toLowerCase().includes("articulo")) {
-        try {
-          const [artResults] = await db.query(
-            "SELECT a.*, p.PR_DENO as NombreProveedor FROM articulos a LEFT JOIN proveedores p ON a.AR_PRV = p.id ORDER BY RAND() LIMIT 1",
-          )
-          if (artResults.length > 0) {
-            const art = artResults[0]
-            respuesta += `Artículo encontrado:\n\n`
-            respuesta += `Nombre: ${art.AR_DENO || "No disponible"}\n`
-            respuesta += `Código: ${art.id || "No disponible"}\n`
-            respuesta += `Referencia: ${art.AR_REF || "No disponible"}\n`
-            respuesta += `Precio: ${art.AR_PVP || "No disponible"}\n`
-            respuesta += `Proveedor: ${art.NombreProveedor || "No disponible"}\n`
-          }
-        } catch (error) {
-          console.error("Error al obtener artículo aleatorio:", error)
-        }
-      }
-
-      return respuesta || null
+    const paisesResponse = await handlePaisesQuery(userMessage);
+    if (paisesResponse) {
+      return paisesResponse;
     }
 
-    // Detectar si es una consulta sobre categorías
-    const isCategoriasQuery =
-      userMessage.toLowerCase().includes("categoría") ||
-      userMessage.toLowerCase().includes("categoria") ||
-      userMessage.toLowerCase().includes("categorías") ||
-      userMessage.toLowerCase().includes("categorias") ||
-      userMessage.toLowerCase().includes("categoría laboral") ||
-      userMessage.toLowerCase().includes("categoria laboral") ||
-      userMessage.toLowerCase().includes("salario") ||
-      userMessage.toLowerCase().includes("coste laboral") ||
-      userMessage.toLowerCase().includes("horas laborales")
-
-    // Consulta para listar todas las categorías
-    if (
-      isCategoriasQuery &&
-      (userMessage.toLowerCase().includes("información") ||
-        userMessage.includes("informacion") ||
-        userMessage.includes("todas") ||
-        userMessage.includes("listar") ||
-        userMessage.includes("mostrar") ||
-        userMessage.includes("dame") ||
-        userMessage.includes("dime"))
-    ) {
-      console.log("Ejecutando consulta para listar categorías")
-      try {
-        const [results] = await db.query("SELECT * FROM categorias ORDER BY id LIMIT 10")
-
-        if (results.length > 0) {
-          let respuesta = "Aquí tienes información sobre las categorías laborales disponibles:\n\n"
-
-          results.forEach((categoria, index) => {
-            respuesta += `${index + 1}. ${categoria.CG_DENO || "Sin nombre"}\n`
-            if (categoria.CG_SALDIA) {
-              respuesta += `   Salario diario: ${categoria.CG_SALDIA}€\n`
-            }
-            if (categoria.CG_COSHOR) {
-              respuesta += `   Coste por hora: ${categoria.CG_COSHOR}€\n`
-            }
-            if (categoria.CG_DIETA) {
-              respuesta += `   Dieta diaria: ${categoria.CG_DIETA}€\n`
-            }
-            respuesta += "\n"
-          })
-
-          respuesta +=
-            "Estas categorías se utilizan para definir las condiciones contractuales y económicas de cada tipo de trabajador en la empresa."
-
-          return respuesta
-        }
-      } catch (error) {
-        console.error("Error al consultar categorías:", error)
-        // Si hay un error, continuamos con el flujo normal
-      }
+    const procesosResponse = await handleProcesosQuery(userMessage);
+    if (procesosResponse) {
+      return procesosResponse;
     }
 
-    // Detectar si es una consulta sobre casas comerciales
-    const isCasasComQuery =
-      userMessage.toLowerCase().includes("casa comercial") ||
-      userMessage.toLowerCase().includes("casas comerciales") ||
-      userMessage.toLowerCase().includes("casas_com") ||
-      userMessage.toLowerCase().includes("proveedor principal") ||
-      userMessage.toLowerCase().includes("proveedores principales")
-
-    // Consulta para listar casas comerciales
-    if (
-      isCasasComQuery &&
-      (userMessage.toLowerCase().includes("información") ||
-        userMessage.toLowerCase().includes("informacion") ||
-        userMessage.toLowerCase().includes("todas") ||
-        userMessage.toLowerCase().includes("listar") ||
-        userMessage.toLowerCase().includes("mostrar") ||
-        userMessage.toLowerCase().includes("dame") ||
-        userMessage.toLowerCase().includes("puedes") ||
-        userMessage.toLowerCase().includes("dime"))
-    ) {
-      console.log("Ejecutando consulta para listar casas comerciales")
-      try {
-        // Limitar la cantidad si es solicitada específicamente
-        const limit = cantidadEspecifica ? cantidadEspecifica : 10
-        const [results] = await db.query(`SELECT * FROM casas_com ORDER BY id LIMIT ${limit}`)
-
-        if (results.length > 0) {
-          let respuesta = "Aquí tienes información sobre las casas comerciales con las que trabajamos:\n\n"
-
-          results.forEach((casa, index) => {
-            respuesta += `${index + 1}. ${casa.CC_DENO || "Sin nombre"}\n`
-            respuesta += `   Ubicación: ${casa.CC_POB || "No disponible"}, ${casa.CC_PROV || "No disponible"}\n`
-            respuesta += `   Teléfono: ${casa.CC_TEL || "No disponible"}\n`
-            if (casa.CC_EMA && casa.CC_EMA.trim() !== "") {
-              respuesta += `   Email: ${casa.CC_EMA}\n`
-            }
-            if (casa.CC_WEB && casa.CC_WEB.trim() !== "") {
-              respuesta += `   Web: ${casa.CC_WEB}\n`
-            }
-            respuesta += "\n"
-          })
-
-          return respuesta
-        }
-      } catch (error) {
-        console.error("Error al consultar casas comerciales:", error)
-        // Si hay un error, continuamos con el flujo normal
-      }
+    const rutasResponse = await handleRutasQuery(userMessage);
+    if (rutasResponse) {
+      return rutasResponse;
     }
 
-    // Detectar si es una consulta sobre bandejas o macetas
-    const isBandejasQuery =
-      userMessage.toLowerCase().includes("bandeja") ||
-      userMessage.toLowerCase().includes("alvéolo") ||
-      userMessage.toLowerCase().includes("alveolo")
-
-    const isMacetasQuery = userMessage.toLowerCase().includes("maceta") || userMessage.toLowerCase().includes("macetas")
-
-    // Detectar si es una consulta sobre máximos/mínimos
-    const isMaxQuery =
-      userMessage.toLowerCase().includes("más") ||
-      userMessage.toLowerCase().includes("mayor") ||
-      userMessage.toLowerCase().includes("máximo") ||
-      userMessage.toLowerCase().includes("maximo") ||
-      userMessage.toLowerCase().includes("máximos") ||
-      userMessage.toLowerCase().includes("maximos")
-
-    const isMinQuery =
-      userMessage.toLowerCase().includes("menos") ||
-      userMessage.toLowerCase().includes("menor") ||
-      userMessage.toLowerCase().includes("mínimo") ||
-      userMessage.toLowerCase().includes("minimo")
-
-    // Consulta específica para bandejas con más alveolos
-    if (isBandejasQuery && isMaxQuery && userMessage.toLowerCase().includes("alveolo")) {
-      console.log("Ejecutando consulta para bandeja con más alveolos")
-      const [results] = await db.query("SELECT * FROM bandejas ORDER BY BN_ALV DESC LIMIT 1")
-
-      if (results.length > 0) {
-        const bandeja = results[0]
-        const respuesta = `Actualmente, la bandeja que contiene más alvéolos es la "${bandeja.BN_DENO}" con código ${bandeja.id} y ${bandeja.BN_ALV} alvéolos. ${bandeja.BN_RET === "S" ? "Esta bandeja es retornable." : "Esta bandeja no es retornable."}`
-        return respuesta
-      }
-    }
-
-    // Consulta para código de bandeja específica
-    if (
-      isBandejasQuery &&
-      userMessage.toLowerCase().includes("código") &&
-      userMessage.toLowerCase().includes("alveolo")
-    ) {
-      console.log("Ejecutando consulta para obtener código de bandeja por alvéolos")
-      // Intentamos extraer un número de alvéolos
-      const alveolosMatch = userMessage.match(/(\d+)\s*(?:alvéolo|alveolo|alveolos|alvéolos)/i)
-      if (alveolosMatch && alveolosMatch[1]) {
-        const numAlveolos = Number.parseInt(alveolosMatch[1])
-        const [results] = await db.query("SELECT * FROM bandejas WHERE BN_ALV = ? LIMIT 1", [numAlveolos])
-
-        if (results.length > 0) {
-          const bandeja = results[0]
-          return `La bandeja con ${bandeja.BN_ALV} alvéolos tiene el código "${bandeja.id}" y su denominación es "${bandeja.BN_DENO}".`
-        }
-      } else {
-        // Si no se especifica número de alvéolos, asumimos que es una consulta de seguimiento
-        const [results] = await db.query("SELECT * FROM bandejas ORDER BY BN_ALV DESC LIMIT 1")
-        if (results.length > 0) {
-          const bandeja = results[0]
-          return `El código de la bandeja con más alvéolos (${bandeja.BN_ALV}) es "${bandeja.id}" y su denominación es "${bandeja.BN_DENO}".`
-        }
-      }
-    }
-
-    // Consulta para listar bandejas
-    if (
-      isBandejasQuery &&
-      (userMessage.toLowerCase().includes("información") ||
-        userMessage.toLowerCase().includes("informacion") ||
-        userMessage.toLowerCase().includes("todas") ||
-        userMessage.toLowerCase().includes("listar") ||
-        userMessage.toLowerCase().includes("mostrar") ||
-        userMessage.toLowerCase().includes("ejemplo") ||
-        userMessage.toLowerCase().includes("ejemplos"))
-    ) {
-      console.log("Ejecutando consulta para listar bandejas")
-      try {
-        // Limitar la cantidad si es solicitada específicamente
-        const limit = cantidadEspecifica ? cantidadEspecifica : 10
-        const [results] = await db.query(`SELECT * FROM bandejas ORDER BY BN_ALV DESC LIMIT ${limit}`)
-
-        if (results.length > 0) {
-          let respuesta = `Aquí tienes ${limit === 1 ? "un ejemplo de bandeja" : `${limit} ejemplos de bandejas`} en nuestro inventario:\n\n`
-
-          results.forEach((bandeja, index) => {
-            respuesta += `${index + 1}. ${bandeja.BN_DENO}: ${bandeja.BN_ALV} alvéolos${bandeja.BN_RET === "S" ? " (retornable)" : ""}, Código: ${bandeja.id}\n`
-          })
-
-          respuesta += "\nTambién contamos con diversos tamaños de macetas para diferentes necesidades de cultivo."
-          return respuesta
-        }
-      } catch (error) {
-        console.error("Error al consultar bandejas:", error)
-        // Si hay un error, continuamos con el flujo normal
-      }
-    }
-
-    // Consulta para listar macetas
-    if (
-      isMacetasQuery &&
-      (userMessage.toLowerCase().includes("información") ||
-        userMessage.toLowerCase().includes("informacion") ||
-        userMessage.toLowerCase().includes("todas") ||
-        userMessage.toLowerCase().includes("listar") ||
-        userMessage.toLowerCase().includes("mostrar") ||
-        userMessage.toLowerCase().includes("ejemplo") ||
-        userMessage.toLowerCase().includes("ejemplos"))
-    ) {
-      console.log("Ejecutando consulta para listar macetas")
-      try {
-        // Limitar la cantidad si es solicitada específicamente
-        const limit = cantidadEspecifica ? cantidadEspecifica : 5
-        const [results] = await db.query(
-          `SELECT * FROM bandejas WHERE BN_DENO LIKE '%MACETA%' ORDER BY id LIMIT ${limit}`,
-        )
-
-        if (results.length > 0) {
-          let respuesta = `Aquí tienes ${limit === 1 ? "un ejemplo de maceta" : `${limit} ejemplos de macetas`} en nuestro inventario:\n\n`
-
-          results.forEach((maceta, index) => {
-            respuesta += `${index + 1}. ${maceta.BN_DENO}, Código: ${maceta.id}\n`
-            if (maceta.BN_ALV) respuesta += `   Alvéolos: ${maceta.BN_ALV}\n`
-            respuesta += `   Retornable: ${maceta.BN_RET === "S" ? "Sí" : "No"}\n\n`
-          })
-
-          return respuesta
-        } else {
-          // Si no encontramos resultados directos, intentamos una búsqueda más amplia
-          const [results] = await db.query(
-            `SELECT * FROM bandejas WHERE BN_DENO LIKE '%MACETA%' OR BN_DENO LIKE '%CM%' ORDER BY id LIMIT ${limit}`,
-          )
-
-          if (results.length > 0) {
-            let respuesta = `Aquí tienes ${limit === 1 ? "un ejemplo de maceta" : `${limit} ejemplos de macetas`} en nuestro inventario:\n\n`
-
-            results.forEach((maceta, index) => {
-              respuesta += `${index + 1}. ${maceta.BN_DENO}, Código: ${maceta.id}\n`
-              if (maceta.BN_ALV) respuesta += `   Alvéolos: ${maceta.BN_ALV}\n`
-              respuesta += `   Retornable: ${maceta.BN_RET === "S" ? "Sí" : "No"}\n\n`
-            })
-
-            return respuesta
-          }
-        }
-      } catch (error) {
-        console.error("Error al consultar macetas:", error)
-        // Si hay un error, continuamos con el flujo normal
-      }
-    }
-
-    // Intentar manejar consultas sobre dispositivos
     const dispositivosResponse = await handleDispositivosQuery(userMessage);
     if (dispositivosResponse) {
       return dispositivosResponse;
     }
 
-    // Detectar si es una consulta sobre dispositivos
-    const isDispositivosQuery =
-      userMessage.toLowerCase().includes("dispositivo") ||
-      userMessage.toLowerCase().includes("dispositivos") ||
-      userMessage.toLowerCase().includes("pda") ||
-      userMessage.toLowerCase().includes("pdas") ||
-      userMessage.toLowerCase().includes("móvil") ||
-      userMessage.toLowerCase().includes("móviles") ||
-      userMessage.toLowerCase().includes("movil") ||
-      userMessage.toLowerCase().includes("moviles") ||
-      userMessage.toLowerCase().includes("terminal") ||
-      userMessage.toLowerCase().includes("terminales")
-
-    // Consulta para dispositivo específico por código o nombre
-    if (
-      isDispositivosQuery &&
-      (userMessage.toLowerCase().includes("información") ||
-        userMessage.toLowerCase().includes("informacion") ||
-        userMessage.toLowerCase().includes("detalle") ||
-        userMessage.toLowerCase().includes("datos") ||
-        userMessage.toLowerCase().includes("código") ||
-        userMessage.toLowerCase().includes("codigo") ||
-        userMessage.toLowerCase().includes("pda"))
-    ) {
-      console.log("Ejecutando consulta para dispositivo específico")
-
-      // Intentar extraer un código de dispositivo o nombre
-      const codigoMatch = userMessage.match(/(?:código|codigo|id)\s*[:\s-]?\s*(\d+)/i)
-      const pdaMatch = userMessage.match(/(?:pda|dispositivo)\s*[:\s-]?\s*(\d+|\w+)/i)
-
-      let codigoDispositivo = ""
-      if (codigoMatch && codigoMatch[1]) {
-        codigoDispositivo = codigoMatch[1]
-      } else if (pdaMatch && pdaMatch[1]) {
-        codigoDispositivo = pdaMatch[1]
-      }
-
-      if (codigoDispositivo) {
-        try {
-          // Consultar información completa del dispositivo
-          const [resultados] = await db.query(
-            `
-            SELECT d.*, o.id2, o.C0 as Observacion
-            FROM dispositivos d
-            LEFT JOIN dispositivos_dis_obs o ON d.id = o.id
-            WHERE d.id = ? OR d.DIS_DENO LIKE ?
-            ORDER BY o.id2
-          `,
-            [codigoDispositivo, `%${codigoDispositivo}%`],
-          )
-
-          if (resultados.length > 0) {
-            // El primer resultado contiene los datos principales del dispositivo
-            const dispositivo = resultados[0]
-
-            // Determinar estado
-            const estado = dispositivo.DIS_BAJA === 0 ? "Activo" : "Inactivo"
-
-            let respuesta = `Información del dispositivo ${dispositivo.DIS_DENO}:\n\n`
-            respuesta += `Código: ${dispositivo.id}\n`
-            respuesta += `Denominación: ${dispositivo.DIS_DENO || "No disponible"}\n`
-            respuesta += `Marca: ${dispositivo.DIS_MARCA || "No disponible"}\n`
-            respuesta += `Modelo: ${dispositivo.DIS_MOD || "No disponible"}\n`
-
-            if (dispositivo.DIS_FCOM) {
-              // Formatear fecha de compra si existe
-              const fecha = new Date(dispositivo.DIS_FCOM)
-              respuesta += `Fecha de compra: ${fecha.toLocaleDateString()}\n`
-            }
-
-            if (dispositivo.DIS_MAC) respuesta += `MAC Address: ${dispositivo.DIS_MAC}\n`
-            if (dispositivo.DIS_IP) respuesta += `Dirección IP: ${dispositivo.DIS_IP}\n`
-            respuesta += `Estado: ${estado}\n`
-
-            // Procesar observaciones si existen
-            if (resultados.some((r) => r.Observacion)) {
-              respuesta += `\nObservaciones:\n`
-              resultados.forEach((r) => {
-                if (r.Observacion) {
-                  respuesta += `- ${r.Observacion}\n`
-                }
-              })
-            }
-
-            return respuesta
-          }
-        } catch (error) {
-          console.error("Error al consultar dispositivo específico:", error)
-          // Continuamos con el flujo normal
-        }
-      }
+    const categoriasResponse = await handleCategoriasQuery(userMessage);
+    if (categoriasResponse) {
+      return categoriasResponse;
     }
 
-    // Si no es una consulta específica que podamos manejar directamente,
-    // generamos una consulta SQL con la IA y la ejecutamos
-    try {
-      console.log("Generando consulta SQL con IA")
-      const sqlQuery = await getQueryFromIA(userMessage)
-      console.log("Consulta SQL generada:", sqlQuery)
+    const envasesResponse = await handleEnvasesVtaQuery(userMessage);
+    if (envasesResponse) {
+      return envasesResponse;
+    }
 
-      // Si la respuesta es conversacional, la devolvemos directamente
-      if (sqlQuery.includes("'CONVERSACIONAL'")) {
-        const match = sqlQuery.match(/SELECT 'CONVERSACIONAL' as response_type, "(.*)" as message/)
-        if (match && match[1]) {
-          return match[1].replace(/\\n/g, "\n")
-        }
-      }
-
-      // Si es una consulta SQL válida, la ejecutamos
-      if (!sqlQuery.includes("'TEXT'") && !sqlQuery.includes("'No se pudo generar'")) {
-        try {
-          console.log("Ejecutando consulta SQL:", sqlQuery)
-          const [results] = await db.query(sqlQuery)
-          console.log("Resultados obtenidos:", results.length)
-
-          // Si tenemos resultados, formateamos una respuesta amigable
-          if (results.length > 0) {
-            // Generar un prompt para que la IA interprete los resultados
-            const interpretPrompt = {
-              system: `Eres un asistente experto de Semilleros Deitana. Te proporcionaré los resultados de una consulta SQL basada en la pregunta del usuario. 
-              Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
-              Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.`,
-              user: `Pregunta original: "${userMessage}"\n\nResultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
-            }
-
-            console.log("Interpretando resultados con IA")
-            const interpretedResponse = await sendToDeepSeek(interpretPrompt)
-            return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "")
-          } else {
-            return "No encontré información que coincida con tu consulta en nuestra base de datos. ¿Podrías reformular tu pregunta?"
-          }
-        } catch (error) {
-          console.error("Error ejecutando consulta SQL:", error)
-          // Si hay un error en la ejecución de la consulta, retornamos null para usar el fallback
-          return null
-        }
-      }
-
-      // Si llegamos aquí, es porque la IA generó una respuesta textual
-      const match = sqlQuery.match(/SELECT 'TEXT' as response_type, "(.*)" as message/)
+    // Si no se encontró una respuesta específica, intentar con la consulta SQL
+    const sqlQuery = await getQueryFromIA(userMessage);
+    
+    // Si la respuesta es conversacional, la devolvemos directamente
+    if (sqlQuery.includes("'CONVERSACIONAL'")) {
+      const match = sqlQuery.match(/SELECT 'CONVERSACIONAL' as response_type, "(.*)" as message/);
       if (match && match[1]) {
-        return match[1].replace(/\\n/g, "\n")
+        return match[1].replace(/\\n/g, "\n");
       }
-    } catch (error) {
-      console.error("Error al generar o ejecutar consulta SQL:", error)
-      // Si hay un error, retornamos null para usar el fallback
-      return null
     }
 
-    // Actualizar el contexto después de cada consulta exitosa
-    if (isBandejasQuery) {
-      conversationContext.lastTopic = 'bandejas';
-      conversationContext.lastQuery = userMessage;
+    // Si es una consulta SQL válida, la ejecutamos
+    if (!sqlQuery.includes("'TEXT'") && !sqlQuery.includes("'No se pudo generar'")) {
+      try {
+        const [results] = await db.query(sqlQuery);
+        
+        // Si tenemos resultados, formateamos una respuesta amigable
+        if (results.length > 0) {
+          // Generar un prompt para que la IA interprete los resultados
+          const interpretPrompt = {
+            system: `Eres un asistente experto de Semilleros Deitana. Te proporcionaré los resultados de una consulta SQL basada en la pregunta del usuario. 
+            Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+            Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.`,
+            user: `Pregunta original: "${userMessage}"\n\nResultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+          }
+
+          const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+          return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+        } else {
+          return "No encontré información que coincida con tu consulta en nuestra base de datos. ¿Podrías reformular tu pregunta?";
+        }
+      } catch (error) {
+        console.error("Error ejecutando consulta SQL:", error);
+        return "Lo siento, hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.";
+      }
     }
 
-    // Si llegamos aquí, significa que no pudimos manejar la consulta específicamente
-    console.log("No se pudo manejar la consulta analíticamente, delegando al sistema tradicional")
-    return null // Retornamos null para que el sistema use el fallback tradicional
+    // Si llegamos aquí, es porque la IA generó una respuesta textual
+    const match = sqlQuery.match(/SELECT 'TEXT' as response_type, "(.*)" as message/);
+    if (match && match[1]) {
+      return match[1].replace(/\\n/g, "\n");
+    }
+
+    return "Lo siento, no pude procesar tu consulta. ¿Podrías reformularla?";
   } catch (error) {
-    console.error("Error general en getAnalyticalResponse:", error)
-    // En caso de error, retornamos null para que el sistema use el fallback tradicional
-    return null
+    console.error('Error en getAnalyticalResponse:', error);
+    return "Lo siento, hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.";
   }
-}
+};
 
 // Función auxiliar para obtener el nombre del mes
 function obtenerNombreMes(numeroMes) {
@@ -1477,24 +1021,6 @@ const handleDispositivosQuery = async (userMessage) => {
     return null;
   }
 
-  // Detectar si es una consulta de conteo total
-  const isConteoTotal = 
-    lowerMessage.includes("cuantos") || 
-    lowerMessage.includes("cuántos") || 
-    lowerMessage.includes("total") ||
-    lowerMessage.includes("cantidad");
-
-  if (isConteoTotal) {
-    // Consulta para obtener el conteo total
-    const [total] = await db.query("SELECT COUNT(*) as total FROM dispositivos");
-    const [activos] = await db.query("SELECT COUNT(*) as activos FROM dispositivos WHERE DIS_BAJA = 0");
-    const [inactivos] = await db.query("SELECT COUNT(*) as inactivos FROM dispositivos WHERE DIS_BAJA = 1");
-    
-    return `Actualmente tenemos un total de ${total[0].total} dispositivos móviles en el inventario:\n` +
-           `- Dispositivos activos: ${activos[0].activos}\n` +
-           `- Dispositivos inactivos: ${inactivos[0].inactivos}`;
-  }
-
   // Construir la consulta SQL base con JOIN para observaciones
   let query = `
     SELECT d.*, o.C0 as UltimaObservacion
@@ -1508,6 +1034,77 @@ const handleDispositivosQuery = async (userMessage) => {
   `;
   let params = [];
   let whereConditions = [];
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Detectar si se pregunta por dispositivos activos de una marca específica
+    const marcaMatch = userMessage.match(/(?:marca)\s+"([^"]+)"/i);
+    if (marcaMatch) {
+      const marca = marcaMatch[1];
+      const [total] = await db.query(`
+        SELECT COUNT(*) as total 
+        FROM dispositivos 
+        WHERE DIS_BAJA = 0 AND UPPER(DIS_MARCA) = UPPER(?)
+      `, [marca]);
+      
+      // Generar un prompt para que la IA interprete el resultado
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de dispositivos activos de la marca ${marca}.
+        Tu tarea es interpretar este resultado y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+        
+        IMPORTANTE:
+        1. NO saludes si ya estás en medio de una conversación
+        2. Menciona el número exacto de dispositivos activos de la marca ${marca}
+        3. Mantén un tono profesional pero amigable
+        4. Si el usuario quiere más información, invítalo a preguntar
+        5. Usa un formato natural y conversacional
+        6. NO hagas referencia a datos personales del usuario
+        7. NO menciones información de perfil o contacto
+        8. Enfócate ÚNICAMENTE en la información de dispositivos
+        
+        Por ejemplo: "Actualmente tenemos X dispositivos activos de la marca ${marca} en nuestro inventario. ¿Te gustaría saber más detalles sobre alguno en particular?"`,
+        user: `Pregunta original: "${userMessage}"
+Resultado de la consulta SQL:\n${JSON.stringify(total[0], null, 2)}`
+      };
+
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    } else {
+      // Consulta para obtener el conteo total
+      const [total] = await db.query("SELECT COUNT(*) as total FROM dispositivos");
+      const [activos] = await db.query("SELECT COUNT(*) as activos FROM dispositivos WHERE DIS_BAJA = 0");
+      const [inactivos] = await db.query("SELECT COUNT(*) as inactivos FROM dispositivos WHERE DIS_BAJA = 1");
+      
+      // Generar un prompt para que la IA interprete el resultado
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número total de dispositivos.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+        
+        IMPORTANTE:
+        1. NO saludes si ya estás en medio de una conversación
+        2. Menciona el número exacto de dispositivos totales, activos e inactivos
+        3. Mantén un tono profesional pero amigable
+        4. Si el usuario quiere más información, invítalo a preguntar
+        5. Usa un formato natural y conversacional
+        6. NO hagas referencia a datos personales del usuario
+        7. NO menciones información de perfil o contacto
+        8. Enfócate ÚNICAMENTE en la información de dispositivos
+        
+        Por ejemplo: "Actualmente tenemos X dispositivos en el inventario, de los cuales Y están activos y Z están inactivos. ¿Te gustaría saber más detalles sobre alguno en particular?"`,
+        user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\nTotal: ${total[0].total}\nActivos: ${activos[0].activos}\nInactivos: ${inactivos[0].inactivos}`
+      };
+
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
 
   // Detectar filtros específicos
   if (lowerMessage.includes("activo") || lowerMessage.includes("activos")) {
@@ -1825,6 +1422,593 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
 let casasComercialesContext = {
   lastResults: [],
   lastQuery: null
+};
+
+// Función para manejar consultas sobre invernaderos
+const handleInvernaderosQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre invernaderos
+  const isInvernaderosQuery = 
+    lowerMessage.includes("invernadero") ||
+    lowerMessage.includes("invernaderos");
+
+  if (!isInvernaderosQuery) {
+    return null;
+  }
+
+  // Construir la consulta SQL base
+  let query = "SELECT * FROM invernaderos";
+  let params = [];
+  let whereConditions = [];
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Consulta para obtener el conteo total
+    const [total] = await db.query("SELECT COUNT(*) as total FROM invernaderos");
+    
+    // Generar un prompt para que la IA interprete el resultado
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número total de invernaderos.
+      Tu tarea es interpretar este resultado y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Menciona el número exacto de invernaderos
+      3. Mantén un tono profesional pero amigable
+      4. Si el usuario quiere más información, invítalo a preguntar
+      5. Usa un formato natural y conversacional
+      6. NO hagas referencia a datos personales del usuario
+      7. NO menciones información de perfil o contacto
+      8. Enfócate ÚNICAMENTE en la información de invernaderos
+      
+      Por ejemplo: "Actualmente tenemos X invernaderos en nuestras instalaciones. ¿Te gustaría saber más detalles sobre alguno en particular?"`,
+      user: `Pregunta original: "${userMessage}"
+Resultado de la consulta SQL:\n${JSON.stringify(total[0], null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Filtros por características específicas
+  if (lowerMessage.includes("sección") || lowerMessage.includes("seccion")) {
+    if (lowerMessage.includes("más") || lowerMessage.includes("mayor")) {
+      query = "SELECT * FROM invernaderos ORDER BY INV_NSEC DESC LIMIT 1";
+    } else if (lowerMessage.includes("menos") || lowerMessage.includes("menor")) {
+      query = "SELECT * FROM invernaderos ORDER BY INV_NSEC ASC LIMIT 1";
+    }
+  }
+
+  if (lowerMessage.includes("fila") || lowerMessage.includes("filas")) {
+    if (lowerMessage.includes("más") || lowerMessage.includes("mayor")) {
+      query = "SELECT * FROM invernaderos ORDER BY INV_NFIL DESC LIMIT 1";
+    } else if (lowerMessage.includes("menos") || lowerMessage.includes("menor")) {
+      query = "SELECT * FROM invernaderos ORDER BY INV_NFIL ASC LIMIT 1";
+    }
+  }
+
+  if (lowerMessage.includes("bandeja") || lowerMessage.includes("bandejas")) {
+    if (lowerMessage.includes("más") || lowerMessage.includes("mayor")) {
+      query = "SELECT * FROM invernaderos ORDER BY INV_NBAN DESC LIMIT 1";
+    } else if (lowerMessage.includes("menos") || lowerMessage.includes("menor")) {
+      query = "SELECT * FROM invernaderos ORDER BY INV_NBAN ASC LIMIT 1";
+    }
+  }
+
+  // Filtros por código o nombre
+  if (lowerMessage.includes("código") || lowerMessage.includes("codigo")) {
+    const codigoMatch = userMessage.match(/(?:código|codigo)\s*[:\s-]?\s*([A-Za-z0-9]+)/i);
+    if (codigoMatch) {
+      whereConditions.push("id = ?");
+      params.push(codigoMatch[1]);
+    }
+  }
+
+  if (lowerMessage.includes("nombre") || lowerMessage.includes("denominación") || lowerMessage.includes("denominacion")) {
+    const nombreMatch = userMessage.match(/(?:nombre|denominación|denominacion)\s*[:\s-]?\s*"([^"]+)"/i);
+    if (nombreMatch) {
+      whereConditions.push("INV_DENO LIKE ?");
+      params.push(`%${nombreMatch[1]}%`);
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query = "SELECT * FROM invernaderos WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ordenar por ID y ajustar el límite según el tipo de consulta
+  let limit = 10;
+  if (lowerMessage.includes("todos") || lowerMessage.includes("listar") || lowerMessage.includes("mostrar")) {
+    limit = 50;
+  }
+  query += ` ORDER BY id LIMIT ${limit}`;
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre invernaderos.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (secciones, filas, bandejas), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada invernadero
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Usa el formato: "Código - Denominación – Secciones: X – Filas: Y – Bandejas: Z"
+      8. Si se pregunta por cantidades, especifica las unidades (secciones, filas, bandejas)
+      9. Si hay muchos resultados, agrupa los invernaderos por características similares
+      10. NO hagas referencia a datos personales del usuario
+      11. NO menciones información de perfil o contacto
+      12. Enfócate ÚNICAMENTE en la información de invernaderos
+      
+      
+      Por ejemplo, si se pregunta por invernaderos con más secciones, destaca ese dato específicamente.
+      Si se pregunta por un invernadero específico, muestra todos sus detalles relevantes.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    // Generar un prompt para que la IA interprete la ausencia de resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre invernaderos, pero no se encontraron resultados que coincidan con su búsqueda.
+      Tu tarea es responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Indica amablemente que no se encontraron resultados
+      3. Sugiere ver los invernaderos disponibles
+      4. Mantén un tono profesional pero amigable
+      5. Invita al usuario a reformular su pregunta si lo desea`,
+      user: `Pregunta original: "${userMessage}"
+No se encontraron resultados en la base de datos.`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+};
+
+// Función para manejar consultas sobre países
+const handlePaisesQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre países
+  const isPaisesQuery = 
+    lowerMessage.includes("país") ||
+    lowerMessage.includes("pais") ||
+    lowerMessage.includes("países") ||
+    lowerMessage.includes("paises");
+
+  if (!isPaisesQuery) {
+    return null;
+  }
+
+  // Construir la consulta SQL base
+  let query = "SELECT * FROM paises";
+  let params = [];
+  let whereConditions = [];
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Consulta para obtener el conteo total
+    const [total] = await db.query("SELECT COUNT(*) as total FROM paises");
+    
+    // Generar un prompt para que la IA interprete el resultado
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número total de países.
+      Tu tarea es interpretar este resultado y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Menciona el número exacto de países
+      3. Mantén un tono profesional pero amigable
+      4. Si el usuario quiere más información, invítalo a preguntar
+      5. Usa un formato natural y conversacional
+      6. NO hagas referencia a datos personales del usuario
+      7. NO menciones información de perfil o contacto
+      8. Enfócate ÚNICAMENTE en la información de países
+      
+      Por ejemplo: "Actualmente tenemos X países registrados en nuestro sistema. ¿Te gustaría saber más detalles sobre alguno en particular?"`,
+      user: `Pregunta original: "${userMessage}"
+Resultado de la consulta SQL:\n${JSON.stringify(total[0], null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Filtros por código o nombre
+  if (lowerMessage.includes("código") || lowerMessage.includes("codigo")) {
+    const codigoMatch = userMessage.match(/(?:código|codigo)\s*[:\s-]?\s*([A-Za-z0-9]+)/i);
+    if (codigoMatch) {
+      whereConditions.push("id = ?");
+      params.push(codigoMatch[1]);
+    }
+  }
+
+  if (lowerMessage.includes("nombre") || lowerMessage.includes("denominación") || lowerMessage.includes("denominacion")) {
+    const nombreMatch = userMessage.match(/(?:nombre|denominación|denominacion)\s*[:\s-]?\s*"([^"]+)"/i);
+    if (nombreMatch) {
+      whereConditions.push("PA_DENO LIKE ?");
+      params.push(`%${nombreMatch[1]}%`);
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query = "SELECT * FROM paises WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ordenar por ID y ajustar el límite según el tipo de consulta
+  let limit = 10;
+  if (lowerMessage.includes("todos") || lowerMessage.includes("listar") || lowerMessage.includes("mostrar")) {
+    limit = 50;
+  }
+  query += ` ORDER BY id LIMIT ${limit}`;
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre países.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (código, nombre), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada país
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Usa el formato: "Código - Denominación"
+      8. Si hay muchos resultados, agrupa los países por regiones o continentes si es posible
+      9. NO hagas referencia a datos personales del usuario
+      10. NO menciones información de perfil o contacto
+      11. Enfócate ÚNICAMENTE en la información de países
+      
+      Por ejemplo, si se pregunta por un país específico, muestra todos sus detalles relevantes.
+      Si se pregunta por una lista de países, organízalos de manera clara y concisa.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    return `No encontré países que coincidan con tu búsqueda. ¿Te gustaría ver la lista de países disponibles?`;
+  }
+};
+
+// Función para manejar consultas sobre procesos
+const handleProcesosQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre procesos
+  const isProcesosQuery = 
+    lowerMessage.includes("proceso") ||
+    lowerMessage.includes("procesos");
+
+  if (!isProcesosQuery) {
+    return null;
+  }
+
+  // Construir la consulta SQL base
+  let query = "SELECT * FROM procesos";
+  let params = [];
+  let whereConditions = [];
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Consulta para obtener el conteo total
+    const [total] = await db.query("SELECT COUNT(*) as total FROM procesos");
+    
+    // Generar un prompt para que la IA interprete el resultado
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número total de procesos.
+      Tu tarea es interpretar este resultado y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Menciona el número exacto de procesos
+      3. Mantén un tono profesional pero amigable
+      4. Si el usuario quiere más información, invítalo a preguntar
+      5. Usa un formato natural y conversacional
+      6. NO hagas referencia a datos personales del usuario
+      7. NO menciones información de perfil o contacto
+      8. Enfócate ÚNICAMENTE en la información de procesos
+      
+      Por ejemplo: "Actualmente tenemos X procesos registrados en nuestro sistema. ¿Te gustaría saber más detalles sobre alguno en particular?"`,
+      user: `Pregunta original: "${userMessage}"
+Resultado de la consulta SQL:\n${JSON.stringify(total[0], null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Filtros por código o nombre
+  if (lowerMessage.includes("código") || lowerMessage.includes("codigo") || 
+      lowerMessage.includes("proceso") && /[0-9]{3}/.test(userMessage)) {
+    const codigoMatch = userMessage.match(/(?:código|codigo|proceso)\s*[:\s-]?\s*([0-9]{3})/i);
+    if (codigoMatch) {
+      whereConditions.push("id = ?");
+      params.push(codigoMatch[1]);
+    }
+  }
+
+  if (lowerMessage.includes("nombre") || lowerMessage.includes("denominación") || lowerMessage.includes("denominacion")) {
+    const nombreMatch = userMessage.match(/(?:nombre|denominación|denominacion)\s*[:\s-]?\s*"([^"]+)"/i);
+    if (nombreMatch) {
+      whereConditions.push("PRO_DENO LIKE ?");
+      params.push(`%${nombreMatch[1]}%`);
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query = "SELECT * FROM procesos WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ordenar por ID y ajustar el límite según el tipo de consulta
+  let limit = 10;
+  if (lowerMessage.includes("todos") || lowerMessage.includes("listar") || lowerMessage.includes("mostrar")) {
+    limit = 50;
+  }
+  query += ` ORDER BY id LIMIT ${limit}`;
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Para cada proceso, buscar sus observaciones
+    for (let i = 0; i < results.length; i++) {
+      const [observaciones] = await db.query(
+        "SELECT * FROM procesos_pro_obs WHERE id = ? ORDER BY id2",
+        [results[i].id]
+      );
+      results[i].observaciones = observaciones;
+    }
+
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre procesos.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (código, nombre), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada proceso
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Usa el formato: "Código - Denominación - Tipo: [tipo] - Modifica: [germinación/bandejas/soporte]"
+      8. Si el proceso tiene observaciones, inclúyelas al final
+      9. NO hagas referencia a datos personales del usuario
+      10. NO menciones información de perfil o contacto
+      11. Enfócate ÚNICAMENTE en la información de procesos
+      
+      Por ejemplo, si se pregunta por un proceso específico, muestra todos sus detalles relevantes.
+      Si se pregunta por una lista de procesos, organízalos de manera clara y concisa.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    // Generar un prompt para que la IA interprete la ausencia de resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre un proceso específico, pero no se encontró en la base de datos.
+      Tu tarea es responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Indica amablemente que no se encontró el proceso solicitado
+      3. Sugiere ver los procesos disponibles
+      4. Mantén un tono profesional pero amigable
+      5. Invita al usuario a reformular su pregunta si lo desea
+      6. NO hagas suposiciones sobre el rango de códigos existentes
+      7. NO menciones información de perfil o contacto
+      8. Enfócate ÚNICAMENTE en la información de procesos`,
+      user: `Pregunta original: "${userMessage}"
+No se encontró el proceso solicitado en la base de datos.`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+};
+
+const handleRutasQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  console.log("Mensaje recibido:", userMessage);
+
+  // Detectar si es una consulta sobre rutas
+  const isRutasQuery = 
+    lowerMessage.includes("ruta") ||
+    lowerMessage.includes("rutas") ||
+    lowerMessage.includes("reparto") ||
+    lowerMessage.includes("logística") ||
+    lowerMessage.includes("porte") ||
+    lowerMessage.includes("transporte");
+
+  if (!isRutasQuery) {
+    return null;
+  }
+
+  // Construir la consulta SQL base
+  let query = "SELECT * FROM rutas";
+  let params = [];
+  let whereConditions = [];
+
+  // Detectar si es una consulta de conteo total
+  const isConteoTotal = 
+    lowerMessage.includes("cuantos") || 
+    lowerMessage.includes("cuántos") || 
+    lowerMessage.includes("total") ||
+    lowerMessage.includes("cantidad");
+
+  if (isConteoTotal) {
+    // Consulta para obtener el conteo total
+    const [total] = await db.query("SELECT COUNT(*) as total FROM rutas");
+    
+    // Generar un prompt para que la IA interprete el resultado
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número total de rutas de reparto.
+      Tu tarea es interpretar este resultado y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Menciona el número exacto de rutas
+      3. Mantén un tono profesional pero amigable
+      4. Si el usuario quiere más información, invítalo a preguntar
+      5. Usa un formato natural y conversacional
+      6. NO hagas referencia a datos personales del usuario
+      7. NO menciones información de perfil o contacto
+      8. Enfócate ÚNICAMENTE en la información de rutas
+      
+      Por ejemplo: "Actualmente tenemos X rutas de reparto configuradas en nuestro sistema. ¿Te gustaría saber más detalles sobre alguna en particular?"`,
+      user: `Pregunta original: "${userMessage}"
+Resultado de la consulta SQL:\n${JSON.stringify(total[0], null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Filtros por código o nombre
+  if (lowerMessage.includes("código") || lowerMessage.includes("codigo") || 
+      lowerMessage.includes("ruta") && /[0-9]{3}/.test(userMessage)) {
+    const codigoMatch = userMessage.match(/(?:código|codigo|ruta)\s*[:\s-]?\s*([0-9]{3})/i);
+    if (codigoMatch) {
+      whereConditions.push("id = ?");
+      params.push(codigoMatch[1]);
+    }
+  }
+
+  if (lowerMessage.includes("nombre") || lowerMessage.includes("denominación") || lowerMessage.includes("denominacion")) {
+    const nombreMatch = userMessage.match(/(?:nombre|denominación|denominacion)\s*[:\s-]?\s*"([^"]+)"/i);
+    if (nombreMatch) {
+      whereConditions.push("RU_DENO LIKE ?");
+      params.push(`%${nombreMatch[1]}%`);
+    }
+  }
+
+  // Filtros por tipo de porte
+  if (lowerMessage.includes("porte") || lowerMessage.includes("portes")) {
+    if (lowerMessage.includes("sin") || lowerMessage.includes("gratis") || lowerMessage.includes("gratuito")) {
+      whereConditions.push("RU_PREC = 0");
+    } else if (lowerMessage.includes("con") || lowerMessage.includes("pago")) {
+      whereConditions.push("RU_PREC > 0");
+    }
+  }
+
+  // Filtros por precio
+  if (lowerMessage.includes("precio") || lowerMessage.includes("coste")) {
+    const precioMatch = userMessage.match(/(\d+(?:\.\d+)?)\s*€/);
+    if (precioMatch) {
+      whereConditions.push("RU_PREC = ?");
+      params.push(precioMatch[1]);
+    }
+  }
+
+  // Agregar condiciones WHERE si existen
+  if (whereConditions.length > 0) {
+    query = "SELECT * FROM rutas WHERE " + whereConditions.join(" AND ");
+  }
+
+  // Ordenar por ID y ajustar el límite según el tipo de consulta
+  let limit = 10;
+  if (lowerMessage.includes("todos") || lowerMessage.includes("listar") || lowerMessage.includes("mostrar")) {
+    limit = 50;
+  }
+  query += ` ORDER BY id LIMIT ${limit}`;
+
+  // Ejecutar la consulta
+  const [results] = await db.query(query, params);
+
+  if (results.length > 0) {
+    // Generar un prompt para que la IA interprete los resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre rutas de reparto.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Si el usuario pidió información específica (código, nombre, porte), enfócate en esos datos
+      3. Incluye todos los datos relevantes de cada ruta
+      4. Si hay información faltante, no la menciones
+      5. Mantén un tono profesional pero amigable
+      6. Si el usuario quiere más información, invítalo a preguntar
+      7. Usa el formato: "Código - Denominación - Porte: [precio]€ - Tipo: [tipo]"
+      8. Si la ruta tiene porte, menciona el código de artículo asociado (RU_CDAR)
+      9. NO hagas referencia a datos personales del usuario
+      10. NO menciones información de perfil o contacto
+      11. Enfócate ÚNICAMENTE en la información de rutas
+      
+      Por ejemplo, si se pregunta por una ruta específica, muestra todos sus detalles relevantes.
+      Si se pregunta por rutas con porte, destaca el precio y el tipo de porte.`,
+      user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  } else {
+    // Generar un prompt para que la IA interprete la ausencia de resultados
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado información sobre rutas de reparto, pero no se encontraron resultados que coincidan con su búsqueda.
+      Tu tarea es responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
+      
+      IMPORTANTE:
+      1. NO saludes si ya estás en medio de una conversación
+      2. Indica amablemente que no se encontraron rutas que coincidan
+      3. Sugiere ver las rutas disponibles
+      4. Mantén un tono profesional pero amigable
+      5. Invita al usuario a reformular su pregunta si lo desea
+      6. NO hagas suposiciones sobre los datos
+      7. NO menciones información de perfil o contacto
+      8. Enfócate ÚNICAMENTE en la información de rutas`,
+      user: `Pregunta original: "${userMessage}"
+No se encontraron rutas que coincidan con la búsqueda en la base de datos.`
+    };
+
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
 };
 
 module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse }
