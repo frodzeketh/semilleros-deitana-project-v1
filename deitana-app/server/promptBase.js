@@ -90,6 +90,7 @@ Responde de manera conversacional y educativa, no como una consulta SQL.`,
     categorias: /categoría[s]?|categoria[s]?|categoría[s]? laboral[es]?|categoria[s]? laboral[es]?/i,
     dispositivos: /dispositivo[s]?|PDA[s]?|móvil[es]?|movil[es]?|terminal[es]?|equipo[s]?/i,
     envases_vta: /envase[s]?|envase[s]? de venta|envases_vta/i,
+    rutas: /ruta[s]?|reparto|logística|porte[s]?|transporte/i,
   }
 
   let targetTable = null
