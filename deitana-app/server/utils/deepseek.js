@@ -1212,71 +1212,25 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`
 // Modificar la función getAnalyticalResponse para mejorar el manejo de bandejas y macetas
 const getAnalyticalResponse = async (userMessage, conversationContext) => {
   try {
-    // Primero intentar manejar consultas específicas
+    // Primero intentar con acciones comerciales
+    const accionesResponse = await handleAccionesComQuery(userMessage);
+    if (accionesResponse) {
+      return accionesResponse;
+    }
+
+    // Luego intentar con proveedores
+    const proveedoresResponse = await handleProveedoresQuery(userMessage);
+    if (proveedoresResponse) {
+      return proveedoresResponse;
+    }
+
+    // Luego intentar con bandejas
     const bandejasResponse = await handleBandejasQuery(userMessage);
     if (bandejasResponse) {
       return bandejasResponse;
     }
 
-    const casasComercialesResponse = await handleCasasComercialesQuery(userMessage);
-    if (casasComercialesResponse) {
-      return casasComercialesResponse;
-    }
-
-    const invernaderosResponse = await handleInvernaderosQuery(userMessage);
-    if (invernaderosResponse) {
-      return invernaderosResponse;
-    }
-
-    const paisesResponse = await handlePaisesQuery(userMessage);
-    if (paisesResponse) {
-      return paisesResponse;
-    }
-
-    const procesosResponse = await handleProcesosQuery(userMessage);
-    if (procesosResponse) {
-      return procesosResponse;
-    }
-
-    const rutasResponse = await handleRutasQuery(userMessage);
-    if (rutasResponse) {
-      return rutasResponse;
-    }
-
-    const dispositivosResponse = await handleDispositivosQuery(userMessage);
-    if (dispositivosResponse) {
-      return dispositivosResponse;
-    }
-
-    const categoriasResponse = await handleCategoriasQuery(userMessage);
-    if (categoriasResponse) {
-      return categoriasResponse;
-    }
-
-    const envasesResponse = await handleEnvasesVtaQuery(userMessage);
-    if (envasesResponse) {
-      return envasesResponse;
-    }
-
-    // Verificar si es una consulta sobre tareas_seccion
-    const tareasResponse = await handleTareasSeccionQuery(userMessage);
-    if (tareasResponse) {
-      return tareasResponse;
-    }
-
-    // Verificar si es una consulta sobre sectores
-    const sectoresResponse = await handleSectoresQuery(userMessage);
-    if (sectoresResponse) {
-      return sectoresResponse;
-    }
-
-    // Verificar si es una consulta sobre sustratos
-    const sustratosResponse = await handleSustratosQuery(userMessage);
-    if (sustratosResponse) {
-      return sustratosResponse;
-    }
-
-    // Si no se encontró una respuesta específica, intentar con la consulta SQL
+    // Si no es ninguna de las anteriores, intentar con la consulta SQL
     const sqlQuery = await getQueryFromIA(userMessage);
     
     // Si la respuesta es conversacional, la devolvemos directamente
@@ -1292,15 +1246,13 @@ const getAnalyticalResponse = async (userMessage, conversationContext) => {
       try {
         const [results] = await db.query(sqlQuery);
         
-        // Si tenemos resultados, formateamos una respuesta amigable
         if (results.length > 0) {
-          // Generar un prompt para que la IA interprete los resultados
           const interpretPrompt = {
             system: `Eres un asistente experto de Semilleros Deitana. Te proporcionaré los resultados de una consulta SQL basada en la pregunta del usuario. 
             Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
             Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.`,
             user: `Pregunta original: "${userMessage}"\n\nResultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
-          }
+          };
 
           const interpretedResponse = await sendToDeepSeek(interpretPrompt);
           return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
@@ -2951,4 +2903,196 @@ const handleSustratosQuery = async (userMessage) => {
   return "No encontré sustratos que coincidan con tu búsqueda. ¿Te gustaría ver la lista completa de sustratos disponibles?";
 };
 
-module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse }
+const handleAccionesComQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Si es una consulta sobre acciones comerciales
+  if (lowerMessage.includes("acciones") || 
+      lowerMessage.includes("incidencias") || 
+      lowerMessage.includes("visitas") || 
+      lowerMessage.includes("llamadas") || 
+      lowerMessage.includes("negociaciones") || 
+      lowerMessage.includes("seguimientos")) {
+    
+    // Extraer el número de acciones solicitadas
+    const cantidadMatch = userMessage.match(/(\d+)\s*(?:acciones|incidencias|visitas|llamadas|negociaciones|seguimientos)/i);
+    const limit = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5;
+    
+    // Construir la consulta base
+    let query = `
+      SELECT 
+        a.id,
+        a.ACCO_DENO as tipo_accion,
+        a.ACCO_FEC as fecha,
+        a.ACCO_HOR as hora,
+        c.CL_DENO as cliente,
+        v.VD_DENO as vendedor,
+        GROUP_CONCAT(n.C0 ORDER BY n.id2 SEPARATOR '') as nota_completa
+      FROM acciones_com a
+      LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
+      LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
+      LEFT JOIN acciones_com_acco_not n ON a.id = n.id
+    `;
+    
+    // Agregar condiciones según el tipo de consulta
+    if (lowerMessage.includes("incidencias")) {
+      query += ` WHERE a.ACCO_DENO LIKE '%INCIDENCIA%'`;
+    } else if (lowerMessage.includes("visitas")) {
+      query += ` WHERE a.ACCO_DENO LIKE '%VISITA%'`;
+    } else if (lowerMessage.includes("llamadas")) {
+      query += ` WHERE a.ACCO_DENO LIKE '%LLAMADA%'`;
+    } else if (lowerMessage.includes("negociaciones")) {
+      query += ` WHERE a.ACCO_DENO LIKE '%NEGOCIACION%'`;
+    } else if (lowerMessage.includes("seguimientos")) {
+      query += ` WHERE a.ACCO_DENO LIKE '%SEGUIMIENTO%'`;
+    }
+    
+    // Si se menciona un vendedor específico
+    const vendedorMatch = userMessage.match(/(?:vendedor|por)\s+([^\s]+(?:\s+[^\s]+)*)/i);
+    if (vendedorMatch) {
+      const vendedorNombre = vendedorMatch[1];
+      query += ` AND v.VD_DENO LIKE '%${vendedorNombre}%'`;
+    }
+    
+    // Si se menciona un cliente específico
+    const clienteMatch = userMessage.match(/(?:cliente|con)\s+([^\s]+(?:\s+[^\s]+)*)/i);
+    if (clienteMatch) {
+      const clienteNombre = clienteMatch[1];
+      query += ` AND c.CL_DENO LIKE '%${clienteNombre}%'`;
+    }
+    
+    // Si se menciona un rango de fechas
+    const fechaMatch = userMessage.match(/(?:entre|del|desde)\s+(\d{1,2})\s+(?:de\s+)?([^\s]+)\s+(?:de\s+)?(\d{4})/i);
+    if (fechaMatch) {
+      const dia = fechaMatch[1];
+      const mes = fechaMatch[2];
+      const año = fechaMatch[3];
+      query += ` AND a.ACCO_FEC >= '${año}-${mes}-${dia}'`;
+    }
+    
+    // Agrupar por acción para reconstruir las notas completas
+    query += ` GROUP BY a.id, a.ACCO_DENO, a.ACCO_FEC, a.ACCO_HOR, c.CL_DENO, v.VD_DENO`;
+    
+    // Ordenar por fecha y hora
+    query += ` ORDER BY a.ACCO_FEC DESC, a.ACCO_HOR DESC LIMIT ${limit}`;
+    
+    const [results] = await db.query(query);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un experto en gestión comercial de Semilleros Deitana. El usuario ha solicitado información sobre acciones comerciales.
+        Tu tarea es presentar la información de manera clara y profesional.
+        
+        IMPORTANTE:
+        1. Para cada acción, menciona:
+           - Tipo de acción
+           - Fecha y hora
+           - Cliente
+           - Vendedor
+           - Nota completa (si existe)
+        2. Si hay notas, preséntalas de manera clara y legible
+        3. Mantén un tono profesional
+        4. Organiza la información de manera estructurada
+        5. Si la nota es larga, preséntala en párrafos separados
+        6. Invita a preguntas más específicas si es necesario
+        
+        Tu respuesta debe ser informativa y fácil de leer.`,
+        user: `Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+  
+  return null;
+};
+
+const handleProveedoresQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Si es una consulta sobre proveedores
+  if (lowerMessage.includes("proveedor") || 
+      lowerMessage.includes("proveedores") || 
+      lowerMessage.includes("suministrador") || 
+      lowerMessage.includes("suministradores")) {
+    
+    // Construir la consulta base
+    let query = `
+      SELECT 
+        id,
+        PR_DENO as denominacion,
+        PR_DOM as domicilio,
+        PR_CDP as codigo_postal,
+        PR_POB as localidad,
+        PR_PROV as provincia,
+        PR_PAIS as pais,
+        PR_TEL as telefonos,
+        PR_FAX as fax,
+        PR_CIF as cif,
+        PR_EMA as email,
+        PR_WEB as web,
+        PR_ACTI as actividad,
+        PR_TIPO as tipo,
+        PR_OBS as observaciones,
+        PR_FPG as forma_pago,
+        PR_FAL as fecha_alta,
+        PR_FUC as fecha_ultima_compra,
+        PR_BIC as bic,
+        PR_IBAN as iban,
+        PR_DOMEN as domicilio_envio,
+        PR_DIAS as dias_aviso
+      FROM proveedores
+    `;
+    
+    // Si se menciona una provincia específica
+    const provinciaMatch = userMessage.match(/(?:provincia|de)\s+([^\s]+(?:\s+[^\s]+)*)/i);
+    if (provinciaMatch) {
+      const provinciaNombre = provinciaMatch[1];
+      query += ` WHERE PR_PROV LIKE '%${provinciaNombre}%'`;
+    }
+    
+    // Si se pregunta por el total de proveedores
+    if (lowerMessage.includes("cuántos") || lowerMessage.includes("cuantos")) {
+      query = `SELECT COUNT(*) as total FROM proveedores`;
+    }
+    
+    // Ordenar por denominación
+    if (!lowerMessage.includes("cuántos") && !lowerMessage.includes("cuantos")) {
+      query += ` ORDER BY PR_DENO`;
+    }
+    
+    const [results] = await db.query(query);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un experto en gestión de proveedores de Semilleros Deitana. El usuario ha solicitado información sobre proveedores.
+        Tu tarea es presentar la información de manera clara y profesional.
+        
+        IMPORTANTE:
+        1. Si es un conteo de proveedores, menciona solo el número total
+        2. Si es una lista de proveedores, para cada uno menciona:
+           - Denominación social
+           - Localidad y provincia
+           - Teléfonos de contacto
+           - Email principal
+        3. Si hay observaciones relevantes, inclúyelas
+        4. Mantén un tono profesional
+        5. Organiza la información de manera clara
+        6. Si hay muchos resultados, sugiere filtrar por provincia o tipo
+        
+        Tu respuesta debe ser informativa pero concisa.`,
+        user: `Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+  
+  return null;
+};
+
+module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse, handleAccionesComQuery, handleProveedoresQuery }
