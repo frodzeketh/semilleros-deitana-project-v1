@@ -91,6 +91,9 @@ Responde de manera conversacional y educativa, no como una consulta SQL.`,
     dispositivos: /dispositivo[s]?|PDA[s]?|móvil[es]?|movil[es]?|terminal[es]?|equipo[s]?/i,
     envases_vta: /envase[s]?|envase[s]? de venta|envases_vta/i,
     rutas: /ruta[s]?|reparto|logística|porte[s]?|transporte/i,
+    tareas_seccion: /tarea[s]?|sección de tareas|seccion de tareas|tareas_seccion|actividad[es]?|actividades/i,
+    sectores: /sector[es]?|subsector[es]?|canal[es]? de venta|área[s]? del negocio|clasificación[es]? comercial/i,
+    sustratos: /sustrato[s]?|medio de cultivo|mezcla[s]? de cultivo|perlita|turba|fibra de coco/i,
   }
 
   let targetTable = null
