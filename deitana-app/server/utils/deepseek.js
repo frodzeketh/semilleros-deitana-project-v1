@@ -388,37 +388,401 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
   }
 
   // Si es una consulta sobre ejemplos de bandejas
-  if (lowerMessage.includes("bandeja") && 
+  if ((lowerMessage.includes("bandeja") && 
       (lowerMessage.includes("ejemplo") || 
        lowerMessage.includes("ejemplos") || 
        lowerMessage.includes("mostrar") || 
-       lowerMessage.includes("listar"))) {
+       lowerMessage.includes("listar") ||
+       lowerMessage.includes("tipos") ||
+       lowerMessage.includes("tenemos") ||
+       lowerMessage.includes("tengamos") ||
+       lowerMessage.includes("tienes"))) ||
+      (conversationContext.lastTopic === 'bandejas' && 
+       (lowerMessage.includes("más") || 
+        lowerMessage.includes("mas") || 
+        lowerMessage.includes("otro") || 
+        lowerMessage.includes("otra")))) {
     
     // Extraer el número de ejemplos solicitados
-    const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo)/i);
-    const limit = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 10;
+    const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo|mas|más|otro|otra|bandejas|bandeja)/i);
+    const limit = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 3;
     
+    // Obtener las bandejas que ya se mostraron anteriormente
+    const bandejasMostradas = conversationContext.lastResults ? 
+      conversationContext.lastResults.map(b => b.BN_DENO) : [];
+    
+    // Construir la consulta SQL excluyendo las bandejas ya mostradas
+    let query = `
+      SELECT * FROM bandejas 
+      WHERE BN_DENO IS NOT NULL 
+      AND BN_DENO != ''
+    `;
+    
+    if (bandejasMostradas.length > 0) {
+      const placeholders = bandejasMostradas.map(() => '?').join(',');
+      query += ` AND BN_DENO NOT IN (${placeholders})`;
+    }
+    
+    query += ` ORDER BY BN_ALV DESC LIMIT ${limit}`;
+    
+    const [results] = await db.query(query, bandejasMostradas);
+
+    if (results.length > 0) {
+      // Generar un prompt para que la IA interprete los resultados
+      const interpretPrompt = {
+        system: `Eres un experto en horticultura y producción de semilleros. El usuario ha solicitado ver ejemplos de bandejas.
+        Tu tarea es presentar las bandejas disponibles de manera informativa y profesional, considerando:
+        1. Las características técnicas de cada bandeja
+        2. La capacidad productiva según el número de alvéolos
+        3. Las ventajas de cada modelo
+        4. Las aplicaciones generales según el tipo de bandeja
+        
+        IMPORTANTE:
+        1. Presenta cada bandeja con sus especificaciones completas
+        2. Explica brevemente las ventajas del número de alvéolos
+        3. Si la bandeja es retornable, destaca esta característica
+        4. Menciona posibles aplicaciones generales
+        5. Mantén un tono profesional pero accesible
+        6. Organiza la información de manera clara y estructurada
+        7. Invita a preguntas específicas sobre cada bandeja
+        8. Sugiere consultar sobre usos específicos
+        
+        Tu respuesta debe ser informativa y orientada a ayudar en la toma de decisiones.`,
+        user: `Contexto anterior: ${conversationContext.lastQuery}
+Resultados anteriores: ${JSON.stringify(conversationContext.lastResults, null, 2)}
+Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      }
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      
+      // Actualizar el contexto después de la consulta
+      conversationContext.lastTopic = 'bandejas';
+      conversationContext.lastQuery = userMessage;
+      conversationContext.lastResults = [...(conversationContext.lastResults || []), ...results];
+      
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    } else {
+      // Si no hay más bandejas para mostrar, verificar si ya se mostraron todas
+      const [totalBandejas] = await db.query('SELECT COUNT(*) as total FROM bandejas WHERE BN_DENO IS NOT NULL AND BN_DENO != ""');
+      const totalMostradas = conversationContext.lastResults ? conversationContext.lastResults.length : 0;
+      
+      if (totalMostradas >= totalBandejas[0].total) {
+        const interpretPrompt = {
+          system: `Eres un experto en horticultura y producción de semilleros. El usuario ha solicitado ver más bandejas, pero ya se han mostrado todas las disponibles.
+          Tu tarea es:
+          1. Informar amablemente que ya se han mostrado todas las bandejas
+          2. Hacer un breve resumen de las categorías principales de bandejas mostradas
+          3. Sugerir próximos pasos útiles
+          4. Mantener un tono profesional y servicial
+          
+          IMPORTANTE:
+          1. No menciones bandejas específicas nuevamente
+          2. Enfócate en categorías generales (por rango de alvéolos)
+          3. Sugiere preguntas específicas que el usuario podría hacer
+          4. Ofrece ayuda para encontrar la bandeja más adecuada
+          
+          Tu respuesta debe ser útil y orientada a continuar la conversación de manera productiva.`,
+          user: `Contexto anterior: ${conversationContext.lastQuery}
+Bandejas ya mostradas: ${JSON.stringify(conversationContext.lastResults, null, 2)}
+Pregunta actual: "${userMessage}"`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      } else {
+        // Si hay un problema técnico, intentar mostrar todas las bandejas disponibles
+        const [allResults] = await db.query(`
+          SELECT * FROM bandejas 
+          WHERE BN_DENO IS NOT NULL 
+          AND BN_DENO != ''
+          ORDER BY BN_ALV DESC
+        `);
+        
+        if (allResults.length > 0) {
+          conversationContext.lastResults = allResults;
+          const interpretPrompt = {
+            system: `Eres un experto en horticultura y producción de semilleros. Debido a un problema técnico, mostraremos todas las bandejas disponibles.
+            Tu tarea es presentar un catálogo completo de manera organizada y profesional, considerando:
+            1. Agrupar las bandejas por categorías según número de alvéolos
+            2. Destacar las características principales de cada grupo
+            3. Mencionar aplicaciones típicas para cada categoría
+            4. Proporcionar una visión general de las opciones disponibles
+            
+            IMPORTANTE:
+            1. Organiza la información de manera clara y estructurada
+            2. Destaca las características más relevantes
+            3. Menciona ventajas específicas de cada grupo
+            4. Sugiere aplicaciones típicas
+            5. Mantén un tono profesional y accesible
+            6. Invita a preguntas específicas
+            
+            Tu respuesta debe ser completa y facilitar la toma de decisiones.`,
+            user: `Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(allResults, null, 2)}`,
+          }
+          const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+          return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+        }
+      }
+    }
+  }
+
+  // Si es una pregunta sobre el uso o recomendación de bandejas
+  if (conversationContext.lastTopic === 'bandejas' && 
+      (lowerMessage.includes("conveniente") || 
+       lowerMessage.includes("recomend") || 
+       lowerMessage.includes("ideal") || 
+       lowerMessage.includes("mejor") ||
+       lowerMessage.includes("para") ||
+       lowerMessage.includes("cultivo") ||
+       lowerMessage.includes("plantines") ||
+       lowerMessage.includes("lechuga") ||
+       lowerMessage.includes("tomate") ||
+       lowerMessage.includes("pimiento") ||
+       lowerMessage.includes("aromaticas") ||
+       lowerMessage.includes("aromáticas"))) {
+    
+    // Obtener todas las bandejas disponibles para hacer recomendaciones
+    const [allBandejas] = await db.query(`
+      SELECT * FROM bandejas 
+      WHERE BN_DENO IS NOT NULL 
+      AND BN_DENO != ''
+      ORDER BY BN_ALV DESC
+    `);
+    
+    if (allBandejas.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un experto en horticultura y producción de semilleros. El usuario está preguntando sobre qué bandeja es más adecuada para un cultivo específico.
+        Tu tarea es analizar las bandejas disponibles y hacer una recomendación experta basada en:
+        1. Las características del cultivo mencionado
+        2. El desarrollo radicular esperado
+        3. El ciclo de cultivo
+        4. Las mejores prácticas de producción
+        5. La eficiencia en el uso del espacio
+        
+        IMPORTANTE:
+        1. Analiza el número de alvéolos y su relación con el cultivo
+        2. Proporciona una explicación técnica detallada
+        3. Menciona ventajas y desventajas de cada opción
+        4. Considera el desarrollo radicular y aéreo
+        5. Incluye recomendaciones de manejo
+        6. Si la bandeja es retornable, menciona las ventajas
+        7. Proporciona información sobre el ciclo de cultivo
+        8. Mantén un tono profesional pero accesible
+        
+        Tu respuesta debe ser completa y basada en conocimiento experto en horticultura.`,
+        user: `Pregunta del usuario: "${userMessage}"
+Bandejas disponibles:\n${JSON.stringify(allBandejas, null, 2)}`,
+      }
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      
+      // Actualizar el contexto
+      conversationContext.lastQuery = userMessage;
+      
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+
+  // Si es una consulta sobre número de alvéolos
+  if (lowerMessage.includes("cuantos alveolos") || lowerMessage.includes("cuántos alvéolos")) {
+    // Primero intentar con tamaño en CM
+    const sizeMatch = userMessage.match(/(\d+(?:\.\d+)?)\s*cm/i);
+    if (sizeMatch && sizeMatch[1]) {
+      const size = sizeMatch[1];
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_DENO LIKE ? AND BN_ALV IS NOT NULL
+        ORDER BY id
+      `, [`%${size} CM%`]);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de alvéolos de una bandeja específica.
+          Tu tarea es interpretar estos resultados y responder de manera clara y concisa.
+          
+          IMPORTANTE:
+          1. Menciona el número exacto de alvéolos según los datos de la base de datos
+          2. Incluye la denominación exacta de la bandeja
+          3. No agregues información adicional que no esté en los datos
+          4. Mantén un tono profesional y directo`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      }
+    }
+
+    // Si no se encontró por tamaño, intentar por denominación
+    const bandejaMatch = userMessage.match(/(?:tiene|tienen)\s+([A-Za-z0-9\s\.\(\)]+)/i);
+    if (bandejaMatch && bandejaMatch[1]) {
+      const nombreBandeja = bandejaMatch[1].trim();
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_DENO LIKE ? AND BN_ALV IS NOT NULL
+        ORDER BY id
+      `, [`%${nombreBandeja}%`]);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de alvéolos de una bandeja específica.
+          Tu tarea es interpretar estos resultados y responder de manera clara y concisa.
+          
+          IMPORTANTE:
+          1. Menciona el número exacto de alvéolos según los datos de la base de datos
+          2. Incluye la denominación exacta de la bandeja
+          3. No agregues información adicional que no esté en los datos
+          4. Mantén un tono profesional y directo`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      }
+    }
+
+    // Si no se encontró ni por tamaño ni por denominación, intentar buscar directamente el nombre
+    const directNameMatch = userMessage.match(/(\d+\s*ALV\.?\s*[A-Za-z0-9\s\.\(\)]+)/i);
+    if (directNameMatch && directNameMatch[1]) {
+      const nombreBandeja = directNameMatch[1].trim();
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_DENO LIKE ? AND BN_ALV IS NOT NULL
+        ORDER BY id
+      `, [`%${nombreBandeja}%`]);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el número de alvéolos de una bandeja específica.
+          Tu tarea es interpretar estos resultados y responder de manera clara y concisa.
+          
+          IMPORTANTE:
+          1. Menciona el número exacto de alvéolos según los datos de la base de datos
+          2. Incluye la denominación exacta de la bandeja
+          3. No agregues información adicional que no esté en los datos
+          4. Mantén un tono profesional y directo`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      }
+    }
+
+    // Si no se encontró ni por tamaño ni por denominación
+    return "No encontré información sobre la bandeja solicitada en nuestra base de datos. ¿Te gustaría ver qué bandejas tenemos disponibles?";
+  }
+
+  // Si es una consulta sobre número de alvéolos
+  if (lowerMessage.includes("alvéolo") || lowerMessage.includes("alveolo")) {
+    // Si pregunta por la bandeja con más alvéolos
+    if (lowerMessage.includes("más") || lowerMessage.includes("mayor")) {
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_ALV IS NOT NULL AND BN_ALV != ''
+        ORDER BY CAST(BN_ALV AS UNSIGNED) DESC 
+        LIMIT 1
+      `);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre la bandeja con más alvéolos.
+          Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+          
+          IMPORTANTE:
+          1. Menciona el número exacto de alvéolos según los datos de la base de datos
+          2. Incluye la denominación de la bandeja y su código
+          3. Si la bandeja es retornable, menciónalo
+          4. No inventes información que no esté en los datos
+          5. Mantén un tono profesional y amigable
+          6. No agregues información adicional sobre usos o tamaños que no estén en los datos
+          7. Si el usuario quiere más información, invítalo a preguntar`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      }
+    }
+    
+    // Si pregunta por bandejas con un número específico de alvéolos
+    const alveolosMatch = userMessage.match(/(\d+)\s*(?:alvéolo|alveolo|alveolos|alvéolos)/i);
+    if (alveolosMatch && alveolosMatch[1]) {
+      const numAlveolos = Number.parseInt(alveolosMatch[1]);
+      const [results] = await db.query(`
+        SELECT * FROM bandejas 
+        WHERE BN_ALV = ? 
+        ORDER BY id
+      `, [numAlveolos]);
+
+      if (results.length > 0) {
+        const interpretPrompt = {
+          system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre bandejas con ${numAlveolos} alvéolos.
+          Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+          
+          IMPORTANTE:
+          1. Menciona todas las bandejas encontradas con ese número de alvéolos
+          2. Incluye la denominación y código de cada bandeja
+          3. Si alguna bandeja es retornable, menciónalo
+          4. No inventes información que no esté en los datos
+          5. Mantén un tono profesional y amigable
+          6. No agregues información adicional sobre usos o tamaños que no estén en los datos
+          7. Si el usuario quiere más información, invítalo a preguntar`,
+          user: `Pregunta original: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar el contexto
+        conversationContext.lastTopic = 'bandejas';
+        conversationContext.lastQuery = userMessage;
+        conversationContext.lastResults = results;
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      } else {
+        return `No encontré bandejas con ${numAlveolos} alvéolos en nuestra base de datos. ¿Te gustaría ver qué bandejas tenemos disponibles?`;
+      }
+    }
+  }
+
+  // Si es una consulta sobre bandejas con tamaño en CM
+  if (lowerMessage.includes("bandeja") && lowerMessage.includes("cm")) {
     const [results] = await db.query(`
       SELECT * FROM bandejas 
-      ORDER BY BN_ALV DESC 
-      LIMIT ${limit}
+      WHERE BN_DENO LIKE '%CM%' 
+      ORDER BY CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(BN_DENO, 'CM', 1), ' ', -1) AS DECIMAL(10,2))
     `);
 
     if (results.length > 0) {
       // Generar un prompt para que la IA interprete los resultados
       const interpretPrompt = {
-        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha solicitado ver ejemplos de bandejas.
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre bandejas que contienen su tamaño en CM.
         Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
-        
-        IMPORTANTE:
-        1. Presenta la información de forma natural y organizada
-        2. Incluye todos los datos relevantes (denominación, número de alvéolos, si es retornable, código)
-        3. Si hay bandejas especiales (como las de aromáticas), destácalas
-        4. Mantén un tono amigable y profesional
-        5. Invita al usuario a hacer preguntas de seguimiento si lo desea
-        
-        Por ejemplo, si hay una bandeja con 1066 alvéolos, puedes mencionar que es una de las más grandes y explicar su uso común.
-        Si hay bandejas específicas para aromáticas, puedes explicar sus características especiales.`,
+        Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.
+        Mantén el contexto de la conversación para poder responder preguntas de seguimiento.`,
         user: `Pregunta original: "${userMessage}"
 Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
       }
@@ -430,6 +794,204 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
       conversationContext.lastResults = results;
       
       return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+
+  // Si es una consulta sobre ejemplos de bandejas
+  if ((lowerMessage.includes("bandeja") && 
+      (lowerMessage.includes("ejemplo") || 
+       lowerMessage.includes("ejemplos") || 
+       lowerMessage.includes("mostrar") || 
+       lowerMessage.includes("listar") ||
+       lowerMessage.includes("tipos") ||
+       lowerMessage.includes("tenemos") ||
+       lowerMessage.includes("tengamos") ||
+       lowerMessage.includes("tienes"))) ||
+      (conversationContext.lastTopic === 'bandejas' && 
+       (lowerMessage.includes("más") || 
+        lowerMessage.includes("mas") || 
+        lowerMessage.includes("otro") || 
+        lowerMessage.includes("otra")))) {
+    
+    // Extraer el número de ejemplos solicitados
+    const cantidadMatch = userMessage.match(/(\d+)\s*(?:ejemplos|ejemplo|mas|más|otro|otra|bandejas|bandeja)/i);
+    const limit = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 3;
+    
+    // Obtener las bandejas que ya se mostraron anteriormente
+    const bandejasMostradas = conversationContext.lastResults ? 
+      conversationContext.lastResults.map(b => b.BN_DENO) : [];
+    
+    // Construir la consulta SQL excluyendo las bandejas ya mostradas
+    let query = `
+      SELECT * FROM bandejas 
+      WHERE BN_DENO IS NOT NULL 
+      AND BN_DENO != ''
+    `;
+    
+    if (bandejasMostradas.length > 0) {
+      const placeholders = bandejasMostradas.map(() => '?').join(',');
+      query += ` AND BN_DENO NOT IN (${placeholders})`;
+    }
+    
+    query += ` ORDER BY BN_ALV DESC LIMIT ${limit}`;
+    
+    const [results] = await db.query(query, bandejasMostradas);
+
+    if (results.length > 0) {
+      // Generar un prompt para que la IA interprete los resultados
+      const interpretPrompt = {
+        system: `Eres un experto en horticultura y producción de semilleros. El usuario ha solicitado ver ejemplos de bandejas.
+        Tu tarea es presentar las bandejas disponibles de manera informativa y profesional, considerando:
+        1. Las características técnicas de cada bandeja
+        2. La capacidad productiva según el número de alvéolos
+        3. Las ventajas de cada modelo
+        4. Las aplicaciones generales según el tipo de bandeja
+        
+        IMPORTANTE:
+        1. Presenta cada bandeja con sus especificaciones completas
+        2. Explica brevemente las ventajas del número de alvéolos
+        3. Si la bandeja es retornable, destaca esta característica
+        4. Menciona posibles aplicaciones generales
+        5. Mantén un tono profesional pero accesible
+        6. Organiza la información de manera clara y estructurada
+        7. Invita a preguntas específicas sobre cada bandeja
+        8. Sugiere consultar sobre usos específicos
+        
+        Tu respuesta debe ser informativa y orientada a ayudar en la toma de decisiones.`,
+        user: `Contexto anterior: ${conversationContext.lastQuery}
+Resultados anteriores: ${JSON.stringify(conversationContext.lastResults, null, 2)}
+Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      }
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      
+      // Actualizar el contexto después de la consulta
+      conversationContext.lastTopic = 'bandejas';
+      conversationContext.lastQuery = userMessage;
+      conversationContext.lastResults = [...(conversationContext.lastResults || []), ...results];
+      
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    } else {
+      // Si no hay más bandejas para mostrar, verificar si ya se mostraron todas
+      const [totalBandejas] = await db.query('SELECT COUNT(*) as total FROM bandejas WHERE BN_DENO IS NOT NULL AND BN_DENO != ""');
+      const totalMostradas = conversationContext.lastResults ? conversationContext.lastResults.length : 0;
+      
+      if (totalMostradas >= totalBandejas[0].total) {
+        const interpretPrompt = {
+          system: `Eres un experto en horticultura y producción de semilleros. El usuario ha solicitado ver más bandejas, pero ya se han mostrado todas las disponibles.
+          Tu tarea es:
+          1. Informar amablemente que ya se han mostrado todas las bandejas
+          2. Hacer un breve resumen de las categorías principales de bandejas mostradas
+          3. Sugerir próximos pasos útiles
+          4. Mantener un tono profesional y servicial
+          
+          IMPORTANTE:
+          1. No menciones bandejas específicas nuevamente
+          2. Enfócate en categorías generales (por rango de alvéolos)
+          3. Sugiere preguntas específicas que el usuario podría hacer
+          4. Ofrece ayuda para encontrar la bandeja más adecuada
+          
+          Tu respuesta debe ser útil y orientada a continuar la conversación de manera productiva.`,
+          user: `Contexto anterior: ${conversationContext.lastQuery}
+Bandejas ya mostradas: ${JSON.stringify(conversationContext.lastResults, null, 2)}
+Pregunta actual: "${userMessage}"`,
+        }
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      } else {
+        // Si hay un problema técnico, intentar mostrar todas las bandejas disponibles
+        const [allResults] = await db.query(`
+          SELECT * FROM bandejas 
+          WHERE BN_DENO IS NOT NULL 
+          AND BN_DENO != ''
+          ORDER BY BN_ALV DESC
+        `);
+        
+        if (allResults.length > 0) {
+          conversationContext.lastResults = allResults;
+          const interpretPrompt = {
+            system: `Eres un experto en horticultura y producción de semilleros. Debido a un problema técnico, mostraremos todas las bandejas disponibles.
+            Tu tarea es presentar un catálogo completo de manera organizada y profesional, considerando:
+            1. Agrupar las bandejas por categorías según número de alvéolos
+            2. Destacar las características principales de cada grupo
+            3. Mencionar aplicaciones típicas para cada categoría
+            4. Proporcionar una visión general de las opciones disponibles
+            
+            IMPORTANTE:
+            1. Organiza la información de manera clara y estructurada
+            2. Destaca las características más relevantes
+            3. Menciona ventajas específicas de cada grupo
+            4. Sugiere aplicaciones típicas
+            5. Mantén un tono profesional y accesible
+            6. Invita a preguntas específicas
+            
+            Tu respuesta debe ser completa y facilitar la toma de decisiones.`,
+            user: `Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(allResults, null, 2)}`,
+          }
+          const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+          return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+        }
+      }
+    }
+  }
+
+  // Si es una pregunta sobre el uso o características de una bandeja específica
+  if (conversationContext.lastTopic === 'bandejas' && 
+      (lowerMessage.includes("para que") || 
+       lowerMessage.includes("para qué") || 
+       lowerMessage.includes("uso") || 
+       lowerMessage.includes("utilizar") ||
+       lowerMessage.includes("funciona") ||
+       lowerMessage.includes("informacion") ||
+       lowerMessage.includes("información"))) {
+    
+    // Buscar la bandeja específica mencionada en la pregunta
+    let bandejaObjetivo = null;
+    const numeroAlveolosMatch = userMessage.match(/(\d+)\s*(?:alvéolos|alveolos|alvéolo|alveolo)/i);
+    
+    if (numeroAlveolosMatch) {
+      const numAlveolos = numeroAlveolosMatch[1];
+      bandejaObjetivo = conversationContext.lastResults.find(b => b.BN_ALV === numAlveolos);
+    } else {
+      // Si no se menciona el número de alvéolos, usar la última bandeja mencionada
+      bandejaObjetivo = conversationContext.lastResults ? 
+        conversationContext.lastResults[conversationContext.lastResults.length - 1] : null;
+    }
+    
+    if (bandejaObjetivo) {
+      const interpretPrompt = {
+        system: `Eres un experto en horticultura y producción de semilleros. El usuario está preguntando sobre el uso de una bandeja específica.
+        Tu tarea es proporcionar información detallada y experta sobre el uso de la bandeja, considerando:
+        1. El número de alvéolos y su impacto en el desarrollo de las plantas
+        2. El tipo de cultivo mencionado (si aplica)
+        3. Las mejores prácticas de uso
+        4. Ventajas y consideraciones específicas
+        
+        IMPORTANTE:
+        1. Proporciona información técnica y práctica
+        2. Incluye recomendaciones basadas en el número de alvéolos
+        3. Menciona cultivos específicos que se beneficien de esta configuración
+        4. Explica el impacto en el desarrollo radicular
+        5. Considera el ciclo de cultivo
+        6. Mantén un tono profesional pero accesible
+        7. Si la bandeja es retornable, menciona las ventajas de reutilización
+        8. Proporciona consejos prácticos de uso
+        
+        Tu respuesta debe ser completa y basada en conocimiento experto en horticultura.`,
+        user: `Bandeja consultada: ${JSON.stringify(bandejaObjetivo, null, 2)}
+Pregunta del usuario: "${userMessage}"
+Contexto anterior: ${conversationContext.lastQuery}
+Historial de bandejas mencionadas: ${JSON.stringify(conversationContext.lastResults, null, 2)}`,
+      }
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      
+      // Actualizar el contexto
+      conversationContext.lastQuery = userMessage;
+      
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    } else {
+      return "No encuentro la bandeja que mencionas en nuestra conversación. ¿Podrías especificar de cuál bandeja te gustaría saber más?";
     }
   }
 
