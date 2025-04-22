@@ -696,6 +696,24 @@ const getAnalyticalResponse = async (userMessage, conversationContext) => {
       return envasesResponse;
     }
 
+    // Verificar si es una consulta sobre tareas_seccion
+    const tareasResponse = await handleTareasSeccionQuery(userMessage);
+    if (tareasResponse) {
+      return tareasResponse;
+    }
+
+    // Verificar si es una consulta sobre sectores
+    const sectoresResponse = await handleSectoresQuery(userMessage);
+    if (sectoresResponse) {
+      return sectoresResponse;
+    }
+
+    // Verificar si es una consulta sobre sustratos
+    const sustratosResponse = await handleSustratosQuery(userMessage);
+    if (sustratosResponse) {
+      return sustratosResponse;
+    }
+
     // Si no se encontró una respuesta específica, intentar con la consulta SQL
     const sqlQuery = await getQueryFromIA(userMessage);
     
@@ -2009,6 +2027,366 @@ No se encontraron rutas que coincidan con la búsqueda en la base de datos.`
     const interpretedResponse = await sendToDeepSeek(interpretPrompt);
     return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
   }
+};
+
+const handleTareasSeccionQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Verificar si la consulta es sobre tareas_seccion
+  if (!lowerMessage.includes("tarea") && 
+      !lowerMessage.includes("sección") && 
+      !lowerMessage.includes("seccion") && 
+      !lowerMessage.includes("actividad")) {
+    return null;
+  }
+
+  // Construir la consulta base
+  let query = `
+    SELECT 
+      id as TARS_COD,
+      TARS_DENO,
+      TARS_UNDM
+    FROM tareas_seccion
+  `;
+
+  // Verificar si es una consulta de conteo total
+  if (lowerMessage.includes("cuantos") || 
+      lowerMessage.includes("cuántos") || 
+      lowerMessage.includes("total") || 
+      lowerMessage.includes("cantidad")) {
+    const [countResults] = await db.query(`
+      SELECT COUNT(*) as total FROM tareas_seccion
+    `);
+    
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el total de tareas registradas.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+      
+      IMPORTANTE:
+      1. Menciona el total de tareas registradas
+      2. Explica que estas tareas representan diferentes actividades en el vivero
+      3. Invita al usuario a preguntar por tareas específicas si lo desea
+      4. Mantén un tono profesional y amigable`,
+      user: `Pregunta original: "${userMessage}"
+      Resultados de la consulta SQL:\n${JSON.stringify(countResults, null, 2)}`,
+    };
+    
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Verificar si es una consulta por código o denominación
+  const codigoMatch = lowerMessage.match(/(?:tarea|sección|seccion|actividad)\s+(\d+)/i);
+  const denominacionMatch = lowerMessage.match(/(?:tarea|sección|seccion|actividad)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/i);
+
+  if (codigoMatch) {
+    query += ` WHERE id = ?`;
+    const [results] = await db.query(query, [codigoMatch[1]]);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre una tarea específica.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Menciona el código, denominación y unidad de medida de la tarea
+        2. Explica brevemente qué representa esta tarea en el contexto del vivero
+        3. Si hay unidad de medida, menciona en qué unidades se mide esta tarea
+        4. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  } else if (denominacionMatch) {
+    query += ` WHERE TARS_DENO LIKE ?`;
+    const [results] = await db.query(query, [`%${denominacionMatch[1]}%`]);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre tareas relacionadas con una denominación específica.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Lista todas las tareas encontradas con su código y denominación
+        2. Si alguna tarea tiene unidad de medida, menciónala
+        3. Explica brevemente qué representan estas tareas en el contexto del vivero
+        4. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  } else {
+    // Consulta general de todas las tareas
+    const [results] = await db.query(query);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre las tareas registradas.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Lista todas las tareas encontradas con su código y denominación
+        2. Si alguna tarea tiene unidad de medida, menciónala
+        3. Explica que estas tareas representan diferentes actividades en el vivero
+        4. Invita al usuario a preguntar por tareas específicas si lo desea
+        5. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+
+  return "No encontré tareas que coincidan con tu búsqueda. ¿Te gustaría ver la lista completa de tareas disponibles?";
+};
+
+const handleSectoresQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Verificar si la consulta es sobre sectores
+  if (!lowerMessage.includes("sector") && 
+      !lowerMessage.includes("subsector") && 
+      !lowerMessage.includes("canal") && 
+      !lowerMessage.includes("área") && 
+      !lowerMessage.includes("area") && 
+      !lowerMessage.includes("clasificación") && 
+      !lowerMessage.includes("clasificacion")) {
+    return null;
+  }
+
+  // Construir la consulta base
+  let query = `
+    SELECT 
+      id as SC_COD,
+      SC_DENO
+    FROM sectores
+  `;
+
+  // Verificar si es una consulta de conteo total
+  if (lowerMessage.includes("cuantos") || 
+      lowerMessage.includes("cuántos") || 
+      lowerMessage.includes("total") || 
+      lowerMessage.includes("cantidad")) {
+    const [countResults] = await db.query(`
+      SELECT COUNT(*) as total FROM sectores
+    `);
+    
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el total de sectores registrados.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+      
+      IMPORTANTE:
+      1. Menciona el total de sectores registrados
+      2. Explica que estos sectores representan diferentes canales de venta o áreas del negocio
+      3. Invita al usuario a preguntar por sectores específicos si lo desea
+      4. Mantén un tono profesional y amigable`,
+      user: `Pregunta original: "${userMessage}"
+      Resultados de la consulta SQL:\n${JSON.stringify(countResults, null, 2)}`,
+    };
+    
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Verificar si es una consulta por código o denominación
+  const codigoMatch = lowerMessage.match(/(?:sector|subsector|canal|área|area)\s+(\d+)/i);
+  const denominacionMatch = lowerMessage.match(/(?:sector|subsector|canal|área|area)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/i);
+
+  if (codigoMatch) {
+    query += ` WHERE id = ?`;
+    const [results] = await db.query(query, [codigoMatch[1]]);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre un sector específico.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Menciona el código y denominación del sector
+        2. Explica brevemente qué representa este sector en el contexto del negocio
+        3. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  } else if (denominacionMatch) {
+    query += ` WHERE SC_DENO LIKE ?`;
+    const [results] = await db.query(query, [`%${denominacionMatch[1]}%`]);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre sectores relacionados con una denominación específica.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Lista todos los sectores encontrados con su código y denominación
+        2. Explica brevemente qué representan estos sectores en el contexto del negocio
+        3. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  } else {
+    // Consulta general de todos los sectores
+    const [results] = await db.query(query);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre los sectores registrados.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Lista todos los sectores encontrados con su código y denominación
+        2. Explica que estos sectores representan diferentes canales de venta o áreas del negocio
+        3. Invita al usuario a preguntar por sectores específicos si lo desea
+        4. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+
+  return "No encontré sectores que coincidan con tu búsqueda. ¿Te gustaría ver la lista completa de sectores disponibles?";
+};
+
+const handleSustratosQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Verificar si la consulta es sobre sustratos
+  if (!lowerMessage.includes("sustrato") && 
+      !lowerMessage.includes("medio de cultivo") && 
+      !lowerMessage.includes("mezcla de cultivo") && 
+      !lowerMessage.includes("perlita") && 
+      !lowerMessage.includes("turba") && 
+      !lowerMessage.includes("fibra de coco")) {
+    return null;
+  }
+
+  // Construir la consulta base
+  let query = `
+    SELECT 
+      id as SUS_COD,
+      SUS_DENO,
+      SUS_PVP,
+      SUS_COS
+    FROM sustratos
+  `;
+
+  // Verificar si es una consulta de conteo total
+  if (lowerMessage.includes("cuantos") || 
+      lowerMessage.includes("cuántos") || 
+      lowerMessage.includes("total") || 
+      lowerMessage.includes("cantidad")) {
+    const [countResults] = await db.query(`
+      SELECT COUNT(*) as total FROM sustratos
+    `);
+    
+    const interpretPrompt = {
+      system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre el total de sustratos registrados.
+      Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+      
+      IMPORTANTE:
+      1. Menciona el total de sustratos registrados
+      2. Explica que los sustratos son medios de cultivo utilizados en el proceso de siembra
+      3. Invita al usuario a preguntar por sustratos específicos si lo desea
+      4. Mantén un tono profesional y amigable`,
+      user: `Pregunta original: "${userMessage}"
+      Resultados de la consulta SQL:\n${JSON.stringify(countResults, null, 2)}`,
+    };
+    
+    const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+    return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+  }
+
+  // Verificar si es una consulta por código o denominación
+  const codigoMatch = lowerMessage.match(/(?:sustrato|medio de cultivo|mezcla de cultivo)\s+(\d+)/i);
+  const denominacionMatch = lowerMessage.match(/(?:sustrato|medio de cultivo|mezcla de cultivo)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)/i);
+
+  if (codigoMatch) {
+    query += ` WHERE id = ?`;
+    const [results] = await db.query(query, [codigoMatch[1]]);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre un sustrato específico.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Menciona el código y denominación del sustrato
+        2. Si hay precio por alveolo (SUS_PVP), menciónalo
+        3. Si hay coste por alveolo (SUS_COS), menciónalo
+        4. Explica brevemente qué representa este sustrato en el contexto del vivero
+        5. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  } else if (denominacionMatch) {
+    query += ` WHERE SUS_DENO LIKE ?`;
+    const [results] = await db.query(query, [`%${denominacionMatch[1]}%`]);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre sustratos relacionados con una denominación específica.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Lista todos los sustratos encontrados con su código y denominación
+        2. Si hay precios o costes por alveolo, menciónalos
+        3. Explica brevemente qué representan estos sustratos en el contexto del vivero
+        4. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  } else {
+    // Consulta general de todos los sustratos
+    const [results] = await db.query(query);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre los sustratos registrados.
+        Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable.
+        
+        IMPORTANTE:
+        1. Lista todos los sustratos encontrados con su código y denominación
+        2. Si hay precios o costes por alveolo, menciónalos
+        3. Explica que los sustratos son medios de cultivo utilizados en el proceso de siembra
+        4. Invita al usuario a preguntar por sustratos específicos si lo desea
+        5. Mantén un tono profesional y amigable`,
+        user: `Pregunta original: "${userMessage}"
+        Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+
+  return "No encontré sustratos que coincidan con tu búsqueda. ¿Te gustaría ver la lista completa de sustratos disponibles?";
 };
 
 module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse }
