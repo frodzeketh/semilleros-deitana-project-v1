@@ -1218,6 +1218,12 @@ const getAnalyticalResponse = async (userMessage, conversationContext) => {
       return accionesResponse;
     }
 
+    // Luego intentar con artículos
+    const articulosResponse = await handleArticulosQuery(userMessage);
+    if (articulosResponse) {
+      return articulosResponse;
+    }
+
     // Luego intentar con proveedores
     const proveedoresResponse = await handleProveedoresQuery(userMessage);
     if (proveedoresResponse) {
@@ -3095,4 +3101,81 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
   return null;
 };
 
-module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse, handleAccionesComQuery, handleProveedoresQuery }
+const handleArticulosQuery = async (userMessage) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Si es una consulta sobre artículos
+  if (lowerMessage.includes("artículo") || 
+      lowerMessage.includes("articulo") || 
+      lowerMessage.includes("producto") || 
+      lowerMessage.includes("artículos") || 
+      lowerMessage.includes("articulos") || 
+      lowerMessage.includes("productos")) {
+    
+    // Construir la consulta base con JOIN a proveedores
+    let query = `
+      SELECT 
+        a.id,
+        a.AR_DENO as denominacion,
+        a.AR_REF as referencia,
+        a.AR_PRV as id_proveedor,
+        p.PR_DENO as nombre_proveedor,
+        p.PR_POB as localidad_proveedor,
+        p.PR_PROV as provincia_proveedor,
+        p.PR_TEL as telefono_proveedor,
+        p.PR_EMA as email_proveedor
+      FROM articulos a
+      LEFT JOIN proveedores p ON a.AR_PRV = p.id
+      WHERE a.AR_DENO LIKE ?
+    `;
+    
+    const params = [];
+    
+    // Detectar si se menciona un proveedor específico
+    if (lowerMessage.includes("provee") || lowerMessage.includes("suministra")) {
+      const articuloMatch = userMessage.match(/(?:quién|quien)\s+(?:provee|suministra)\s+(.+)/i);
+      if (articuloMatch) {
+        const nombreArticulo = articuloMatch[1].trim();
+        params.push(`%${nombreArticulo}%`);
+      }
+    }
+    
+    // Ejecutar la consulta
+    const [results] = await db.query(query, params);
+    
+    if (results.length > 0) {
+      const interpretPrompt = {
+        system: `Eres un experto en gestión de artículos de Semilleros Deitana. El usuario ha solicitado información sobre artículos.
+        Tu tarea es presentar la información de manera clara y profesional.
+        
+        IMPORTANTE:
+        1. Si es una consulta sobre quién provee un artículo, DEBES mencionar:
+           - El nombre del artículo
+           - El nombre completo del proveedor (OBLIGATORIO)
+           - La localidad y provincia del proveedor (OBLIGATORIO)
+           - Si no hay proveedor asignado, indica que no hay registro
+           - Ofrece mostrar más detalles del proveedor si el usuario lo solicita
+        
+        2. La información del proveedor DEBE venir EXCLUSIVAMENTE de la tabla 'proveedores'
+        
+        3. NUNCA menciones solo el código del proveedor, siempre incluye su nombre completo y localidad
+        
+        4. FORMATO DE RESPUESTA PARA CONSULTAS DE PROVEEDOR:
+           "¡Claro! Según nuestros registros, el proveedor que nos suministra [NOMBRE_ARTICULO] es [NOMBRE_PROVEEDOR] de [LOCALIDAD], [PROVINCIA].
+           
+           Si necesitas más detalles sobre este proveedor (como teléfono, email, etc.), puedo ayudarte a buscarlos. ¡Solo dime! 😊"
+        
+        Tu respuesta debe ser informativa pero concisa.`,
+        user: `Pregunta actual: "${userMessage}"
+Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
+      };
+      
+      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    }
+  }
+  
+  return null;
+};
+
+module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse, handleAccionesComQuery, handleProveedoresQuery, handleArticulosQuery }
