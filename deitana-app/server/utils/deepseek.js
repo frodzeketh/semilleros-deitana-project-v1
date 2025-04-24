@@ -1010,7 +1010,16 @@ Historial de bandejas mencionadas: ${JSON.stringify(conversationContext.lastResu
 
 
 
-// Función para manejar consultas sobre casas comerciales
+
+
+
+// =====================================================
+// SECCIÓN: MANEJO DE CONSULTAS SOBRE CASAS COMERCIALES
+// Esta sección maneja todas las consultas relacionadas con la tabla "casas_com"
+// que contiene información sobre casas comerciales, tiendas, etc.
+// =====================================================
+
+// Función para manejar consultas sobre casas comerciales con contexto
 const handleCasasComercialesQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
   console.log("Mensaje recibido:", userMessage);
@@ -3104,6 +3113,36 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
 const handleArticulosQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
   
+  // Si es una consulta sobre proveedores de artículos
+  if ((lowerMessage.includes("quien") || lowerMessage.includes("quién") || lowerMessage.includes("que proveedor") || lowerMessage.includes("qué proveedor")) &&
+      (lowerMessage.includes("provee") || lowerMessage.includes("suministra") || lowerMessage.includes("distribuye"))) {
+    
+    // Extraer el nombre del artículo
+    const articuloMatch = lowerMessage.match(/(?:provee|suministra|distribuye)\s+(.+?)(?:\?|$)/i);
+    if (articuloMatch && articuloMatch[1]) {
+      const nombreArticulo = articuloMatch[1].trim().toUpperCase();
+      
+      // Buscar el artículo y su proveedor
+      const [results] = await db.query(
+        `SELECT a.*, p.* 
+         FROM articulos a 
+         LEFT JOIN proveedores p ON a.AR_PRV = p.id 
+         WHERE a.AR_DENO LIKE ?`,
+        [`%${nombreArticulo}%`]
+      );
+
+      if (results && results.length > 0) {
+        const articulo = results[0];
+        if (articulo.PR_DENO) {
+          return `¡Claro! Según nuestros registros, el proveedor que nos suministra ${articulo.AR_DENO} es ${articulo.PR_DENO}.\n\nInformación del proveedor:\nID: ${articulo.id}\nNombre: ${articulo.PR_DENO}\nLocalidad: ${articulo.PR_POB || 'No disponible'}\nProvincia: ${articulo.PR_PROV || 'No disponible'}\nTeléfono: ${articulo.PR_TEL || 'No disponible'}\nEmail: ${articulo.PR_EMA || 'No disponible'}\n\nSi necesitas más detalles sobre este proveedor, ¡solo dime! 😊`;
+        } else {
+          return `Encontré el artículo ${articulo.AR_DENO}, pero no tiene un proveedor asignado en la base de datos.`;
+        }
+      }
+      return "No encontré información sobre el artículo especificado. ¿Podrías verificar el nombre?";
+    }
+  }
+  
   // Si es una consulta sobre artículos
   if (lowerMessage.includes("artículo") || 
       lowerMessage.includes("articulo") || 
@@ -3112,9 +3151,25 @@ const handleArticulosQuery = async (userMessage) => {
       lowerMessage.includes("articulos") || 
       lowerMessage.includes("productos")) {
     
+    // Detectar si es una consulta de conteo
+    if (lowerMessage.includes("cuantos") || 
+        lowerMessage.includes("cuántos") || 
+        lowerMessage.includes("total") || 
+        lowerMessage.includes("cantidad") ||
+        lowerMessage.includes("número") ||
+        lowerMessage.includes("numero")) {
+      
+      // Ejecutar consulta de conteo
+      const [results] = await db.query("SELECT COUNT(*) as total FROM articulos");
+      
+      if (results && results.length > 0) {
+        return `Actualmente tenemos un total de ${results[0].total} artículos registrados en nuestra base de datos. ¿Te gustaría ver información más detallada sobre algún artículo en particular?`;
+      }
+    }
+    
     // Construir la consulta base con JOIN a proveedores
     let query = `
-      SELECT 
+      SELECT DISTINCT
         a.id,
         a.AR_DENO as denominacion,
         a.AR_REF as referencia,
@@ -3126,18 +3181,14 @@ const handleArticulosQuery = async (userMessage) => {
         p.PR_EMA as email_proveedor
       FROM articulos a
       LEFT JOIN proveedores p ON a.AR_PRV = p.id
-      WHERE a.AR_DENO LIKE ?
     `;
     
-    const params = [];
+    let whereConditions = [];
+    let params = [];
     
-    // Detectar si se menciona un proveedor específico
-    if (lowerMessage.includes("provee") || lowerMessage.includes("suministra")) {
-      const articuloMatch = userMessage.match(/(?:quién|quien)\s+(?:provee|suministra)\s+(.+)/i);
-      if (articuloMatch) {
-        const nombreArticulo = articuloMatch[1].trim();
-        params.push(`%${nombreArticulo}%`);
-      }
+    // Agregar condiciones WHERE si existen
+    if (whereConditions.length > 0) {
+      query += " WHERE " + whereConditions.join(" AND ");
     }
     
     // Ejecutar la consulta
@@ -3146,32 +3197,15 @@ const handleArticulosQuery = async (userMessage) => {
     if (results.length > 0) {
       const interpretPrompt = {
         system: `Eres un experto en gestión de artículos de Semilleros Deitana. El usuario ha solicitado información sobre artículos.
-        Tu tarea es presentar la información de manera clara y profesional.
-        
-        IMPORTANTE:
-        1. Si es una consulta sobre quién provee un artículo, DEBES mencionar:
-           - El nombre del artículo
-           - El nombre completo del proveedor (OBLIGATORIO)
-           - La localidad y provincia del proveedor (OBLIGATORIO)
-           - Si no hay proveedor asignado, indica que no hay registro
-           - Ofrece mostrar más detalles del proveedor si el usuario lo solicita
-        
-        2. La información del proveedor DEBE venir EXCLUSIVAMENTE de la tabla 'proveedores'
-        
-        3. NUNCA menciones solo el código del proveedor, siempre incluye su nombre completo y localidad
-        
-        4. FORMATO DE RESPUESTA PARA CONSULTAS DE PROVEEDOR:
-           "¡Claro! Según nuestros registros, el proveedor que nos suministra [NOMBRE_ARTICULO] es [NOMBRE_PROVEEDOR] de [LOCALIDAD], [PROVINCIA].
-           
-           Si necesitas más detalles sobre este proveedor (como teléfono, email, etc.), puedo ayudarte a buscarlos. ¡Solo dime! 😊"
-        
-        Tu respuesta debe ser informativa pero concisa.`,
+        Tu tarea es presentar la información de manera clara y profesional.`,
         user: `Pregunta actual: "${userMessage}"
 Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
       };
       
       const interpretedResponse = await sendToDeepSeek(interpretPrompt);
       return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    } else {
+      return "No encontré información sobre el artículo solicitado. ¿Podrías verificar el nombre o proporcionarme más detalles?";
     }
   }
   
