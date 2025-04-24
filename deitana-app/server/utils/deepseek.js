@@ -64,7 +64,7 @@ async function searchArticulosByName(nombre) {
     SELECT 
       a.id as articulo_id,
       a.AR_DENO as denominacion,
-      a.AR_BAR as codigo_barras,
+      NULLIF(a.AR_BAR, '') as codigo_barras,
       a.AR_PRV as proveedor_id,
       p.PR_DENO as nombre_proveedor,
       a.AR_PGE as porcentaje_germinacion
@@ -162,15 +162,29 @@ async function queryProveedorConMasArticulos() {
     SELECT 
       p.id as proveedor_id,
       p.PR_DENO as nombre_proveedor,
-      COUNT(DISTINCT a.id) as total_articulos
+      COUNT(DISTINCT a.id) as total_articulos,
+      GROUP_CONCAT(
+        JSON_OBJECT(
+          'id', a.id,
+          'denominacion', a.AR_DENO,
+          'codigo_barras', NULLIF(a.AR_BAR, ''),
+          'porcentaje_germinacion', a.AR_PGE
+        )
+        ORDER BY RAND()
+        LIMIT 3
+      ) as ejemplos_articulos
     FROM proveedores p
     INNER JOIN articulos a ON p.id = a.AR_PRV
+    WHERE a.AR_PRV IS NOT NULL AND a.AR_PRV != ''
     GROUP BY p.id, p.PR_DENO
     ORDER BY COUNT(DISTINCT a.id) DESC
     LIMIT 1`;
   
   try {
     const [results] = await db.query(query);
+    if (results[0]) {
+      results[0].ejemplos_articulos = JSON.parse(`[${results[0].ejemplos_articulos}]`);
+    }
     return results[0];
   } catch (error) {
     console.error('Error en consulta SQL:', error);
@@ -183,10 +197,12 @@ async function queryArticulosDeProveedor(proveedorId, limit = 3) {
     SELECT 
       a.id as articulo_id,
       a.AR_DENO as denominacion,
-      a.AR_BAR as codigo_barras,
+      NULLIF(a.AR_BAR, '') as codigo_barras,
       a.AR_PGE as porcentaje_germinacion
     FROM articulos a
     WHERE a.AR_PRV = ?
+    AND a.AR_PRV IS NOT NULL 
+    AND a.AR_PRV != ''
     ORDER BY RAND()
     LIMIT ?`;
   
@@ -295,32 +311,38 @@ INSTRUCCIONES:
     } else {
       systemContent += `CONTEXTO IMPORTANTE:
 - Los artículos pueden tener un proveedor asignado mediante AR_PRV.
-- Si AR_PRV está vacío o null, el artículo no tiene proveedor asignado.
-- Cada artículo tiene una denominación (AR_DENO) y puede tener un código de barras (AR_BAR).
-- NUNCA inventes códigos de barras o datos que no existan en la base de datos.
+- Si AR_PRV está vacío, null o no existe, el artículo no tiene proveedor asignado.
+- Los códigos de barras (AR_BAR) deben mostrarse EXACTAMENTE como están en la base de datos.
+- NUNCA inventes o modifiques ningún dato.
 
 DATOS DISPONIBLES:
-${proveedoresData ? JSON.stringify(proveedoresData, null, 2) : ''}
-${articulosData ? JSON.stringify(articulosData, null, 2) : ''}
+${JSON.stringify(proveedoresData || {}, null, 2)}
+${JSON.stringify(articulosData || {}, null, 2)}
 
 INSTRUCCIONES ESPECÍFICAS:
-1. Si es consulta sobre proveedor con más productos:
-   - Menciona el ID y nombre del proveedor
-   - Indica el total de artículos
-   - Si hay ejemplos disponibles, menciónalos EXACTAMENTE como aparecen en AR_DENO
-2. Si es consulta sobre artículos de un proveedor:
-   - Lista SOLO los artículos encontrados en la base de datos
-   - Incluye el código de barras (AR_BAR) SOLO si existe
-   - NO inventes datos ni características
-3. Si es búsqueda de proveedor de un artículo:
-   - Si el artículo existe y tiene proveedor, menciona su ID y nombre
-   - Si el artículo existe pero no tiene proveedor (AR_PRV vacío o null), indícalo explícitamente
+1. Para consultas sobre proveedor con más productos:
+   - Usa EXACTAMENTE el ID y nombre del proveedor como aparece en la base de datos
+   - Muestra el total de artículos sin modificar
+   - Lista SOLO los artículos proporcionados en ejemplos_articulos
+2. Para consultas sobre artículos de un proveedor:
+   - Muestra SOLO los artículos retornados por la consulta
+   - Incluye el código de barras SOLO si existe y EXACTAMENTE como está en AR_BAR
+   - NO agregues ni inventes ningún dato adicional
+3. Para búsquedas de proveedor de un artículo:
+   - Si el artículo existe, usa EXACTAMENTE los datos encontrados
+   - Si AR_PRV está vacío o es null, indica explícitamente que no tiene proveedor
    - Si el artículo no se encuentra, indícalo claramente
 
+REGLAS ESTRICTAS:
+1. NUNCA modifiques los códigos de barras
+2. NUNCA inventes datos que no existan
+3. NUNCA asumas relaciones que no estén en la base de datos
+4. Usa SIEMPRE los datos EXACTOS de la base de datos
+
 FORMATO DE RESPUESTA:
-- Sé conciso y preciso
+- Sé preciso y exacto
 - Usa SOLO datos reales de la base de datos
-- NO inventes ni asumas información
+- Si un dato no existe, indícalo explícitamente
 - Responde en español`;
     }
 
