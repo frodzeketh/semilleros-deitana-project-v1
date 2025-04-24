@@ -65,16 +65,12 @@ async function searchArticulosByName(nombre) {
       a.id as articulo_id,
       a.AR_DENO as denominacion,
       a.AR_BAR as codigo_barras,
-      a.AR_TIVA as tipo_iva,
-      a.AR_GRP as grupo,
-      a.AR_FAM as familia,
       a.AR_PRV as proveedor_id,
-      a.AR_PGE as porcentaje_germinacion,
-      p.id as id_proveedor,
-      p.PR_DENO as nombre_proveedor
+      p.PR_DENO as nombre_proveedor,
+      a.AR_PGE as porcentaje_germinacion
     FROM articulos a
     LEFT JOIN proveedores p ON a.AR_PRV = p.id
-    WHERE a.AR_DENO LIKE ?`;
+    WHERE LOWER(a.AR_DENO) LIKE LOWER(?)`;
   
   try {
     const [results] = await db.query(query, [`%${nombre}%`]);
@@ -160,51 +156,131 @@ function prepareDataForPrompt(data, type) {
   }
 }
 
+// Funciones auxiliares para consultas SQL - Artículos y Proveedores
+async function queryProveedorConMasArticulos() {
+  const query = `
+    SELECT 
+      p.id as proveedor_id,
+      p.PR_DENO as nombre_proveedor,
+      COUNT(DISTINCT a.id) as total_articulos
+    FROM proveedores p
+    INNER JOIN articulos a ON p.id = a.AR_PRV
+    GROUP BY p.id, p.PR_DENO
+    ORDER BY COUNT(DISTINCT a.id) DESC
+    LIMIT 1`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryArticulosDeProveedor(proveedorId, limit = 3) {
+  const query = `
+    SELECT 
+      a.id as articulo_id,
+      a.AR_DENO as denominacion,
+      a.AR_BAR as codigo_barras,
+      a.AR_PGE as porcentaje_germinacion
+    FROM articulos a
+    WHERE a.AR_PRV = ?
+    ORDER BY RAND()
+    LIMIT ?`;
+  
+  try {
+    const [results] = await db.query(query, [proveedorId, limit]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryArticuloPorNombre(nombre) {
+  const query = `
+    SELECT 
+      a.id as articulo_id,
+      a.AR_DENO as denominacion,
+      a.AR_PRV as proveedor_id,
+      p.PR_DENO as nombre_proveedor,
+      a.AR_BAR as codigo_barras,
+      a.AR_PGE as porcentaje_germinacion
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE a.AR_DENO LIKE ?`;
+  
+  try {
+    const [results] = await db.query(query, [`%${nombre}%`]);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
 // Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
     console.log('Procesando mensaje en deepseek.js:', userMessage);
 
-    // Obtener datos relevantes de la base de datos según el mensaje
     let dbData = null;
     let vendedoresData = null;
+    let proveedoresData = null;
+    let articulosData = null;
+    let contextType = null;
     const messageLower = userMessage.toLowerCase();
-    
-    if (messageLower.includes('vendedor') || messageLower.includes('vendedora') || 
-        messageLower.includes('gestion') || messageLower.includes('gestiona')) {
-      // Obtener TODOS los vendedores y sus acciones
+
+    // Detección de consultas sobre artículos y proveedores
+    if (messageLower.includes('proveedor') && messageLower.includes('más productos')) {
+      proveedoresData = await queryProveedorConMasArticulos();
+      if (proveedoresData) {
+        articulosData = await queryArticulosDeProveedor(proveedoresData.proveedor_id);
+      }
+      contextType = 'proveedor_mas_articulos';
+    } else if (messageLower.includes('productos de') || messageLower.includes('artículos de')) {
+      const lastProvider = assistantContext.lastResponse ? 
+        assistantContext.lastResponse.match(/ID: (\d+)/)?.[1] : null;
+      if (lastProvider) {
+        articulosData = await queryArticulosDeProveedor(lastProvider);
+        proveedoresData = await queryProveedorConMasArticulos();
+        contextType = 'articulos_proveedor';
+      }
+    } else if (messageLower.includes('quien provee') || messageLower.includes('proveedor de') || 
+               messageLower.includes('que proveedor tiene')) {
+      const searchTerms = messageLower.split(' ').filter(word => 
+        word.length > 3 && 
+        !['quien', 'provee', 'proveedor', 'de', 'el', 'la', 'los', 'las', 'tiene', 'que'].includes(word)
+      );
+      if (searchTerms.length > 0) {
+        const results = await searchArticulosByName(searchTerms.join(' '));
+        articulosData = results && results.length > 0 ? results[0] : null;
+        contextType = 'busqueda_articulo';
+      }
+    }
+    // Mantener la lógica existente de acciones comerciales
+    else if (messageLower.includes('vendedor') || messageLower.includes('vendedora') || 
+             messageLower.includes('gestion') || messageLower.includes('gestiona')) {
       vendedoresData = await queryVendedores();
-      // Obtener todas las acciones comerciales sin límite
       dbData = await queryAccionesCom();
+      contextType = 'acciones_comerciales';
     } else if (messageLower.includes('acciones comerciales') || messageLower.includes('acciones registradas')) {
       vendedoresData = await queryVendedores();
       dbData = await queryAccionesCom(10);
-    } else if (messageLower.includes('incidencia')) {
-      dbData = await queryAccionesPorTipo('INCIDENCIA');
-    } else if (messageLower.includes('negociacion')) {
-      dbData = await queryAccionesPorTipo('NEGOCIACION');
+      contextType = 'acciones_comerciales';
     }
 
-    const messages = [
-      {
-        role: "system",
-        content: `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+    // Preparar el prompt según el tipo de consulta
+    let systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.\n\n`;
 
-CONTEXTO IMPORTANTE:
-- Semilleros Deitana utiliza un ERP de GsBase para gestionar información de artículos, clientes y acciones comerciales.
+    if (contextType === 'acciones_comerciales') {
+      // Mantener el prompt existente para acciones comerciales
+      systemContent += `CONTEXTO IMPORTANTE:
 - Las acciones comerciales incluyen incidencias, visitas técnicas, llamadas y negociaciones.
-- La información se almacena en tablas como acciones_com (para acciones comerciales) y acciones_com_acco_not (para notas detalladas).
-- El sistema maneja un seguimiento detallado de clientes y sus interacciones.
-- Existe una relación entre vendedores y acciones_com a través del campo ACCO_CDVD que corresponde al id del vendedor.
-- Cada vendedor tiene un id único y un nombre (VD_DENO) en la tabla vendedores.
-
-RELACIONES IMPORTANTES:
-- vendedores → acciones_com
-  * Tipo: Muchos a uno
-  * Campo de enlace: ACCO_CDVD = id del vendedor
-  * Cada acción comercial está asociada a un único vendedor responsable
-  * Un vendedor puede tener múltiples acciones comerciales
-  * SIEMPRE debes verificar el id del vendedor (ACCO_CDVD) con su nombre (VD_DENO)
+- Existe una relación entre vendedores y acciones_com a través del campo ACCO_CDVD.
+- Cada vendedor tiene un id único y un nombre (VD_DENO).
 
 DATOS DE VENDEDORES:
 ${vendedoresData ? JSON.stringify(vendedoresData, null, 2) : 'No hay datos específicos de vendedores.'}
@@ -213,22 +289,48 @@ DATOS DE ACCIONES COMERCIALES:
 ${dbData ? JSON.stringify(dbData, null, 2) : 'No hay datos específicos para esta consulta.'}
 
 INSTRUCCIONES:
-1. SIEMPRE usa los datos completos disponibles, no solo los primeros registros
-2. Cuando menciones un vendedor, SIEMPRE incluye tanto su ID como su nombre
-3. Si hay múltiples vendedores, MENCIÓNALOS A TODOS
-4. Mantén un tono profesional pero conversacional
-5. Si no entiendes algo, pide aclaraciones específicas
-6. Usa el contexto del ERP cuando sea relevante
-7. Responde en español
-8. Formatea las fechas en formato dd/mm/yyyy
-9. Si mencionas datos de la base de datos, sé específico y cita los ejemplos
-10. NUNCA asumas que solo hay un vendedor sin verificar todos los datos disponibles`
-      },
-      ...assistantContext.conversationHistory,
+1. SIEMPRE menciona tanto el ID como el nombre del vendedor
+2. Si hay múltiples vendedores, menciónalos a todos
+3. Formatea las fechas en dd/mm/yyyy`;
+    } else {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Los artículos pueden tener un proveedor asignado mediante AR_PRV.
+- Si AR_PRV está vacío o null, el artículo no tiene proveedor asignado.
+- Cada artículo tiene una denominación (AR_DENO) y puede tener un código de barras (AR_BAR).
+- NUNCA inventes códigos de barras o datos que no existan en la base de datos.
+
+DATOS DISPONIBLES:
+${proveedoresData ? JSON.stringify(proveedoresData, null, 2) : ''}
+${articulosData ? JSON.stringify(articulosData, null, 2) : ''}
+
+INSTRUCCIONES ESPECÍFICAS:
+1. Si es consulta sobre proveedor con más productos:
+   - Menciona el ID y nombre del proveedor
+   - Indica el total de artículos
+   - Si hay ejemplos disponibles, menciónalos EXACTAMENTE como aparecen en AR_DENO
+2. Si es consulta sobre artículos de un proveedor:
+   - Lista SOLO los artículos encontrados en la base de datos
+   - Incluye el código de barras (AR_BAR) SOLO si existe
+   - NO inventes datos ni características
+3. Si es búsqueda de proveedor de un artículo:
+   - Si el artículo existe y tiene proveedor, menciona su ID y nombre
+   - Si el artículo existe pero no tiene proveedor (AR_PRV vacío o null), indícalo explícitamente
+   - Si el artículo no se encuentra, indícalo claramente
+
+FORMATO DE RESPUESTA:
+- Sé conciso y preciso
+- Usa SOLO datos reales de la base de datos
+- NO inventes ni asumas información
+- Responde en español`;
+    }
+
+    const messages = [
       {
-        role: "user",
-        content: userMessage
-      }
+        role: "system",
+        content: systemContent
+      },
+      ...assistantContext.conversationHistory.slice(-4),
+      { role: "user", content: userMessage }
     ];
 
     // Llamada a la API
@@ -236,7 +338,7 @@ INSTRUCCIONES:
       model: "deepseek-chat",
       messages: messages,
       temperature: 0.7,
-      max_tokens: 500
+      max_tokens: 300
     }, {
       headers: {
         'Content-Type': 'application/json',
