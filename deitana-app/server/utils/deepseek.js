@@ -1,10 +1,72 @@
 const axios = require("axios")
 const db = require("../db")
-const { conversationContext } = require("../promptBase")
+const { conversationContext: baseContext } = require("../promptBase")
 
+// Sistema de contexto mejorado para conversaciones
+const conversationContext = {
+  ...baseContext,
+  lastQuery: null,          // Última consulta del usuario
+  lastResponse: null,       // Última respuesta de la IA
+  lastAnalysis: null,       // Último análisis realizado
+  lastSQLResults: null,     // Últimos resultados de SQL
+  currentTopic: null,       // Tema actual de la conversación
+  pendingAnalysis: null,    // Análisis pendiente de profundizar
+  followUpQuestions: [],    // Preguntas de seguimiento sugeridas
+  lastIntent: null,         // Última intención detectada
+  conversationStack: []     // Historial de temas tratados
+};
 
+// Función para actualizar el contexto
+const updateContext = (newData) => {
+  Object.assign(conversationContext, newData);
+  // Mantener historial de temas
+  if (newData.currentTopic && newData.currentTopic !== conversationContext.currentTopic) {
+    conversationContext.conversationStack.push(newData.currentTopic);
+  }
+};
 
+// Función para detectar continuidad en la conversación
+const isContinuationResponse = (message) => {
+  const continuationPhrases = [
+    "si", "sí", "dale", "ok", "seguí", "continua", "continúa", "adelante",
+    "dime", "cuenta", "más", "mas", "prosigue", "bien", "correcto", "exacto",
+    "efectivamente", "así es", "claro", "por supuesto", "vale"
+  ];
+  return continuationPhrases.some(phrase => 
+    message.toLowerCase().includes(phrase) || 
+    message.toLowerCase() === phrase
+  );
+};
 
+// Función para generar prompt basado en contexto
+const generateContextualPrompt = (userMessage, context) => {
+  let systemPrompt = `Eres un experto analista de Semilleros Deitana con acceso directo a la base de datos.`;
+  
+  if (context.currentTopic) {
+    systemPrompt += `\nEstamos hablando sobre: ${context.currentTopic}`;
+  }
+  
+  if (context.lastAnalysis) {
+    systemPrompt += `\n\nContexto del análisis anterior:\n${context.lastAnalysis}`;
+  }
+  
+  if (context.pendingAnalysis) {
+    systemPrompt += `\n\nAspectos pendientes de analizar:\n${context.pendingAnalysis}`;
+  }
+  
+  systemPrompt += `\n\nIMPORTANTE:
+  1. Mantén la continuidad de la conversación
+  2. Si el usuario cambia de tema, adáptate al nuevo tema
+  3. Proporciona análisis detallados usando los datos disponibles
+  4. Sugiere siempre próximos pasos o aspectos a profundizar
+  5. Mantén un tono profesional pero conversacional`;
+  
+  return {
+    system: systemPrompt,
+    user: `Mensaje del usuario: "${userMessage}"
+Contexto actual: ${JSON.stringify(context.lastSQLResults || {}, null, 2)}`
+  };
+};
 
 // =====================================================
 // SECCIÓN: CONFIGURACIÓN Y CONEXIÓN CON DEEPSEEK
@@ -2918,109 +2980,161 @@ const handleSustratosQuery = async (userMessage) => {
   return "No encontré sustratos que coincidan con tu búsqueda. ¿Te gustaría ver la lista completa de sustratos disponibles?";
 };
 
+// Variable para mantener el contexto de la conversación sobre acciones comerciales
+let accionesComContext = {
+  lastQuery: null,
+  lastResults: null,
+  lastAnalysis: null,
+  lastIds: null,
+  currentTopic: null
+};
+
+// Función para validar resultados contra la base de datos
+const validateDataExists = async (query, params = []) => {
+  const [results] = await db.query(query, params);
+  return results && results.length > 0 ? results : null;
+};
+
+// Función para manejar respuestas cortas
+const handleShortResponse = (message, context) => {
+  const shortResponses = {
+    "ok": "¿Hay algo específico sobre lo que te gustaría saber más?",
+    "okey": "¿Hay algo específico sobre lo que te gustaría saber más?",
+    "si": "¿Qué aspecto te gustaría conocer en más detalle?",
+    "sí": "¿Qué aspecto te gustaría conocer en más detalle?",
+    "no": "Entiendo. ¿Hay algo más en lo que pueda ayudarte?",
+    "gracias": "De nada. ¿Necesitas algo más?"
+  };
+
+  const lowerMessage = message.toLowerCase().trim();
+  return shortResponses[lowerMessage] || null;
+};
+
 const handleAccionesComQuery = async (userMessage) => {
   const lowerMessage = userMessage.toLowerCase();
-  
-  // Si es una consulta sobre acciones comerciales
-  if (lowerMessage.includes("acciones") || 
-      lowerMessage.includes("incidencias") || 
-      lowerMessage.includes("visitas") || 
-      lowerMessage.includes("llamadas") || 
-      lowerMessage.includes("negociaciones") || 
-      lowerMessage.includes("seguimientos")) {
-    
-    // Extraer el número de acciones solicitadas
-    const cantidadMatch = userMessage.match(/(\d+)\s*(?:acciones|incidencias|visitas|llamadas|negociaciones|seguimientos)/i);
-    const limit = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5;
-    
-    // Construir la consulta base
-    let query = `
-      SELECT 
-        a.id,
-        a.ACCO_DENO as tipo_accion,
-        a.ACCO_FEC as fecha,
-        a.ACCO_HOR as hora,
-        c.CL_DENO as cliente,
-        v.VD_DENO as vendedor,
-        GROUP_CONCAT(n.C0 ORDER BY n.id2 SEPARATOR '') as nota_completa
-      FROM acciones_com a
-      LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
-      LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
-      LEFT JOIN acciones_com_acco_not n ON a.id = n.id
-    `;
-    
-    // Agregar condiciones según el tipo de consulta
-    if (lowerMessage.includes("incidencias")) {
-      query += ` WHERE a.ACCO_DENO LIKE '%INCIDENCIA%'`;
-    } else if (lowerMessage.includes("visitas")) {
-      query += ` WHERE a.ACCO_DENO LIKE '%VISITA%'`;
-    } else if (lowerMessage.includes("llamadas")) {
-      query += ` WHERE a.ACCO_DENO LIKE '%LLAMADA%'`;
-    } else if (lowerMessage.includes("negociaciones")) {
-      query += ` WHERE a.ACCO_DENO LIKE '%NEGOCIACION%'`;
-    } else if (lowerMessage.includes("seguimientos")) {
-      query += ` WHERE a.ACCO_DENO LIKE '%SEGUIMIENTO%'`;
+
+  // Primero verificar si es una respuesta corta
+  const shortResponse = handleShortResponse(userMessage, conversationContext);
+  if (shortResponse) {
+    return shortResponse;
+  }
+
+  // Consultas específicas sobre acciones comerciales
+  const queries = {
+    ultima_incidencia: {
+      pattern: /última|ultima|reciente|(?:^|\s)(?:la|una)\s+incidencia/i,
+      query: `
+        SELECT 
+          a.id,
+          a.ACCO_DENO as tipo_accion,
+          DATE_FORMAT(a.ACCO_FEC, '%d/%m/%Y') as fecha,
+          a.ACCO_HOR as hora,
+          c.id as codigo_cliente,
+          c.CL_DENO as nombre_cliente,
+          v.id as codigo_vendedor,
+          v.VD_DENO as nombre_vendedor,
+          GROUP_CONCAT(n.C0 ORDER BY n.id2 SEPARATOR ' ') as nota_completa
+        FROM acciones_com a
+        LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
+        LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
+        LEFT JOIN acciones_com_acco_not n ON a.id = n.id
+        WHERE a.ACCO_DENO LIKE '%INCIDENCIA%'
+        GROUP BY a.id
+        ORDER BY a.ACCO_FEC DESC, a.ACCO_HOR DESC
+        LIMIT 1
+      `
+    },
+    incidencia_por_fecha: {
+      pattern: /incidencia.*(?:durante|en|del?)\s+(?:mes\s+de\s+)?(\w+)\s+(?:del?\s+)?(\d{4})/i,
+      query: `
+        SELECT 
+          a.id,
+          a.ACCO_DENO as tipo_accion,
+          DATE_FORMAT(a.ACCO_FEC, '%d/%m/%Y') as fecha,
+          a.ACCO_HOR as hora,
+          c.id as codigo_cliente,
+          c.CL_DENO as nombre_cliente,
+          v.id as codigo_vendedor,
+          v.VD_DENO as nombre_vendedor,
+          GROUP_CONCAT(n.C0 ORDER BY n.id2 SEPARATOR ' ') as nota_completa
+        FROM acciones_com a
+        LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
+        LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
+        LEFT JOIN acciones_com_acco_not n ON a.id = n.id
+        WHERE a.ACCO_DENO LIKE '%INCIDENCIA%'
+        AND MONTH(a.ACCO_FEC) = ?
+        AND YEAR(a.ACCO_FEC) = ?
+        GROUP BY a.id
+        ORDER BY a.ACCO_FEC DESC, a.ACCO_HOR DESC
+      `,
+      getParams: (match) => {
+        const meses = {
+          'enero': 1, 'febrero': 2, 'marzo': 3, 'abril': 4,
+          'mayo': 5, 'junio': 6, 'julio': 7, 'agosto': 8,
+          'septiembre': 9, 'octubre': 10, 'noviembre': 11, 'diciembre': 12
+        };
+        return [meses[match[1].toLowerCase()], parseInt(match[2])];
+      }
+    },
+    tipos_acciones: {
+      pattern: /tipo|tipos|clase|clases|diferentes/i,
+      query: `
+        SELECT DISTINCT 
+          ACCO_DENO as tipo_accion,
+          COUNT(*) as cantidad,
+          MIN(ACCO_FEC) as primera_accion,
+          MAX(ACCO_FEC) as ultima_accion
+        FROM acciones_com 
+        GROUP BY ACCO_DENO 
+        ORDER BY cantidad DESC
+      `
     }
-    
-    // Si se menciona un vendedor específico
-    const vendedorMatch = userMessage.match(/(?:vendedor|por)\s+([^\s]+(?:\s+[^\s]+)*)/i);
-    if (vendedorMatch) {
-      const vendedorNombre = vendedorMatch[1];
-      query += ` AND v.VD_DENO LIKE '%${vendedorNombre}%'`;
-    }
-    
-    // Si se menciona un cliente específico
-    const clienteMatch = userMessage.match(/(?:cliente|con)\s+([^\s]+(?:\s+[^\s]+)*)/i);
-    if (clienteMatch) {
-      const clienteNombre = clienteMatch[1];
-      query += ` AND c.CL_DENO LIKE '%${clienteNombre}%'`;
-    }
-    
-    // Si se menciona un rango de fechas
-    const fechaMatch = userMessage.match(/(?:entre|del|desde)\s+(\d{1,2})\s+(?:de\s+)?([^\s]+)\s+(?:de\s+)?(\d{4})/i);
-    if (fechaMatch) {
-      const dia = fechaMatch[1];
-      const mes = fechaMatch[2];
-      const año = fechaMatch[3];
-      query += ` AND a.ACCO_FEC >= '${año}-${mes}-${dia}'`;
-    }
-    
-    // Agrupar por acción para reconstruir las notas completas
-    query += ` GROUP BY a.id, a.ACCO_DENO, a.ACCO_FEC, a.ACCO_HOR, c.CL_DENO, v.VD_DENO`;
-    
-    // Ordenar por fecha y hora
-    query += ` ORDER BY a.ACCO_FEC DESC, a.ACCO_HOR DESC LIMIT ${limit}`;
-    
-    const [results] = await db.query(query);
-    
-    if (results.length > 0) {
-      const interpretPrompt = {
-        system: `Eres un experto en gestión comercial de Semilleros Deitana. El usuario ha solicitado información sobre acciones comerciales.
-        Tu tarea es presentar la información de manera clara y profesional.
-        
-        IMPORTANTE:
-        1. Para cada acción, menciona:
-           - Tipo de acción
-           - Fecha y hora
-           - Cliente
-           - Vendedor
-           - Nota completa (si existe)
-        2. Si hay notas, preséntalas de manera clara y legible
-        3. Mantén un tono profesional
-        4. Organiza la información de manera estructurada
-        5. Si la nota es larga, preséntala en párrafos separados
-        6. Invita a preguntas más específicas si es necesario
-        
-        Tu respuesta debe ser informativa y fácil de leer.`,
-        user: `Pregunta actual: "${userMessage}"
-Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
-      };
+  };
+
+  // Buscar coincidencia con consultas específicas
+  for (const [queryType, queryData] of Object.entries(queries)) {
+    const match = lowerMessage.match(queryData.pattern);
+    if (match) {
+      const params = queryData.getParams ? queryData.getParams(match) : [];
+      const results = await validateDataExists(queryData.query, params);
       
-      const interpretedResponse = await sendToDeepSeek(interpretPrompt);
-      return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      if (results) {
+        const interpretPrompt = {
+          system: `Eres un experto analista de Semilleros Deitana.
+          
+          IMPORTANTE:
+          1. SOLO usa los datos proporcionados, NO inventes información
+          2. Si no hay datos suficientes, indícalo claramente
+          3. Si hay datos incompletos, menciona qué información falta
+          4. Mantén un tono profesional pero conversacional
+          5. NO hagas suposiciones sobre datos que no están en los resultados
+          
+          FORMATO DE RESPUESTA:
+          1. Resumen directo de los datos disponibles
+          2. Análisis de la información presente
+          3. Indicación de datos faltantes (si aplica)
+          4. Sugerencia de próximos pasos basada en datos reales`,
+          user: `Consulta sobre ${queryType.replace('_', ' ')}
+Resultados: ${JSON.stringify(results, null, 2)}`
+        };
+        
+        const interpretedResponse = await sendToDeepSeek(interpretPrompt);
+        
+        // Actualizar contexto
+        updateContext({
+          currentTopic: 'acciones_comerciales',
+          lastQuery: userMessage,
+          lastSQLResults: results,
+          lastAnalysis: interpretedResponse
+        });
+        
+        return interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+      } else {
+        return `No encontré registros que coincidan con tu búsqueda. ¿Te gustaría intentar con otra fecha o ver las últimas incidencias registradas?`;
+      }
     }
   }
-  
+
   return null;
 };
 
@@ -3212,4 +3326,13 @@ Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
   return null;
 };
 
-module.exports = { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse, handleAccionesComQuery, handleProveedoresQuery, handleArticulosQuery }
+// Exportar todas las funciones necesarias
+module.exports = {
+  sendToDeepSeek,
+  getQueryFromIA,
+  getAnalyticalResponse,
+  handleAccionesComQuery,
+  updateContext,
+  isContinuationResponse,
+  generateContextualPrompt
+};

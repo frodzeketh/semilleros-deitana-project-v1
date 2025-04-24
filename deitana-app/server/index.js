@@ -1,11 +1,21 @@
 const express = require("express")
 const cors = require("cors")
+const bodyParser = require("body-parser")
 const mysql = require("mysql2/promise")
 const axios = require("axios")
 const dotenv = require("dotenv")
 const fs = require("fs")
-const promptBase = require("./promptBase")
-const { sendToDeepSeek, getQueryFromIA, getAnalyticalResponse } = require("./utils/deepseek")
+
+// Importar funciones de promptBase
+const { conversationContext, detectTopic } = require("./promptBase")
+
+// Importar funciones de deepseek
+const { 
+  sendToDeepSeek, 
+  getQueryFromIA, 
+  getAnalyticalResponse,
+  handleAccionesComQuery 
+} = require("./utils/deepseek")
 
 dotenv.config()
 
@@ -21,7 +31,7 @@ app.use(cors({
   credentials: true
 }))
 
-app.use(express.json())
+app.use(bodyParser.json())
 
 // Ruta raíz
 app.get('/', (req, res) => {
@@ -2507,1227 +2517,69 @@ function detectIntentFn(message, context) {
 
 // Modificar la función app.post("/chat"...) para mejorar el manejo de consultas
 app.post("/chat", async (req, res) => {
-  const { message } = req.body
-  // Obtener o crear un ID de sesión
-  const sessionId = req.headers["session-id"] || "default-session"
-
-  // Obtener el contexto de la conversación o crear uno nuevo
-  if (!conversationContexts.has(sessionId)) {
-    conversationContexts.set(sessionId, {
-      lastClientName: null,
-      lastClientData: null,
-      lastArticleName: null,
-      lastArticleData: null,
-      lastProviderName: null,
-      lastProviderData: null,
-      lastCasaComercialName: null,
-      lastCasaComercialData: null,
-      lastCategoriaName: null,
-      lastCategoriaData: null,
-      lastQuery: null,
-      conversationHistory: [],
-    })
-  }
-
-  const context = conversationContexts.get(sessionId)
-
-  // Guardar el mensaje en el historial de conversación
-  context.conversationHistory.push({
-    role: "user",
-    content: message,
-  })
-
-  // Guardar el mensaje actual para consultas de seguimiento
-  context.lastQuery = message
-
-  console.log("Mensaje recibido:", message)
-
+  const { message } = req.body;
+  
   try {
-    // Detectar la intención del mensaje
-    const intent = detectIntentFn(message, context)
-    console.log("Intención detectada:", intent)
-
-    // Manejar diferentes tipos de intenciones
-    switch (intent) {
-      case "multiple_query":
-        try {
-          // Usar la función analítica para consultas múltiples
-          const response = await getAnalyticalResponse(message)
-
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no hay respuesta analítica, usar un mensaje genérico
-          const fallbackResponse =
-            "Lo siento, pero no pude obtener la información solicitada. ¿Podrías hacer preguntas separadas para cada tipo de información que necesitas?"
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: fallbackResponse,
-          })
-
-          return res.json({ response: fallbackResponse })
-        } catch (error) {
-          console.error("Error al procesar consulta múltiple:", error)
-          return res.json({
-            response:
-              "Lo siento, hubo un error al procesar tu consulta múltiple. Intenta hacer preguntas individuales.",
-          })
-        }
-
-      case "macetas_query":
-      case "macetas_list":
-        try {
-          // Intentar con la función analítica para macetas
-          const response = await getAnalyticalResponse(message)
-
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no hay resultados, buscar en la base de datos
-          const cantidadMatch = message.match(/(\d+)\s*(?:ejemplo|ejemplos|macetas|maceta)/i)
-          const cantidad = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5
-
-          const [results] = await db.query(`SELECT * FROM bandejas WHERE BN_DENO LIKE '%MACETA%' LIMIT ${cantidad}`)
-
-          if (results.length > 0) {
-            let respuesta = `Aquí tienes ${cantidad === 1 ? "un ejemplo de maceta" : `${cantidad} ejemplos de macetas`} de nuestro inventario:\n\n`
-
-            results.forEach((maceta, i) => {
-              respuesta += `${i + 1}. ${maceta.BN_DENO} (Código: ${maceta.id})\n`
-              if (maceta.BN_ALV) respuesta += `   Alvéolos: ${maceta.BN_ALV}\n`
-              respuesta += `   Retornable: ${maceta.BN_RET === "S" ? "Sí" : "No"}\n\n`
-            })
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "Lo siento, no pude encontrar información sobre macetas en nuestra base de datos."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error al procesar consulta de macetas:", error)
-          return res.json({
-            response: "Lo siento, hubo un error al buscar información sobre macetas. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "bandejas_examples":
-        try {
-          // Intentar con la función analítica que maneja el contexto
-          const response = await getAnalyticalResponse(message)
-          
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-            return res.json({ response })
-          }
-
-          // Si no hay respuesta analítica, intentar con una consulta SQL
-          const sqlQuery = await getQueryFromIA(message)
-          const [results] = await db.query(sqlQuery)
-          
-          if (results && results.length > 0) {
-            // Generar un prompt para que la IA interprete los resultados
-            const interpretPrompt = {
-              system: `Eres un asistente experto de Semilleros Deitana. El usuario ha preguntado sobre bandejas.
-              Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
-              
-              IMPORTANTE:
-              1. Proporciona una explicación clara sobre qué son las bandejas y su importancia
-              2. Menciona los tipos de bandejas que existen (por tamaño, número de alvéolos, etc.)
-              3. Explica su uso en el contexto de un semillero
-              4. Ofrece un ejemplo concreto de una bandeja común
-              5. Invita al usuario a hacer preguntas más específicas si lo desea
-              
-              Responde de manera conversacional y amigable, como si estuvieras hablando con un colega.`,
-              user: `Pregunta original: "${message}"
-Resultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
-            }
-            
-            const interpretedResponse = await sendToDeepSeek(interpretPrompt)
-            const finalResponse = interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "")
-            
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: finalResponse,
-            })
-            
-            return res.json({ response: finalResponse })
-          }
-
-          return res.json({
-            response: "Lo siento, no pude encontrar información sobre bandejas. ¿Podrías reformular tu consulta?",
-          })
-        } catch (error) {
-          console.error("Error al procesar consulta de bandejas:", error)
-          return res.json({
-            response: "Lo siento, hubo un error al buscar información sobre bandejas. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "bandeja_followup":
-        try {
-          // Consulta para obtener la bandeja con más alvéolos
-          const [results] = await db.query("SELECT * FROM bandejas ORDER BY BN_ALV DESC LIMIT 1")
-
-          if (results.length > 0) {
-            const bandeja = results[0]
-            const respuesta = `El código de la bandeja con más alvéolos (${bandeja.BN_ALV}) es "${bandeja.id}" y su denominación es "${bandeja.BN_DENO}".`
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "Lo siento, no pude encontrar información sobre la bandeja solicitada."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error al procesar seguimiento de bandejas:", error)
-          return res.json({
-            response:
-              "Lo siento, hubo un error al buscar información sobre la bandeja. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "categorias_query":
-      case "categorias_list":
-        try {
-          // Intentar primero con la función analítica
-          const response = await getAnalyticalResponse(message)
-
-          // Si tenemos una respuesta, la devolvemos
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no, usar el fallback
-          const fallbackResponse = await fallbackClientes(message)
-          if (fallbackResponse) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: fallbackResponse,
-            })
-
-            return res.json({ response: fallbackResponse })
-          }
-
-          // Si el fallback tampoco funcionó, intentar con una consulta SQL
-          const [results] = await pool.query("SELECT * FROM categorias LIMIT 5")
-
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                let salarioInfo = ""
-                if (row.CG_SALDIA) {
-                  salarioInfo = ` - Salario: ${row.CG_SALDIA}€/día`
-                } else if (row.CG_COSHOR) {
-                  salarioInfo = ` - Coste: ${row.CG_COSHOR}€/h`
-                }
-                return `${i + 1}. ${row.CG_DENO || "Sin nombre"}${salarioInfo}`
-              })
-              .join("\n")
-
-            const respuesta = `Aquí tienes algunas categorías laborales:\n\n${formatted}\n\n¿Necesitas información más específica?`
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "No se encontraron categorías laborales en la base de datos."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error al procesar consulta de categorías laborales:", error)
-          return res.json({
-            response:
-              "Lo siento, no pude obtener información sobre categorías laborales. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "casas_com_query":
-      case "casas_com_list":
-        try {
-          // Intentar primero con la función analítica
-          const response = await getAnalyticalResponse(message)
-
-          // Si tenemos una respuesta, la devolvemos
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no, usar el fallback
-          const fallbackResponse = await fallbackClientes(message)
-          if (fallbackResponse) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: fallbackResponse,
-            })
-
-            return res.json({ response: fallbackResponse })
-          }
-
-          // Si el fallback tampoco funcionó, intentar con una consulta SQL
-          const [results] = await pool.query("SELECT * FROM casas_com LIMIT 5")
-
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                return `${i + 1}. ${row.CC_DENO || "Sin nombre"} - ${row.CC_POB || "Sin localidad"} - Tel: ${row.CC_TEL || "N/A"}`
-              })
-              .join("\n")
-
-            const respuesta = `Aquí tienes algunas casas comerciales:\n\n${formatted}\n\n¿Necesitas información más específica?`
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "No se encontraron casas comerciales en la base de datos."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error al procesar consulta de casas comerciales:", error)
-          return res.json({
-            response:
-              "Lo siento, no pude obtener información sobre casas comerciales. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "dispositivos_query":
-      case "dispositivos_list":
-        try {
-          // Intentar primero con la función analítica
-          const response = await getAnalyticalResponse(message)
-
-          // Si tenemos una respuesta, la devolvemos
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no, usar el fallback
-          const fallbackResponse = await fallbackClientes(message)
-          if (fallbackResponse) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: fallbackResponse,
-            })
-
-            return res.json({ response: fallbackResponse })
-          }
-
-          // Si el fallback tampoco funcionó, intentar con una consulta SQL
-          const [results] = await pool.query(`
-            SELECT d.id, d.DIS_DENO, d.DIS_MARCA, d.DIS_MOD, d.DIS_BAJA, o.C0 as UltimaObservacion
-            FROM dispositivos d
-            LEFT JOIN (
-              SELECT id, MAX(id2) as max_id2
-              FROM dispositivos_dis_obs
-              GROUP BY id
-            ) latest ON d.id = latest.id
-            LEFT JOIN dispositivos_dis_obs o ON latest.id = o.id AND latest.max_id2 = o.id2
-            ORDER BY d.id
-            LIMIT 5
-          `)
-
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                const estado = row.DIS_BAJA === 0 ? "Activo" : "Inactivo"
-                let info = `${i + 1}. ${row.DIS_DENO || "Sin nombre"} (${row.DIS_MARCA || ""} ${row.DIS_MOD || ""})`
-                info += ` - Estado: ${estado}`
-
-                if (row.UltimaObservacion) {
-                  info += ` - ${row.UltimaObservacion}`
-                }
-
-                return info
-              })
-              .join("\n")
-
-            const respuesta = `Aquí tienes algunos dispositivos registrados:\n\n${formatted}\n\n¿Necesitas información más específica?`
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "No se encontraron dispositivos en la base de datos."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error al procesar consulta de dispositivos:", error)
-          return res.json({
-            response: "Lo siento, no pude obtener información sobre dispositivos. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "definition_query":
-        try {
-          // Use DeepSeek API to get a definition response
-          const promptBase = require("./promptBase")
-          const prompt = promptBase(message)
-          const { sendToDeepSeek } = require("./utils/deepseek")
-
-          const aiResponse = await sendToDeepSeek(prompt)
-
-          // Clean up the response if needed
-          let cleanResponse = aiResponse
-          if (aiResponse.startsWith("CONVERSACIONAL:")) {
-            cleanResponse = aiResponse.substring(15).trim()
-          }
-
-          // Save the response in conversation history
-          context.conversationHistory.push({
-            role: "assistant",
-            content: cleanResponse,
-          })
-
-          return res.json({ response: cleanResponse })
-        } catch (error) {
-          console.error("Error al procesar consulta de definición:", error)
-          return res.json({
-            response: "Lo siento, no pude generar una definición para esa consulta. ¿Podrías reformularla?",
-          })
-        }
-
-      case "analytical_query":
-        try {
-          // Usar la nueva función para consultas analíticas
-          const response = await getAnalyticalResponse(message)
-
-          // Si la función analítica no pudo manejar la consulta, usar el fallback
-          if (!response) {
-            console.log("La función analítica no pudo manejar la consulta, usando fallback")
-            const fallbackResponse = await fallbackClientes(message)
-
-            if (fallbackResponse) {
-              // Guardar la respuesta en el historial
-              context.conversationHistory.push({
-                role: "assistant",
-                content: fallbackResponse,
-              })
-              return res.json({ response: fallbackResponse })
-            } else {
-              throw new Error("El fallback tampoco pudo manejar la consulta")
-            }
-          }
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: response,
-          })
-
-          return res.json({ response })
-        } catch (error) {
-          console.error("Error al procesar consulta analítica:", error)
-          // Si falla la consulta analítica, intentar con el fallback
-          try {
-            const fallbackResponse = await fallbackClientes(message)
-            if (fallbackResponse) {
-              context.conversationHistory.push({
-                role: "assistant",
-                content: fallbackResponse,
-              })
-              return res.json({ response: fallbackResponse })
-            }
-          } catch (fallbackError) {
-            console.error("Error en fallback:", fallbackError)
-          }
-
-          return res.json({
-            response: "Lo siento, hubo un problema al analizar los datos. ¿Podrías reformular tu pregunta?",
-          })
-        }
-
-      case "bandejas_query":
-        try {
-          // Intentar primero con la función analítica para bandejas
-          const response = await getAnalyticalResponse(message);
-
-          // Si tenemos una respuesta, la devolvemos
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            });
-
-            return res.json({ response });
-          }
-
-          // Si no hay respuesta analítica, proceder con la consulta SQL
-          const sqlQuery = await getQueryFromIA(message);
-          
-          // Si la respuesta es conversacional, la devolvemos directamente
-          if (sqlQuery.includes("'CONVERSACIONAL'")) {
-            const match = sqlQuery.match(/SELECT 'CONVERSACIONAL' as response_type, "(.*)" as message/);
-            if (match && match[1]) {
-              const respuesta = match[1].replace(/\\n/g, "\n");
-              
-              // Guardar la respuesta en el historial
-              context.conversationHistory.push({
-                role: "assistant",
-                content: respuesta,
-              });
-
-              return res.json({ response: respuesta });
-            }
-          }
-
-          // Si es una consulta SQL válida, la ejecutamos
-          if (!sqlQuery.includes("'TEXT'") && !sqlQuery.includes("'No se pudo generar'")) {
-            try {
-              const [results] = await db.query(sqlQuery);
-              
-              // Si tenemos resultados, formateamos una respuesta amigable
-              if (results.length > 0) {
-                // Generar un prompt para que la IA interprete los resultados
-                const interpretPrompt = {
-                  system: `Eres un asistente experto de Semilleros Deitana. Te proporcionaré los resultados de una consulta SQL basada en la pregunta del usuario. 
-                  Tu tarea es interpretar estos resultados y responder de manera conversacional y amigable, como si fueras parte del equipo de la empresa.
-                  Incluye todos los datos relevantes de los resultados, pero preséntalo de forma natural y fácil de entender.`,
-                  user: `Pregunta original: "${message}"\n\nResultados de la consulta SQL:\n${JSON.stringify(results, null, 2)}`,
-                }
-
-                const interpretedResponse = await sendToDeepSeek(interpretPrompt);
-                const respuesta = interpretedResponse.replace(/^CONVERSACIONAL:\s*/i, "");
-                
-                // Guardar la respuesta en el historial
-                context.conversationHistory.push({
-                  role: "assistant",
-                  content: respuesta,
-                });
-
-                return res.json({ response: respuesta });
-              } else {
-                const respuesta = "No encontré información que coincida con tu consulta en nuestra base de datos. ¿Podrías reformular tu pregunta?";
-                
-                // Guardar la respuesta en el historial
-                context.conversationHistory.push({
-                  role: "assistant",
-                  content: respuesta,
-                });
-
-                return res.json({ response: respuesta });
-              }
-            } catch (error) {
-              console.error("Error ejecutando consulta SQL:", error);
-              const respuesta = "Lo siento, hubo un error al procesar tu consulta. ¿Podrías reformularla?";
-              
-              // Guardar la respuesta en el historial
-              context.conversationHistory.push({
-                role: "assistant",
-                content: respuesta,
-              });
-
-              return res.json({ response: respuesta });
-            }
-          }
-
-          // Si llegamos aquí, es porque la IA generó una respuesta textual
-          const match = sqlQuery.match(/SELECT 'TEXT' as response_type, "(.*)" as message/);
-          if (match && match[1]) {
-            const respuesta = match[1].replace(/\\n/g, "\n");
-            
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            });
-
-            return res.json({ response: respuesta });
-          }
-
-          const respuesta = "Lo siento, no pude procesar tu consulta. ¿Podrías reformularla?";
-          
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          });
-
-          return res.json({ response: respuesta });
-        } catch (error) {
-          console.error("Error al procesar consulta de bandejas:", error);
-          const respuesta = "Lo siento, hubo un error al procesar tu consulta. ¿Podrías reformularla?";
-          
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          });
-
-          return res.json({ response: respuesta });
-        }
-
-      case "greeting":
-        return res.json({
-          response: getGreetingResponse(),
-        })
-
-      case "farewell":
-        return res.json({
-          response: getFarewellResponse(),
-        })
-
-      case "gratitude":
-        return res.json({
-          response: getGratitudeResponse(),
-        })
-
-      case "smalltalk":
-        return res.json({
-          response: getSmallTalkResponse(message),
-        })
-
-      case "client_list":
-        // Continuar con la lógica existente para listar clientes
-        try {
-          // Extraer el número de clientes solicitados
-          const cantidadMatch = message.match(/(\d+)\s*clientes/i)
-          const numClientes = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5 // Por defecto 5 si no se especifica
-
-          const esClientesActivos = /clientes\s+activos/i.test(message)
-          const pideEstado = /estado|activo|de baja|situación|situacion/i.test(message)
-          const pideDatosCompletos =
-            /datos|información|informacion|completo|completa|detalle|detalles|todo|todos/i.test(message) ||
-            /envía|envia|muestra|dame|dime/i.test(message)
-
-          // Solo mostrar el estado si se pide específicamente o si se piden clientes activos
-          const mostrarEstado = pideEstado || esClientesActivos
-          const listaClientes = await obtenerListaClientes(
-            numClientes,
-            esClientesActivos,
-            mostrarEstado,
-            pideDatosCompletos,
-          )
-
-          // Limpiar el contexto ya que estamos cambiando de tema
-          context.lastClientName = null
-          context.lastClientData = null
-          context.lastArticleName = null
-          context.lastArticleData = null
-          context.lastProviderName = null
-          context.lastProviderData = null
-          context.lastCasaComercialName = null
-          context.lastCasaComercialData = null
-          context.lastCategoriaName = null
-          context.lastCategoriaData = null
-
-          let respuesta
-          if (esClientesActivos) {
-            respuesta = `Aquí tienes los clientes activos solicitados:\n\n${listaClientes}`
-          } else {
-            respuesta = `Aquí tienes los clientes solicitados:\n\n${listaClientes}`
-          }
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          })
-
-          return res.json({ response: respuesta })
-        } catch (error) {
-          console.error("Error al procesar lista de clientes:", error)
-          return res.json({
-            response: "Hubo un error al obtener la lista de clientes. Por favor, intenta de nuevo.",
-          })
-        }
-
-      case "article_list":
-        try {
-          // Extraer el número de artículos solicitados
-          const cantidadMatch = message.match(/(\d+)\s*(?:articulos|artículos|productos)/i)
-          const numArticulos = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5 // Por defecto 5 si no se especifica
-
-          const pideDatosCompletos =
-            /datos|información|informacion|completo|completa|detalle|detalles|todo|todos/i.test(message) ||
-            /envía|envia|muestra|dame|dime/i.test(message)
-
-          const listaArticulos = await obtenerListaArticulos(numArticulos, pideDatosCompletos)
-
-          // Limpiar el contexto ya que estamos cambiando de tema
-          context.lastClientName = null
-          context.lastClientData = null
-          context.lastArticleName = null
-          context.lastArticleData = null
-          context.lastProviderName = null
-          context.lastProviderData = null
-          context.lastCasaComercialName = null
-          context.lastCasaComercialData = null
-          context.lastCategoriaName = null
-          context.lastCategoriaData = null
-
-          const respuesta = `Aquí tienes los artículos solicitados:\n\n${listaArticulos}`
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          })
-
-          return res.json({ response: respuesta })
-        } catch (error) {
-          console.error("Error al procesar lista de artículos:", error)
-          return res.json({
-            response: "Hubo un error al obtener la lista de artículos. Por favor, intenta de nuevo.",
-          })
-        }
-
-      case "provider_list":
-        try {
-          // Extraer el número de proveedores solicitados
-          const cantidadMatch = message.match(/(\d+)\s*(?:proveedores|proveedor|distribuidores|distribuidor)/i)
-          const numProveedores = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5 // Por defecto 5 si no se especifica
-
-          const pideDatosCompletos =
-            /datos|información|informacion|completo|completa|detalle|detalles|todo|todos/i.test(message) ||
-            /envía|envia|muestra|dame|dime/i.test(message)
-
-          const listaProveedores = await obtenerListaProveedores(numProveedores, pideDatosCompletos)
-
-          // Limpiar el contexto ya que estamos cambiando de tema
-          context.lastClientName = null
-          context.lastClientData = null
-          context.lastArticleName = null
-          context.lastArticleData = null
-          context.lastProviderName = null
-          context.lastProviderData = null
-          context.lastCasaComercialName = null
-          context.lastCasaComercialData = null
-          context.lastCategoriaName = null
-          context.lastCategoriaData = null
-
-          const respuesta = `Aquí tienes los proveedores solicitados:\n\n${listaProveedores}`
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          })
-
-          return res.json({ response: respuesta })
-        } catch (error) {
-          console.error("Error al procesar lista de proveedores:", error)
-          return res.json({
-            response: "Hubo un error al obtener la lista de proveedores. Por favor, intenta de nuevo.",
-          })
-        }
-
-      case "macetas_list":
-        try {
-          // Extraer el número de macetas solicitadas
-          const cantidadMatch = message.match(/(\d+)\s*(?:macetas|maceta)/i)
-          const numMacetas = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 5 // Por defecto 5 si no se especifica
-
-          const listaMacetas = await obtenerListaMacetas(numMacetas)
-
-          // Limpiar el contexto ya que estamos cambiando de tema
-          context.lastClientName = null
-          context.lastClientData = null
-          context.lastArticleName = null
-          context.lastArticleData = null
-          context.lastProviderName = null
-          context.lastProviderData = null
-          context.lastCasaComercialName = null
-          context.lastCasaComercialData = null
-          context.lastCategoriaName = null
-          context.lastCategoriaData = null
-
-          const respuesta = `Aquí tienes las macetas solicitadas:\n\n${listaMacetas}`
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          })
-
-          return res.json({ response: respuesta })
-        } catch (error) {
-          console.error("Error al procesar lista de macetas:", error)
-          return res.json({
-            response: "Hubo un error al obtener la lista de macetas. Por favor, intenta de nuevo.",
-          })
-        }
-
-      case "bandejas_examples":
-        try {
-          // Extraer el número de ejemplos de bandejas solicitados
-          const cantidadMatch = message.match(/(\d+)\s*(?:ejemplos|ejemplo)/i)
-          const numEjemplos = cantidadMatch ? Number.parseInt(cantidadMatch[1]) : 2 // Por defecto 2 si no se especifica
-
-          const listaEjemplos = await obtenerListaEjemplosBandejas(numEjemplos)
-
-          // Limpiar el contexto ya que estamos cambiando de tema
-          context.lastClientName = null
-          context.lastClientData = null
-          context.lastArticleName = null
-          context.lastArticleData = null
-          context.lastProviderName = null
-          context.lastProviderData = null
-          context.lastCasaComercialName = null
-          context.lastCasaComercialData = null
-          context.lastCategoriaName = null
-          context.lastCategoriaData = null
-
-          const respuesta = `Aquí tienes los ejemplos de bandejas solicitados:\n\n${listaEjemplos}`
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          })
-
-          return res.json({ response: respuesta })
-        } catch (error) {
-          console.error("Error al procesar lista de ejemplos de bandejas:", error)
-          return res.json({
-            response: "Hubo un error al obtener la lista de ejemplos de bandejas. Por favor, intenta de nuevo.",
-          })
-        }
-
-      case "dispositivos_query":
-      case "dispositivos_list":
-        try {
-          // Intentar primero con la función analítica
-          const response = await getAnalyticalResponse(message)
-
-          // Si tenemos una respuesta, la devolvemos
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no, usar el fallback
-          const fallbackResponse = await fallbackClientes(message)
-          if (fallbackResponse) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: fallbackResponse,
-            })
-
-            return res.json({ response: fallbackResponse })
-          }
-
-          // Si el fallback tampoco funcionó, intentar con una consulta SQL
-          const [results] = await pool.query(`
-            SELECT d.id, d.DIS_DENO, d.DIS_MARCA, d.DIS_MOD, d.DIS_BAJA, o.C0 as UltimaObservacion
-            FROM dispositivos d
-            LEFT JOIN (
-              SELECT id, MAX(id2) as max_id2
-              FROM dispositivos_dis_obs
-              GROUP BY id
-            ) latest ON d.id = latest.id
-            LEFT JOIN dispositivos_dis_obs o ON latest.id = o.id AND latest.max_id2 = o.id2
-            ORDER BY d.id
-            LIMIT 5
-          `)
-
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                const estado = row.DIS_BAJA === 0 ? "Activo" : "Inactivo"
-                let info = `${i + 1}. ${row.DIS_DENO || "Sin nombre"} (${row.DIS_MARCA || ""} ${row.DIS_MOD || ""})`
-                info += ` - Estado: ${estado}`
-
-                if (row.UltimaObservacion) {
-                  info += ` - ${row.UltimaObservacion}`
-                }
-
-                return info
-              })
-              .join("\n")
-
-            const respuesta = `Aquí tienes algunos dispositivos registrados:\n\n${formatted}\n\n¿Necesitas información más específica?`
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "No se encontraron dispositivos en la base de datos."
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error al procesar consulta de dispositivos:", error)
-          return res.json({
-            response: "Lo siento, no pude obtener información sobre dispositivos. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "definition_query":
-        try {
-          // Use DeepSeek API to get a definition response
-          const promptBase = require("./promptBase")
-          const prompt = promptBase(message)
-          const { sendToDeepSeek } = require("./utils/deepseek")
-
-          const aiResponse = await sendToDeepSeek(prompt)
-
-          // Clean up the response if needed
-          let cleanResponse = aiResponse
-          if (aiResponse.startsWith("CONVERSACIONAL:")) {
-            cleanResponse = aiResponse.substring(15).trim()
-          }
-
-          // Save the response in conversation history
-          context.conversationHistory.push({
-            role: "assistant",
-            content: cleanResponse,
-          })
-
-          return res.json({ response: cleanResponse })
-        } catch (error) {
-          console.error("Error al procesar consulta de definición:", error)
-          return res.json({
-            response: "Lo siento, no pude generar una definición para esa consulta. ¿Podrías reformularla?",
-          })
-        }
-
-      case "analytical_query":
-        try {
-          // Usar la nueva función para consultas analíticas
-          const response = await getAnalyticalResponse(message)
-
-          // Si la función analítica no pudo manejar la consulta, usar el fallback
-          if (!response) {
-            console.log("La función analítica no pudo manejar la consulta, usando fallback")
-            const fallbackResponse = await fallbackClientes(message)
-
-            if (fallbackResponse) {
-              // Guardar la respuesta en el historial
-              context.conversationHistory.push({
-                role: "assistant",
-                content: fallbackResponse,
-              })
-              return res.json({ response: fallbackResponse })
-            } else {
-              throw new Error("El fallback tampoco pudo manejar la consulta")
-            }
-          }
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: response,
-          })
-
-          return res.json({ response })
-        } catch (error) {
-          console.error("Error al procesar consulta analítica:", error)
-          // Si falla la consulta analítica, intentar con el fallback
-          try {
-            const fallbackResponse = await fallbackClientes(message)
-            if (fallbackResponse) {
-              context.conversationHistory.push({
-                role: "assistant",
-                content: fallbackResponse,
-              })
-              return res.json({ response: fallbackResponse })
-            }
-          } catch (fallbackError) {
-            console.error("Error en fallback:", fallbackError)
-          }
-
-          return res.json({
-            response: "Lo siento, hubo un problema al analizar los datos. ¿Podrías reformular tu pregunta?",
-          })
-        }
-
-      case "bandejas_query":
-        try {
-          // Intentar primero con la función analítica para bandejas
-          const response = await getAnalyticalResponse(message)
-
-          // Si tenemos una respuesta, la devolvemos
-          if (response) {
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: response,
-            })
-
-            return res.json({ response })
-          }
-
-          // Si no, usar la consulta tradicional
-          const [results] = await pool.query("SELECT * FROM bandejas LIMIT 10")
-
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                return `${i + 1}. ${row.BN_DENO || "Sin nombre"} - Alvéolos: ${row.BN_ALV || "N/A"} - Retornable: ${row.BN_RET === "S" ? "Sí" : "No"} - Código: ${row.id}`
-              })
-              .join("\n")
-
-            const respuesta = `Aquí tienes información sobre las bandejas:\n\n${formatted}`
-
-            // Save the response in conversation history
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            // If no results, try using the AI to explain what bandejas are
-            const promptBase = require("./promptBase")
-            const prompt = promptBase("¿Qué son las bandejas en un semillero?")
-            const { sendToDeepSeek } = require("./utils/deepseek")
-
-            const aiResponse = await sendToDeepSeek(prompt)
-
-            // Clean up the response if needed
-            let cleanResponse = aiResponse
-            if (aiResponse.startsWith("CONVERSACIONAL:")) {
-              cleanResponse = aiResponse.substring(15).trim()
-            }
-
-            // Save the response in conversation history
-            context.conversationHistory.push({
-              role: "assistant",
-              content: cleanResponse,
-            })
-
-            return res.json({ response: cleanResponse })
-          }
-        } catch (error) {
-          console.error("Error al procesar consulta de bandejas:", error)
-          return res.json({
-            response: "Lo siento, no pude obtener información sobre bandejas. ¿Podrías reformular tu consulta?",
-          })
-        }
-
-      case "greeting":
-        return res.json({
-          response: getGreetingResponse(),
-        })
-
-      case "farewell":
-        return res.json({
-          response: getFarewellResponse(),
-        })
-
-      case "gratitude":
-        return res.json({
-          response: getGratitudeResponse(),
-        })
-
-      case "smalltalk":
-        return res.json({
-          response: getSmallTalkResponse(message),
-        })
-
-      case "database_query":
-      default:
-        // Si llegamos aquí, intentamos procesar como una consulta de base de datos genérica
-        try {
-          // Intentar primero con la función analítica
-          try {
-            console.log("Intentando procesar con getAnalyticalResponse")
-            const analyticalResponse = await getAnalyticalResponse(message)
-            if (analyticalResponse) {
-              console.log("Respuesta analítica obtenida")
-              // Guardar la respuesta en el historial
-              context.conversationHistory.push({
-                role: "assistant",
-                content: analyticalResponse,
-              })
-
-              return res.json({ response: analyticalResponse })
-            } else {
-              console.log("La función analítica no pudo manejar la consulta")
-            }
-          } catch (error) {
-            console.error("Error en consulta analítica, continuando con fallback:", error)
-          }
-
-          // Intentar con el fallback para consultas comunes
-          console.log("Intentando procesar con fallbackClientes")
-          const fallbackResponse = await fallbackClientes(message)
-          if (fallbackResponse) {
-            console.log("Respuesta fallback obtenida")
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: fallbackResponse,
-            })
-
-            return res.json({ response: fallbackResponse })
-          } else {
-            console.log("El fallback no pudo manejar la consulta")
-          }
-
-          // Si el fallback no funcionó, intentar con una consulta SQL
-          console.log("Ejecutando consulta SQL genérica")
-          const [results] = await pool.query("SELECT * FROM clientes LIMIT 5")
-
-          if (results.length > 0) {
-            const formatted = results
-              .map((row, i) => {
-                const nombre = row.CL_DENO || "Cliente sin nombre"
-                const localidad = row.CL_POB || "Sin localidad"
-                const estado = row.CL_SIT && row.CL_SIT.toUpperCase() === "ACTIVO" ? "Activo" : "De baja"
-                return `${i + 1}. ${nombre} - ${localidad} (${estado})`
-              })
-              .join("\n")
-
-            const respuesta = `Aquí tienes algunos clientes de nuestra base de datos:\n\n${formatted}\n\n¿Necesitas información más específica?`
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          } else {
-            const respuesta = "No se encontraron resultados en la base de datos. ¿Podrías reformular tu consulta?"
-
-            // Guardar la respuesta en el historial
-            context.conversationHistory.push({
-              role: "assistant",
-              content: respuesta,
-            })
-
-            return res.json({ response: respuesta })
-          }
-        } catch (error) {
-          console.error("Error general en database_query:", error.message)
-
-          // Si no podemos procesar como consulta de base de datos, responder de forma genérica
-          const respuesta =
-            "No estoy seguro de cómo responder a eso. ¿Podrías reformular tu pregunta o especificar qué información necesitas de la base de datos?"
-
-          // Guardar la respuesta en el historial
-          context.conversationHistory.push({
-            role: "assistant",
-            content: respuesta,
-          })
-
-          return res.json({ response: respuesta })
-        }
+    // Actualizar el historial de la conversación
+    conversationContext.addToHistory('user', message);
+
+    // Detectar el tema y actualizar el contexto
+    const topic = detectTopic(message);
+    if (topic) {
+      conversationContext.updateCurrentTopic(topic);
     }
+
+    // Intentar primero con el manejador de acciones comerciales
+    const accionesResponse = await handleAccionesComQuery(message);
+    if (accionesResponse) {
+      conversationContext.addToHistory('assistant', accionesResponse);
+      return res.json({ response: accionesResponse });
+    }
+
+    // Si no es una acción comercial, intentar con el análisis general
+    const response = await getAnalyticalResponse(message, conversationContext);
+    if (response) {
+      conversationContext.addToHistory('assistant', response);
+      return res.json({ response });
+    }
+
+    // Si no hay respuesta específica, usar la IA para generar una respuesta contextual
+    const interpretPrompt = {
+      system: `Eres un experto analista de Semilleros Deitana.
+      ${conversationContext.currentTopic ? `Estamos hablando sobre: ${conversationContext.currentTopic}` : ''}
+      
+      HISTORIAL RECIENTE:
+      ${conversationContext.getRecentHistory(3).map(h => `${h.role}: ${h.content}`).join('\n')}
+      
+      Tu tarea es:
+      1. Mantener una conversación fluida y profesional
+      2. Usar el contexto histórico para enriquecer tus respuestas
+      3. Si el usuario cambia de tema, adáptate pero mantén la referencia al contexto anterior si es relevante
+      4. Proporcionar respuestas detalladas y analíticas
+      5. Sugerir siempre próximos pasos o aspectos a profundizar
+      
+      IMPORTANTE:
+      - Mantén un tono profesional pero conversacional
+      - Si no tienes datos específicos, indícalo claramente
+      - Sugiere consultas relacionadas basadas en el contexto
+      - Si el usuario hace preguntas de seguimiento cortas, usa el contexto para entenderlas`,
+      user: `Mensaje del usuario: "${message}"
+Contexto actual: ${JSON.stringify(conversationContext.getTopicContext(conversationContext.currentTopic), null, 2)}`
+    };
+
+    const aiResponse = await sendToDeepSeek(interpretPrompt);
+    const formattedResponse = aiResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+    
+    // Actualizar el historial con la respuesta
+    conversationContext.addToHistory('assistant', formattedResponse);
+    
+    return res.json({ response: formattedResponse });
+
   } catch (error) {
-    console.error("Error crítico en el procesamiento del mensaje:", error)
-    return res.json({
-      response:
-        "Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta de nuevo con una consulta diferente.",
-    })
+    console.error("Error procesando mensaje:", error);
+    return res.status(500).json({ 
+      error: "Hubo un error procesando tu mensaje. Por favor, intenta de nuevo." 
+    });
   }
 })
 
@@ -3802,91 +2654,50 @@ function getGratitudeResponse() {
   return gratitude[seed]
 }
 
-function getSmallTalkResponse(message) {
-  // Respuestas genéricas para conversación casual
-  const lowerMessage = message.toLowerCase().trim()
-
-const respuestas = {
-    // Preguntas sobre el estado
-    "cómo estás": [
-      "Estoy funcionando perfectamente, gracias por preguntar. ¿En qué puedo ayudarte con la base de datos de Semilleros Deitana?",
-      "¡Muy bien! Listo para ayudarte con cualquier consulta que tengas. ¿Qué necesitas saber?",
-      "Estoy operando a plena capacidad y listo para asistirte. ¿Qué información necesitas hoy?",
-      "Siempre bien y a tu servicio. ¿Cómo puedo ayudarte?",
-      "Excelente y listo para responder tus consultas. ¿Qué necesitas?",
-    ],
-
-    // Preguntas sobre identidad
-    "quién eres": [
-      "Soy Deitana IA, el asistente virtual de Semilleros Deitana. Estoy aquí para ayudarte a consultar información de la base de datos de clientes, productos y más.",
-      "Me llamo Deitana IA, soy un asistente especializado en la base de datos de Semilleros Deitana. Puedo ayudarte a encontrar información sobre clientes, productos y más.",
-      "Soy el asistente virtual de Semilleros Deitana, diseñado para facilitar el acceso a la información de la base de datos de la empresa.",
-      "Soy Deitana IA, tu asistente para consultas de datos. Estoy conectado a la base de datos de Semilleros Deitana para ofrecerte información precisa y rápida.",
-    ],
-
-    // Preguntas sobre capacidades
-    "qué puedes hacer": [
-      "Puedo ayudarte a consultar información sobre clientes, productos, stock y más datos de Semilleros Deitana. Por ejemplo, puedes preguntarme sobre un cliente específico o pedirme una lista de clientes activos.",
-      "Estoy especializado en consultas a la base de datos de Semilleros Deitana. Puedo buscar información de clientes, mostrar listas de productos, verificar inventario y mucho más.",
-      "Puedo buscar clientes por nombre, mostrar listas de productos, verificar estados de inventario, y responder preguntas generales sobre la información almacenada en la base de datos.",
-      "Mi función principal es ayudarte a acceder a la información de la base de datos de forma conversacional. Puedo buscar clientes, productos, verificar inventario y más.",
-    ],
-  }
-
-  // Función para encontrar la mejor coincidencia en las claves
-  const encontrarMejorCoincidencia = (mensaje) => {
-    for (const patron in respuestas) {
-      if (mensaje.includes(patron)) {
-        return patron
-      }
+// Función para obtener respuesta de small talk
+async function getSmallTalkResponse(message) {
+  const lowerMessage = message.toLowerCase().trim();
+  
+  try {
+    // Intentar primero con el manejador de acciones comerciales
+    const accionesResponse = await handleAccionesComQuery(message);
+    if (accionesResponse) {
+      return accionesResponse;
     }
 
-    // Buscar coincidencias parciales para mensajes cortos
-    if (mensaje.length < 10) {
-      for (const patron in respuestas) {
-        // Si el mensaje es parte del patrón o viceversa
-        if (
-          patron.includes(mensaje) ||
-          (mensaje.length > 3 && patron.split(" ").some((palabra) => palabra.startsWith(mensaje)))
-        ) {
-          return patron
-        }
-      }
+    // Si no es una acción comercial, intentar con el análisis general
+    const response = await getAnalyticalResponse(message, conversationContext);
+    if (response) {
+      return response;
     }
 
-    return null
+    // Si no hay respuesta específica, usar la IA para generar una respuesta contextual
+    const interpretPrompt = {
+      system: `Eres un experto analista de Semilleros Deitana.
+      ${conversationContext.currentTopic ? `Estamos hablando sobre: ${conversationContext.currentTopic}` : ''}
+      
+      Tu tarea es:
+      1. Mantener una conversación fluida y profesional
+      2. Usar el contexto de la conversación cuando exista
+      3. Proporcionar respuestas informativas basadas en datos
+      4. Sugerir próximos pasos o temas relacionados
+      
+      IMPORTANTE:
+      - Mantén un tono profesional pero conversacional
+      - Si no tienes datos específicos, indícalo claramente
+      - Sugiere consultas alternativas si es apropiado
+      - Mantén el hilo de la conversación`,
+      user: `Mensaje del usuario: "${message}"
+Contexto actual: ${JSON.stringify(conversationContext, null, 2)}`
+    };
+
+    const aiResponse = await sendToDeepSeek(interpretPrompt);
+    return aiResponse.replace(/^CONVERSACIONAL:\s*/i, "");
+
+  } catch (error) {
+    console.error("Error procesando mensaje:", error);
+    return "Lo siento, hubo un error procesando tu mensaje. ¿Podrías reformularlo?";
   }
-
-  const coincidencia = encontrarMejorCoincidencia(lowerMessage)
-
-  if (coincidencia) {
-    const posiblesRespuestas = respuestas[coincidencia]
-    return posiblesRespuestas[Math.floor(Math.random() * posiblesRespuestas.length)]
-  }
-
-  // Respuestas para mensajes muy cortos o que no coinciden con patrones conocidos
-  if (lowerMessage.length < 5) {
-    const respuestasCortas = [
-      "¿En qué puedo ayudarte hoy? Puedo buscar información de clientes, productos o inventario.",
-      "No estoy seguro de entender. ¿Podrías ser más específico sobre qué información necesitas?",
-      "Estoy aquí para ayudarte con consultas sobre la base de datos. ¿Qué te gustaría saber?",
-      "¿Necesitas información sobre algún cliente o producto en particular?",
-      "Dime qué información necesitas y te ayudaré a encontrarla en la base de datos.",
-    ]
-    return respuestasCortas[Math.floor(Math.random() * respuestasCortas.length)]
-  }
-
-
-  // Respuesta genérica para otras conversaciones casuales
-  const respuestasGenericas = [
-    "Estoy aquí para ayudarte con consultas sobre la base de datos de Semilleros Deitana. ¿Qué información necesitas consultar hoy?",
-    "Mi especialidad es ayudarte con información de la base de datos. ¿Qué datos necesitas encontrar?",
-    "Puedo ayudarte a encontrar información en la base de datos. ¿Qué estás buscando específicamente?",
-    "¿Necesitas ayuda con alguna consulta específica sobre clientes, productos o inventario?",
-    "Estoy listo para asistirte con cualquier consulta de datos. ¿Qué información necesitas?",
-  ]
-
-  return respuestasGenericas[Math.floor(Math.random() * respuestasGenericas.length)]
 }
 
 app.listen(port, () => {
