@@ -96,7 +96,7 @@ function procesarDatosArticulo(fila, campos, userPrompt) {
   const precioCoste = articulo["AR_PMC"] || "No disponible"
   const stockMinimo = articulo["AR_MIN"] || "No disponible"
   const stockMaximo = articulo["AR_MAX"] || "No disponible"
-  const proveedor = articulo["NombreProveedor"] || articulo["PR_DENO"] || "No disponible"
+  const proveedor = articulo["NombreProveedor"] || "No disponible" // Solo usar NombreProveedor que viene del JOIN
   const idProveedor = articulo["AR_PRV"] || "No disponible"
   const stock = articulo["AR_STOK"] || "No disponible"
 
@@ -1810,6 +1810,46 @@ async function fallbackClientes(userMessage) {
     userMessage.toLowerCase().includes("distribuidor")
   ) {
     return await obtenerListaProveedores(cantidadClientes, pideDatosCompletos)
+  }
+
+  // Detectar si es una consulta sobre proveedores de artículos
+  const lowerMessage = userMessage.toLowerCase();
+  const isProveedorArticuloQuery = 
+    (lowerMessage.includes("quien") || lowerMessage.includes("quién") || lowerMessage.includes("que proveedor") || lowerMessage.includes("qué proveedor")) &&
+    (lowerMessage.includes("provee") || lowerMessage.includes("suministra") || lowerMessage.includes("distribuye"));
+
+  if (isProveedorArticuloQuery) {
+    // Extraer el nombre del artículo
+    const articuloMatch = lowerMessage.match(/(?:provee|suministra|distribuye)\s+(.+)$/i);
+    if (articuloMatch && articuloMatch[1]) {
+      const nombreArticulo = articuloMatch[1].trim().toUpperCase();
+      // Primero buscar el artículo
+      const [articuloResults] = await pool.query(
+        "SELECT a.*, p.PR_DENO, p.PR_POB, p.PR_PROV, p.PR_TEL, p.PR_EMA FROM articulos a LEFT JOIN proveedores p ON a.AR_PRV = p.id WHERE a.AR_DENO LIKE ?",
+        [`%${nombreArticulo}%`]
+      );
+      
+      if (articuloResults && articuloResults.length > 0) {
+        const articulo = articuloResults[0];
+        // Si encontramos el artículo, buscar su proveedor
+        if (articulo.AR_PRV) {
+          const [proveedorResults] = await pool.query(
+            "SELECT * FROM proveedores WHERE id = ?",
+            [articulo.AR_PRV]
+          );
+          
+          if (proveedorResults && proveedorResults.length > 0) {
+            const proveedor = proveedorResults[0];
+            return `¡Claro! Según nuestros registros, el proveedor que nos suministra ${articulo.AR_DENO} es ${proveedor.PR_DENO}.\n\nInformación del proveedor:\nID: ${proveedor.id}\nNombre: ${proveedor.PR_DENO}\nLocalidad: ${proveedor.PR_POB}\nProvincia: ${proveedor.PR_PROV}\nTeléfono: ${proveedor.PR_TEL}\nEmail: ${proveedor.PR_EMA}\n\nSi necesitas más detalles sobre este proveedor, ¡solo dime! 😊`;
+          } else {
+            return `Encontré el artículo ${articulo.AR_DENO} con código de proveedor ${articulo.AR_PRV}, pero no pude encontrar la información del proveedor en la base de datos.`;
+          }
+        } else {
+          return `Encontré el artículo ${articulo.AR_DENO}, pero no tiene un proveedor asignado en la base de datos.`;
+        }
+      }
+      return "No encontré información sobre el artículo especificado. ¿Podrías verificar el nombre del artículo?";
+    }
   }
 
   // Si el mensaje está en mayúsculas y no se encontró nada, probablemente sea un artículo
