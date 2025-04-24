@@ -6,8 +6,8 @@ import ReactMarkdown from 'react-markdown'
 
 const API_URL =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:3001"
-    : "https://semilleros-deitana-project-v1.onrender.com"
+    ? "http://localhost:3001/api"
+    : "https://semilleros-deitana-project-v1.onrender.com/api"
 
 const Home = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -68,8 +68,8 @@ const Home = () => {
 
       const data = await response.json()
 
-      // Simular el efecto de streaming de texto
-      const fullText = data.response || "Hubo un problema al obtener respuesta."
+      // Modificar el manejo de la respuesta
+      const fullText = data.data?.message || "Hubo un problema al obtener respuesta."
       let displayedText = ""
 
       // Determinar la velocidad de escritura basada en la longitud del texto
