@@ -237,6 +237,165 @@ async function queryArticuloPorNombre(nombre) {
   }
 }
 
+// Funciones auxiliares para consultas SQL - Clientes
+async function queryClientesPorPais(pais, limit = 5) {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CL_DENO, '') as nombre,
+      NULLIF(CL_DOM, '') as domicilio,
+      NULLIF(CL_POB, '') as poblacion,
+      NULLIF(CL_PROV, '') as provincia,
+      NULLIF(CL_CDP, '') as codigo_postal,
+      NULLIF(CL_TEL, '') as telefono,
+      NULLIF(CL_FAX, '') as fax,
+      NULLIF(CL_CIF, '') as cif,
+      NULLIF(CL_EMA, '') as email,
+      NULLIF(CL_WEB, '') as web,
+      NULLIF(CL_PAIS, '') as pais
+    FROM clientes
+    WHERE LOWER(CL_PAIS) LIKE LOWER(?)
+    ORDER BY CL_DENO
+    LIMIT ?`;
+  
+  try {
+    const [results] = await db.query(query, [`%${pais}%`, limit]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryClientesPorProvincia(provincia) {
+  const query = `
+    SELECT 
+      COUNT(*) as total_clientes,
+      NULLIF(CL_PROV, '') as provincia
+    FROM clientes
+    WHERE LOWER(CL_PROV) LIKE LOWER(?)
+    GROUP BY CL_PROV`;
+  
+  try {
+    const [results] = await db.query(query, [`%${provincia}%`]);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryClientesPorPoblacion(poblacion, limit = 3) {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CL_DENO, '') as nombre,
+      NULLIF(CL_DOM, '') as domicilio,
+      NULLIF(CL_POB, '') as poblacion,
+      NULLIF(CL_PROV, '') as provincia,
+      NULLIF(CL_CDP, '') as codigo_postal,
+      NULLIF(CL_TEL, '') as telefono,
+      NULLIF(CL_FAX, '') as fax,
+      NULLIF(CL_CIF, '') as cif,
+      NULLIF(CL_EMA, '') as email,
+      NULLIF(CL_WEB, '') as web,
+      NULLIF(CL_PAIS, '') as pais
+    FROM clientes
+    WHERE LOWER(CL_POB) LIKE LOWER(?)
+    ORDER BY CL_DENO
+    LIMIT ?`;
+  
+  try {
+    const [results] = await db.query(query, [`%${poblacion}%`, limit]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryClientePorNombre(nombre) {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CL_DENO, '') as nombre,
+      NULLIF(CL_DOM, '') as domicilio,
+      NULLIF(CL_POB, '') as poblacion,
+      NULLIF(CL_PROV, '') as provincia,
+      NULLIF(CL_CDP, '') as codigo_postal,
+      NULLIF(CL_TEL, '') as telefono,
+      NULLIF(CL_FAX, '') as fax,
+      NULLIF(CL_CIF, '') as cif,
+      NULLIF(CL_EMA, '') as email,
+      NULLIF(CL_WEB, '') as web,
+      NULLIF(CL_PAIS, '') as pais
+    FROM clientes
+    WHERE LOWER(CL_DENO) LIKE LOWER(?)`;
+  
+  try {
+    const [results] = await db.query(query, [`%${nombre}%`]);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryClientePorCIF(cif) {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CL_DENO, '') as nombre,
+      NULLIF(CL_DOM, '') as domicilio,
+      NULLIF(CL_POB, '') as poblacion,
+      NULLIF(CL_PROV, '') as provincia,
+      NULLIF(CL_CDP, '') as codigo_postal,
+      NULLIF(CL_TEL, '') as telefono,
+      NULLIF(CL_FAX, '') as fax,
+      NULLIF(CL_CIF, '') as cif,
+      NULLIF(CL_EMA, '') as email,
+      NULLIF(CL_WEB, '') as web,
+      NULLIF(CL_PAIS, '') as pais
+    FROM clientes
+    WHERE CL_CIF = ?`;
+  
+  try {
+    const [results] = await db.query(query, [cif]);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryClientesOrdenados(limit = 10) {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CL_DENO, '') as nombre,
+      NULLIF(CL_DOM, '') as domicilio,
+      NULLIF(CL_POB, '') as poblacion,
+      NULLIF(CL_PROV, '') as provincia,
+      NULLIF(CL_CDP, '') as codigo_postal,
+      NULLIF(CL_TEL, '') as telefono,
+      NULLIF(CL_FAX, '') as fax,
+      NULLIF(CL_CIF, '') as cif,
+      NULLIF(CL_EMA, '') as email,
+      NULLIF(CL_WEB, '') as web,
+      NULLIF(CL_PAIS, '') as pais
+    FROM clientes
+    ORDER BY CL_DENO
+    LIMIT ?`;
+  
+  try {
+    const [results] = await db.query(query, [limit]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
 // Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
@@ -249,7 +408,7 @@ async function processMessage(userMessage) {
     let contextType = null;
     const messageLower = userMessage.toLowerCase();
 
-    // Detección de consultas sobre artículos y proveedores
+    // Detección del tipo de consulta
     if (messageLower.includes('proveedor') && messageLower.includes('más productos')) {
       proveedoresData = await queryProveedorConMasArticulos();
       if (proveedoresData) {
@@ -275,10 +434,8 @@ async function processMessage(userMessage) {
         articulosData = results && results.length > 0 ? results[0] : null;
         contextType = 'busqueda_articulo';
       }
-    }
-    // Mantener la lógica existente de acciones comerciales
-    else if (messageLower.includes('vendedor') || messageLower.includes('vendedora') || 
-             messageLower.includes('gestion') || messageLower.includes('gestiona')) {
+    } else if (messageLower.includes('vendedor') || messageLower.includes('vendedora') || 
+               messageLower.includes('gestion') || messageLower.includes('gestiona')) {
       vendedoresData = await queryVendedores();
       dbData = await queryAccionesCom();
       contextType = 'acciones_comerciales';
@@ -286,13 +443,78 @@ async function processMessage(userMessage) {
       vendedoresData = await queryVendedores();
       dbData = await queryAccionesCom(10);
       contextType = 'acciones_comerciales';
+    } else if (messageLower.includes('clientes') || messageLower.includes('cliente')) {
+      contextType = 'clientes';
+      
+      if (messageLower.includes('provincia')) {
+        const provincia = messageLower.match(/provincia de ([a-zá-úñ\s]+)/i)?.[1];
+        if (provincia) {
+          dbData = await queryClientesPorProvincia(provincia);
+          contextType = 'clientes_provincia';
+        }
+      } else if (messageLower.includes('población') || messageLower.includes('poblacion')) {
+        const poblacion = messageLower.match(/población de ([a-zá-úñ\s]+)/i)?.[1] || 
+                         messageLower.match(/poblacion de ([a-zá-úñ\s]+)/i)?.[1];
+        if (poblacion) {
+          dbData = await queryClientesPorPoblacion(poblacion);
+          contextType = 'clientes_poblacion';
+        }
+      } else if (messageLower.includes('cif')) {
+        const cif = messageLower.match(/cif ([a-z0-9]+)/i)?.[1];
+        if (cif) {
+          dbData = await queryClientePorCIF(cif);
+          contextType = 'cliente_cif';
+        }
+      } else if (messageLower.includes('ordenados')) {
+        dbData = await queryClientesOrdenados();
+        contextType = 'clientes_ordenados';
+      } else if (messageLower.includes('españa') || messageLower.includes('espana')) {
+        dbData = await queryClientesPorPais('ESPAÑA');
+        contextType = 'clientes_pais';
+      } else if (messageLower.includes('información de') || messageLower.includes('informacion de')) {
+        const nombre = messageLower.match(/información de "(.*?)"/i)?.[1] || 
+                      messageLower.match(/informacion de "(.*?)"/i)?.[1];
+        if (nombre) {
+          dbData = await queryClientePorNombre(nombre);
+          contextType = 'cliente_nombre';
+        } else {
+          dbData = await queryClientesOrdenados(5);
+          contextType = 'clientes_info';
+        }
+      }
+    } else {
+      // Manejo de conversación general
+      contextType = 'conversacion_general';
     }
 
     // Preparar el prompt según el tipo de consulta
     let systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.\n\n`;
 
-    if (contextType === 'acciones_comerciales') {
-      // Mantener el prompt existente para acciones comerciales
+    if (contextType === 'conversacion_general') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Eres un asistente amigable y profesional de Semilleros Deitana.
+- Puedes ayudar con consultas sobre:
+  * Artículos y proveedores
+  * Acciones comerciales y vendedores
+  * Información de clientes
+  * Conversación general relacionada con el negocio
+
+HISTORIAL DE CONVERSACIÓN:
+${assistantContext.conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+
+INSTRUCCIONES:
+1. Mantén un tono profesional pero amigable
+2. Si el mensaje es general (saludos, agradecimientos, etc.), responde apropiadamente
+3. Si no entiendes la consulta, pide aclaraciones
+4. Sugiere tipos de consultas que puedes responder
+5. Responde en español
+
+EJEMPLOS DE CONSULTAS QUE PUEDO AYUDAR:
+- Información sobre proveedores y sus productos
+- Detalles de acciones comerciales y vendedores
+- Datos de clientes y su información de contacto
+- Consultas generales sobre el negocio`;
+    } else if (contextType === 'acciones_comerciales') {
       systemContent += `CONTEXTO IMPORTANTE:
 - Las acciones comerciales incluyen incidencias, visitas técnicas, llamadas y negociaciones.
 - Existe una relación entre vendedores y acciones_com a través del campo ACCO_CDVD.
@@ -308,6 +530,39 @@ INSTRUCCIONES:
 1. SIEMPRE menciona tanto el ID como el nombre del vendedor
 2. Si hay múltiples vendedores, menciónalos a todos
 3. Formatea las fechas en dd/mm/yyyy`;
+    } else if (contextType.startsWith('cliente')) {
+      systemContent += `CONTEXTO IMPORTANTE:
+- La información de clientes es sensible y debe manejarse con cuidado.
+- Cada cliente tiene un ID único y puede tener diversos campos de información.
+- Los campos vacíos o null indican que no hay información disponible.
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+INSTRUCCIONES ESPECÍFICAS:
+1. Para consultas sobre clientes:
+   - Muestra SOLO la información disponible en la base de datos
+   - Para campos vacíos, indica "No hay información disponible"
+   - NO incluyas datos sensibles innecesarios
+2. Para búsquedas específicas:
+   - Usa EXACTAMENTE los datos encontrados
+   - Respeta el formato y orden de los campos
+   - Indica claramente cuando no se encuentran resultados
+3. Para conteos y estadísticas:
+   - Proporciona números exactos
+   - Incluye el contexto relevante (provincia, población, etc.)
+
+REGLAS ESTRICTAS:
+1. NUNCA inventes datos de clientes
+2. NUNCA modifiques la información existente
+3. NUNCA asumas datos que no estén en la base
+4. Protege la privacidad de los datos sensibles
+
+FORMATO DE RESPUESTA:
+- Estructura clara y organizada
+- Indica campos faltantes como "No disponible"
+- Usa formato legible para teléfonos y direcciones
+- Responde en español`;
     } else {
       systemContent += `CONTEXTO IMPORTANTE:
 - Los artículos pueden tener un proveedor asignado mediante AR_PRV.
@@ -359,8 +614,8 @@ FORMATO DE RESPUESTA:
     const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
       model: "deepseek-chat",
       messages: messages,
-      temperature: 0.7,
-      max_tokens: 300
+      temperature: contextType === 'conversacion_general' ? 0.8 : 0.7,
+      max_tokens: contextType === 'conversacion_general' ? 150 : 300
     }, {
       headers: {
         'Content-Type': 'application/json',
@@ -391,7 +646,7 @@ FORMATO DE RESPUESTA:
   } catch (error) {
     console.error('Error en processMessage:', error);
     return {
-      message: "Lo siento, estoy teniendo problemas para procesar tu consulta en este momento. ¿Podrías intentarlo de nuevo?",
+      message: "Lo siento, estoy teniendo problemas para procesar tu consulta en este momento. Por favor, verifica que tu pregunta esté relacionada con artículos, proveedores, acciones comerciales o clientes, y vuelve a intentarlo.",
       context: assistantContext
     };
   }
