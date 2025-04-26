@@ -72,9 +72,10 @@ const Home = () => {
       const fullText = data.data?.message || "Hubo un problema al obtener respuesta."
       let displayedText = ""
 
-      // Determinar la velocidad de escritura basada en la longitud del texto
-      const chunkSize = Math.max(1, Math.floor(fullText.length / 100))
-      const delay = fullText.length > 500 ? 10 : 20 // Más rápido para textos largos
+      // Ajustamos la velocidad de escritura y el tamaño de los chunks
+      const baseChunkSize = 5 // Tamaño base más pequeño para mejor control
+      const chunkSize = Math.max(baseChunkSize, Math.floor(fullText.length / 200))
+      const delay = fullText.length > 1000 ? 5 : 10 // Más rápido para textos largos
 
       const updateMessageText = (text, isStreaming) => {
         setChatMessages((prev) =>
@@ -86,15 +87,23 @@ const Home = () => {
         )
       }
 
-      for (let i = 0; i < fullText.length; i += chunkSize) {
-        const nextChunk = fullText.slice(i, i + chunkSize)
-        displayedText += nextChunk
+      try {
+        for (let i = 0; i < fullText.length; i += chunkSize) {
+          const nextChunk = fullText.slice(i, i + chunkSize)
+          displayedText += nextChunk
 
-        // Actualizar el mensaje del bot con el texto acumulado
-        updateMessageText(displayedText, i + chunkSize < fullText.length)
+          // Actualizar el mensaje del bot con el texto acumulado
+          updateMessageText(displayedText, i + chunkSize < fullText.length)
 
-        // Esperar un poco antes de mostrar el siguiente fragmento
-        await new Promise((resolve) => setTimeout(resolve, delay))
+          // Esperar un poco antes de mostrar el siguiente fragmento
+          await new Promise((resolve) => setTimeout(resolve, delay))
+        }
+
+        // Asegurarnos de que se muestre todo el texto al final
+        updateMessageText(fullText, false)
+      } catch (error) {
+        console.error("Error en el streaming de texto:", error)
+        updateMessageText(fullText, false) // En caso de error, mostrar todo el texto
       }
     } catch (error) {
       console.error("Error al conectar con el backend:", error)

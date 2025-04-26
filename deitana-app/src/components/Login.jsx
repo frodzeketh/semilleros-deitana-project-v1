@@ -1,32 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../components/Authenticator/firebase'; // Asegúrate de que esta ruta sea correcta
 import '../global.css';
-
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí puedes agregar la lógica para manejar el inicio de sesión
-    console.log('Email:', email, 'Password:', password);
-    
-    // Redirigir a Home después del login
-    navigate('/home');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate('/home'); // Redirige al home si el login es exitoso
+    } catch (err) {
+      setError("Correo o contraseña incorrectos.");
+      console.error(err);
+    }
   };
 
   return (
     <div className="login-page">
       <div className="login-container">
         <div className="logo-container">
-        <img src="/logo-login.png" alt="Logo" className="logo" />
+          <img src="/logo-login.png" alt="Logo" className="logo" />
         </div>
-        
+
         <div className="divider"></div>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -38,7 +42,7 @@ const Login = () => {
               required
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <div className="password-input-container">
@@ -69,7 +73,9 @@ const Login = () => {
               </button>
             </div>
           </div>
-          
+
+          {error && <p className="error-message">{error}</p>}
+
           <button type="submit" className="login-button">Login</button>
         </form>
       </div>

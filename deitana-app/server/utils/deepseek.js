@@ -913,7 +913,7 @@ FORMATO DE RESPUESTA:
       model: "deepseek-chat",
       messages: messages,
       temperature: contextType === 'conversacion_general' ? 0.8 : 0.7,
-      max_tokens: contextType === 'conversacion_general' ? 150 : 300
+      max_tokens: 2000
     }, {
       headers: {
         'Content-Type': 'application/json',
