@@ -609,6 +609,45 @@ async function queryProveedoresConFax() {
   }
 }
 
+async function queryVendedoresDetallado(limit = null) {
+  const query = `
+    SELECT 
+      v.id as vendedor_id,
+      v.VD_DENO as nombre_vendedor,
+      v.VD_DOM as domicilio,
+      v.VD_POB as poblacion,
+      v.VD_PROV as provincia,
+      v.VD_PDA as numero_tecnico,
+      t.TN_DENO as nombre_tecnico,
+      GROUP_CONCAT(DISTINCT vo.C0 ORDER BY vo.id2 SEPARATOR '|||') as observaciones
+    FROM vendedores v
+    LEFT JOIN tecnicos t ON v.VD_PDA = t.id
+    LEFT JOIN vendedores_vd_obs vo ON v.id = vo.id
+    GROUP BY v.id, v.VD_DENO, v.VD_DOM, v.VD_POB, v.VD_PROV, v.VD_PDA, t.TN_DENO
+    ORDER BY CAST(v.id AS SIGNED)
+    ${limit ? 'LIMIT ?' : ''}`;
+  
+  try {
+    const [results] = await db.query(query, limit ? [limit] : []);
+    
+    // Procesar los resultados
+    return results.map(r => ({
+      ...r,
+      // Mantener los campos vacíos como cadenas vacías en lugar de null
+      nombre_vendedor: r.nombre_vendedor || '',
+      domicilio: r.domicilio || '',
+      poblacion: r.poblacion || '',
+      provincia: r.provincia || '',
+      numero_tecnico: r.numero_tecnico || '',
+      // Convertir las observaciones en un array
+      observaciones: r.observaciones ? r.observaciones.split('|||').filter(obs => obs.trim()) : []
+    }));
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
 // Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
@@ -746,6 +785,8 @@ async function processMessage(userMessage) {
           contextType = 'proveedor_info_completa';
         }
       }
+    } else if (messageLower.includes('empleados') && messageLower.includes('lista')) {
+      contextType = 'empleados_lista';
     } else {
       // Manejo de conversación general
       contextType = 'conversacion_general';
@@ -853,7 +894,7 @@ INSTRUCCIONES ESPECÍFICAS:
 REGLAS ESTRICTAS:
 1. NUNCA inventes datos de proveedores
 2. NUNCA modifiques la información existente
-3. NUNCA asumas datos que no estén en la base
+3. NUNCA asumas datos que no estén en la base de datos
 4. Protege la privacidad de los datos sensibles
 
 FORMATO DE RESPUESTA:
@@ -861,6 +902,49 @@ FORMATO DE RESPUESTA:
 - Indica campos faltantes como "No disponible"
 - Usa formato legible para teléfonos y direcciones
 - Responde en español`;
+    } else if (contextType === 'empleados_lista') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Estás proporcionando un listado de empleados/vendedores de nuestra empresa
+- Los datos provienen EXACTAMENTE de la tabla "vendedores"
+- Cada empleado puede tener información técnica y observaciones
+- Las observaciones SIEMPRE deben mostrarse cuando existan
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+INSTRUCCIONES:
+1. Muestra los empleados con:
+   - ID y nombre EXACTAMENTE como están en la base de datos
+   - Ubicación (población/provincia) si existe
+   - Número técnico si existe
+   - TODAS las observaciones si existen (no omitir ninguna)
+2. Formato:
+   - Lista numerada
+   - Información clara y separada
+   - Observaciones en formato lista
+3. Reglas:
+   - NO modificar ningún dato
+   - NO omitir observaciones
+   - NO inventar información
+   - NO asumir datos no presentes
+
+EJEMPLO DE RESPUESTA CORRECTA:
+"Aquí tienes el empleado solicitado:
+
+1. MIGUEL GALERA (ID: 05)
+   - Ubicación: PARIS
+   - No tiene número técnico asignado
+   - Observaciones:
+     * COMERCIAL FRANCIA
+     * 2% COMISION VTAS A NUESTRA TARIFA
+     * 50% DEL SOBRE PRECIO QUE CONSIGA POR ENCIMA DE NUESTRA TARIFA"
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres y datos como aparecen en la base de datos
+- SIEMPRE mostrar las observaciones completas cuando existan
+- Indicar explícitamente cuando un campo está vacío o no disponible`;
     } else {
       systemContent += `CONTEXTO IMPORTANTE:
 - Los artículos pueden tener un proveedor asignado mediante AR_PRV.
