@@ -6,7 +6,8 @@ const assistantContext = {
   currentTopic: null,
   lastQuery: null,
   lastResponse: null,
-  conversationHistory: []
+  conversationHistory: [],
+  lastIndex: null
 };
 
 // Funciones auxiliares para consultas SQL
@@ -609,15 +610,171 @@ async function queryProveedoresConFax() {
   }
 }
 
-async function queryVendedoresDetallado(limit = null) {
+async function queryVendedoresDetallado(limit = null, offset = 0) {
+  const query = `
+    SELECT 
+      v.id,
+      v.VD_DENO,
+      NULLIF(v.VD_DOM, '') as VD_DOM,
+      NULLIF(v.VD_POB, '') as VD_POB,
+      NULLIF(v.VD_PROV, '') as VD_PROV,
+      NULLIF(v.VD_PDA, '') as VD_PDA,
+      t.TN_DENO as tecnico_nombre,
+      t.TN_TEL as tecnico_telefono,
+      t.TN_EMA as tecnico_email,
+      t.TN_DOM as tecnico_domicilio,
+      t.TN_POB as tecnico_poblacion,
+      t.TN_PROV as tecnico_provincia,
+      t.TN_CIF as tecnico_cif,
+      GROUP_CONCAT(
+        DISTINCT vo.C0 
+        ORDER BY vo.id2 
+        SEPARATOR '|||'
+      ) as observaciones
+    FROM vendedores v
+    LEFT JOIN tecnicos t ON v.VD_PDA = t.id
+    LEFT JOIN vendedores_vd_obs vo ON v.id = vo.id
+    GROUP BY 
+      v.id, v.VD_DENO, v.VD_DOM, v.VD_POB, v.VD_PROV, v.VD_PDA,
+      t.TN_DENO, t.TN_TEL, t.TN_EMA, t.TN_DOM, t.TN_POB, t.TN_PROV, t.TN_CIF
+    ORDER BY CAST(v.id AS SIGNED)
+    LIMIT ? OFFSET ?`;
+  
+  try {
+    const [results] = await db.query(query, [limit || 10, offset]);
+    
+    // Procesar los resultados según las reglas especificadas
+    return results.map(r => ({
+      id: r.id,
+      nombre: r.VD_DENO,
+      domicilio: r.VD_DOM || null,
+      poblacion: r.VD_POB || null,
+      provincia: r.VD_PROV || null,
+      numero_tecnico: r.VD_PDA || null,
+      // Información técnica si está disponible
+      tecnico: r.VD_PDA ? {
+        nombre: r.tecnico_nombre,
+        telefono: r.tecnico_telefono,
+        email: r.tecnico_email,
+        domicilio: r.tecnico_domicilio,
+        poblacion: r.tecnico_poblacion,
+        provincia: r.tecnico_provincia,
+        cif: r.tecnico_cif
+      } : null,
+      // Procesar observaciones
+      observaciones: r.observaciones ? 
+        r.observaciones.split('|||').filter(obs => obs.trim()) : 
+        []
+    }));
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryVendedorPorId(id) {
   const query = `
     SELECT 
       v.id as vendedor_id,
       v.VD_DENO as nombre_vendedor,
-      v.VD_DOM as domicilio,
-      v.VD_POB as poblacion,
-      v.VD_PROV as provincia,
-      v.VD_PDA as numero_tecnico,
+      NULLIF(v.VD_DOM, '') as domicilio,
+      NULLIF(v.VD_POB, '') as poblacion,
+      NULLIF(v.VD_PROV, '') as provincia,
+      NULLIF(v.VD_PDA, '') as numero_tecnico,
+      t.TN_DENO as nombre_tecnico,
+      t.TN_TEL as telefono_tecnico,
+      t.TN_EMA as email_tecnico,
+      t.TN_DOM as domicilio_tecnico,
+      t.TN_POB as poblacion_tecnico,
+      t.TN_PROV as provincia_tecnico,
+      t.TN_CIF as cif_tecnico,
+      GROUP_CONCAT(DISTINCT vo.C0 ORDER BY vo.id2 SEPARATOR '|||') as observaciones
+    FROM vendedores v
+    LEFT JOIN tecnicos t ON v.VD_PDA = t.id
+    LEFT JOIN vendedores_vd_obs vo ON v.id = vo.id
+    WHERE v.id = ?
+    GROUP BY v.id, v.VD_DENO, v.VD_DOM, v.VD_POB, v.VD_PROV, v.VD_PDA, 
+             t.TN_DENO, t.TN_TEL, t.TN_EMA, t.TN_DOM, t.TN_POB, t.TN_PROV, t.TN_CIF`;
+
+  try {
+    const [results] = await db.query(query, [id]);
+    if (results[0]) {
+      return {
+        ...results[0],
+        observaciones: results[0].observaciones ? results[0].observaciones.split('|||').filter(obs => obs.trim()) : []
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryVendedorPorNombre(nombre) {
+  const query = `
+    SELECT 
+      v.id as vendedor_id,
+      v.VD_DENO as nombre_vendedor,
+      NULLIF(v.VD_DOM, '') as domicilio,
+      NULLIF(v.VD_POB, '') as poblacion,
+      NULLIF(v.VD_PROV, '') as provincia,
+      NULLIF(v.VD_PDA, '') as numero_tecnico,
+      t.TN_DENO as nombre_tecnico,
+      t.TN_TEL as telefono_tecnico,
+      t.TN_EMA as email_tecnico,
+      t.TN_DOM as domicilio_tecnico,
+      t.TN_POB as poblacion_tecnico,
+      t.TN_PROV as provincia_tecnico,
+      t.TN_CIF as cif_tecnico,
+      GROUP_CONCAT(DISTINCT vo.C0 ORDER BY vo.id2 SEPARATOR '|||') as observaciones
+    FROM vendedores v
+    LEFT JOIN tecnicos t ON v.VD_PDA = t.id
+    LEFT JOIN vendedores_vd_obs vo ON v.id = vo.id
+    WHERE LOWER(v.VD_DENO) LIKE LOWER(?)
+    GROUP BY v.id, v.VD_DENO, v.VD_DOM, v.VD_POB, v.VD_PROV, v.VD_PDA, 
+             t.TN_DENO, t.TN_TEL, t.TN_EMA, t.TN_DOM, t.TN_POB, t.TN_PROV, t.TN_CIF`;
+
+  try {
+    const [results] = await db.query(query, [`%${nombre}%`]);
+    return results.map(r => ({
+      ...r,
+      observaciones: r.observaciones ? r.observaciones.split('|||').filter(obs => obs.trim()) : []
+    }));
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryObservacionesVendedor(vendedorId) {
+  const query = `
+    SELECT 
+      id,
+      id2,
+      C0 as observacion
+    FROM vendedores_vd_obs
+    WHERE id = ?
+    ORDER BY id2`;
+
+  try {
+    const [results] = await db.query(query, [vendedorId]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryTodosVendedores(limit = null) {
+  const query = `
+    SELECT 
+      v.id as vendedor_id,
+      v.VD_DENO as nombre_vendedor,
+      NULLIF(v.VD_DOM, '') as domicilio,
+      NULLIF(v.VD_POB, '') as poblacion,
+      NULLIF(v.VD_PROV, '') as provincia,
+      NULLIF(v.VD_PDA, '') as numero_tecnico,
       t.TN_DENO as nombre_tecnico,
       GROUP_CONCAT(DISTINCT vo.C0 ORDER BY vo.id2 SEPARATOR '|||') as observaciones
     FROM vendedores v
@@ -626,22 +783,120 @@ async function queryVendedoresDetallado(limit = null) {
     GROUP BY v.id, v.VD_DENO, v.VD_DOM, v.VD_POB, v.VD_PROV, v.VD_PDA, t.TN_DENO
     ORDER BY CAST(v.id AS SIGNED)
     ${limit ? 'LIMIT ?' : ''}`;
+
+  try {
+    const [results] = await db.query(query, limit ? [limit] : []);
+    return results.map(r => ({
+      ...r,
+      observaciones: r.observaciones ? r.observaciones.split('|||').filter(obs => obs.trim()) : []
+    }));
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryTotalVendedores() {
+  const query = `SELECT COUNT(DISTINCT id) as total FROM vendedores`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results[0]?.total || 0;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return 0;
+  }
+}
+
+async function queryVendedorMasAcciones() {
+  const query = `
+    SELECT 
+      v.id as vendedor_id,
+      v.VD_DENO as nombre_vendedor,
+      COUNT(DISTINCT ac.id) as total_acciones,
+      GROUP_CONCAT(DISTINCT ac.ACCO_DENO) as tipos_acciones,
+      MIN(ac.ACCO_FEC) as primera_accion,
+      MAX(ac.ACCO_FEC) as ultima_accion
+    FROM vendedores v
+    INNER JOIN acciones_com ac ON v.id = ac.ACCO_CDVD
+    GROUP BY v.id, v.VD_DENO
+    ORDER BY COUNT(DISTINCT ac.id) DESC
+    LIMIT 1`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryBandejas(limit = null) {
+  const query = `
+    SELECT 
+      id,
+      BN_DENO as denominacion,
+      BN_ALV as total_alveolos,
+      BN_RET as retornable,
+      BN_PVP as precio_venta,
+      BN_COS as coste,
+      BN_ALVC as alveolos_columna,
+      BN_EM2 as metros_cuadrados,
+      BN_ALVG as alveolos_grandes
+    FROM bandejas
+    ORDER BY CAST(BN_ALV AS SIGNED) DESC
+    ${limit ? 'LIMIT ?' : ''}`;
   
   try {
     const [results] = await db.query(query, limit ? [limit] : []);
-    
-    // Procesar los resultados
-    return results.map(r => ({
-      ...r,
-      // Mantener los campos vacíos como cadenas vacías en lugar de null
-      nombre_vendedor: r.nombre_vendedor || '',
-      domicilio: r.domicilio || '',
-      poblacion: r.poblacion || '',
-      provincia: r.provincia || '',
-      numero_tecnico: r.numero_tecnico || '',
-      // Convertir las observaciones en un array
-      observaciones: r.observaciones ? r.observaciones.split('|||').filter(obs => obs.trim()) : []
-    }));
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryBandejasConMasAlveolos(minAlveolos) {
+  const query = `
+    SELECT 
+      id,
+      BN_DENO as denominacion,
+      BN_ALV as total_alveolos,
+      BN_RET as retornable,
+      BN_PVP as precio_venta,
+      BN_ALVC as alveolos_columna,
+      BN_EM2 as metros_cuadrados
+    FROM bandejas
+    WHERE BN_ALV >= ?
+    ORDER BY BN_ALV DESC`;
+  
+  try {
+    const [results] = await db.query(query, [minAlveolos]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryBandejaMasAlveolos() {
+  const query = `
+    SELECT 
+      id,
+      BN_DENO as denominacion,
+      BN_ALV as total_alveolos,
+      BN_RET as retornable,
+      BN_PVP as precio_venta,
+      BN_ALVC as alveolos_columna,
+      BN_EM2 as metros_cuadrados
+    FROM bandejas
+    ORDER BY CAST(BN_ALV AS SIGNED) DESC
+    LIMIT 1`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results[0];
   } catch (error) {
     console.error('Error en consulta SQL:', error);
     return null;
@@ -686,14 +941,24 @@ async function processMessage(userMessage) {
         articulosData = results && results.length > 0 ? results[0] : null;
         contextType = 'busqueda_articulo';
       }
-    } else if (messageLower.includes('vendedor') || messageLower.includes('vendedora') || 
-               messageLower.includes('gestion') || messageLower.includes('gestiona')) {
-      vendedoresData = await queryVendedores();
-      dbData = await queryAccionesCom();
-      contextType = 'acciones_comerciales';
-    } else if (messageLower.includes('acciones comerciales') || messageLower.includes('acciones registradas')) {
+    } else if (messageLower.includes('empleados') || messageLower.includes('vendedor') || 
+               messageLower.includes('vendedores') || messageLower.match(/dame \d+ vendedores?/)) {
+      // Detectar si se solicita un número específico de vendedores
+      const numMatch = messageLower.match(/dame (\d+) vendedores?/);
+      const limit = numMatch ? parseInt(numMatch[1]) : null;
+      
+      dbData = await queryVendedoresDetallado(limit);
+      contextType = 'empleados_lista';
+    } else if (messageLower.includes('acciones comerciales') || 
+               messageLower.includes('acciones registradas') ||
+               messageLower.includes('que tipo de acciones') ||
+               (messageLower.includes('accion') && messageLower.includes('comercial'))) {
       vendedoresData = await queryVendedores();
       dbData = await queryAccionesCom(10);
+      contextType = 'acciones_comerciales';
+    } else if (messageLower.includes('gestion') || messageLower.includes('gestiona')) {
+      vendedoresData = await queryVendedores();
+      dbData = await queryAccionesCom();
       contextType = 'acciones_comerciales';
     } else if (messageLower.includes('clientes') || messageLower.includes('cliente')) {
       contextType = 'clientes';
@@ -785,8 +1050,30 @@ async function processMessage(userMessage) {
           contextType = 'proveedor_info_completa';
         }
       }
-    } else if (messageLower.includes('empleados') && messageLower.includes('lista')) {
-      contextType = 'empleados_lista';
+    } else if (messageLower.includes('quien') && 
+               (messageLower.includes('gestiono mas') || messageLower.includes('gestionó más')) && 
+               messageLower.includes('acciones')) {
+      dbData = await queryVendedorMasAcciones();
+      contextType = 'vendedor_mas_acciones';
+    } else if (messageLower.includes('bandeja') || messageLower.includes('bandejas')) {
+      if (messageLower.includes('más alveolos') || messageLower.includes('mayor número')) {
+        dbData = await queryBandejaMasAlveolos();
+        contextType = 'bandeja_mas_alveolos';
+      } else if (messageLower.match(/más de (\d+) alveolos/)) {
+        const numAlveolos = parseInt(messageLower.match(/más de (\d+) alveolos/)[1]);
+        dbData = await queryBandejasConMasAlveolos(numAlveolos);
+        contextType = 'bandejas_filtradas';
+      } else if (messageLower.includes('tipos de bandejas') || messageLower.includes('que bandejas')) {
+        dbData = await queryBandejas();
+        contextType = 'tipos_bandejas';
+      } else if (messageLower.match(/dime (\d+) bandejas/)) {
+        const numBandejas = parseInt(messageLower.match(/dime (\d+) bandejas/)[1]);
+        dbData = await queryBandejas(numBandejas);
+        contextType = 'lista_bandejas';
+      } else {
+        dbData = await queryBandejas(5);
+        contextType = 'tipos_bandejas';
+      }
     } else {
       // Manejo de conversación general
       contextType = 'conversacion_general';
@@ -820,21 +1107,38 @@ EJEMPLOS DE CONSULTAS QUE PUEDO AYUDAR:
 - Datos de clientes y su información de contacto
 - Consultas generales sobre el negocio`;
     } else if (contextType === 'acciones_comerciales') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Las acciones comerciales incluyen incidencias, visitas técnicas, llamadas y negociaciones.
-- Existe una relación entre vendedores y acciones_com a través del campo ACCO_CDVD.
-- Cada vendedor tiene un id único y un nombre (VD_DENO).
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
 
-DATOS DE VENDEDORES:
-${vendedoresData ? JSON.stringify(vendedoresData, null, 2) : 'No hay datos específicos de vendedores.'}
+CONTEXTO IMPORTANTE:
+- Las acciones comerciales son registros de interacciones con clientes
+- Cada acción tiene un tipo (ACCO_DENO), fecha, hora y vendedor asociado
+- Los datos provienen directamente de la tabla acciones_com
+- Las notas son importantes y deben mostrarse cuando existan
 
-DATOS DE ACCIONES COMERCIALES:
-${dbData ? JSON.stringify(dbData, null, 2) : 'No hay datos específicos para esta consulta.'}
+DATOS DISPONIBLES:
+Datos de Vendedores:
+${JSON.stringify(vendedoresData || [], null, 2)}
 
-INSTRUCCIONES:
-1. SIEMPRE menciona tanto el ID como el nombre del vendedor
-2. Si hay múltiples vendedores, menciónalos a todos
-3. Formatea las fechas en dd/mm/yyyy`;
+Datos de Acciones Comerciales:
+${JSON.stringify(dbData || [], null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Mostrar los tipos de acciones comerciales que aparecen en ACCO_DENO
+2. Para cada acción mostrar:
+   - Tipo de acción (ACCO_DENO)
+   - Vendedor responsable (nombre del vendedor)
+   - Fecha y hora
+   - Notas si existen
+3. Formato:
+   - Agrupar por tipo de acción
+   - Ordenar por fecha descendente
+   - Mostrar fechas en formato dd/mm/yyyy
+
+IMPORTANTE:
+- NO inventar tipos de acciones que no estén en los datos
+- Usar EXACTAMENTE los nombres como aparecen en ACCO_DENO
+- Si no hay datos, indicarlo claramente
+- NO incluir información sensible de clientes`;
     } else if (contextType.startsWith('cliente')) {
       systemContent += `CONTEXTO IMPORTANTE:
 - La información de clientes es sensible y debe manejarse con cuidado.
@@ -903,48 +1207,159 @@ FORMATO DE RESPUESTA:
 - Usa formato legible para teléfonos y direcciones
 - Responde en español`;
     } else if (contextType === 'empleados_lista') {
+      const isSingleVendor = dbData && dbData.length === 1;
+      
       systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
 
 CONTEXTO IMPORTANTE:
-- Estás proporcionando un listado de empleados/vendedores de nuestra empresa
-- Los datos provienen EXACTAMENTE de la tabla "vendedores"
-- Cada empleado puede tener información técnica y observaciones
-- Las observaciones SIEMPRE deben mostrarse cuando existan
+- Los datos provienen de las tablas: vendedores, tecnicos y vendedores_vd_obs
+- Cada vendedor puede tener o no información técnica asociada (a través de VD_PDA)
+- Las observaciones están concatenadas y ordenadas por id2
+${isSingleVendor ? '- Se está mostrando un único vendedor' : '- Se está mostrando una lista de vendedores'}
 
 DATOS DISPONIBLES:
 ${JSON.stringify(dbData || {}, null, 2)}
 
-INSTRUCCIONES:
-1. Muestra los empleados con:
-   - ID y nombre EXACTAMENTE como están en la base de datos
-   - Ubicación (población/provincia) si existe
-   - Número técnico si existe
-   - TODAS las observaciones si existen (no omitir ninguna)
-2. Formato:
-   - Lista numerada
-   - Información clara y separada
-   - Observaciones en formato lista
-3. Reglas:
+REGLAS DE PRESENTACIÓN:
+1. Para cada vendedor mostrar:
+   - ID y Nombre (Obligatorio)
+   - Ubicación principal (si existe en vendedores)
+   - Si tiene número técnico (VD_PDA):
+     * Indicar que tiene información técnica disponible
+     * NO mostrar la información técnica detallada a menos que se solicite
+   - Observaciones (si existen)
+
+2. Formato de Presentación:
+   ${isSingleVendor ? 
+     '- Mostrar la información del vendedor de forma clara y directa' : 
+     '- Lista numerada de vendedores'}
+   - Información organizada y clara
+   - Observaciones en formato lista con viñetas
+
+3. Reglas Estrictas:
    - NO modificar ningún dato
    - NO omitir observaciones
    - NO inventar información
-   - NO asumir datos no presentes
+   - Si un campo está vacío o es null, indicar "No disponible"
+   - Si no hay observaciones, indicar "Sin observaciones registradas"
 
-EJEMPLO DE RESPUESTA CORRECTA:
-"Aquí tienes el empleado solicitado:
-
-1. MIGUEL GALERA (ID: 05)
-   - Ubicación: PARIS
-   - No tiene número técnico asignado
-   - Observaciones:
-     * COMERCIAL FRANCIA
-     * 2% COMISION VTAS A NUESTRA TARIFA
-     * 50% DEL SOBRE PRECIO QUE CONSIGA POR ENCIMA DE NUESTRA TARIFA"
+4. Manejo de Información Técnica:
+   - Si VD_PDA existe, mencionar: "Tiene registro técnico asociado (Número: [VD_PDA])"
+   - NO mostrar detalles técnicos a menos que se soliciten específicamente
 
 IMPORTANTE:
-- Usar EXACTAMENTE los nombres y datos como aparecen en la base de datos
-- SIEMPRE mostrar las observaciones completas cuando existan
-- Indicar explícitamente cuando un campo está vacío o no disponible`;
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- Mantener el formato especificado
+- Respetar la privacidad de la información técnica
+${isSingleVendor ? 
+  '- Al mostrar un único vendedor, ser conciso y directo en la presentación' : 
+  '- Al mostrar múltiples vendedores, mantener consistencia en el formato de la lista'}`;
+    } else if (contextType === 'vendedor_mas_acciones') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Se está consultando el vendedor que ha gestionado más acciones comerciales
+- Los datos provienen de las tablas vendedores y acciones_com
+- La información incluye el total de acciones y los tipos de acciones realizadas
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Mostrar:
+   - Nombre del vendedor y su ID
+   - Total de acciones gestionadas
+   - Período de actividad (primera a última acción)
+   - Tipos de acciones que ha realizado
+
+2. Formato:
+   - Presentación clara y directa
+   - Fechas en formato dd/mm/yyyy
+   - Números con separadores de miles
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- NO incluir información adicional que no esté en los datos
+- Presentar la información de manera profesional y concisa`;
+    } else if (contextType === 'tipos_bandejas' || contextType === 'lista_bandejas') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Las bandejas son elementos fundamentales para el cultivo en alvéolos
+- Cada bandeja tiene características específicas (alvéolos, dimensiones, etc.)
+- Algunas bandejas son retornables y otras desechables
+- Los precios y costes son información sensible
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Para cada bandeja mostrar:
+   - Denominación exacta (BN_DENO)
+   - Número total de alvéolos
+   - Si es retornable o no
+   - Dimensiones (metros cuadrados) si están disponibles
+
+2. Formato:
+   - Lista numerada de bandejas
+   - Información clara y organizada
+   - Destacar características principales
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- NO revelar información de costes o precios internos
+- Indicar claramente si un dato no está disponible
+- Mantener un tono profesional y técnico`;
+    } else if (contextType === 'bandeja_mas_alveolos') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Se está consultando la bandeja con mayor número de alvéolos
+- Esta información es relevante para planificación de producción
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Mostrar:
+   - Denominación exacta de la bandeja
+   - Número total de alvéolos
+   - Características adicionales relevantes
+
+2. Formato:
+   - Presentación clara y directa
+   - Destacar el número de alvéolos
+   - Incluir información sobre retornabilidad
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- NO revelar información de costes
+- Mantener un tono técnico y profesional`;
+    } else if (contextType === 'bandejas_filtradas') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Se están mostrando bandejas que cumplen criterios específicos
+- La información es relevante para decisiones de cultivo
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Listar cada bandeja con:
+   - Denominación exacta
+   - Número de alvéolos
+   - Características relevantes
+
+2. Formato:
+   - Lista ordenada por número de alvéolos
+   - Información clara y concisa
+   - Destacar características principales
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- NO revelar información de costes
+- Mantener un tono técnico y profesional`;
     } else {
       systemContent += `CONTEXTO IMPORTANTE:
 - Los artículos pueden tener un proveedor asignado mediante AR_PRV.
