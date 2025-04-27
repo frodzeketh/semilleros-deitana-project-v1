@@ -1012,6 +1012,46 @@ async function queryCasasComercialConFiltros(options = {}) {
   }
 }
 
+async function queryCategorias() {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CG_DENO, '') as denominacion,
+      CG_SALDIA as salario_diario,
+      CG_COSHOR as coste_hora,
+      CG_SDIA as coste_hora_extra
+    FROM categorias
+    ORDER BY CG_DENO`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryCategoriaPorNombre(nombre) {
+  const query = `
+    SELECT 
+      id,
+      NULLIF(CG_DENO, '') as denominacion,
+      CG_SALDIA as salario_diario,
+      CG_COSHOR as coste_hora,
+      CG_SDIA as coste_hora_extra
+    FROM categorias
+    WHERE LOWER(CG_DENO) LIKE LOWER(?)`;
+  
+  try {
+    const [results] = await db.query(query, [`%${nombre}%`]);
+    return results[0];
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
 // Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
@@ -1221,6 +1261,37 @@ async function processMessage(userMessage) {
       } else {
         dbData = await queryCasasComercialesTodas();
         contextType = 'casas_comerciales_todas';
+      }
+    } else if (messageLower.includes('categorias') || messageLower.includes('categorías') || 
+               (messageLower.match(/(encargado|conductor|produccion)/i) && 
+                (messageLower.includes('cobra') || messageLower.includes('salario') || 
+                 messageLower.includes('hora') || messageLower.includes('costo')))) {
+      
+      // Detectar tipo de consulta
+      let tipoConsulta = null;
+      if (messageLower.includes('hora extra')) {
+        tipoConsulta = 'hora_extra';
+      } else if (messageLower.includes('por hora')) {
+        tipoConsulta = 'costo_hora';
+      } else if (messageLower.includes('cobra') || messageLower.includes('salario') || messageLower.includes('por dia')) {
+        tipoConsulta = 'salario';
+      }
+
+      // Detectar categoría
+      const categoriaMatch = messageLower.match(/(encargado|conductor|produccion)/i);
+      
+      if (categoriaMatch) {
+        dbData = await queryCategoriaPorNombre(categoriaMatch[1]);
+        if (dbData) {
+          dbData.tipoConsulta = tipoConsulta;
+          contextType = 'categoria_especifica';
+        }
+      } else if (messageLower.includes('cuantas') || messageLower.includes('cuántas')) {
+        dbData = await queryCategorias();
+        contextType = 'total_categorias';
+      } else {
+        dbData = await queryCategorias();
+        contextType = 'lista_categorias';
       }
     } else {
       // Manejo de conversación general
@@ -1543,6 +1614,69 @@ IMPORTANTE:
 - NO inventar o asumir información faltante
 - Mantener un tono profesional y técnico
 - Si hay filtros aplicados, mencionarlos en la respuesta`;
+    } else if (contextType === 'total_categorias' || contextType === 'lista_categorias') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Las categorías representan clasificaciones laborales en la empresa
+- Cada categoría tiene asociadas condiciones económicas específicas
+- La información salarial es sensible y debe manejarse con discreción
+- Los costes y salarios son datos confidenciales internos
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Para cada categoría mostrar:
+   - Denominación exacta (CG_DENO)
+   
+
+2. Formato:
+   - Lista clara y organizada
+   - Información estructurada
+   - Mantener la confidencialidad
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- Indicar si algún dato no está disponible`;
+    } else if (contextType === 'categoria_especifica') {
+      const tipoConsulta = dbData?.tipoConsulta;
+      let respuesta = '';
+      
+      if (dbData && dbData.denominacion) {
+        if (tipoConsulta === 'salario') {
+          respuesta = `El salario diario de ${dbData.denominacion} es ${dbData.salario_diario} €`;
+        } else if (tipoConsulta === 'costo_hora') {
+          respuesta = `El coste por hora de ${dbData.denominacion} es ${dbData.coste_hora} €`;
+        } else if (tipoConsulta === 'hora_extra') {
+          respuesta = `El coste por hora extra de ${dbData.denominacion} es ${dbData.coste_hora_extra} €`;
+        }
+      }
+      
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Se está consultando información específica de una categoría laboral
+- Los datos provienen directamente de la tabla categorias
+- Debes mostrar exactamente el valor solicitado
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+RESPUESTA ESPECÍFICA:
+${respuesta || 'No se encontró la información solicitada'}
+
+REGLAS DE PRESENTACIÓN:
+1. Mostrar SOLO el valor específicamente solicitado
+2. Usar el formato exacto proporcionado en la respuesta
+3. No añadir información adicional ni contextual
+4. No modificar los valores numéricos
+
+IMPORTANTE:
+- Usar EXACTAMENTE la respuesta proporcionada
+- No añadir texto adicional ni sugerencias
+- Si el dato no existe, solo indicar que no se encontró
+- Mantener la respuesta breve y directa`;
     } else {
       systemContent += `CONTEXTO IMPORTANTE:
 - Los artículos pueden tener un proveedor asignado mediante AR_PRV.
