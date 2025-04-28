@@ -7,7 +7,8 @@ const assistantContext = {
   lastQuery: null,
   lastResponse: null,
   conversationHistory: [],
-  lastIndex: null
+  lastIndex: null,
+  lastCreditoCaucion: null
 };
 
 // Funciones auxiliares para consultas SQL
@@ -1052,6 +1053,71 @@ async function queryCategoriaPorNombre(nombre) {
   }
 }
 
+async function queryCreditosCaucion(limit = null) {
+  const query = `
+    SELECT 
+      cc.id,
+      cc.CAU_CCL as cliente_id,
+      cc.CAU_DIAS as dias_maximos,
+      cc.CAU_TIPO as tipo,
+      c.CL_DENO as nombre_cliente,
+      GROUP_CONCAT(
+        DISTINCT obs.C0 
+        ORDER BY obs.id2 
+        SEPARATOR '|||'
+      ) as observaciones
+    FROM creditocau cc
+    LEFT JOIN clientes c ON cc.CAU_CCL = c.id
+    LEFT JOIN creditocau_cau_obs obs ON cc.id = obs.id
+    WHERE obs.id IS NOT NULL
+    GROUP BY cc.id, cc.CAU_CCL, cc.CAU_DIAS, cc.CAU_TIPO, c.CL_DENO
+    ORDER BY RAND()
+    LIMIT 1`;
+  
+  try {
+    const [results] = await db.query(query);
+    if (!results || results.length === 0) {
+      return null;
+    }
+
+    return results.map(r => ({
+      ...r,
+      observaciones: r.observaciones ? r.observaciones.split('|||').filter(obs => obs.trim()) : [],
+      tipo_descripcion: r.tipo === 'A' ? 'Asegurado' : 'No Asegurado'
+    }));
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryClientePorId(clienteId) {
+  const query = `
+    SELECT 
+      id,
+      CL_DENO as denominacion,
+      CL_DOM as domicilio,
+      CL_POB as poblacion,
+      CL_PROV as provincia,
+      CL_CDP as codigo_postal,
+      CL_TEL as telefono,
+      CL_FAX as fax,
+      CL_CIF as cif,
+      CL_EMA as email,
+      CL_WEB as web,
+      CL_PAIS as pais
+    FROM clientes
+    WHERE id = ?`;
+  
+  try {
+    const [results] = await db.query(query, [clienteId]);
+    return results[0] || null;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
 // Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
@@ -1292,6 +1358,27 @@ async function processMessage(userMessage) {
       } else {
         dbData = await queryCategorias();
         contextType = 'lista_categorias';
+      }
+    } else if (messageLower.includes('credito') && messageLower.includes('caucion')) {
+      if (messageLower.includes('si') && assistantContext.lastCreditoCaucion) {
+        // Si el usuario responde "sí" a ver la información del cliente
+        const clienteInfo = await queryClientePorId(assistantContext.lastCreditoCaucion.cliente_id);
+        dbData = {
+          ...assistantContext.lastCreditoCaucion,
+          clienteInfo
+        };
+        contextType = 'ejemplo_credito_caucion';
+      } else if (messageLower.includes('ejemplo') || messageLower.match(/muestra(?:me)? (?:un|1)/)) {
+        const data = await queryCreditosCaucion(1);
+        if (data && data[0]) {
+          // Guardar el crédito caución actual en el contexto
+          assistantContext.lastCreditoCaucion = data[0];
+        }
+        dbData = data;
+        contextType = 'ejemplo_credito_caucion';
+      } else {
+        dbData = await queryCreditosCaucion(5);
+        contextType = 'lista_creditos_caucion';
       }
     } else {
       // Manejo de conversación general
@@ -1677,6 +1764,103 @@ IMPORTANTE:
 - No añadir texto adicional ni sugerencias
 - Si el dato no existe, solo indicar que no se encontró
 - Mantener la respuesta breve y directa`;
+    } else if (contextType === 'total_creditos_caucion') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+INSTRUCCIONES DE RESPUESTA:
+1. Si hay datos, mostrar exactamente:
+   "Se han realizado [total_registros] créditos caución:
+   - [total_asegurados] Asegurados
+   - [total_no_asegurados] No Asegurados"
+
+2. Si no hay datos:
+   "No se encontraron créditos caución registrados en el sistema."
+
+IMPORTANTE:
+- Mostrar solo los números exactos
+- No agregar información adicional
+- Mantener el formato especificado`;
+    } else if (contextType === 'ejemplo_credito_caucion') {
+      if (dbData?.clienteInfo) {
+        // Si ya tenemos la información del cliente
+        systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+INSTRUCCIONES DE RESPUESTA:
+Mostrar exactamente:
+"Información del Cliente:
+- Denominación: [CL_DENO]
+- Domicilio: [CL_DOM]
+- Población: [CL_POB]
+- Provincia: [CL_PROV]
+- Código Postal: [CL_CDP]
+- Teléfono: [CL_TEL]
+- Fax: [CL_FAX]
+- CIF: [CL_CIF]
+- Email: [CL_EMA]
+- Web: [CL_WEB]
+- País: [CL_PAIS]"
+
+IMPORTANTE:
+- Mostrar TODOS los campos, incluso si están vacíos
+- NO inventar información
+- NO agregar texto adicional
+- NO agregar notas o sugerencias`;
+      } else {
+        // Si estamos mostrando el crédito caución inicial
+        systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+INSTRUCCIONES DE RESPUESTA:
+Mostrar EXACTAMENTE:
+"Crédito Caución #[id]
+- Cliente: [nombre_cliente] (ID: [cliente_id])
+- Días máximos: [dias_maximos]
+- Tipo: [tipo_descripcion]
+
+Observaciones:
+[lista de observaciones]
+
+¿Desea ver la información completa del cliente?"
+
+IMPORTANTE:
+- SOLO mostrar datos reales de la base de datos
+- NO agregar notas o comentarios adicionales
+- NO mencionar si hay más registros o no`;
+      }
+    } else if (contextType === 'lista_creditos_caucion') {
+      systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+
+CONTEXTO IMPORTANTE:
+- Se está mostrando una lista de créditos caución
+- Cada crédito tiene información básica y puede tener observaciones
+- La información del cliente es sensible
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS DE PRESENTACIÓN:
+1. Para cada crédito mostrar:
+   - ID y nombre del cliente
+   - Días máximos y tipo
+   - Observaciones si existen
+
+2. Formato:
+   - Lista numerada
+   - Información organizada
+   - Observaciones en sublista
+
+IMPORTANTE:
+- Mostrar solo la información solicitada
+- Ofrecer más detalles si se solicitan
+- Mantener la privacidad de datos sensibles`;
     } else {
       systemContent += `CONTEXTO IMPORTANTE:
 - Los artículos pueden tener un proveedor asignado mediante AR_PRV.
