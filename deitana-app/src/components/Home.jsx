@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown'
 const API_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3001/api"
-    : "https://tu-backend-en-railway.railway.app/api"
+    : "https://semilleros-deitana-project-v1-production.up.railway.app/api";
 
 
 const Home = () => {
