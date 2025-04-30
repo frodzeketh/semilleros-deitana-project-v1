@@ -1256,6 +1256,168 @@ async function queryClientePorId(clienteId) {
   }
 }
 
+async function queryTotalArticulos() {
+  const query = `
+    SELECT COUNT(*) as total
+    FROM articulos`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results[0]?.total || 0;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return 0;
+  }
+}
+
+async function queryEjemplosArticulos(limit = 5) {
+  const query = `
+    SELECT 
+      a.id,
+      a.AR_DENO as denominacion,
+      a.AR_BAR as codigo_barras,
+      a.AR_TIVA as tipo_iva,
+      a.AR_GRP as grupo,
+      a.AR_FAM as familia,
+      a.AR_PRV as proveedor_id,
+      p.PR_DENO as nombre_proveedor
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    ORDER BY RAND()
+    LIMIT ?`;
+  
+  try {
+    const [results] = await db.query(query, [limit]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryArticulosConCodigoBarras() {
+  const query = `
+    SELECT 
+      a.id,
+      a.AR_DENO as denominacion,
+      a.AR_BAR as codigo_barras,
+      p.PR_DENO as nombre_proveedor
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE a.AR_BAR IS NOT NULL AND a.AR_BAR != ''
+    ORDER BY a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryArticulosSinProveedor() {
+  const query = `
+    SELECT 
+      a.id,
+      a.AR_DENO as denominacion,
+      a.AR_BAR as codigo_barras
+    FROM articulos a
+    WHERE a.AR_PRV IS NULL OR a.AR_PRV = ''
+    ORDER BY a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryArticulosPorGrupo(grupo) {
+  const query = `
+    SELECT 
+      a.id,
+      a.AR_DENO as denominacion,
+      a.AR_BAR as codigo_barras,
+      a.AR_GRP as grupo,
+      a.AR_FAM as familia,
+      p.PR_DENO as nombre_proveedor
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE a.AR_GRP = ?
+    ORDER BY a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query, [grupo]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryArticulosPorTipo(tipo) {
+  const query = `
+    SELECT 
+      a.id,
+      a.AR_DENO as denominacion,
+      a.AR_BAR as codigo_barras,
+      p.PR_DENO as nombre_proveedor
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE LOWER(a.AR_DENO) LIKE LOWER(?)
+    ORDER BY a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query, [`%${tipo}%`]);
+    return results;
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryTiposProductoYProveedores(producto) {
+  const query = `
+    SELECT 
+      a.id,
+      a.AR_DENO as denominacion,
+      a.AR_PRV as proveedor_id,
+      p.PR_DENO as nombre_proveedor,
+      COUNT(*) OVER (PARTITION BY a.AR_PRV) as total_por_proveedor
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE LOWER(a.AR_DENO) LIKE LOWER(?)
+    ORDER BY p.PR_DENO, a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query, [`%${producto}%`]);
+    
+    // Agrupar por proveedor
+    const agrupadoPorProveedor = results.reduce((acc, item) => {
+      if (!acc[item.nombre_proveedor || 'Sin proveedor']) {
+        acc[item.nombre_proveedor || 'Sin proveedor'] = {
+          proveedor: item.nombre_proveedor || 'Sin proveedor',
+          total: item.total_por_proveedor,
+          articulos: []
+        };
+      }
+      acc[item.nombre_proveedor || 'Sin proveedor'].articulos.push(item.denominacion);
+      return acc;
+    }, {});
+
+    return {
+      total_tipos: results.length,
+      por_proveedor: Object.values(agrupadoPorProveedor)
+    };
+  } catch (error) {
+    console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
 // Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
@@ -1269,10 +1431,45 @@ async function processMessage(userMessage) {
     const messageLower = userMessage.toLowerCase();
 
     // Detección del tipo de consulta
-    if (messageLower.includes('acciones comerciales') || 
-        messageLower.includes('acciones realizadas') ||
-        messageLower.includes('interacciones con clientes') ||
-        messageLower.includes('gestiones comerciales')) {
+    if (messageLower.includes('artículo') || messageLower.includes('articulo') || 
+        messageLower.includes('artículos') || messageLower.includes('articulos') ||
+        messageLower.includes('producto') || messageLower.includes('productos')) {
+      
+      if (messageLower.includes('ejemplo') || messageLower.includes('muestra') || 
+          messageLower.includes('dime') || messageLower.includes('un')) {
+        dbData = await queryEjemplosArticulos(1);
+        contextType = 'ejemplo_articulo';
+      } else if (messageLower.includes('cuántos') || messageLower.includes('cuantos') || 
+                 messageLower.includes('total') || messageLower.includes('inventario')) {
+        dbData = await queryTotalArticulos();
+        contextType = 'total_articulos';
+      } else if (messageLower.includes('código de barras') || messageLower.includes('codigo de barras')) {
+        dbData = await queryArticulosConCodigoBarras();
+        contextType = 'articulos_codigo_barras';
+      } else if (messageLower.includes('sin proveedor') || messageLower.includes('no tiene proveedor')) {
+        dbData = await queryArticulosSinProveedor();
+        contextType = 'articulos_sin_proveedor';
+      } else if (messageLower.includes('grupo')) {
+        const grupoMatch = messageLower.match(/grupo (\d+)/);
+        if (grupoMatch) {
+          dbData = await queryArticulosPorGrupo(grupoMatch[1]);
+          contextType = 'articulos_por_grupo';
+        }
+      } else if (messageLower.includes('tipo') || messageLower.includes('variedad')) {
+        const tipoMatch = messageLower.match(/tipo de ([a-zá-úñ]+)/i) || 
+                         messageLower.match(/variedad de ([a-zá-úñ]+)/i);
+        if (tipoMatch) {
+          dbData = await queryArticulosPorTipo(tipoMatch[1]);
+          contextType = 'articulos_por_tipo';
+        }
+      } else {
+        dbData = await queryEjemplosArticulos(10);
+        contextType = 'articulos_general';
+      }
+    } else if (messageLower.includes('acciones comerciales') || 
+               messageLower.includes('acciones realizadas') ||
+               messageLower.includes('interacciones con clientes') ||
+               messageLower.includes('gestiones comerciales')) {
       
       // Detectar consultas específicas sobre acciones comerciales
       if (messageLower.includes('última') || messageLower.includes('ultima')) {
@@ -1586,249 +1783,42 @@ async function processMessage(userMessage) {
     // Preparar el prompt según el tipo de consulta
     let systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.\n\n`;
 
-    if (contextType === 'vendedor_mas_acciones') {
+    if (contextType === 'ejemplo_articulo') {
       systemContent += `CONTEXTO IMPORTANTE:
-- Se está consultando el vendedor que ha gestionado más acciones comerciales
-- Los datos provienen directamente de las tablas vendedores y acciones_com
-- La información incluye el total de acciones y los tipos de acciones realizadas
+- Se está solicitando un ejemplo de artículo del inventario
+- SOLO se deben mostrar datos reales de la base de datos
+- NO se debe inventar información bajo ninguna circunstancia
+- NO se deben sugerir ejemplos hipotéticos
+- NO se deben incluir datos que no estén en la base de datos
 
 DATOS DISPONIBLES:
-${JSON.stringify(dbData || {}, null, 2)}
+${JSON.stringify(dbData || [], null, 2)}
 
-REGLAS DE PRESENTACIÓN:
-1. Mostrar:
-   - Nombre del vendedor y su ID
-   - Total de acciones gestionadas
-   - Período de actividad (primera a última acción)
-   - Tipos de acciones que ha realizado
+REGLAS ESTRICTAS:
+1. SOLO mostrar los datos que existen en la base de datos
+2. NO inventar códigos, descripciones, precios o existencias
+3. NO inventar proveedores o información adicional
+4. Si no hay datos, indicar claramente "No se encontraron artículos en la base de datos"
 
-2. Formato:
-   - Presentación clara y directa
-   - Fechas en formato dd/mm/yyyy
-   - Números con separadores de miles
-
-IMPORTANTE:
-- Usar EXACTAMENTE los nombres como aparecen en la base de datos
-- NO incluir información adicional que no esté en los datos
-- Presentar la información de manera profesional y concisa
+FORMATO DE RESPUESTA:
+1. Mostrar EXACTAMENTE los datos disponibles:
+   - ID del artículo
+   - Denominación exacta
+   - Código de barras (si existe)
+   - Proveedor (si está asignado)
+2. NO agregar información adicional
+3. NO sugerir ejemplos hipotéticos
 
 RESPUESTA ESPECÍFICA:
-Si hay datos, mostrar EXACTAMENTE:
-"El vendedor que ha gestionado más acciones comerciales es [nombre_vendedor] (ID: [vendedor_id]) con un total de [total_acciones] acciones.
+${dbData && dbData.length > 0 ? `
+Artículo encontrado:
+- ID: ${dbData[0].id}
+- Denominación: ${dbData[0].denominacion}
+${dbData[0].codigo_barras ? `- Código de barras: ${dbData[0].codigo_barras}` : ''}
+${dbData[0].nombre_proveedor ? `- Proveedor: ${dbData[0].nombre_proveedor}` : ''}` : 
+'No se encontraron artículos en la base de datos'}`;
 
-Período de actividad:
-- Primera acción: [primera_accion]
-- Última acción: [ultima_accion]
-
-Tipos de acciones realizadas:
-[lista de tipos de acciones]
-
-Si no hay datos, mostrar:
-"No se encontraron datos suficientes para determinar el vendedor con más acciones comerciales."`;
-
-    } else if (contextType === 'conversacion_general') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Eres un asistente amigable y profesional de Semilleros Deitana.
-- Puedes ayudar con consultas sobre:
-  * Artículos y proveedores
-  * Acciones comerciales y vendedores
-  * Información de clientes
-  * Conversación general relacionada con el negocio
-
-HISTORIAL DE CONVERSACIÓN:
-${assistantContext.conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
-
-INSTRUCCIONES:
-1. Mantén un tono profesional pero amigable
-2. Si el mensaje es general (saludos, agradecimientos, etc.), responde apropiadamente
-3. Si no entiendes la consulta, pide aclaraciones
-4. Sugiere tipos de consultas que puedes responder
-5. Responde en español
-
-EJEMPLOS DE CONSULTAS QUE PUEDO AYUDAR:
-- Información sobre proveedores y sus productos
-- Detalles de acciones comerciales y vendedores
-- Datos de clientes y su información de contacto
-- Consultas generales sobre el negocio`;
-    } else if (contextType === 'acciones_comerciales') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Las acciones comerciales son registros de interacciones con clientes
-- Cada acción tiene un tipo (ACCO_DENO), fecha, hora y vendedor asociado
-- Los datos provienen directamente de la tabla acciones_com
-- Las notas son importantes y deben mostrarse cuando existan
-
-DATOS DISPONIBLES:
-${JSON.stringify(dbData || [], null, 2)}
-
-REGLAS ESTRICTAS:
-1. SOLO mostrar acciones que existan en los datos
-2. NO inventar tipos de acciones
-3. NO inventar fechas o vendedores
-4. NO inventar notas o detalles
-5. Si no hay datos, indicar claramente "No se encontraron acciones comerciales registradas"
-
-FORMATO DE RESPUESTA:
-1. Agrupar por tipo de acción
-2. Para cada acción mostrar:
-   - Tipo exacto de acción (ACCO_DENO)
-   - Fecha y hora exactas
-   - Vendedor asociado
-   - Cliente asociado
-   - Notas si existen
-3. Ordenar por fecha descendente
-4. Usar formato dd/mm/yyyy para fechas
-
-IMPORTANTE:
-- Si no hay datos, responder SOLO con "No se encontraron acciones comerciales registradas"
-- NO sugerir tipos de acciones que no estén en los datos
-- NO inventar información bajo ninguna circunstancia`;
-    } else if (contextType === 'ultima_accion_comercial') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Se está consultando la última acción comercial registrada
-- Debe mostrar todos los detalles disponibles
-- Las notas son especialmente importantes
-
-DATOS DISPONIBLES:
-${JSON.stringify(dbData || {}, null, 2)}
-
-REGLAS ESTRICTAS:
-1. Mostrar SOLO los datos reales
-2. NO inventar información
-3. Si no hay datos, indicar claramente "No se encontraron acciones comerciales registradas"
-
-FORMATO DE RESPUESTA:
-1. Mostrar:
-   - Tipo de acción
-   - Fecha y hora exactas
-   - Vendedor responsable
-   - Cliente involucrado
-   - Notas completas si existen
-2. Usar formato dd/mm/yyyy para fechas
-
-IMPORTANTE:
-- Si no hay datos, responder SOLO con "No se encontraron acciones comerciales registradas"
-- NO inventar información bajo ninguna circunstancia`;
-    } else if (contextType === 'acciones_comerciales_anio') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Se están consultando acciones comerciales de un año específico
-- Debe mostrar todas las acciones de ese año
-- Las notas son importantes
-
-DATOS DISPONIBLES:
-${JSON.stringify(dbData || [], null, 2)}
-
-REGLAS ESTRICTAS:
-1. Mostrar SOLO las acciones del año especificado
-2. NO inventar información
-3. Si no hay datos, indicar claramente "No se encontraron acciones comerciales para el año [año]"
-
-FORMATO DE RESPUESTA:
-1. Agrupar por tipo de acción
-2. Para cada acción mostrar:
-   - Tipo exacto de acción
-   - Fecha y hora exactas
-   - Vendedor asociado
-   - Cliente asociado
-   - Notas si existen
-3. Ordenar por fecha descendente
-4. Usar formato dd/mm/yyyy para fechas
-
-IMPORTANTE:
-- Si no hay datos, responder SOLO con "No se encontraron acciones comerciales para el año [año]"
-- NO inventar información bajo ninguna circunstancia`;
-    } else if (contextType === 'tipos_acciones_comerciales') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Se están consultando los tipos de acciones comerciales disponibles
-- Estos tipos son fijos y no pueden modificarse
-- Cada tipo tiene un propósito específico
-
-DATOS DISPONIBLES:
-${JSON.stringify(dbData || [], null, 2)}
-
-REGLAS ESTRICTAS:
-1. Mostrar SOLO los tipos que existen en la base de datos
-2. NO inventar tipos adicionales
-3. NO modificar los nombres de los tipos
-
-FORMATO DE RESPUESTA:
-1. Listar todos los tipos disponibles
-2. Para cada tipo, explicar brevemente su propósito:
-   - CAMPAÑA: Acciones relacionadas con campañas comerciales
-   - COBROS: Gestión de cobros y pagos
-   - E-MAIL: Comunicaciones por correo electrónico
-   - INCIDENCIA: Problemas o quejas reportadas
-   - LLAMADA: Comunicaciones telefónicas
-   - NEGOCIACION: Procesos de negociación
-   - OTROS: Otras acciones no categorizadas
-   - TARJETA: Acciones relacionadas con tarjetas
-   - VISITA: Visitas a clientes
-
-IMPORTANTE:
-- NO inventar tipos adicionales
-- NO modificar los nombres de los tipos
-- Mantener un tono profesional y técnico`;
-    } else if (contextType === 'estadisticas_acciones_comerciales') {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Se están consultando estadísticas de acciones comerciales
-- Los datos son históricos y no pueden modificarse
-- Las estadísticas incluyen totales por año y tipo
-
-DATOS DISPONIBLES:
-${JSON.stringify(dbData || [], null, 2)}
-
-REGLAS ESTRICTAS:
-1. Mostrar SOLO los datos reales de la base de datos
-2. NO inventar estadísticas
-3. NO modificar los números
-
-FORMATO DE RESPUESTA:
-1. Agrupar por año
-2. Para cada año mostrar:
-   - Total de acciones
-   - Distribución por tipo
-   - Total de clientes involucrados
-   - Total de vendedores involucrados
-3. Ordenar por año descendente
-
-IMPORTANTE:
-- Usar números exactos de la base de datos
-- NO redondear ni aproximar
-- Mantener un tono profesional y técnico`;
-    } else if (contextType.startsWith('incidencias') || 
-               contextType.startsWith('visitas') || 
-               contextType.startsWith('llamadas') || 
-               contextType.startsWith('emails') || 
-               contextType.startsWith('negociaciones') || 
-               contextType.startsWith('campanas') || 
-               contextType.startsWith('cobros') || 
-               contextType.startsWith('tarjetas') || 
-               contextType.startsWith('otros')) {
-      systemContent += `CONTEXTO IMPORTANTE:
-- Se están consultando acciones comerciales de un tipo específico
-- Los datos son históricos y no pueden modificarse
-- Las notas son especialmente importantes
-
-DATOS DISPONIBLES:
-${JSON.stringify(dbData || [], null, 2)}
-
-REGLAS ESTRICTAS:
-1. Mostrar SOLO las acciones del tipo especificado
-2. NO inventar información
-3. Si no hay datos, indicar claramente "No se encontraron acciones de tipo [tipo]"
-
-FORMATO DE RESPUESTA:
-1. Para cada acción mostrar:
-   - Fecha y hora exactas
-   - Vendedor asociado
-   - Cliente asociado
-   - Notas completas si existen
-2. Ordenar por fecha descendente
-3. Usar formato dd/mm/yyyy para fechas
-
-IMPORTANTE:
-- Si no hay datos, responder SOLO con "No se encontraron acciones de tipo [tipo]"
-- NO inventar información bajo ninguna circunstancia`;
-    } else {
+    } else if (contextType === 'total_articulos') {
       // ... existing code for other context types ...
     }
 
@@ -1877,7 +1867,7 @@ IMPORTANTE:
   } catch (error) {
     console.error('Error en processMessage:', error);
     return {
-      message: "Lo siento, estoy teniendo problemas para procesar tu consulta en este momento. Por favor, verifica que tu pregunta esté relacionada con acciones comerciales y vuelve a intentarlo.",
+      message: "Lo siento, estoy teniendo problemas para procesar tu consulta en este momento. Por favor, verifica que tu pregunta esté relacionada con artículos o acciones comerciales y vuelve a intentarlo.",
       context: assistantContext
     };
   }
