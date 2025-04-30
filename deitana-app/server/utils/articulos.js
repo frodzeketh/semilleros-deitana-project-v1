@@ -136,7 +136,7 @@ async function queryArticulosPorNombre(nombre) {
       p.PR_DENO as proveedor_nombre
     FROM articulos a
     LEFT JOIN proveedores p ON a.AR_PRV = p.id
-    WHERE a.AR_DENO LIKE ?
+    WHERE UPPER(a.AR_DENO) LIKE UPPER(?)
     ORDER BY a.AR_DENO`;
   try {
     const [results] = await db.query(query, [`%${nombre}%`]);
@@ -183,6 +183,24 @@ async function queryArticulosPorGrupo(grupo) {
   }
 }
 
+async function queryArticuloEjemplo() {
+  const query = `
+    SELECT 
+      a.*,
+      p.PR_DENO as proveedor_nombre
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    ORDER BY RAND()
+    LIMIT 1`;
+  try {
+    const [results] = await db.query(query);
+    return results[0] || null;
+  } catch (error) {
+    console.error('Error al consultar artículo de ejemplo:', error);
+    return null;
+  }
+}
+
 async function formatArticuloResponse(dbData, contextType, userMessage) {
   if (!dbData) {
     const prompt = `El usuario preguntó: "${userMessage}" pero no se encontraron artículos en la base de datos. 
@@ -205,16 +223,16 @@ async function formatArticuloResponse(dbData, contextType, userMessage) {
     let context = {
       tipo_consulta: contextType,
       total_resultados: dbData.length,
-      datos: dbData.slice(0, 5)
+      datos: dbData
     };
 
     let prompt = `El usuario preguntó: "${userMessage}" y se encontraron ${dbData.length} artículos. 
     Aquí están los datos relevantes: ${JSON.stringify(context)}.
     Por favor, proporciona una respuesta natural y profesional que incluya:
     1. Un resumen de los resultados encontrados
-    2. Los detalles más relevantes de los artículos
-    3. Sugerencias de análisis o próximos pasos
-    4. Si hay más de 5 resultados, menciona que hay más disponibles`;
+    2. Los detalles más relevantes de los artículos encontrados
+    3. Información sobre los proveedores si está disponible
+    4. Sugerencias de análisis o próximos pasos`;
 
     const aiResponse = await getDeepSeekResponse(prompt, context);
     return aiResponse || formatBasicResponse(dbData, contextType);
@@ -222,10 +240,11 @@ async function formatArticuloResponse(dbData, contextType, userMessage) {
 
   const prompt = `El usuario preguntó: "${userMessage}" y se encontró el siguiente artículo: ${JSON.stringify(dbData)}.
   Por favor, proporciona una respuesta natural y profesional que:
-  1. Describa el artículo de manera clara
-  2. Destaque los aspectos más relevantes
-  3. Proporcione contexto sobre su importancia
-  4. Sugiera posibles próximos pasos o información relacionada`;
+  1. Describa el artículo de manera clara y detallada
+  2. Mencione su código, descripción y código de barras si está disponible
+  3. Indique quién es el proveedor si está disponible
+  4. Proporcione información sobre el porcentaje de germinación si está disponible
+  5. Sugiera posibles próximos pasos o información relacionada`;
 
   const aiResponse = await getDeepSeekResponse(prompt, dbData);
   return aiResponse || formatBasicResponse(dbData, contextType);
@@ -273,11 +292,14 @@ async function processArticulosMessage(message) {
       contextType = 'articulo_por_id';
     }
   } else if (messageLower.includes('proveedor') || 
-             messageLower.includes('proveedores')) {
-    const proveedorId = messageLower.match(/(?:proveedor|proveedores)\s+([a-z0-9]+)/i)?.[1];
-    if (proveedorId) {
-      dbData = await queryArticulosPorProveedor(proveedorId);
-      contextType = 'articulos_por_proveedor';
+             messageLower.includes('proveedores') ||
+             messageLower.includes('quién provee') ||
+             messageLower.includes('quien provee')) {
+    // Extraer el nombre del artículo después de "proveedor" o "quién provee"
+    const nombreArticulo = messageLower.replace(/(?:proveedor|proveedores|quién provee|quien provee)\s+/i, '').trim();
+    if (nombreArticulo) {
+      dbData = await queryArticulosPorNombre(nombreArticulo);
+      contextType = 'articulos_por_nombre';
     }
   } else if (messageLower.includes('grupo') || 
              messageLower.includes('grupos')) {
@@ -286,6 +308,11 @@ async function processArticulosMessage(message) {
       dbData = await queryArticulosPorGrupo(grupo);
       contextType = 'articulos_por_grupo';
     }
+  } else if (messageLower.includes('ejemplo') || 
+             messageLower.includes('muestra') ||
+             messageLower.includes('muéstrame')) {
+    dbData = await queryArticuloEjemplo();
+    contextType = 'articulo_ejemplo';
   } else {
     // Búsqueda por nombre o descripción
     const palabrasClave = messageLower.split(' ').filter(p => p.length > 3);
@@ -308,5 +335,6 @@ module.exports = {
   queryArticuloPorId,
   queryArticulosPorNombre,
   queryArticulosPorProveedor,
-  queryArticulosPorGrupo
+  queryArticulosPorGrupo,
+  queryArticuloEjemplo
 };

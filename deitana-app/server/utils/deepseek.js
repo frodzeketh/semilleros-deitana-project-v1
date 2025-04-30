@@ -6,6 +6,7 @@ const { processBandejasMessage } = require('./bandejas');
 const { processCasasComercialesMessage } = require('./casascomerciales');
 const { processClientesMessage } = require('./clientes');
 const { processVendedoresMessage } = require('./vendedores');
+const { processArticulosMessage } = require('./articulos');
 
 // Configuración de la API de DeepSeek
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -25,6 +26,8 @@ const assistantContext = {
   lastCreditoCaucion: null,
   lastAccionComercial: null,
   lastAccionesComerciales: [],
+  lastArticulo: null,
+  lastArticulos: [],
   isFirstMessage: true
 };
 
@@ -97,7 +100,13 @@ function detectarReferenciaAnterior(message) {
     'ultimo': 0,
     'siguiente': -1,
     'próximo': -1,
-    'proximo': -1
+    'proximo': -1,
+    'otro': 0,
+    'otra': 0,
+    'más': 0,
+    'mas': 0,
+    'nuevo': 0,
+    'nueva': 0
   };
 
   for (const [key, value] of Object.entries(referencias)) {
@@ -139,38 +148,119 @@ async function processMessage(userMessage) {
 
     // Detectar referencias a consultas anteriores
     const referencia = detectarReferenciaAnterior(messageLower);
-    if (referencia !== null && assistantContext.lastAccionesComerciales.length > 0) {
-      const index = assistantContext.lastAccionesComerciales.length - 1 + referencia;
-      if (index >= 0 && index < assistantContext.lastAccionesComerciales.length) {
-        const result = await processAccionesComercialesMessage(
-          `Mostrar la acción comercial con ID ${assistantContext.lastAccionesComerciales[index]}`
-        );
-        return {
-          message: result.message,
-          context: assistantContext
-        };
+    if (referencia !== null) {
+      // Si la última consulta fue sobre artículos
+      if (assistantContext.currentTopic === 'articulos') {
+        if (messageLower.includes('ejemplo') || 
+            messageLower.includes('muestra') ||
+            messageLower.includes('muéstrame') ||
+            messageLower.includes('otro') ||
+            messageLower.includes('otra') ||
+            messageLower.includes('más') ||
+            messageLower.includes('mas') ||
+            messageLower.includes('nuevo') ||
+            messageLower.includes('nueva')) {
+          const result = await processArticulosMessage('muéstrame otro artículo');
+          
+          // Actualizar el contexto
+          if (result.data) {
+            if (Array.isArray(result.data)) {
+              assistantContext.lastArticulos = result.data.map(art => art.id);
+            } else {
+              assistantContext.lastArticulo = result.data.id;
+              assistantContext.lastArticulos.push(result.data.id);
+            }
+          }
+          
+          assistantContext.conversationHistory.push(
+            { role: "user", content: userMessage },
+            { role: "assistant", content: result.message }
+          );
+          
+          return {
+            message: result.message,
+            context: assistantContext
+          };
+        }
+      }
+      
+      // Si la última consulta fue sobre acciones comerciales
+      if (assistantContext.lastAccionesComerciales.length > 0) {
+        const index = assistantContext.lastAccionesComerciales.length - 1 + referencia;
+        if (index >= 0 && index < assistantContext.lastAccionesComerciales.length) {
+          const result = await processAccionesComercialesMessage(
+            `Mostrar la acción comercial con ID ${assistantContext.lastAccionesComerciales[index]}`
+          );
+          return {
+            message: result.message,
+            context: assistantContext
+          };
+        }
       }
     }
 
     // Detección del tipo de consulta y enrutamiento
-    if (messageLower.includes('acciones comerciales') || 
-        messageLower.includes('acciones realizadas') ||
-        messageLower.includes('interacciones con clientes') ||
-        messageLower.includes('gestiones comerciales') ||
-        messageLower.includes('ejemplo de accion') ||
-        messageLower.includes('ejemplo de acción') ||
-        messageLower.includes('incidencia') ||
-        messageLower.includes('observación') ||
-        messageLower.includes('grave') ||
-        messageLower.includes('accion comercial') ||
-        messageLower.includes('acción comercial') ||
-        messageLower.includes('última') ||
-        messageLower.includes('ultima') ||
-        messageLower.includes('anteúltima') ||
-        messageLower.includes('anteultima') ||
-        messageLower.includes('penúltima') ||
-        messageLower.includes('penultima') ||
-        messageLower.includes('anterior')) {
+    if (messageLower.includes('artículo') || 
+        messageLower.includes('articulo') ||
+        messageLower.includes('artículos') ||
+        messageLower.includes('articulos') ||
+        messageLower.includes('producto') ||
+        messageLower.includes('productos') ||
+        messageLower.includes('inventario') ||
+        messageLower.includes('stock') ||
+        messageLower.includes('catalogo') ||
+        messageLower.includes('catálogo') ||
+        messageLower.includes('variedad') ||
+        messageLower.includes('variedades') ||
+        messageLower.includes('semilla') ||
+        messageLower.includes('semillas') ||
+        messageLower.includes('esqueje') ||
+        messageLower.includes('esquejes') ||
+        messageLower.includes('planta') ||
+        messageLower.includes('plantas')) {
+      
+      const result = await processArticulosMessage(userMessage);
+      
+      // Actualizar el contexto con el último artículo consultado
+      if (result.data) {
+        if (Array.isArray(result.data)) {
+          assistantContext.lastArticulos = result.data.map(art => art.id);
+        } else {
+          assistantContext.lastArticulo = result.data.id;
+          assistantContext.lastArticulos.push(result.data.id);
+        }
+      }
+      
+      // Actualizar el tema actual
+      assistantContext.currentTopic = 'articulos';
+      
+      assistantContext.conversationHistory.push(
+        { role: "user", content: userMessage },
+        { role: "assistant", content: result.message }
+      );
+      
+      return {
+        message: result.message,
+        context: assistantContext
+      };
+    } else if (messageLower.includes('acciones comerciales') || 
+               messageLower.includes('acciones realizadas') ||
+               messageLower.includes('interacciones con clientes') ||
+               messageLower.includes('gestiones comerciales') ||
+               messageLower.includes('ejemplo de accion') ||
+               messageLower.includes('ejemplo de acción') ||
+               messageLower.includes('incidencia') ||
+               messageLower.includes('observación') ||
+               messageLower.includes('grave') ||
+               messageLower.includes('accion comercial') ||
+               messageLower.includes('acción comercial') ||
+               messageLower.includes('última') ||
+               messageLower.includes('ultima') ||
+               messageLower.includes('anteúltima') ||
+               messageLower.includes('anteultima') ||
+               messageLower.includes('penúltima') ||
+               messageLower.includes('penultima') ||
+               messageLower.includes('anterior')) {
       
       const result = await processAccionesComercialesMessage(userMessage);
       
@@ -179,6 +269,9 @@ async function processMessage(userMessage) {
         assistantContext.lastAccionComercial = result.data.id;
         assistantContext.lastAccionesComerciales.push(result.data.id);
       }
+      
+      // Actualizar el tema actual
+      assistantContext.currentTopic = 'acciones_comerciales';
       
       assistantContext.conversationHistory.push(
         { role: "user", content: userMessage },
@@ -253,15 +346,15 @@ async function processMessage(userMessage) {
         throw new Error('No se pudo obtener respuesta de la IA');
       }
       
-      assistantContext.conversationHistory.push(
+    assistantContext.conversationHistory.push(
         { role: "user", content: userMessage },
         { role: "assistant", content: aiResponse }
-      );
-      
-      return {
-        message: aiResponse,
-        context: assistantContext
-      };
+    );
+
+    return {
+      message: aiResponse,
+      context: assistantContext
+    };
     }
   } catch (error) {
     console.error('Error en processMessage:', error);
