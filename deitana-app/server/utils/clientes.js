@@ -204,7 +204,7 @@ async function formatClienteResponse(dbData, contextType, userMessage) {
   if (!dbData) {
     const prompt = `El usuario preguntó: "${userMessage}" pero no se encontraron clientes en la base de datos. 
     Por favor, proporciona una respuesta amable y profesional explicando que no hay datos disponibles y sugiere algunas 
-    alternativas de consulta que podrían ser útiles.`;
+    alternativas de consulta que podrían ser útiles. Mantén un tono conversacional y amigable.`;
     
     const aiResponse = await getDeepSeekResponse(prompt, null);
     return aiResponse || "No se encontraron clientes que coincidan con tu búsqueda. ¿Te gustaría intentar con otros criterios?";
@@ -212,19 +212,20 @@ async function formatClienteResponse(dbData, contextType, userMessage) {
 
   if (contextType === 'total_clientes_provincia') {
     const prompt = `El usuario preguntó: "${userMessage}" y se encontraron ${dbData} clientes en la provincia especificada.
-    Por favor, proporciona una respuesta natural y profesional que:
-    1. Indique el número total de clientes encontrados
+    Por favor, proporciona una respuesta natural y conversacional que:
+    1. Indique el número total de clientes encontrados de manera amigable
     2. Ofrezca sugerencias para obtener más información sobre estos clientes
-    3. Mantenga un tono profesional pero amigable`;
+    3. Mantenga un tono profesional pero cercano
+    4. Incluya una pregunta abierta para continuar la conversación`;
     
     const aiResponse = await getDeepSeekResponse(prompt, { total: dbData });
-    return aiResponse || `Se encontraron ${dbData} clientes en la provincia especificada. ¿Te gustaría ver más detalles sobre alguno de ellos?`;
+    return aiResponse || `¡Hemos encontrado ${dbData} clientes en la provincia especificada! ¿Te gustaría ver más detalles sobre alguno de ellos o prefieres buscar por algún otro criterio?`;
   }
 
   if (Array.isArray(dbData)) {
     if (dbData.length === 0) {
       const prompt = `El usuario preguntó: "${userMessage}" pero no se encontraron clientes que coincidan con su búsqueda.
-      Por favor, proporciona una respuesta amable y profesional sugiriendo alternativas de búsqueda.`;
+      Por favor, proporciona una respuesta amable y conversacional sugiriendo alternativas de búsqueda.`;
       
       const aiResponse = await getDeepSeekResponse(prompt, null);
       return aiResponse || "No se encontraron clientes que coincidan con tu búsqueda. ¿Te gustaría intentar con otros criterios?";
@@ -233,28 +234,37 @@ async function formatClienteResponse(dbData, contextType, userMessage) {
     let context = {
       tipo_consulta: contextType,
       total_resultados: dbData.length,
-      datos: dbData
+      datos: dbData.slice(0, 5) // Limitar a los primeros 5 resultados para el contexto
     };
 
     let prompt = `El usuario preguntó: "${userMessage}" y se encontraron ${dbData.length} clientes. 
     Aquí están los datos relevantes: ${JSON.stringify(context)}.
-    Por favor, proporciona una respuesta natural y profesional que incluya:
-    1. Un resumen de los resultados encontrados
-    2. Los detalles más relevantes de los clientes encontrados
-    3. Información sobre su ubicación y datos de contacto
-    4. Sugerencias de análisis o próximos pasos`;
+    Por favor, proporciona una respuesta natural y conversacional que:
+    1. Comience con una confirmación amigable de los resultados
+    2. Presente los clientes encontrados de manera clara y organizada
+    3. Incluya los datos más relevantes de cada cliente
+    4. Termine con una pregunta o sugerencia para continuar la conversación
+    5. Mantenga un tono profesional pero cercano
+    
+    Ejemplo de tono deseado:
+    "¡Por supuesto! Aquí tienes la información que solicitaste...
+    ¿Te gustaría saber más sobre alguno de estos clientes o prefieres buscar por otro criterio?"`;
 
     const aiResponse = await getDeepSeekResponse(prompt, context);
     return aiResponse || formatBasicResponse(dbData, contextType);
   }
 
   const prompt = `El usuario preguntó: "${userMessage}" y se encontró el siguiente cliente: ${JSON.stringify(dbData)}.
-  Por favor, proporciona una respuesta natural y profesional que:
-  1. Describa al cliente de manera clara y detallada
-  2. Mencione su nombre, dirección y datos de contacto
-  3. Incluya información sobre su ubicación (población, provincia)
-  4. Proporcione datos fiscales si están disponibles
-  5. Sugiera posibles próximos pasos o información relacionada`;
+  Por favor, proporciona una respuesta natural y conversacional que:
+  1. Comience con una confirmación amigable
+  2. Describa al cliente de manera clara y detallada
+  3. Incluya todos los datos relevantes de manera organizada
+  4. Termine con una pregunta o sugerencia para continuar la conversación
+  5. Mantenga un tono profesional pero cercano
+  
+  Ejemplo de tono deseado:
+  "¡Perfecto! Aquí tienes la información completa del cliente...
+  ¿Te gustaría saber algo más sobre este cliente o prefieres buscar otro?"`;
 
   const aiResponse = await getDeepSeekResponse(prompt, dbData);
   return aiResponse || formatBasicResponse(dbData, contextType);
