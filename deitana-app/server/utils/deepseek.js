@@ -7,7 +7,7 @@ const assistantContext = {
   lastQuery: null,
   lastResponse: null,
   conversationHistory: [],
-  lastIndex: null,
+  lastIndex: 0,  // Índice para controlar qué acción mostrar
   lastCreditoCaucion: null
 };
 
@@ -83,7 +83,7 @@ async function searchArticulosByName(nombre) {
   }
 }
 
-async function queryAccionesCom(limit = null) {
+async function queryAccionesCom(limit = null, offset = 0) {
   const query = `
     SELECT 
       ac.id as accion_id,
@@ -100,13 +100,151 @@ async function queryAccionesCom(limit = null) {
     LEFT JOIN acciones_com_acco_not acn ON ac.id = acn.id
     GROUP BY ac.id, v.id, ac.ACCO_DENO, ac.ACCO_CDCL, ac.ACCO_CDVD, ac.ACCO_FEC, ac.ACCO_HOR
     ORDER BY ac.ACCO_FEC DESC, ac.ACCO_HOR DESC
-    ${limit ? 'LIMIT ?' : ''}`;
+    ${limit ? 'LIMIT ? OFFSET ?' : ''}`;
   
   try {
-    const [results] = await db.query(query, limit ? [limit] : []);
+    const [results] = await db.query(query, limit ? [limit, offset] : []);
     return results;
   } catch (error) {
     console.error('Error en consulta SQL:', error);
+    return null;
+  }
+}
+
+async function queryAccionesComerciales() {
+  const query = `
+    SELECT 
+      ac.id as accion_id,
+      ac.ACCO_DENO as tipo_accion,
+      DATE_FORMAT(ac.ACCO_FEC, '%d/%m/%Y') as fecha,
+      TIME_FORMAT(ac.ACCO_HOR, '%H:%i') as hora,
+      v.id as vendedor_id,
+      v.VD_DENO as vendedor_nombre,
+      c.id as cliente_id,
+      c.CL_DENO as cliente_nombre,
+      GROUP_CONCAT(acn.C0 ORDER BY acn.id2 SEPARATOR ' | ') as notas
+    FROM acciones_com ac
+    LEFT JOIN vendedores v ON ac.ACCO_CDVD = v.id
+    LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
+    LEFT JOIN acciones_com_acco_not acn ON ac.id = acn.id
+    WHERE ac.ACCO_FEC >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+    GROUP BY ac.id, v.id, c.id, ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR
+    ORDER BY ac.ACCO_FEC DESC, ac.ACCO_HOR DESC
+    LIMIT 50`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results;
+  } catch (error) {
+    console.error('Error al consultar acciones comerciales:', error);
+    return null;
+  }
+}
+
+async function queryAccionesComercialesPorAnio(anio) {
+  const query = `
+    SELECT 
+      ac.id as accion_id,
+      ac.ACCO_DENO as tipo_accion,
+      DATE_FORMAT(ac.ACCO_FEC, '%d/%m/%Y') as fecha,
+      TIME_FORMAT(ac.ACCO_HOR, '%H:%i') as hora,
+      v.id as vendedor_id,
+      v.VD_DENO as vendedor_nombre,
+      c.id as cliente_id,
+      c.CL_DENO as cliente_nombre,
+      GROUP_CONCAT(acn.C0 ORDER BY acn.id2 SEPARATOR ' | ') as notas
+    FROM acciones_com ac
+    LEFT JOIN vendedores v ON ac.ACCO_CDVD = v.id
+    LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
+    LEFT JOIN acciones_com_acco_not acn ON ac.id = acn.id
+    WHERE YEAR(ac.ACCO_FEC) = ?
+    GROUP BY ac.id, v.id, c.id, ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR
+    ORDER BY ac.ACCO_FEC DESC, ac.ACCO_HOR DESC`;
+  
+  try {
+    const [results] = await db.query(query, [anio]);
+    return results;
+  } catch (error) {
+    console.error('Error al consultar acciones comerciales por año:', error);
+    return null;
+  }
+}
+
+async function queryUltimaAccionComercial() {
+  const query = `
+    SELECT 
+      ac.id as accion_id,
+      ac.ACCO_DENO as tipo_accion,
+      DATE_FORMAT(ac.ACCO_FEC, '%d/%m/%Y') as fecha,
+      TIME_FORMAT(ac.ACCO_HOR, '%H:%i') as hora,
+      v.id as vendedor_id,
+      v.VD_DENO as vendedor_nombre,
+      c.id as cliente_id,
+      c.CL_DENO as cliente_nombre,
+      GROUP_CONCAT(acn.C0 ORDER BY acn.id2 SEPARATOR ' | ') as notas
+    FROM acciones_com ac
+    LEFT JOIN vendedores v ON ac.ACCO_CDVD = v.id
+    LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
+    LEFT JOIN acciones_com_acco_not acn ON ac.id = acn.id
+    GROUP BY ac.id, v.id, c.id, ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR
+    ORDER BY ac.ACCO_FEC DESC, ac.ACCO_HOR DESC
+    LIMIT 1`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results[0] || null;
+  } catch (error) {
+    console.error('Error al consultar última acción comercial:', error);
+    return null;
+  }
+}
+
+async function queryAccionesComercialesPorTipo(tipo) {
+  const query = `
+    SELECT 
+      ac.id as accion_id,
+      ac.ACCO_DENO as tipo_accion,
+      DATE_FORMAT(ac.ACCO_FEC, '%d/%m/%Y') as fecha,
+      TIME_FORMAT(ac.ACCO_HOR, '%H:%i') as hora,
+      v.id as vendedor_id,
+      v.VD_DENO as vendedor_nombre,
+      c.id as cliente_id,
+      c.CL_DENO as cliente_nombre,
+      GROUP_CONCAT(acn.C0 ORDER BY acn.id2 SEPARATOR ' | ') as notas
+    FROM acciones_com ac
+    LEFT JOIN vendedores v ON ac.ACCO_CDVD = v.id
+    LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
+    LEFT JOIN acciones_com_acco_not acn ON ac.id = acn.id
+    WHERE ac.ACCO_DENO = ?
+    GROUP BY ac.id, v.id, c.id, ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR
+    ORDER BY ac.ACCO_FEC DESC, ac.ACCO_HOR DESC`;
+  
+  try {
+    const [results] = await db.query(query, [tipo]);
+    return results;
+  } catch (error) {
+    console.error('Error al consultar acciones comerciales por tipo:', error);
+    return null;
+  }
+}
+
+async function queryEstadisticasAccionesComerciales() {
+  const query = `
+    SELECT 
+      YEAR(ac.ACCO_FEC) as anio,
+      COUNT(DISTINCT ac.id) as total_acciones,
+      ac.ACCO_DENO as tipo_accion,
+      COUNT(DISTINCT ac.ACCO_CDCL) as total_clientes,
+      COUNT(DISTINCT ac.ACCO_CDVD) as total_vendedores
+    FROM acciones_com ac
+    GROUP BY YEAR(ac.ACCO_FEC), ac.ACCO_DENO
+    ORDER BY YEAR(ac.ACCO_FEC) DESC, COUNT(DISTINCT ac.id) DESC`;
+  
+  try {
+    const [results] = await db.query(query);
+    return results;
+  } catch (error) {
+    console.error('Error al consultar estadísticas de acciones comerciales:', error);
     return null;
   }
 }
@@ -1053,32 +1191,7 @@ async function queryCategoriaPorNombre(nombre) {
   }
 }
 
-async function queryCreditosCaucion(options = {}) {
-  const { id, clienteId, tipo, diasMinimos, limit, random } = options;
-
-  let conditions = [];
-  let params = [];
-  
-  if (id) {
-    conditions.push('cc.id = ?');
-    params.push(id);
-  }
-  
-  if (clienteId) {
-    conditions.push('cc.CAU_CCL = ?');
-    params.push(clienteId);
-  }
-  
-  if (tipo) {
-    conditions.push('cc.CAU_TIPO = ?');
-    params.push(tipo);
-  }
-  
-  if (diasMinimos) {
-    conditions.push('cc.CAU_DIAS >= ?');
-    params.push(diasMinimos);
-  }
-
+async function queryCreditosCaucion(limit = null) {
   const query = `
     SELECT 
       cc.id,
@@ -1094,37 +1207,22 @@ async function queryCreditosCaucion(options = {}) {
     FROM creditocau cc
     LEFT JOIN clientes c ON cc.CAU_CCL = c.id
     LEFT JOIN creditocau_cau_obs obs ON cc.id = obs.id
-    ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}
+    WHERE obs.id IS NOT NULL
     GROUP BY cc.id, cc.CAU_CCL, cc.CAU_DIAS, cc.CAU_TIPO, c.CL_DENO
-    ${random ? 'ORDER BY RAND()' : 'ORDER BY cc.id DESC'}
-    ${limit ? 'LIMIT ?' : ''}`;
-
-  if (limit) params.push(limit);
+    ORDER BY RAND()
+    LIMIT 1`;
   
   try {
-    const [results] = await db.query(query, params);
+    const [results] = await db.query(query);
+    if (!results || results.length === 0) {
+      return null;
+    }
+
     return results.map(r => ({
       ...r,
       observaciones: r.observaciones ? r.observaciones.split('|||').filter(obs => obs.trim()) : [],
       tipo_descripcion: r.tipo === 'A' ? 'Asegurado' : 'No Asegurado'
     }));
-  } catch (error) {
-    console.error('Error en consulta SQL:', error);
-    return null;
-  }
-}
-
-async function queryTotalCreditosCaucion() {
-  const query = `
-    SELECT 
-      COUNT(*) as total,
-      SUM(CASE WHEN CAU_TIPO = 'A' THEN 1 ELSE 0 END) as total_asegurados,
-      SUM(CASE WHEN CAU_TIPO = 'N' THEN 1 ELSE 0 END) as total_no_asegurados
-    FROM creditocau`;
-  
-  try {
-    const [results] = await db.query(query);
-    return results[0];
   } catch (error) {
     console.error('Error en consulta SQL:', error);
     return null;
@@ -1163,70 +1261,591 @@ async function processMessage(userMessage) {
   try {
     console.log('Procesando mensaje en deepseek.js:', userMessage);
 
-    // Primero, obtener los datos necesarios según el tipo de consulta
     let dbData = null;
+    let vendedoresData = null;
+    let proveedoresData = null;
+    let articulosData = null;
     let contextType = null;
     const messageLower = userMessage.toLowerCase();
 
-    // Consulta sobre proveedores con teléfono
-    if (messageLower.includes('proveedor') && messageLower.includes('teléfono')) {
-      dbData = await queryProveedoresConTelefono(5);
-      contextType = 'proveedores_telefono';
-    }
-    // Consulta sobre bandejas
-    else if (messageLower.includes('bandeja') || messageLower.includes('bandejas')) {
-      dbData = await queryBandejas();
-      contextType = 'tipos_bandejas';
-    }
-    // Consulta sobre créditos caución
-    else if (messageLower.includes('credito') && messageLower.includes('caucion')) {
-      if (messageLower.includes('cuantos') || messageLower.includes('total')) {
-        dbData = await queryTotalCreditosCaucion();
-        contextType = 'total_creditos_caucion';
+    // Detección del tipo de consulta
+    if (messageLower.includes('acciones comerciales') || 
+        messageLower.includes('acciones realizadas') ||
+        messageLower.includes('interacciones con clientes') ||
+        messageLower.includes('gestiones comerciales')) {
+      
+      // Detectar consultas específicas sobre acciones comerciales
+      if (messageLower.includes('última') || messageLower.includes('ultima')) {
+        dbData = await queryUltimaAccionComercial();
+        contextType = 'ultima_accion_comercial';
+      } else if (messageLower.match(/\d{4}/)) {
+        const anio = messageLower.match(/\d{4}/)[0];
+        dbData = await queryAccionesComercialesPorAnio(anio);
+        contextType = 'acciones_comerciales_anio';
+      } else if (messageLower.includes('tipo') || messageLower.includes('tipos')) {
+        const tipos = ['CAMPAÑA', 'COBROS', 'E-MAIL', 'INCIDENCIA', 'LLAMADA', 'NEGOCIACION', 'OTROS', 'TARJETA', 'VISITA'];
+        dbData = tipos;
+        contextType = 'tipos_acciones_comerciales';
+      } else if (messageLower.includes('estadísticas') || messageLower.includes('estadisticas')) {
+        dbData = await queryEstadisticasAccionesComerciales();
+        contextType = 'estadisticas_acciones_comerciales';
       } else {
-        dbData = await queryCreditosCaucion({ limit: 5 });
+        dbData = await queryAccionesComerciales();
+        contextType = 'acciones_comerciales';
+      }
+    } else if (messageLower.includes('vendedor') && 
+               (messageLower.includes('más acciones') || 
+                messageLower.includes('mas acciones') || 
+                messageLower.includes('gestionó más') || 
+                messageLower.includes('gestiono mas'))) {
+      dbData = await queryVendedorMasAcciones();
+      contextType = 'vendedor_mas_acciones';
+    } else if (messageLower.includes('incidencia') || messageLower.includes('incidencias')) {
+      dbData = await queryAccionesComercialesPorTipo('INCIDENCIA');
+      contextType = 'incidencias';
+    } else if (messageLower.includes('visita') || messageLower.includes('visitas')) {
+      dbData = await queryAccionesComercialesPorTipo('VISITA');
+      contextType = 'visitas';
+    } else if (messageLower.includes('llamada') || messageLower.includes('llamadas')) {
+      dbData = await queryAccionesComercialesPorTipo('LLAMADA');
+      contextType = 'llamadas';
+    } else if (messageLower.includes('email') || messageLower.includes('correo')) {
+      dbData = await queryAccionesComercialesPorTipo('E-MAIL');
+      contextType = 'emails';
+    } else if (messageLower.includes('negociación') || messageLower.includes('negociacion')) {
+      dbData = await queryAccionesComercialesPorTipo('NEGOCIACION');
+      contextType = 'negociaciones';
+    } else if (messageLower.includes('campaña') || messageLower.includes('campana')) {
+      dbData = await queryAccionesComercialesPorTipo('CAMPAÑA');
+      contextType = 'campanas';
+    } else if (messageLower.includes('cobros')) {
+      dbData = await queryAccionesComercialesPorTipo('COBROS');
+      contextType = 'cobros';
+    } else if (messageLower.includes('tarjeta')) {
+      dbData = await queryAccionesComercialesPorTipo('TARJETA');
+      contextType = 'tarjetas';
+    } else if (messageLower.includes('otros')) {
+      dbData = await queryAccionesComercialesPorTipo('OTROS');
+      contextType = 'otros';
+    } else if (messageLower.includes('proveedor') && messageLower.includes('más productos')) {
+      proveedoresData = await queryProveedorConMasArticulos();
+      if (proveedoresData) {
+        articulosData = await queryArticulosDeProveedor(proveedoresData.proveedor_id);
+      }
+      contextType = 'proveedor_mas_articulos';
+    } else if (messageLower.includes('productos de') || messageLower.includes('artículos de')) {
+      const lastProvider = assistantContext.lastResponse ? 
+        assistantContext.lastResponse.match(/ID: (\d+)/)?.[1] : null;
+      if (lastProvider) {
+        articulosData = await queryArticulosDeProveedor(lastProvider);
+        proveedoresData = await queryProveedorConMasArticulos();
+        contextType = 'articulos_proveedor';
+      }
+    } else if (messageLower.includes('quien provee') || messageLower.includes('proveedor de') || 
+               messageLower.includes('que proveedor tiene')) {
+      const searchTerms = messageLower.split(' ').filter(word => 
+        word.length > 3 && 
+        !['quien', 'provee', 'proveedor', 'de', 'el', 'la', 'los', 'las', 'tiene', 'que'].includes(word)
+      );
+      if (searchTerms.length > 0) {
+        const results = await searchArticulosByName(searchTerms.join(' '));
+        articulosData = results && results.length > 0 ? results[0] : null;
+        contextType = 'busqueda_articulo';
+      }
+    } else if (messageLower.includes('empleados') || messageLower.includes('vendedor') || 
+               messageLower.includes('vendedores') || messageLower.match(/dame \d+ vendedores?/)) {
+      // Detectar si se solicita un número específico de vendedores
+      const numMatch = messageLower.match(/dame (\d+) vendedores?/);
+      const limit = numMatch ? parseInt(numMatch[1]) : null;
+      
+      dbData = await queryVendedoresDetallado(limit);
+      contextType = 'empleados_lista';
+    } else if (messageLower.includes('acciones comerciales') || 
+               messageLower.includes('acciones registradas') ||
+               messageLower.includes('que tipo de acciones') ||
+               (messageLower.includes('accion') && messageLower.includes('comercial'))) {
+      vendedoresData = await queryVendedores();
+      const currentOffset = assistantContext.lastIndex || 0;
+      dbData = await queryAccionesCom(1, currentOffset);
+      contextType = 'acciones_comerciales';
+      assistantContext.lastIndex = currentOffset + 1;
+    } else if (messageLower.includes('gestion') || messageLower.includes('gestiona')) {
+      vendedoresData = await queryVendedores();
+      dbData = await queryAccionesCom();
+      contextType = 'acciones_comerciales';
+    } else if (messageLower.includes('clientes') || messageLower.includes('cliente')) {
+      contextType = 'clientes';
+      
+      if (messageLower.includes('provincia')) {
+        const provincia = messageLower.match(/provincia de ([a-zá-úñ\s]+)/i)?.[1];
+        if (provincia) {
+          dbData = await queryClientesPorProvincia(provincia);
+          contextType = 'clientes_provincia';
+        }
+      } else if (messageLower.includes('población') || messageLower.includes('poblacion')) {
+        const poblacion = messageLower.match(/población de ([a-zá-úñ\s]+)/i)?.[1] || 
+                         messageLower.match(/poblacion de ([a-zá-úñ\s]+)/i)?.[1];
+        if (poblacion) {
+          dbData = await queryClientesPorPoblacion(poblacion);
+          contextType = 'clientes_poblacion';
+        }
+      } else if (messageLower.includes('cif')) {
+        const cif = messageLower.match(/cif ([a-z0-9]+)/i)?.[1];
+        if (cif) {
+          dbData = await queryClientePorCIF(cif);
+          contextType = 'cliente_cif';
+        }
+      } else if (messageLower.includes('ordenados')) {
+        dbData = await queryClientesOrdenados();
+        contextType = 'clientes_ordenados';
+      } else if (messageLower.includes('españa') || messageLower.includes('espana')) {
+        dbData = await queryClientesPorPais('ESPAÑA');
+        contextType = 'clientes_pais';
+      } else if (messageLower.includes('información de') || messageLower.includes('informacion de')) {
+        const nombre = messageLower.match(/información de "(.*?)"/i)?.[1] || 
+                      messageLower.match(/informacion de "(.*?)"/i)?.[1];
+        if (nombre) {
+          dbData = await queryClientePorNombre(nombre);
+          contextType = 'cliente_nombre';
+        } else {
+          dbData = await queryClientesOrdenados(5);
+          contextType = 'clientes_info';
+        }
+      }
+    } else if (messageLower.includes('proveedor') || messageLower.includes('proveedores')) {
+      if (messageLower.includes('provincia')) {
+        const provincia = messageLower.match(/provincia de ([a-zá-úñ\s]+)/i)?.[1];
+        if (provincia) {
+          dbData = await queryProveedoresPorProvincia(provincia);
+          contextType = 'proveedores_provincia';
+        }
+      } else if (messageLower.includes('población') || messageLower.includes('poblacion')) {
+        const poblacion = messageLower.match(/población de ([a-zá-úñ\s]+)/i)?.[1] || 
+                         messageLower.match(/poblacion de ([a-zá-úñ\s]+)/i)?.[1];
+        if (poblacion) {
+          dbData = await queryProveedoresPorPoblacion(poblacion);
+          contextType = 'proveedores_poblacion';
+        }
+      } else if (messageLower.includes('código') || messageLower.includes('codigo')) {
+        const codigo = messageLower.match(/código (\d+)/i)?.[1] || 
+                      messageLower.match(/codigo (\d+)/i)?.[1];
+        if (codigo) {
+          dbData = await queryProveedorPorId(codigo.padStart(5, '0'));
+          contextType = 'proveedor_id';
+        }
+      } else if (messageLower.includes('empiecen con') || messageLower.includes('letra')) {
+        const letra = messageLower.match(/letra ["']?([a-z])["']?/i)?.[1];
+        if (letra) {
+          dbData = await queryProveedoresPorLetra(letra);
+          contextType = 'proveedores_letra';
+        }
+      } else if (messageLower.includes('web') || messageLower.includes('página web')) {
+        dbData = await queryProveedoresConWeb();
+        contextType = 'proveedores_web';
+      } else if (messageLower.includes('teléfono') || messageLower.includes('telefono')) {
+        if (messageLower.includes('número')) {
+          const telefono = messageLower.match(/número[:\s]+([0-9\s]+)/i)?.[1];
+          if (telefono) {
+            dbData = await queryProveedoresPorTelefono(telefono.trim());
+            contextType = 'proveedor_telefono';
+          }
+        } else {
+          dbData = await queryProveedoresConTelefono();
+          contextType = 'proveedores_con_telefono';
+        }
+      } else if (messageLower.includes('fax')) {
+        dbData = await queryProveedoresConFax();
+        contextType = 'proveedores_fax';
+      } else if (messageLower.includes('información completa') || messageLower.includes('informacion completa')) {
+        const nombre = messageLower.match(/["'](.*?)["']/)?.[1];
+        if (nombre) {
+          dbData = await queryProveedorPorNombre(nombre);
+          contextType = 'proveedor_info_completa';
+        }
+      }
+    } else if (messageLower.includes('quien') && 
+               (messageLower.includes('gestiono mas') || messageLower.includes('gestionó más')) && 
+               messageLower.includes('acciones')) {
+      dbData = await queryVendedorMasAcciones();
+      contextType = 'vendedor_mas_acciones';
+    } else if (messageLower.includes('bandeja') || messageLower.includes('bandejas')) {
+      if (messageLower.includes('más alveolos') || messageLower.includes('mayor número')) {
+        dbData = await queryBandejaMasAlveolos();
+        contextType = 'bandeja_mas_alveolos';
+      } else if (messageLower.match(/más de (\d+) alveolos/)) {
+        const numAlveolos = parseInt(messageLower.match(/más de (\d+) alveolos/)[1]);
+        dbData = await queryBandejasConMasAlveolos(numAlveolos);
+        contextType = 'bandejas_filtradas';
+      } else if (messageLower.includes('tipos de bandejas') || messageLower.includes('que bandejas')) {
+        dbData = await queryBandejas();
+        contextType = 'tipos_bandejas';
+      } else if (messageLower.match(/dime (\d+) bandejas/)) {
+        const numBandejas = parseInt(messageLower.match(/dime (\d+) bandejas/)[1]);
+        dbData = await queryBandejas(numBandejas);
+        contextType = 'lista_bandejas';
+      } else {
+        dbData = await queryBandejas(5);
+        contextType = 'tipos_bandejas';
+      }
+    } else if (messageLower.includes('casa') && messageLower.includes('comercial')) {
+      let options = {};
+      
+      // Detectar provincia
+      const provinciaMatch = messageLower.match(/(?:en|de) ([a-zá-úñ]+)(?:\s|$)/i);
+      if (provinciaMatch) {
+        options.provincia = provinciaMatch[1];
+      }
+      
+      // Detectar código postal
+      const cpMatch = messageLower.match(/(?:postal|cp) (\d{5})/);
+      if (cpMatch) {
+        options.codigoPostal = cpMatch[1];
+      }
+      
+      // Detectar filtros específicos
+      if (messageLower.includes('teléfono') || messageLower.includes('telefono')) {
+        options.conTelefono = true;
+      }
+      if (messageLower.includes('correo') || messageLower.includes('email')) {
+        options.conEmail = true;
+      }
+      if (messageLower.includes('web') || messageLower.includes('página web')) {
+        options.conWeb = true;
+      }
+      
+      // Detectar límite
+      const limitMatch = messageLower.match(/(?:muestra|dame|ver|lista|mostrar) (\d+)/);
+      if (limitMatch) {
+        options.limit = parseInt(limitMatch[1]);
+      }
+      
+      if (Object.keys(options).length > 0) {
+        dbData = await queryCasasComercialConFiltros(options);
+        contextType = 'casas_comerciales_filtradas';
+      } else {
+        dbData = await queryCasasComercialesTodas();
+        contextType = 'casas_comerciales_todas';
+      }
+    } else if (messageLower.includes('categorias') || messageLower.includes('categorías') || 
+               (messageLower.match(/(encargado|conductor|produccion)/i) && 
+                (messageLower.includes('cobra') || messageLower.includes('salario') || 
+                 messageLower.includes('hora') || messageLower.includes('costo')))) {
+      
+      // Detectar tipo de consulta
+      let tipoConsulta = null;
+      if (messageLower.includes('hora extra')) {
+        tipoConsulta = 'hora_extra';
+      } else if (messageLower.includes('por hora')) {
+        tipoConsulta = 'costo_hora';
+      } else if (messageLower.includes('cobra') || messageLower.includes('salario') || messageLower.includes('por dia')) {
+        tipoConsulta = 'salario';
+      }
+
+      // Detectar categoría
+      const categoriaMatch = messageLower.match(/(encargado|conductor|produccion)/i);
+      
+      if (categoriaMatch) {
+        dbData = await queryCategoriaPorNombre(categoriaMatch[1]);
+        if (dbData) {
+          dbData.tipoConsulta = tipoConsulta;
+          contextType = 'categoria_especifica';
+        }
+      } else if (messageLower.includes('cuantas') || messageLower.includes('cuántas')) {
+        dbData = await queryCategorias();
+        contextType = 'total_categorias';
+      } else {
+        dbData = await queryCategorias();
+        contextType = 'lista_categorias';
+      }
+    } else if (messageLower.includes('credito') && messageLower.includes('caucion')) {
+      if (messageLower.includes('si') && assistantContext.lastCreditoCaucion) {
+        // Si el usuario responde "sí" a ver la información del cliente
+        const clienteInfo = await queryClientePorId(assistantContext.lastCreditoCaucion.cliente_id);
+        dbData = {
+          ...assistantContext.lastCreditoCaucion,
+          clienteInfo
+        };
+        contextType = 'ejemplo_credito_caucion';
+      } else if (messageLower.includes('ejemplo') || messageLower.match(/muestra(?:me)? (?:un|1)/)) {
+        const data = await queryCreditosCaucion(1);
+        if (data && data[0]) {
+          // Guardar el crédito caución actual en el contexto
+          assistantContext.lastCreditoCaucion = data[0];
+        }
+        dbData = data;
+        contextType = 'ejemplo_credito_caucion';
+      } else {
+        dbData = await queryCreditosCaucion(5);
         contextType = 'lista_creditos_caucion';
       }
+    } else {
+      // Manejo de conversación general
+      contextType = 'conversacion_general';
     }
-    // ... otros tipos de consultas ...
 
-    // Construir el prompt para la IA
-    const systemPrompt = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.
+    // Preparar el prompt según el tipo de consulta
+    let systemContent = `Eres un asistente experto del ERP DEITANA de Semilleros Deitana.\n\n`;
 
-CONTEXTO ACTUAL:
-${contextType ? `Tipo de consulta: ${contextType}` : 'Consulta general'}
+    if (contextType === 'vendedor_mas_acciones') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Se está consultando el vendedor que ha gestionado más acciones comerciales
+- Los datos provienen directamente de las tablas vendedores y acciones_com
+- La información incluye el total de acciones y los tipos de acciones realizadas
 
 DATOS DISPONIBLES:
 ${JSON.stringify(dbData || {}, null, 2)}
 
-INSTRUCCIONES:
-1. Analiza la consulta del usuario y los datos disponibles
-2. Proporciona una respuesta detallada y profesional
-3. Si los datos están disponibles, úsalos para dar información específica
-4. Si no hay datos suficientes, indica qué información adicional se necesita
-5. Mantén un tono profesional pero conversacional
-6. Responde SIEMPRE en español
+REGLAS DE PRESENTACIÓN:
+1. Mostrar:
+   - Nombre del vendedor y su ID
+   - Total de acciones gestionadas
+   - Período de actividad (primera a última acción)
+   - Tipos de acciones que ha realizado
 
-REGLAS:
-1. NUNCA inventes datos que no estén en la base de datos
-2. Si no hay datos disponibles, indícalo claramente
-3. Usa los datos EXACTAMENTE como aparecen en la base de datos
-4. Si necesitas más información, pregunta al usuario
-5. Mantén la privacidad de los datos sensibles
+2. Formato:
+   - Presentación clara y directa
+   - Fechas en formato dd/mm/yyyy
+   - Números con separadores de miles
+
+IMPORTANTE:
+- Usar EXACTAMENTE los nombres como aparecen en la base de datos
+- NO incluir información adicional que no esté en los datos
+- Presentar la información de manera profesional y concisa
+
+RESPUESTA ESPECÍFICA:
+Si hay datos, mostrar EXACTAMENTE:
+"El vendedor que ha gestionado más acciones comerciales es [nombre_vendedor] (ID: [vendedor_id]) con un total de [total_acciones] acciones.
+
+Período de actividad:
+- Primera acción: [primera_accion]
+- Última acción: [ultima_accion]
+
+Tipos de acciones realizadas:
+[lista de tipos de acciones]
+
+Si no hay datos, mostrar:
+"No se encontraron datos suficientes para determinar el vendedor con más acciones comerciales."`;
+
+    } else if (contextType === 'conversacion_general') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Eres un asistente amigable y profesional de Semilleros Deitana.
+- Puedes ayudar con consultas sobre:
+  * Artículos y proveedores
+  * Acciones comerciales y vendedores
+  * Información de clientes
+  * Conversación general relacionada con el negocio
+
+HISTORIAL DE CONVERSACIÓN:
+${assistantContext.conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}
+
+INSTRUCCIONES:
+1. Mantén un tono profesional pero amigable
+2. Si el mensaje es general (saludos, agradecimientos, etc.), responde apropiadamente
+3. Si no entiendes la consulta, pide aclaraciones
+4. Sugiere tipos de consultas que puedes responder
+5. Responde en español
+
+EJEMPLOS DE CONSULTAS QUE PUEDO AYUDAR:
+- Información sobre proveedores y sus productos
+- Detalles de acciones comerciales y vendedores
+- Datos de clientes y su información de contacto
+- Consultas generales sobre el negocio`;
+    } else if (contextType === 'acciones_comerciales') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Las acciones comerciales son registros de interacciones con clientes
+- Cada acción tiene un tipo (ACCO_DENO), fecha, hora y vendedor asociado
+- Los datos provienen directamente de la tabla acciones_com
+- Las notas son importantes y deben mostrarse cuando existan
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || [], null, 2)}
+
+REGLAS ESTRICTAS:
+1. SOLO mostrar acciones que existan en los datos
+2. NO inventar tipos de acciones
+3. NO inventar fechas o vendedores
+4. NO inventar notas o detalles
+5. Si no hay datos, indicar claramente "No se encontraron acciones comerciales registradas"
 
 FORMATO DE RESPUESTA:
-1. Primero, responde directamente a la pregunta
-2. Luego, proporciona contexto adicional si es relevante
-3. Si es apropiado, sugiere preguntas relacionadas`;
+1. Agrupar por tipo de acción
+2. Para cada acción mostrar:
+   - Tipo exacto de acción (ACCO_DENO)
+   - Fecha y hora exactas
+   - Vendedor asociado
+   - Cliente asociado
+   - Notas si existen
+3. Ordenar por fecha descendente
+4. Usar formato dd/mm/yyyy para fechas
 
-    // Llamada a la API de DeepSeek
+IMPORTANTE:
+- Si no hay datos, responder SOLO con "No se encontraron acciones comerciales registradas"
+- NO sugerir tipos de acciones que no estén en los datos
+- NO inventar información bajo ninguna circunstancia`;
+    } else if (contextType === 'ultima_accion_comercial') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Se está consultando la última acción comercial registrada
+- Debe mostrar todos los detalles disponibles
+- Las notas son especialmente importantes
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || {}, null, 2)}
+
+REGLAS ESTRICTAS:
+1. Mostrar SOLO los datos reales
+2. NO inventar información
+3. Si no hay datos, indicar claramente "No se encontraron acciones comerciales registradas"
+
+FORMATO DE RESPUESTA:
+1. Mostrar:
+   - Tipo de acción
+   - Fecha y hora exactas
+   - Vendedor responsable
+   - Cliente involucrado
+   - Notas completas si existen
+2. Usar formato dd/mm/yyyy para fechas
+
+IMPORTANTE:
+- Si no hay datos, responder SOLO con "No se encontraron acciones comerciales registradas"
+- NO inventar información bajo ninguna circunstancia`;
+    } else if (contextType === 'acciones_comerciales_anio') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Se están consultando acciones comerciales de un año específico
+- Debe mostrar todas las acciones de ese año
+- Las notas son importantes
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || [], null, 2)}
+
+REGLAS ESTRICTAS:
+1. Mostrar SOLO las acciones del año especificado
+2. NO inventar información
+3. Si no hay datos, indicar claramente "No se encontraron acciones comerciales para el año [año]"
+
+FORMATO DE RESPUESTA:
+1. Agrupar por tipo de acción
+2. Para cada acción mostrar:
+   - Tipo exacto de acción
+   - Fecha y hora exactas
+   - Vendedor asociado
+   - Cliente asociado
+   - Notas si existen
+3. Ordenar por fecha descendente
+4. Usar formato dd/mm/yyyy para fechas
+
+IMPORTANTE:
+- Si no hay datos, responder SOLO con "No se encontraron acciones comerciales para el año [año]"
+- NO inventar información bajo ninguna circunstancia`;
+    } else if (contextType === 'tipos_acciones_comerciales') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Se están consultando los tipos de acciones comerciales disponibles
+- Estos tipos son fijos y no pueden modificarse
+- Cada tipo tiene un propósito específico
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || [], null, 2)}
+
+REGLAS ESTRICTAS:
+1. Mostrar SOLO los tipos que existen en la base de datos
+2. NO inventar tipos adicionales
+3. NO modificar los nombres de los tipos
+
+FORMATO DE RESPUESTA:
+1. Listar todos los tipos disponibles
+2. Para cada tipo, explicar brevemente su propósito:
+   - CAMPAÑA: Acciones relacionadas con campañas comerciales
+   - COBROS: Gestión de cobros y pagos
+   - E-MAIL: Comunicaciones por correo electrónico
+   - INCIDENCIA: Problemas o quejas reportadas
+   - LLAMADA: Comunicaciones telefónicas
+   - NEGOCIACION: Procesos de negociación
+   - OTROS: Otras acciones no categorizadas
+   - TARJETA: Acciones relacionadas con tarjetas
+   - VISITA: Visitas a clientes
+
+IMPORTANTE:
+- NO inventar tipos adicionales
+- NO modificar los nombres de los tipos
+- Mantener un tono profesional y técnico`;
+    } else if (contextType === 'estadisticas_acciones_comerciales') {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Se están consultando estadísticas de acciones comerciales
+- Los datos son históricos y no pueden modificarse
+- Las estadísticas incluyen totales por año y tipo
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || [], null, 2)}
+
+REGLAS ESTRICTAS:
+1. Mostrar SOLO los datos reales de la base de datos
+2. NO inventar estadísticas
+3. NO modificar los números
+
+FORMATO DE RESPUESTA:
+1. Agrupar por año
+2. Para cada año mostrar:
+   - Total de acciones
+   - Distribución por tipo
+   - Total de clientes involucrados
+   - Total de vendedores involucrados
+3. Ordenar por año descendente
+
+IMPORTANTE:
+- Usar números exactos de la base de datos
+- NO redondear ni aproximar
+- Mantener un tono profesional y técnico`;
+    } else if (contextType.startsWith('incidencias') || 
+               contextType.startsWith('visitas') || 
+               contextType.startsWith('llamadas') || 
+               contextType.startsWith('emails') || 
+               contextType.startsWith('negociaciones') || 
+               contextType.startsWith('campanas') || 
+               contextType.startsWith('cobros') || 
+               contextType.startsWith('tarjetas') || 
+               contextType.startsWith('otros')) {
+      systemContent += `CONTEXTO IMPORTANTE:
+- Se están consultando acciones comerciales de un tipo específico
+- Los datos son históricos y no pueden modificarse
+- Las notas son especialmente importantes
+
+DATOS DISPONIBLES:
+${JSON.stringify(dbData || [], null, 2)}
+
+REGLAS ESTRICTAS:
+1. Mostrar SOLO las acciones del tipo especificado
+2. NO inventar información
+3. Si no hay datos, indicar claramente "No se encontraron acciones de tipo [tipo]"
+
+FORMATO DE RESPUESTA:
+1. Para cada acción mostrar:
+   - Fecha y hora exactas
+   - Vendedor asociado
+   - Cliente asociado
+   - Notas completas si existen
+2. Ordenar por fecha descendente
+3. Usar formato dd/mm/yyyy para fechas
+
+IMPORTANTE:
+- Si no hay datos, responder SOLO con "No se encontraron acciones de tipo [tipo]"
+- NO inventar información bajo ninguna circunstancia`;
+    } else {
+      // ... existing code for other context types ...
+    }
+
+    const messages = [
+      {
+        role: "system",
+        content: systemContent
+      },
+      ...assistantContext.conversationHistory.slice(-4),
+      { role: "user", content: userMessage }
+    ];
+
+    // Llamada a la API
     const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
       model: "deepseek-chat",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage }
-      ],
-      temperature: 0.7,
+      messages: messages,
+      temperature: contextType === 'conversacion_general' ? 0.8 : 0.7,
       max_tokens: 2000
     }, {
       headers: {
@@ -1236,8 +1855,8 @@ FORMATO DE RESPUESTA:
     });
 
     const aiResponse = response.data.choices[0].message.content;
-
-    // Actualizar el contexto
+    
+    // Actualizar contexto
     assistantContext.lastQuery = userMessage;
     assistantContext.lastResponse = aiResponse;
     assistantContext.conversationHistory.push(
@@ -1245,7 +1864,7 @@ FORMATO DE RESPUESTA:
       { role: 'assistant', content: aiResponse }
     );
 
-    // Mantener el historial manejable
+    // Mantener historial manejable
     if (assistantContext.conversationHistory.length > 6) {
       assistantContext.conversationHistory = assistantContext.conversationHistory.slice(-6);
     }
@@ -1257,115 +1876,74 @@ FORMATO DE RESPUESTA:
 
   } catch (error) {
     console.error('Error en processMessage:', error);
-    
-    // En caso de error, también usamos la IA para dar una respuesta más natural
-    try {
-      const errorPrompt = `Eres un asistente experto del ERP DEITANA. 
-      Ha ocurrido un error al procesar la consulta del usuario: "${userMessage}". 
-      Por favor, genera una respuesta amable explicando que hubo un problema y sugiriendo alternativas.`;
-
-      const errorResponse = await axios.post('https://api.deepseek.com/v1/chat/completions', {
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: errorPrompt },
-          { role: "user", content: "Genera una respuesta de error amable" }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-        }
-      });
-
-      return {
-        message: errorResponse.data.choices[0].message.content,
-        context: assistantContext
-      };
-    } catch (secondaryError) {
-      console.error('Error al generar mensaje de error:', secondaryError);
-      return {
-        message: "Lo siento, ha ocurrido un error inesperado. Por favor, intenta reformular tu pregunta o contacta con soporte técnico si el problema persiste.",
-        context: assistantContext
-      };
-    }
+    return {
+      message: "Lo siento, estoy teniendo problemas para procesar tu consulta en este momento. Por favor, verifica que tu pregunta esté relacionada con acciones comerciales y vuelve a intentarlo.",
+      context: assistantContext
+    };
   }
 }
 
-function formatTotalCreditosCaucion(data) {
-  const { total, asegurados, noAsegurados } = data;
-  return `Hay un total de ${total} créditos caución registrados:
-- ${asegurados} créditos asegurados
-- ${noAsegurados} créditos no asegurados`;
-}
-
-function formatListaCreditosCaucion(data) {
+async function processAccionesComercialesResponse(data) {
   if (!data || data.length === 0) {
-    return 'No se encontraron créditos caución que coincidan con los criterios especificados.';
+    return "No se encontraron acciones comerciales registradas en los últimos 3 meses.";
   }
 
-  let response = 'Aquí tienes los créditos caución encontrados:\n\n';
-  data.forEach((credito, index) => {
-    response += `${index + 1}. Cliente: ${credito.cliente_nombre}\n`;
-    response += `   - Tipo: ${credito.tipo === 'A' ? 'Asegurado' : 'No asegurado'}\n`;
-    response += `   - Días: ${credito.dias}\n`;
-    if (credito.observaciones && credito.observaciones.length > 0) {
-      response += '   - Observaciones:\n';
-      credito.observaciones.forEach(obs => {
-        response += `     * ${obs}\n`;
-      });
-    }
-    response += '\n';
-  });
+  // Preparar el prompt para la IA con restricciones estrictas
+  const systemPrompt = `Eres un asistente experto del ERP DEITANA. Debes seguir estas reglas estrictamente:
 
-  return response;
-}
+1. SOLO usar los datos proporcionados en la base de datos
+2. NUNCA inventar o sugerir datos ficticios
+3. NUNCA proponer formatos o ejemplos hipotéticos
+4. Si no hay datos, indicar claramente "No hay datos disponibles"
+5. Respetar exactamente los nombres, fechas y notas como aparecen en la base de datos
 
-function formatEjemploCreditoCaucion(data) {
-  if (!data || (Array.isArray(data) && data.length === 0)) {
-    return 'No se encontró el crédito caución solicitado.';
-  }
+DATOS DISPONIBLES:
+${JSON.stringify(data, null, 2)}
 
-  const credito = Array.isArray(data) ? data[0] : data;
-  let response = 'Detalles del crédito caución:\n\n';
-  response += `Cliente: ${credito.cliente_nombre}\n`;
-  response += `Tipo: ${credito.tipo === 'A' ? 'Asegurado' : 'No asegurado'}\n`;
-  response += `Días: ${credito.dias}\n`;
-  
-  if (credito.observaciones && credito.observaciones.length > 0) {
-    response += 'Observaciones:\n';
-    credito.observaciones.forEach(obs => {
-      response += `- ${obs}\n`;
+INSTRUCCIONES:
+1. Mostrar SOLO los datos reales de la base de datos
+2. No sugerir ni proponer ejemplos hipotéticos
+3. No inventar información bajo ninguna circunstancia
+4. Si se solicita un ejemplo, mostrar SOLO los datos reales disponibles`;
+
+  try {
+    const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "Muestra un ejemplo de acción comercial real de la base de datos" }
+      ],
+      temperature: 0.3, // Baja temperatura para reducir la creatividad
+      max_tokens: 500
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      }
     });
-  }
 
-  if (credito.clienteInfo) {
-    response += '\nInformación adicional del cliente:\n';
-    response += `- Código: ${credito.clienteInfo.codigo}\n`;
-    response += `- Razón social: ${credito.clienteInfo.razon_social}\n`;
-    response += `- NIF: ${credito.clienteInfo.nif}\n`;
-  } else {
-    response += '\n¿Deseas ver más información sobre el cliente?';
-  }
-
-  return response;
-}
-
-function formatResponse(data, contextType) {
-  switch (contextType) {
-    // ... existing code ...
-    case 'total_creditos_caucion':
-      return formatTotalCreditosCaucion(data);
-    case 'lista_creditos_caucion':
-      return formatListaCreditosCaucion(data);
-    case 'ejemplo_credito_caucion':
-      return formatEjemploCreditoCaucion(data);
-    // ... existing code ...
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error al procesar respuesta de IA:', error);
+    // En caso de error, mostrar los datos directamente
+    let response = "Acciones Comerciales Reales:\n\n";
+    data.forEach((accion, index) => {
+      response += `Acción #${index + 1}:\n`;
+      response += `- Tipo: ${accion.tipo_accion || 'No especificado'}\n`;
+      response += `- Fecha: ${accion.fecha}\n`;
+      response += `- Hora: ${accion.hora}\n`;
+      response += `- Vendedor: ${accion.vendedor_nombre || 'No especificado'}\n`;
+      response += `- Cliente: ${accion.cliente_nombre || 'No especificado'}\n`;
+      if (accion.notas) {
+        response += `- Notas: ${accion.notas}\n`;
+      }
+      response += "\n";
+    });
+    return response;
   }
 }
 
 module.exports = {
   processMessage,
-  formatResponse
+  processAccionesComercialesResponse
 };
