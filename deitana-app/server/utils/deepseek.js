@@ -16,6 +16,47 @@ if (!DEEPSEEK_API_KEY) {
   console.error('Error: DEEPSEEK_API_KEY no está configurada en las variables de entorno');
 }
 
+// Prompt base para la IA
+const SYSTEM_PROMPT = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en analizar consultas y derivarlas al módulo correspondiente.
+
+Tu Objetivo Principal: Analizar la consulta del usuario y determinar a qué módulo debe ser derivada, basándote en:
+1. El contexto de la conversación
+2. El tema actual
+3. La intención de la consulta
+
+Módulos Disponibles:
+1. Artículos: Consultas sobre productos, inventario, catálogo, semillas, plantas, etc.
+2. Acciones Comerciales: Consultas sobre interacciones con clientes, incidencias, observaciones, etc.
+3. Proveedores: Consultas sobre suministradores, compras, etc.
+4. Clientes: Consultas sobre clientes, pedidos, etc.
+5. Vendedores: Consultas sobre el equipo comercial, etc.
+6. Bandejas: Consultas sobre contenedores, etc.
+7. Casas Comerciales: Consultas sobre distribuidores, etc.
+
+Proceso de Análisis:
+1. Lee la consulta del usuario
+2. Analiza el contexto de la conversación
+3. Identifica el tema principal
+4. Determina el módulo más apropiado
+5. Deriva la consulta al módulo correspondiente
+
+Ejemplos de Derivación:
+- "¿Cuántos artículos tenemos?" → Módulo de Artículos
+- "¿Cuál es el problema más común?" → Módulo de Acciones Comerciales
+- "¿Quién es nuestro proveedor principal?" → Módulo de Proveedores
+
+Reglas Fundamentales:
+1. NUNCA inventes respuestas
+2. SIEMPRE deriva la consulta al módulo correcto
+3. Mantén el contexto de la conversación
+4. Si no estás seguro, pregunta al usuario para clarificar
+
+Recuerda:
+- Analiza el contexto completo de la conversación
+- Identifica cambios de tema
+- Deriva la consulta al módulo más apropiado
+- Mantén un tono profesional pero amigable`;
+
 // Sistema de contexto para el asistente
 const assistantContext = {
   currentTopic: null,
@@ -38,21 +79,9 @@ async function getDeepSeekResponse(prompt, context) {
     }
 
     const messages = [
-      {
-        role: "system",
-        content: "Eres un asistente virtual de Semilleros Deitana S.L., una empresa española con más de 30 años de experiencia en la propagación de plantas. Tu función es enrutar las consultas a los módulos específicos y proporcionar respuestas amables cuando no se entienda la consulta."
-      }
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: prompt }
     ];
-
-    // Agregar historial de conversación si existe
-    if (context.conversationHistory.length > 0) {
-      messages.push(...context.conversationHistory);
-    }
-
-    messages.push({
-      role: "user",
-      content: prompt
-    });
 
     if (context) {
       messages.push({
@@ -87,34 +116,24 @@ async function getDeepSeekResponse(prompt, context) {
   }
 }
 
-// Función para detectar referencias a consultas anteriores
-function detectarReferenciaAnterior(message) {
-  const messageLower = message.toLowerCase();
-  const referencias = {
-    'anterior': 1,
-    'anteúltimo': 1,
-    'anteultimo': 1,
-    'penúltimo': 1,
-    'penultimo': 1,
-    'último': 0,
-    'ultimo': 0,
-    'siguiente': -1,
-    'próximo': -1,
-    'proximo': -1,
-    'otro': 0,
-    'otra': 0,
-    'más': 0,
-    'mas': 0,
-    'nuevo': 0,
-    'nueva': 0
-  };
+async function analyzeAndRouteMessage(message, context) {
+  const prompt = `Analiza la siguiente consulta y determina a qué módulo debe ser derivada:
+  
+  Consulta: "${message}"
+  
+  Contexto actual: ${JSON.stringify(context)}
+  
+  Por favor, responde con el nombre del módulo al que debe ser derivada la consulta (artículos, acciones_comerciales, proveedores, clientes, vendedores, bandejas, casas_comerciales) y una breve explicación de por qué.`;
 
-  for (const [key, value] of Object.entries(referencias)) {
-    if (messageLower.includes(key)) {
-      return value;
-    }
+  const analysis = await getDeepSeekResponse(prompt, context);
+  
+  if (!analysis) {
+    return null;
   }
-  return null;
+
+  // Extraer el módulo de la respuesta
+  const moduleMatch = analysis.match(/(artículos|acciones_comerciales|proveedores|clientes|vendedores|bandejas|casas_comerciales)/i);
+  return moduleMatch ? moduleMatch[0].toLowerCase() : null;
 }
 
 // Función principal para procesar mensajes
@@ -146,23 +165,15 @@ async function processMessage(userMessage) {
       };
     }
 
-    // Detectar referencias a consultas anteriores
-    const referencia = detectarReferenciaAnterior(messageLower);
-    if (referencia !== null) {
-      // Si la última consulta fue sobre artículos
-      if (assistantContext.currentTopic === 'articulos') {
-        if (messageLower.includes('ejemplo') || 
-            messageLower.includes('muestra') ||
-            messageLower.includes('muéstrame') ||
-            messageLower.includes('otro') ||
-            messageLower.includes('otra') ||
-            messageLower.includes('más') ||
-            messageLower.includes('mas') ||
-            messageLower.includes('nuevo') ||
-            messageLower.includes('nueva')) {
-          const result = await processArticulosMessage('muéstrame otro artículo');
-          
-          // Actualizar el contexto
+    // Analizar y enrutar el mensaje
+    const targetModule = await analyzeAndRouteMessage(userMessage, assistantContext);
+    
+    if (targetModule) {
+      let result;
+      
+      switch (targetModule) {
+        case 'artículos':
+          result = await processArticulosMessage(userMessage);
           if (result.data) {
             if (Array.isArray(result.data)) {
               assistantContext.lastArticulos = result.data.map(art => art.id);
@@ -171,191 +182,78 @@ async function processMessage(userMessage) {
               assistantContext.lastArticulos.push(result.data.id);
             }
           }
+          break;
           
-          assistantContext.conversationHistory.push(
-            { role: "user", content: userMessage },
-            { role: "assistant", content: result.message }
-          );
+        case 'acciones_comerciales':
+          result = await processAccionesComercialesMessage(userMessage);
+          if (result.contextType === 'ultima_accion' && result.data) {
+            assistantContext.lastAccionComercial = result.data.id;
+            assistantContext.lastAccionesComerciales.push(result.data.id);
+          }
+          break;
           
-          return {
-            message: result.message,
-            context: assistantContext
-          };
-        }
+        case 'proveedores':
+          result = await processProveedoresMessage(userMessage);
+          break;
+          
+        case 'clientes':
+          result = await processClientesMessage(userMessage);
+          break;
+          
+        case 'vendedores':
+          result = await processVendedoresMessage(userMessage);
+          break;
+          
+        case 'bandejas':
+          result = await processBandejasMessage(userMessage);
+          break;
+          
+        case 'casas_comerciales':
+          result = await processCasasComercialesMessage(userMessage);
+          break;
+          
+        default:
+          result = { message: "Lo siento, no he podido determinar a qué módulo derivar tu consulta. ¿Podrías reformularla?" };
       }
       
-      // Si la última consulta fue sobre acciones comerciales
-      if (assistantContext.lastAccionesComerciales.length > 0) {
-        const index = assistantContext.lastAccionesComerciales.length - 1 + referencia;
-        if (index >= 0 && index < assistantContext.lastAccionesComerciales.length) {
-          const result = await processAccionesComercialesMessage(
-            `Mostrar la acción comercial con ID ${assistantContext.lastAccionesComerciales[index]}`
-          );
-          return {
-            message: result.message,
-            context: assistantContext
-          };
-        }
-      }
+      // Actualizar el contexto
+      assistantContext.currentTopic = targetModule;
+      assistantContext.lastQuery = userMessage;
+      assistantContext.lastResponse = result.message;
+      
+      assistantContext.conversationHistory.push(
+        { role: "user", content: userMessage },
+        { role: "assistant", content: result.message }
+      );
+      
+      return {
+        message: result.message,
+        context: assistantContext
+      };
     }
 
-    // Detección del tipo de consulta y enrutamiento
-    if (messageLower.includes('artículo') || 
-        messageLower.includes('articulo') ||
-        messageLower.includes('artículos') ||
-        messageLower.includes('articulos') ||
-        messageLower.includes('producto') ||
-        messageLower.includes('productos') ||
-        messageLower.includes('inventario') ||
-        messageLower.includes('stock') ||
-        messageLower.includes('catalogo') ||
-        messageLower.includes('catálogo') ||
-        messageLower.includes('variedad') ||
-        messageLower.includes('variedades') ||
-        messageLower.includes('semilla') ||
-        messageLower.includes('semillas') ||
-        messageLower.includes('esqueje') ||
-        messageLower.includes('esquejes') ||
-        messageLower.includes('planta') ||
-        messageLower.includes('plantas')) {
-      
-      const result = await processArticulosMessage(userMessage);
-      
-      // Actualizar el contexto con el último artículo consultado
-      if (result.data) {
-        if (Array.isArray(result.data)) {
-          assistantContext.lastArticulos = result.data.map(art => art.id);
-        } else {
-          assistantContext.lastArticulo = result.data.id;
-          assistantContext.lastArticulos.push(result.data.id);
-        }
-      }
-      
-      // Actualizar el tema actual
-      assistantContext.currentTopic = 'articulos';
-      
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else if (messageLower.includes('acciones comerciales') || 
-               messageLower.includes('acciones realizadas') ||
-               messageLower.includes('interacciones con clientes') ||
-               messageLower.includes('gestiones comerciales') ||
-               messageLower.includes('ejemplo de accion') ||
-               messageLower.includes('ejemplo de acción') ||
-               messageLower.includes('incidencia') ||
-               messageLower.includes('observación') ||
-               messageLower.includes('grave') ||
-               messageLower.includes('accion comercial') ||
-               messageLower.includes('acción comercial') ||
-               messageLower.includes('última') ||
-               messageLower.includes('ultima') ||
-               messageLower.includes('anteúltima') ||
-               messageLower.includes('anteultima') ||
-               messageLower.includes('penúltima') ||
-               messageLower.includes('penultima') ||
-               messageLower.includes('anterior')) {
-      
-      const result = await processAccionesComercialesMessage(userMessage);
-      
-      // Actualizar el contexto con la última acción comercial
-      if (result.contextType === 'ultima_accion' && result.data) {
-        assistantContext.lastAccionComercial = result.data.id;
-        assistantContext.lastAccionesComerciales.push(result.data.id);
-      }
-      
-      // Actualizar el tema actual
-      assistantContext.currentTopic = 'acciones_comerciales';
-      
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else if (messageLower.includes('proveedor') || messageLower.includes('proveedores')) {
-      const result = await processProveedoresMessage(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else if (messageLower.includes('bandeja') || messageLower.includes('bandejas')) {
-      const result = await processBandejasMessage(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else if (messageLower.includes('casa') && messageLower.includes('comercial')) {
-      const result = await processCasasComercialesMessage(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else if (messageLower.includes('cliente') || messageLower.includes('clientes')) {
-      const result = await processClientesMessage(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else if (messageLower.includes('vendedor') || messageLower.includes('vendedores')) {
-      const result = await processVendedoresMessage(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
-      );
-      return {
-        message: result.message,
-        context: assistantContext
-      };
-    } else {
-      // Manejo de conversación general con IA
-      const prompt = `El usuario ha enviado el mensaje: "${userMessage}", pero no se ha detectado una consulta específica 
-      sobre las áreas que manejo. Por favor, proporciona una respuesta amable y profesional que:
-      1. Indique que no se ha entendido completamente la consulta
-      2. Sugiera las áreas sobre las que puedes ayudar
-      3. Ofrezca ejemplos de consultas que podrías responder
-      4. Mantenga un tono amigable y de ayuda`;
-      
-      const aiResponse = await getDeepSeekResponse(prompt, assistantContext);
-      if (!aiResponse) {
-        throw new Error('No se pudo obtener respuesta de la IA');
-      }
-      
+    // Si no se pudo determinar el módulo, pedir clarificación
+    const prompt = `El usuario ha enviado el mensaje: "${userMessage}", pero no he podido determinar a qué módulo derivarlo.
+    Por favor, proporciona una respuesta amable y profesional que:
+    1. Indique que no se ha entendido completamente la consulta
+    2. Sugiera los diferentes módulos disponibles
+    3. Ofrezca ejemplos de consultas para cada módulo
+    4. Mantenga un tono amigable y de ayuda`;
+    
+    const aiResponse = await getDeepSeekResponse(prompt, assistantContext);
+    if (!aiResponse) {
+      throw new Error('No se pudo obtener respuesta de la IA');
+    }
+    
     assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: aiResponse }
+      { role: "user", content: userMessage },
+      { role: "assistant", content: aiResponse }
     );
-
+    
     return {
       message: aiResponse,
       context: assistantContext
     };
-    }
   } catch (error) {
     console.error('Error en processMessage:', error);
     return {
