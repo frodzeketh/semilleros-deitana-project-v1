@@ -6,6 +6,7 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 // Prompt base para la IA
+// Prompt base para la IA
 const SYSTEM_PROMPT = `Eres un Asistente de IA para el sistema ERP DEITANA, especializado en proporcionar información verídica y detallada sobre las Acciones Comerciales.
 
 Tu Objetivo Principal: Analizar la consulta del usuario, identificar qué información específica necesita, y ejecutar la consulta SQL correspondiente para obtener los datos exactos de la base de datos.
@@ -303,7 +304,7 @@ async function queryAccionesComercialesPorCliente(clienteId) {
   }
 }
 
-async function queryUltimaAccionComercial() {
+async function queryUltimaAccionComercial(offset = 0) {
   const query = `
     SELECT 
       ac.id as accion_id,
@@ -321,10 +322,10 @@ async function queryUltimaAccionComercial() {
     LEFT JOIN acciones_com_acco_not acn ON ac.id = acn.id
     GROUP BY ac.id, v.id, c.id, ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR
     ORDER BY ac.ACCO_FEC DESC, ac.ACCO_HOR DESC
-    LIMIT 1`;
+    LIMIT 1 OFFSET ?`;
   
   try {
-    const [results] = await db.query(query);
+    const [results] = await db.query(query, [offset]);
     return results[0] || null;
   } catch (error) {
     console.error('Error al consultar última acción comercial:', error);
@@ -430,8 +431,22 @@ async function processAccionesComercialesMessage(message) {
   let dbData = null;
   let contextType = null;
 
-  // Detectar consultas específicas
-  if (messageLower.includes('cuántas') || messageLower.includes('cuantas') || messageLower.includes('total')) {
+  // Detectar consultas sobre acciones anteriores
+  if (messageLower.includes('anteúltima') || 
+      messageLower.includes('anteultima') || 
+      messageLower.includes('penúltima') || 
+      messageLower.includes('penultima') ||
+      messageLower.includes('anterior')) {
+    dbData = await queryUltimaAccionComercial(1);
+    contextType = 'ultima_accion';
+  } else if (messageLower.includes('última') || 
+             messageLower.includes('ultima') || 
+             messageLower.includes('reciente')) {
+    dbData = await queryUltimaAccionComercial(0);
+    contextType = 'ultima_accion';
+  } else if (messageLower.includes('cuántas') || 
+             messageLower.includes('cuantas') || 
+             messageLower.includes('total')) {
     // Consulta para contar total de acciones
     const query = `SELECT COUNT(*) as total FROM acciones_com`;
     try {
@@ -445,20 +460,19 @@ async function processAccionesComercialesMessage(message) {
         contextType: 'error'
       };
     }
-  } else if (messageLower.includes('última') || messageLower.includes('ultima') || messageLower.includes('reciente')) {
-    dbData = await queryUltimaAccionComercial();
-    contextType = 'ultima_accion';
   } else if (messageLower.match(/(?:año|año|en)\s+(\d{4})/)) {
     const year = parseInt(messageLower.match(/(?:año|año|en)\s+(\d{4})/)[1]);
     dbData = await queryAccionesComercialesPorAnio(year);
     contextType = 'acciones_por_anio';
-  } else if (messageLower.includes('tipo') || messageLower.includes('tipos')) {
+  } else if (messageLower.includes('tipo') || 
+             messageLower.includes('tipos')) {
     const tipo = messageLower.match(/(?:tipo|de)\s+([a-záéíóúñ\s]+)\s+(?:acciones|acción)/i)?.[1]?.trim();
     if (tipo) {
       dbData = await queryAccionesComercialesPorTipo(tipo);
       contextType = 'acciones_por_tipo';
     }
-  } else if (messageLower.includes('estadísticas') || messageLower.includes('estadisticas')) {
+  } else if (messageLower.includes('estadísticas') || 
+             messageLower.includes('estadisticas')) {
     dbData = await queryEstadisticasAccionesComerciales();
     contextType = 'estadisticas';
   }
@@ -471,7 +485,8 @@ async function processAccionesComercialesMessage(message) {
 
   return {
     message: await formatAccionComercialResponse(dbData, contextType, message),
-    contextType
+    contextType,
+    data: dbData
   };
 }
 
