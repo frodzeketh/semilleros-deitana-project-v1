@@ -8,6 +8,11 @@ const { processClientesMessage } = require('./clientes');
 const { processVendedoresMessage } = require('./vendedores');
 const { processArticulosMessage } = require('./articulos');
 const { processCreditosCaucionMessage } = require('./creditocaucion');
+const { processDispositivosMovilesMessage } = require('./dispositivosmoviles');
+const { processEnvasesVentaMessage } = require('./envasesventa');
+const { processInvernaderosMessage } = require('./invernaderos');
+const { processMotivosMessage } = require('./motivos');
+const { processPaisesMessage } = require('./paises');
 
 // Configuración de la API de DeepSeek
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -34,6 +39,11 @@ Módulos Disponibles:
 6. Bandejas: Consultas sobre contenedores, etc.
 7. Casas Comerciales: Consultas sobre distribuidores, etc.
 8. Créditos Caución: Consultas sobre seguros de crédito, pólizas y garantías.
+9. Dispositivos Móviles: Consultas sobre PDAs, terminales portátiles y sus características.
+10. Envases de Venta: Consultas sobre tipos de envases, presentaciones y formatos de venta.
+11. Invernaderos: Consultas sobre invernaderos, sus almacenes asociados y características.
+12. Motivos: Consultas sobre motivos, razones, causas, etc.
+13. Países: Consultas sobre países registrados, sus relaciones y uso en el sistema.
 
 Proceso de Análisis:
 1. Lee la consulta del usuario
@@ -47,6 +57,10 @@ Ejemplos de Derivación:
 - "¿Cuál es el problema más común?" → Módulo de Acciones Comerciales
 - "¿Quién es nuestro proveedor principal?" → Módulo de Proveedores
 - "¿Cuántos créditos caución hay?" → Módulo de Créditos Caución
+- "¿Cuántos dispositivos móviles tenemos?" → Módulo de Dispositivos Móviles
+- "¿Qué tipos de envases tenemos?" → Módulo de Envases de Venta
+- "¿Cuántos invernaderos hay?" → Módulo de Invernaderos
+- "¿Qué países tenemos registrados?" → Módulo de Países
 
 Reglas Fundamentales:
 1. NUNCA inventes respuestas
@@ -126,7 +140,7 @@ async function analyzeAndRouteMessage(message, context) {
   
   Contexto actual: ${JSON.stringify(context)}
   
-  Por favor, responde con el nombre del módulo al que debe ser derivada la consulta (artículos, acciones_comerciales, proveedores, clientes, vendedores, bandejas, casas_comerciales, creditos_caucion) y una breve explicación de por qué.`;
+  Por favor, responde con el nombre del módulo al que debe ser derivada la consulta (artículos, acciones_comerciales, proveedores, clientes, vendedores, bandejas, casas_comerciales, creditos_caucion, dispositivos_moviles, envases_venta, invernaderos, motivos, paises) y una breve explicación de por qué.`;
 
   const analysis = await getDeepSeekResponse(prompt, context);
   
@@ -135,7 +149,7 @@ async function analyzeAndRouteMessage(message, context) {
   }
 
   // Extraer el módulo de la respuesta
-  const moduleMatch = analysis.match(/(artículos|acciones_comerciales|proveedores|clientes|vendedores|bandejas|casas_comerciales|creditos_caucion)/i);
+  const moduleMatch = analysis.match(/(artículos|acciones_comerciales|proveedores|clientes|vendedores|bandejas|casas_comerciales|creditos_caucion|dispositivos_moviles|envases_venta|invernaderos|motivos|paises)/i);
   return moduleMatch ? moduleMatch[0].toLowerCase() : null;
 }
 
@@ -219,6 +233,41 @@ async function processMessage(userMessage) {
           result = await processCreditosCaucionMessage(userMessage);
           if (result.data) {
             assistantContext.lastCreditoCaucion = result.data.id;
+          }
+          break;
+          
+        case 'dispositivos_moviles':
+          result = await processDispositivosMovilesMessage(userMessage);
+          if (result.data) {
+            assistantContext.lastDispositivoMovil = result.data.id;
+          }
+          break;
+          
+        case 'envases_venta':
+          result = await processEnvasesVentaMessage(userMessage);
+          if (result.data) {
+            assistantContext.lastEnvaseVenta = result.data.id;
+          }
+          break;
+          
+        case 'invernaderos':
+          result = await processInvernaderosMessage(userMessage);
+          if (result.data) {
+            assistantContext.lastInvernadero = result.data.id;
+          }
+          break;
+          
+        case 'motivos':
+          result = await processMotivosMessage(userMessage);
+          if (result.data) {
+            assistantContext.lastMotivo = result.data.id;
+          }
+          break;
+          
+        case 'paises':
+          result = await processPaisesMessage(userMessage);
+          if (result.data) {
+            assistantContext.lastPais = result.data.id;
           }
           break;
           
