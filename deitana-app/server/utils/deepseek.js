@@ -7,6 +7,7 @@ const { processCasasComercialesMessage } = require('./casascomerciales');
 const { processClientesMessage } = require('./clientes');
 const { processVendedoresMessage } = require('./vendedores');
 const { processArticulosMessage } = require('./articulos');
+const { processCreditosCaucionMessage } = require('./creditocaucion');
 
 // Configuración de la API de DeepSeek
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -32,6 +33,7 @@ Módulos Disponibles:
 5. Vendedores: Consultas sobre el equipo comercial, etc.
 6. Bandejas: Consultas sobre contenedores, etc.
 7. Casas Comerciales: Consultas sobre distribuidores, etc.
+8. Créditos Caución: Consultas sobre seguros de crédito, pólizas y garantías.
 
 Proceso de Análisis:
 1. Lee la consulta del usuario
@@ -44,6 +46,7 @@ Ejemplos de Derivación:
 - "¿Cuántos artículos tenemos?" → Módulo de Artículos
 - "¿Cuál es el problema más común?" → Módulo de Acciones Comerciales
 - "¿Quién es nuestro proveedor principal?" → Módulo de Proveedores
+- "¿Cuántos créditos caución hay?" → Módulo de Créditos Caución
 
 Reglas Fundamentales:
 1. NUNCA inventes respuestas
@@ -123,7 +126,7 @@ async function analyzeAndRouteMessage(message, context) {
   
   Contexto actual: ${JSON.stringify(context)}
   
-  Por favor, responde con el nombre del módulo al que debe ser derivada la consulta (artículos, acciones_comerciales, proveedores, clientes, vendedores, bandejas, casas_comerciales) y una breve explicación de por qué.`;
+  Por favor, responde con el nombre del módulo al que debe ser derivada la consulta (artículos, acciones_comerciales, proveedores, clientes, vendedores, bandejas, casas_comerciales, creditos_caucion) y una breve explicación de por qué.`;
 
   const analysis = await getDeepSeekResponse(prompt, context);
   
@@ -132,7 +135,7 @@ async function analyzeAndRouteMessage(message, context) {
   }
 
   // Extraer el módulo de la respuesta
-  const moduleMatch = analysis.match(/(artículos|acciones_comerciales|proveedores|clientes|vendedores|bandejas|casas_comerciales)/i);
+  const moduleMatch = analysis.match(/(artículos|acciones_comerciales|proveedores|clientes|vendedores|bandejas|casas_comerciales|creditos_caucion)/i);
   return moduleMatch ? moduleMatch[0].toLowerCase() : null;
 }
 
@@ -210,6 +213,13 @@ async function processMessage(userMessage) {
           
         case 'casas_comerciales':
           result = await processCasasComercialesMessage(userMessage);
+          break;
+          
+        case 'creditos_caucion':
+          result = await processCreditosCaucionMessage(userMessage);
+          if (result.data) {
+            assistantContext.lastCreditoCaucion = result.data.id;
+          }
           break;
           
         default:
