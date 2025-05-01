@@ -333,7 +333,7 @@ async function queryUltimaAccionComercial(offset = 0) {
   }
 }
 
-async function formatAccionComercialResponse(dbData, contextType, userMessage) {
+async function formatAccionComercialResponse(dbData, contextType, userMessage, contexto = null) {
   if (!dbData) {
     const prompt = `El usuario preguntó: "${userMessage}" pero no se encontraron acciones comerciales en la base de datos. 
     Por favor, proporciona una respuesta amable y profesional explicando que no hay datos disponibles y sugiere algunas 
@@ -357,6 +357,16 @@ async function formatAccionComercialResponse(dbData, contextType, userMessage) {
       total_resultados: dbData.length,
       datos: dbData.slice(0, 5)
     };
+
+    // Agregar información del contexto si está disponible
+    if (contexto) {
+      const resumenContexto = contexto.obtenerResumenContexto();
+      if (resumenContexto) {
+        context.historial = resumenContexto.historial;
+        context.ultima_consulta = resumenContexto.ultimaConsulta;
+        context.ultimo_tipo_consulta = resumenContexto.ultimoTipoConsulta;
+      }
+    }
 
     let prompt = `El usuario preguntó: "${userMessage}" y se encontraron ${dbData.length} acciones comerciales. 
     Aquí están los datos relevantes: ${JSON.stringify(context)}.
@@ -426,79 +436,155 @@ ${dbData.notas ? `Notas: ${dbData.notas}` : ''}`;
   }
 }
 
-async function processAccionesComercialesMessage(message) {
+async function processAccionesComercialesMessage(message, contexto = null) {
   const messageLower = message.toLowerCase();
   let dbData = null;
   let contextType = null;
+  let limit = 100000; // Límite por defecto
+  let offset = 0;
 
-  // Detectar consultas sobre acciones anteriores
-  if (messageLower.includes('anteúltima') || 
-      messageLower.includes('anteultima') || 
-      messageLower.includes('penúltima') || 
-      messageLower.includes('penultima') ||
-      messageLower.includes('anterior')) {
-    dbData = await queryUltimaAccionComercial(1);
-    contextType = 'ultima_accion';
-  } else if (messageLower.includes('última') || 
-             messageLower.includes('ultima') || 
-             messageLower.includes('reciente')) {
-    dbData = await queryUltimaAccionComercial(0);
-    contextType = 'ultima_accion';
-  } else if (messageLower.includes('cuántas') || 
-             messageLower.includes('cuantas') || 
-             messageLower.includes('total')) {
-    // Consulta para contar total de acciones
-    const query = `SELECT COUNT(*) as total FROM acciones_com`;
-    try {
-      const [results] = await db.query(query);
-      dbData = results[0].total;
-      contextType = 'total_acciones';
-    } catch (error) {
-      console.error('Error al contar acciones:', error);
-      return {
-        message: "Lo siento, no pude obtener el total de acciones comerciales en este momento.",
-        contextType: 'error'
-      };
+  // Si hay contexto y el mensaje indica "otro" o similar
+  if (contexto && (messageLower.includes('otro') || messageLower.includes('siguiente') || messageLower.includes('más'))) {
+    // Obtener el tipo de consulta anterior
+    const tipoConsultaAnterior = contexto.ultimoTipoConsulta;
+    
+    // Ajustar el offset basado en las acciones ya mostradas
+    offset = contexto.accionesMostradas.size;
+    
+    // Reutilizar la misma consulta que la anterior
+    switch (tipoConsultaAnterior) {
+      case 'acciones_por_anio':
+        const anio = messageLower.match(/(\d{4})/)?.[1];
+        if (anio) {
+          dbData = await queryAccionesComercialesPorAnio(anio);
+          contextType = 'acciones_por_anio';
+        }
+        break;
+      case 'acciones_por_tipo':
+        const tipo = messageLower.match(/(?:tipo|de)\s+([a-záéíóúñ\s]+)\s+(?:acciones|acción)/i)?.[1]?.trim();
+        if (tipo) {
+          dbData = await queryAccionesComercialesPorTipo(tipo);
+          contextType = 'acciones_por_tipo';
+        }
+        break;
+      default:
+        dbData = await queryAccionesCom(limit, offset);
+        contextType = 'todas_acciones';
     }
-  } else if (messageLower.match(/(?:año|año|en)\s+(\d{4})/)) {
-    const year = parseInt(messageLower.match(/(?:año|año|en)\s+(\d{4})/)[1]);
-    dbData = await queryAccionesComercialesPorAnio(year);
-    contextType = 'acciones_por_anio';
-  } else if (messageLower.includes('tipo') || 
-             messageLower.includes('tipos')) {
-    const tipo = messageLower.match(/(?:tipo|de)\s+([a-záéíóúñ\s]+)\s+(?:acciones|acción)/i)?.[1]?.trim();
-    if (tipo) {
-      dbData = await queryAccionesComercialesPorTipo(tipo);
-      contextType = 'acciones_por_tipo';
+
+    // Filtrar acciones ya mostradas
+    if (dbData && contexto) {
+      dbData = contexto.obtenerAccionesNoMostradas(dbData);
     }
-  } else if (messageLower.includes('estadísticas') || 
-             messageLower.includes('estadisticas')) {
-    dbData = await queryEstadisticasAccionesComerciales();
-    contextType = 'estadisticas';
+  } else {
+    // Lógica normal para nuevas consultas
+    if (messageLower.match(/(?:año|año|en)\s+(\d{4})/)) {
+      const year = parseInt(messageLower.match(/(?:año|año|en)\s+(\d{4})/)[1]);
+      dbData = await queryAccionesComercialesPorAnio(year);
+      contextType = 'acciones_por_anio';
+    } else if (messageLower.includes('tipo') || messageLower.includes('tipos')) {
+      const tipo = messageLower.match(/(?:tipo|de)\s+([a-záéíóúñ\s]+)\s+(?:acciones|acción)/i)?.[1]?.trim();
+      if (tipo) {
+        dbData = await queryAccionesComercialesPorTipo(tipo);
+        contextType = 'acciones_por_tipo';
+      }
+    } else if (messageLower.includes('estadísticas') || messageLower.includes('estadisticas')) {
+      dbData = await queryEstadisticasAccionesComerciales();
+      contextType = 'estadisticas';
+    } else {
+      dbData = await queryAccionesCom(limit, offset);
+      contextType = 'todas_acciones';
+    }
   }
 
-  // Si no se detectó un tipo específico, intentar una consulta general
-  if (!dbData) {
-    dbData = await queryAccionesCom();
-    contextType = 'todas_acciones';
+  // Si no hay datos, retornar mensaje apropiado
+  if (!dbData || (Array.isArray(dbData) && dbData.length === 0)) {
+    return {
+      message: "No se encontraron más acciones comerciales que coincidan con tu búsqueda.",
+      contextType,
+      data: null
+    };
+  }
+
+  // Si hay contexto, actualizarlo con las nuevas acciones mostradas
+  if (contexto && Array.isArray(dbData)) {
+    dbData.forEach(accion => {
+      contexto.agregarAccionMostrada(accion.accion_id);
+    });
+  }
+
+  const respuesta = await formatAccionComercialResponse(dbData, contextType, message, contexto);
+
+  // Actualizar el contexto con la nueva interacción
+  if (contexto) {
+    contexto.agregarMensaje(message, respuesta, contextType);
   }
 
   return {
-    message: await formatAccionComercialResponse(dbData, contextType, message),
+    message: respuesta,
     contextType,
     data: dbData
   };
 }
 
+class ConversacionContext {
+  constructor() {
+    this.historial = [];
+    this.accionesMostradas = new Set();
+    this.ultimaConsulta = null;
+    this.ultimoTipoConsulta = null;
+  }
+
+  agregarMensaje(mensaje, respuesta, tipoConsulta) {
+    this.historial.push({
+      mensaje,
+      respuesta,
+      tipoConsulta,
+      timestamp: new Date()
+    });
+    this.ultimaConsulta = mensaje;
+    this.ultimoTipoConsulta = tipoConsulta;
+  }
+
+  agregarAccionMostrada(accionId) {
+    this.accionesMostradas.add(accionId);
+  }
+
+  obtenerAccionesNoMostradas(acciones) {
+    return acciones.filter(accion => !this.accionesMostradas.has(accion.accion_id));
+  }
+
+  obtenerResumenContexto() {
+    if (this.historial.length === 0) return null;
+    
+    const ultimasInteracciones = this.historial.slice(-3);
+    return {
+      ultimaConsulta: this.ultimaConsulta,
+      ultimoTipoConsulta: this.ultimoTipoConsulta,
+      historial: ultimasInteracciones.map(h => ({
+        mensaje: h.mensaje,
+        tipoConsulta: h.tipoConsulta
+      }))
+    };
+  }
+
+  limpiarContexto() {
+    this.historial = [];
+    this.accionesMostradas.clear();
+    this.ultimaConsulta = null;
+    this.ultimoTipoConsulta = null;
+  }
+}
+
 module.exports = {
   processAccionesComercialesMessage,
   queryAccionesCom,
-  
   queryUltimaAccionComercial,
   queryAccionesComercialesPorAnio,
   queryAccionesComercialesPorTipo,
   queryEstadisticasAccionesComerciales,
   queryAccionesComercialesPorPeriodo,
   queryAccionesComercialesPorVendedor,
-  queryAccionesComercialesPorCliente
+  queryAccionesComercialesPorCliente,
+  ConversacionContext
 };
