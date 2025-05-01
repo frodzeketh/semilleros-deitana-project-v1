@@ -6,14 +6,16 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 // Prompt base para la IA
-const SYSTEM_PROMPT = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en proporcionar información detallada sobre los artículos del inventario.
+const SYSTEM_PROMPT = `Eres un asistente virtual especializado en el inventario de Semilleros Deitana S.L., con acceso a una base de datos de artículos que incluye semillas, plantones, herramientas y materiales.
 
-Tu Objetivo Principal: Analizar la consulta del usuario, identificar qué información específica necesita sobre los artículos, y ejecutar la consulta SQL correspondiente para obtener los datos exactos de la base de datos.
+Tu objetivo es mantener una conversación natural y útil con el usuario, entendiendo el contexto y el propósito de sus preguntas.
 
 REGLA FUNDAMENTAL:
 1. NUNCA inventes datos o respuestas
 2. SIEMPRE consulta la base de datos para obtener información real
-3. Proporciona respuestas precisas basadas en los datos reales
+3. Proporciona respuestas precisas basadas SOLO en los datos reales
+4. Si no tienes un dato específico, indícalo claramente con "No disponible" o "No especificado"
+5. NUNCA generes códigos, descripciones o datos que no existan en la base de datos
 
 Estructura de la Base de Datos:
 - articulos: Registro principal de artículos
@@ -32,29 +34,41 @@ Estructura de la Base de Datos:
 
 Proceso de Respuesta:
 1. Analiza la consulta del usuario para entender qué información necesita
-2. Identifica qué tablas y campos son relevantes
-3. Ejecuta la consulta SQL apropiada
-4. Procesa los resultados
-5. Proporciona una respuesta clara y precisa
+2. Considera el contexto de la conversación anterior
+3. Identifica qué tablas y campos son relevantes
+4. Ejecuta la consulta SQL apropiada
+5. Procesa los resultados
+6. Proporciona una respuesta clara y precisa basada SOLO en los datos reales
 
 Ejemplos de Consultas y Respuestas:
-- "¿Cuántos artículos tenemos en total?"
-  * Consulta: SELECT COUNT(*) FROM articulos
-  * Respuesta: "Existen X artículos en total en el inventario"
-
-- "¿Quién provee el artículo X?"
-  * Consulta: SELECT a.*, p.PR_DENO FROM articulos a LEFT JOIN proveedores p ON a.AR_PRV = p.id WHERE a.id = 'X'
-  * Respuesta: "El artículo X es provisto por [nombre del proveedor]"
+- "¿Cuántos artículos tenemos registrados?"
+  * Consulta: SELECT COUNT(*) as total, COUNT(DISTINCT AR_GRP) as grupos, COUNT(DISTINCT AR_FAM) as familias FROM articulos
+  * Respuesta: "En nuestro inventario tenemos X artículos registrados, distribuidos en Y grupos y Z familias. ¿Te gustaría ver más detalles sobre algún grupo específico?"
 
 - "¿Qué tipos de tomates tenemos?"
-  * Consulta: SELECT * FROM articulos WHERE AR_DENO LIKE '%TOMATE%'
-  * Respuesta: "Tenemos los siguientes tipos de tomates: [lista de variedades]"
+  * Consulta: SELECT DISTINCT AR_DENO, id, AR_BAR FROM articulos WHERE UPPER(AR_DENO) LIKE '%TOMATE%' OR UPPER(AR_DENO) LIKE '%TOMATO%'
+  * Respuesta: "Encontramos X variedades de tomates: [lista de variedades con códigos]. Si necesitas más detalles sobre alguna variedad específica, puedo proporcionártelos."
+
+- "Muéstrame otro artículo"
+  * Si el contexto anterior era una búsqueda específica, continuar con esa búsqueda
+  * Si no, mostrar un artículo aleatorio diferente a los ya mostrados
+  * Respuesta: "Aquí tienes otro artículo: [detalles]. ¿Te gustaría ver más detalles o buscar algo específico?"
+
+- "Artículos que empiecen con B"
+  * Consulta: SELECT * FROM articulos WHERE UPPER(AR_DENO) LIKE 'B%' OR UPPER(AR_DENO) LIKE 'B%'
+  * Respuesta: "Encontramos X artículos que empiezan con B: [lista de artículos]. ¿Te gustaría ver más detalles sobre alguno en particular?"
 
 Recuerda:
 - SIEMPRE consulta la base de datos para obtener información real
-- Proporciona respuestas precisas y basadas en datos
-- Si no hay datos, indícalo claramente
-- Mantén un tono profesional pero amigable`;
+- Proporciona respuestas precisas y basadas SOLO en datos reales
+- Si no hay datos, indícalo claramente y sugiere alternativas
+- Mantén un tono profesional pero amigable
+- NUNCA inventes datos o respuestas
+- Considera el contexto de la conversación anterior
+- Si una búsqueda no da resultados, intenta variaciones o sugiere alternativas relacionadas
+- Mantén una conversación natural y fluida
+- Pide aclaraciones cuando la consulta sea ambigua
+- Sugiere alternativas cuando no encuentres resultados exactos`;
 
 async function getDeepSeekResponse(prompt, context) {
   try {
@@ -102,10 +116,14 @@ async function getDeepSeekResponse(prompt, context) {
 
 // Funciones de consulta a la base de datos
 async function queryTotalArticulos() {
-  const query = `SELECT COUNT(*) as total FROM articulos`;
+  const query = `
+    SELECT COUNT(*) as total, 
+           COUNT(DISTINCT AR_GRP) as grupos,
+           COUNT(DISTINCT AR_FAM) as familias
+    FROM articulos`;
   try {
     const [results] = await db.query(query);
-    return results[0].total;
+    return results[0];
   } catch (error) {
     console.error('Error al contar artículos:', error);
     return null;
@@ -201,50 +219,115 @@ async function queryArticuloEjemplo() {
   }
 }
 
-async function formatArticuloResponse(dbData, contextType, userMessage) {
+async function queryArticulosPorTipo(tipo) {
+  const query = `
+    SELECT DISTINCT
+      a.id,
+      a.AR_DENO,
+      a.AR_BAR,
+      a.AR_PGE,
+      p.PR_DENO as proveedor_nombre,
+      a.AR_GRP,
+      a.AR_FAM
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE UPPER(a.AR_DENO) LIKE UPPER(?)
+    OR UPPER(a.AR_DENO) LIKE UPPER(?)
+    OR UPPER(a.AR_DENO) LIKE UPPER(?)
+    ORDER BY a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query, [
+      `%${tipo}%`,
+      `%${tipo.replace(/[áéíóú]/g, c => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u'}[c]))}%`,
+      `%${tipo.replace(/[a-z]/g, c => ({'a':'á','e':'é','i':'í','o':'ó','u':'ú'}[c] || c))}%`
+    ]);
+    return results;
+  } catch (error) {
+    console.error('Error al consultar artículos por tipo:', error);
+    return null;
+  }
+}
+
+async function queryArticulosPorInicial(letra) {
+  const query = `
+    SELECT DISTINCT
+      a.id,
+      a.AR_DENO,
+      a.AR_BAR,
+      a.AR_PGE,
+      p.PR_DENO as proveedor_nombre,
+      a.AR_GRP,
+      a.AR_FAM
+    FROM articulos a
+    LEFT JOIN proveedores p ON a.AR_PRV = p.id
+    WHERE UPPER(a.AR_DENO) LIKE UPPER(?) OR UPPER(a.AR_DENO) LIKE UPPER(?)
+    ORDER BY a.AR_DENO`;
+  
+  try {
+    const [results] = await db.query(query, [
+      `${letra}%`,
+      `${letra.toUpperCase()}%`
+    ]);
+    return results;
+  } catch (error) {
+    console.error('Error al consultar artículos por inicial:', error);
+    return null;
+  }
+}
+
+async function formatArticuloResponse(dbData, contextType, userMessage, contexto = null) {
   if (!dbData) {
     const prompt = `El usuario preguntó: "${userMessage}" pero no se encontraron artículos en la base de datos. 
     Por favor, proporciona una respuesta amable y profesional explicando que no hay datos disponibles y sugiere algunas 
-    alternativas de consulta que podrían ser útiles.`;
+    alternativas de consulta que podrían ser útiles. Considera el contexto de la conversación anterior y mantén un tono conversacional.`;
     
     const aiResponse = await getDeepSeekResponse(prompt, null);
-    return aiResponse || "No se encontraron artículos que coincidan con tu búsqueda. ¿Te gustaría intentar con otros criterios?";
+    return aiResponse || "Lo siento, no pude encontrar ningún artículo en este momento. ¿Te gustaría intentar con otros criterios de búsqueda?";
   }
 
   if (Array.isArray(dbData)) {
     if (dbData.length === 0) {
       const prompt = `El usuario preguntó: "${userMessage}" pero no se encontraron artículos que coincidan con su búsqueda.
-      Por favor, proporciona una respuesta amable y profesional sugiriendo alternativas de búsqueda.`;
+      Por favor, proporciona una respuesta amable y profesional sugiriendo alternativas de búsqueda o criterios diferentes.
+      Considera el contexto de la conversación anterior y sugiere búsquedas relacionadas. Mantén un tono conversacional.`;
       
       const aiResponse = await getDeepSeekResponse(prompt, null);
-      return aiResponse || "No se encontraron artículos que coincidan con tu búsqueda. ¿Te gustaría intentar con otros criterios?";
+      return aiResponse || "No encontré artículos que coincidan con tu búsqueda. ¿Te gustaría intentar con otros criterios o ver un artículo de ejemplo?";
     }
 
     let context = {
       tipo_consulta: contextType,
       total_resultados: dbData.length,
-      datos: dbData
+      datos: dbData.slice(0, 5),
+      contexto_anterior: contexto ? contexto.obtenerResumenContexto() : null
     };
 
     let prompt = `El usuario preguntó: "${userMessage}" y se encontraron ${dbData.length} artículos. 
     Aquí están los datos relevantes: ${JSON.stringify(context)}.
-    Por favor, proporciona una respuesta natural y profesional que incluya:
+    Por favor, proporciona una respuesta natural y conversacional que incluya:
     1. Un resumen de los resultados encontrados
     2. Los detalles más relevantes de los artículos encontrados
     3. Información sobre los proveedores si está disponible
-    4. Sugerencias de análisis o próximos pasos`;
+    4. Si hay más de 5 resultados, menciona que hay más disponibles y que el usuario puede pedir más detalles
+    5. Considera el contexto de la conversación anterior
+    6. Mantén un tono conversacional y natural
+    7. NO inventes datos que no estén en los resultados`;
 
     const aiResponse = await getDeepSeekResponse(prompt, context);
     return aiResponse || formatBasicResponse(dbData, contextType);
   }
 
+  // Si es un solo artículo
   const prompt = `El usuario preguntó: "${userMessage}" y se encontró el siguiente artículo: ${JSON.stringify(dbData)}.
-  Por favor, proporciona una respuesta natural y profesional que:
+  Por favor, proporciona una respuesta natural y conversacional que:
   1. Describa el artículo de manera clara y detallada
   2. Mencione su código, descripción y código de barras si está disponible
   3. Indique quién es el proveedor si está disponible
   4. Proporcione información sobre el porcentaje de germinación si está disponible
-  5. Sugiera posibles próximos pasos o información relacionada`;
+  5. Considere el contexto de la conversación anterior
+  6. Mantenga un tono conversacional y natural
+  7. Sugiera posibles próximos pasos o información relacionada`;
 
   const aiResponse = await getDeepSeekResponse(prompt, dbData);
   return aiResponse || formatBasicResponse(dbData, contextType);
@@ -273,60 +356,214 @@ ${dbData.AR_PGE ? `% Germinación: ${dbData.AR_PGE}%\n` : ''}`;
   }
 }
 
-async function processArticulosMessage(message) {
+async function processArticulosMessage(message, contexto = null) {
   const messageLower = message.toLowerCase();
   let dbData = null;
   let contextType = null;
+  let filtro = null;
 
+  // Detectar solicitudes de "otro" o "más" artículos
+  if (contexto && (messageLower.includes('otro') || messageLower.includes('siguiente') || 
+      messageLower.includes('más') || messageLower.includes('mas'))) {
+    const tipoConsultaAnterior = contexto.ultimoTipoConsulta;
+    const filtroAnterior = contexto.ultimoFiltro;
+    
+    switch (tipoConsultaAnterior) {
+      case 'articulos_por_nombre':
+        if (filtroAnterior) {
+          dbData = await queryArticulosPorNombre(filtroAnterior);
+          contextType = 'articulos_por_nombre';
+          filtro = filtroAnterior;
+        }
+        break;
+      case 'articulos_por_proveedor':
+        if (filtroAnterior) {
+          dbData = await queryArticulosPorProveedor(filtroAnterior);
+          contextType = 'articulos_por_proveedor';
+          filtro = filtroAnterior;
+        }
+        break;
+      case 'articulos_por_grupo':
+        if (filtroAnterior) {
+          dbData = await queryArticulosPorGrupo(filtroAnterior);
+          contextType = 'articulos_por_grupo';
+          filtro = filtroAnterior;
+        }
+        break;
+      case 'articulos_por_tipo':
+        if (filtroAnterior) {
+          dbData = await queryArticulosPorTipo(filtroAnterior);
+          contextType = 'articulos_por_tipo';
+          filtro = filtroAnterior;
+        }
+        break;
+      default:
+        dbData = await queryArticuloEjemplo();
+        contextType = 'articulo_ejemplo';
+    }
+
+    // Filtrar artículos ya mostrados
+    if (dbData && contexto) {
+      if (Array.isArray(dbData)) {
+        dbData = contexto.obtenerArticulosNoMostrados(dbData);
+        if (dbData.length === 0) {
+          // Si no quedan artículos por mostrar, obtener uno nuevo
+          dbData = await queryArticuloEjemplo();
+          while (dbData && contexto.articulosMostrados.has(dbData.id)) {
+            dbData = await queryArticuloEjemplo();
+          }
+        }
+      } else {
+        if (contexto.articulosMostrados.has(dbData.id)) {
+          dbData = await queryArticuloEjemplo();
+          while (dbData && contexto.articulosMostrados.has(dbData.id)) {
+            dbData = await queryArticuloEjemplo();
+          }
+        }
+      }
+    }
+  }
+  // Detectar consultas generales sobre artículos
+  else if (messageLower.includes('artículo') || messageLower.includes('articulo') || 
+           messageLower.includes('producto') || messageLower.includes('inventario') ||
+           messageLower.includes('muestra') || messageLower.includes('ejemplo')) {
+    dbData = await queryArticuloEjemplo();
+    contextType = 'articulo_ejemplo';
+  }
+  // Detectar consultas sobre tipos de artículos
+  else if (messageLower.includes('tipos') || messageLower.includes('variedades') || 
+           messageLower.includes('clases') || messageLower.includes('categorías')) {
+    const tipo = messageLower.match(/(?:tipos|variedades|clases|categorías)\s+de\s+([a-záéíóúñ\s]+)/i)?.[1]?.trim();
+    if (tipo) {
+      dbData = await queryArticulosPorTipo(tipo);
+      contextType = 'articulos_por_tipo';
+      filtro = tipo;
+    }
+  }
   // Detectar consultas específicas
-  if (messageLower.includes('cuántos') || 
-      messageLower.includes('cuantos') || 
-      messageLower.includes('total')) {
+  else if (messageLower.includes('cuántos') || messageLower.includes('cuantos') || messageLower.includes('total')) {
     dbData = await queryTotalArticulos();
     contextType = 'total_articulos';
-  } else if (messageLower.includes('código') || 
-             messageLower.includes('codigo')) {
+  }
+  else if (messageLower.includes('código') || messageLower.includes('codigo')) {
     const codigo = messageLower.match(/(?:código|codigo)\s+([a-z0-9]+)/i)?.[1];
     if (codigo) {
       dbData = await queryArticuloPorId(codigo);
       contextType = 'articulo_por_id';
+      filtro = codigo;
     }
-  } else if (messageLower.includes('proveedor') || 
-             messageLower.includes('proveedores') ||
-             messageLower.includes('quién provee') ||
-             messageLower.includes('quien provee')) {
-    // Extraer el nombre del artículo después de "proveedor" o "quién provee"
-    const nombreArticulo = messageLower.replace(/(?:proveedor|proveedores|quién provee|quien provee)\s+/i, '').trim();
-    if (nombreArticulo) {
-      dbData = await queryArticulosPorNombre(nombreArticulo);
-      contextType = 'articulos_por_nombre';
+  }
+  else if (messageLower.includes('proveedor') || messageLower.includes('proveedores')) {
+    const proveedorId = messageLower.match(/(?:proveedor|proveedores)\s+([a-z0-9]+)/i)?.[1];
+    if (proveedorId) {
+      dbData = await queryArticulosPorProveedor(proveedorId);
+      contextType = 'articulos_por_proveedor';
+      filtro = proveedorId;
     }
-  } else if (messageLower.includes('grupo') || 
-             messageLower.includes('grupos')) {
+  }
+  else if (messageLower.includes('grupo') || messageLower.includes('grupos')) {
     const grupo = messageLower.match(/(?:grupo|grupos)\s+([a-z0-9]+)/i)?.[1];
     if (grupo) {
       dbData = await queryArticulosPorGrupo(grupo);
       contextType = 'articulos_por_grupo';
+      filtro = grupo;
     }
-  } else if (messageLower.includes('ejemplo') || 
-             messageLower.includes('muestra') ||
-             messageLower.includes('muéstrame')) {
-    dbData = await queryArticuloEjemplo();
-    contextType = 'articulo_ejemplo';
-  } else {
-    // Búsqueda por nombre o descripción
+  }
+  // Búsqueda por nombre o descripción
+  else {
     const palabrasClave = messageLower.split(' ').filter(p => p.length > 3);
     if (palabrasClave.length > 0) {
       dbData = await queryArticulosPorNombre(palabrasClave.join(' '));
       contextType = 'articulos_por_nombre';
+      filtro = palabrasClave.join(' ');
     }
   }
 
+  // Si no se encontró ningún artículo específico y no es una consulta general, mostrar un ejemplo
+  if (!dbData && !messageLower.includes('artículo') && !messageLower.includes('articulo') && 
+      !messageLower.includes('producto') && !messageLower.includes('inventario')) {
+    dbData = await queryArticuloEjemplo();
+    contextType = 'articulo_ejemplo';
+  }
+
+  // Si hay contexto, actualizarlo con los nuevos artículos mostrados
+  if (contexto) {
+    if (Array.isArray(dbData)) {
+      dbData.forEach(articulo => {
+        contexto.agregarArticuloMostrado(articulo.id);
+      });
+    } else if (dbData) {
+      contexto.agregarArticuloMostrado(dbData.id);
+    }
+  }
+
+  const respuesta = await formatArticuloResponse(dbData, contextType, message, contexto);
+
+  // Actualizar el contexto con la nueva interacción
+  if (contexto) {
+    contexto.agregarMensaje(message, respuesta, contextType, filtro);
+  }
+
   return {
-    message: await formatArticuloResponse(dbData, contextType, message),
+    message: respuesta,
     contextType,
     data: dbData
   };
+}
+
+class ConversacionContext {
+  constructor() {
+    this.historial = [];
+    this.articulosMostrados = new Set();
+    this.ultimaConsulta = null;
+    this.ultimoTipoConsulta = null;
+    this.ultimoFiltro = null;
+  }
+
+  agregarMensaje(mensaje, respuesta, tipoConsulta, filtro = null) {
+    this.historial.push({
+      mensaje,
+      respuesta,
+      tipoConsulta,
+      filtro,
+      timestamp: new Date()
+    });
+    this.ultimaConsulta = mensaje;
+    this.ultimoTipoConsulta = tipoConsulta;
+    this.ultimoFiltro = filtro;
+  }
+
+  agregarArticuloMostrado(articuloId) {
+    this.articulosMostrados.add(articuloId);
+  }
+
+  obtenerArticulosNoMostrados(articulos) {
+    return articulos.filter(articulo => !this.articulosMostrados.has(articulo.id));
+  }
+
+  obtenerResumenContexto() {
+    if (this.historial.length === 0) return null;
+    
+    const ultimasInteracciones = this.historial.slice(-3);
+    return {
+      ultimaConsulta: this.ultimaConsulta,
+      ultimoTipoConsulta: this.ultimoTipoConsulta,
+      ultimoFiltro: this.ultimoFiltro,
+      historial: ultimasInteracciones.map(h => ({
+        mensaje: h.mensaje,
+        tipoConsulta: h.tipoConsulta,
+        filtro: h.filtro
+      }))
+    };
+  }
+
+  limpiarContexto() {
+    this.historial = [];
+    this.articulosMostrados.clear();
+    this.ultimaConsulta = null;
+    this.ultimoTipoConsulta = null;
+    this.ultimoFiltro = null;
+  }
 }
 
 module.exports = {
@@ -336,5 +573,6 @@ module.exports = {
   queryArticulosPorNombre,
   queryArticulosPorProveedor,
   queryArticulosPorGrupo,
-  queryArticuloEjemplo
+  queryArticuloEjemplo,
+  ConversacionContext
 };
