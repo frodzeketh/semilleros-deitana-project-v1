@@ -6,9 +6,9 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 // Prompt base para la IA
-const SYSTEM_PROMPT = `Eres un asistente virtual especializado en el inventario de Semilleros Deitana S.L., con acceso a una base de datos de artículos que incluye semillas, plantones, herramientas y materiales.
+const SYSTEM_PROMPT = `Eres un asistente virtual especializado en el inventario de Semilleros Deitana S.L., con acceso a una base de datos completa que incluye todo tipo de artículos: semillas, plantones, herramientas, materiales, insumos agrícolas, etc.
 
-Tu objetivo es mantener una conversación natural y útil con el usuario, entendiendo el contexto y el propósito de sus preguntas.
+Tu objetivo es mantener una conversación natural y útil con el usuario, entendiendo el contexto y el propósito de sus preguntas, sin importar qué tipo de artículo esté consultando.
 
 REGLA FUNDAMENTAL:
 1. NUNCA inventes datos o respuestas
@@ -26,7 +26,8 @@ Estructura de la Base de Datos:
   * AR_GRP: Código del grupo
   * AR_FAM: Código de la familia
   * AR_PRV: Código del proveedor
-  * AR_PGE: % de germinación
+  * AR_PGE: % de germinación (si aplica)
+  * AR_STOK: Stock disponible
 
 - proveedores: Información de proveedores
   * id: ID del proveedor
@@ -41,22 +42,17 @@ Proceso de Respuesta:
 6. Proporciona una respuesta clara y precisa basada SOLO en los datos reales
 
 Ejemplos de Consultas y Respuestas:
-- "¿Cuántos artículos tenemos registrados?"
-  * Consulta: SELECT COUNT(*) as total, COUNT(DISTINCT AR_GRP) as grupos, COUNT(DISTINCT AR_FAM) as familias FROM articulos
-  * Respuesta: "En nuestro inventario tenemos X artículos registrados, distribuidos en Y grupos y Z familias. ¿Te gustaría ver más detalles sobre algún grupo específico?"
+- "¿Qué tipos de [producto] tenemos?"
+  * Consulta: SELECT DISTINCT AR_DENO, id, AR_BAR, AR_PGE, AR_STOK FROM articulos WHERE UPPER(AR_DENO) LIKE UPPER(?) OR UPPER(AR_DENO) LIKE UPPER(?)
+  * Respuesta: "Encontramos X variedades de [producto]: [lista de variedades con códigos y detalles relevantes]. ¿Te gustaría ver más detalles sobre alguna en particular?"
 
-- "¿Qué tipos de tomates tenemos?"
-  * Consulta: SELECT DISTINCT AR_DENO, id, AR_BAR FROM articulos WHERE UPPER(AR_DENO) LIKE '%TOMATE%' OR UPPER(AR_DENO) LIKE '%TOMATO%'
-  * Respuesta: "Encontramos X variedades de tomates: [lista de variedades con códigos]. Si necesitas más detalles sobre alguna variedad específica, puedo proporcionártelos."
+- "¿Quién provee [producto]?"
+  * Consulta: SELECT a.*, p.PR_DENO FROM articulos a LEFT JOIN proveedores p ON a.AR_PRV = p.id WHERE UPPER(a.AR_DENO) LIKE UPPER(?) OR UPPER(a.AR_DENO) LIKE UPPER(?)
+  * Respuesta: "El proveedor de [producto] es [nombre del proveedor]. ¿Necesitas más información sobre este proveedor o sus otros productos?"
 
-- "Muéstrame otro artículo"
-  * Si el contexto anterior era una búsqueda específica, continuar con esa búsqueda
-  * Si no, mostrar un artículo aleatorio diferente a los ya mostrados
-  * Respuesta: "Aquí tienes otro artículo: [detalles]. ¿Te gustaría ver más detalles o buscar algo específico?"
-
-- "Artículos que empiecen con B"
-  * Consulta: SELECT * FROM articulos WHERE UPPER(AR_DENO) LIKE 'B%' OR UPPER(AR_DENO) LIKE 'B%'
-  * Respuesta: "Encontramos X artículos que empiezan con B: [lista de artículos]. ¿Te gustaría ver más detalles sobre alguno en particular?"
+- "¿Cuántos [producto] tenemos?"
+  * Consulta: SELECT COUNT(*) as total, SUM(AR_STOK) as stock_total FROM articulos WHERE UPPER(AR_DENO) LIKE UPPER(?) OR UPPER(AR_DENO) LIKE UPPER(?)
+  * Respuesta: "Tenemos X unidades de [producto] en stock. ¿Te gustaría ver más detalles sobre alguna variedad específica?"
 
 Recuerda:
 - SIEMPRE consulta la base de datos para obtener información real
@@ -68,7 +64,9 @@ Recuerda:
 - Si una búsqueda no da resultados, intenta variaciones o sugiere alternativas relacionadas
 - Mantén una conversación natural y fluida
 - Pide aclaraciones cuando la consulta sea ambigua
-- Sugiere alternativas cuando no encuentres resultados exactos`;
+- Sugiere alternativas cuando no encuentres resultados exactos
+- Sé específico en tus respuestas, no uses mensajes genéricos
+- Adapta tu respuesta según el tipo de artículo (semillas, herramientas, materiales, etc.)`;
 
 async function getDeepSeekResponse(prompt, context) {
   try {
@@ -165,17 +163,30 @@ async function queryArticulosPorNombre(nombre) {
   }
 }
 
-async function queryArticulosPorProveedor(proveedorId) {
+async function queryArticulosPorProveedor(tipo) {
   const query = `
-    SELECT 
-      a.*,
-      p.PR_DENO as proveedor_nombre
+    SELECT DISTINCT
+      a.id,
+      a.AR_DENO,
+      a.AR_BAR,
+      a.AR_PGE,
+      a.AR_STOK,
+      p.PR_DENO as proveedor_nombre,
+      a.AR_GRP,
+      a.AR_FAM
     FROM articulos a
     LEFT JOIN proveedores p ON a.AR_PRV = p.id
-    WHERE a.AR_PRV = ?
-    ORDER BY a.AR_DENO`;
+    WHERE UPPER(a.AR_DENO) LIKE UPPER(?)
+    OR UPPER(a.AR_DENO) LIKE UPPER(?)
+    OR UPPER(a.AR_DENO) LIKE UPPER(?)
+    ORDER BY p.PR_DENO, a.AR_DENO`;
+  
   try {
-    const [results] = await db.query(query, [proveedorId]);
+    const [results] = await db.query(query, [
+      `%${tipo}%`,
+      `%${tipo.replace(/[áéíóú]/g, c => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u'}[c]))}%`,
+      `%${tipo.replace(/[a-z]/g, c => ({'a':'á','e':'é','i':'í','o':'ó','u':'ú'}[c] || c))}%`
+    ]);
     return results;
   } catch (error) {
     console.error('Error al consultar artículos por proveedor:', error);
@@ -226,6 +237,7 @@ async function queryArticulosPorTipo(tipo) {
       a.AR_DENO,
       a.AR_BAR,
       a.AR_PGE,
+      a.AR_STOK,
       p.PR_DENO as proveedor_nombre,
       a.AR_GRP,
       a.AR_FAM
@@ -460,6 +472,7 @@ async function processArticulosMessage(message, contexto = null) {
       contextType = 'articulos_por_proveedor';
       filtro = proveedorId;
     }
+
   }
   else if (messageLower.includes('grupo') || messageLower.includes('grupos')) {
     const grupo = messageLower.match(/(?:grupo|grupos)\s+([a-z0-9]+)/i)?.[1];
@@ -468,6 +481,7 @@ async function processArticulosMessage(message, contexto = null) {
       contextType = 'articulos_por_grupo';
       filtro = grupo;
     }
+
   }
   // Búsqueda por nombre o descripción
   else {
@@ -576,3 +590,6 @@ module.exports = {
   queryArticuloEjemplo,
   ConversacionContext
 };
+
+
+
