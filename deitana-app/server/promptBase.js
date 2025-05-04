@@ -113,59 +113,6 @@ const conversationContext = {
   }
 };
 
-// Función mejorada para detectar el tema principal
-function detectTopic(message) {
-  const lowerMessage = message.toLowerCase();
-  
-  const topics = {
-    articulos: {
-      priority: 2,
-      patterns: [
-        /(?:tomate|melon|acelga|producto|artículo|articulo)/i,
-        /(?:tipos?|ejemplos?|variedades?) de ([a-zá-úñ\s]+)/i,
-        /(?:germinación|germinacion|precio|stock|código|barras)/i,
-        /(?:semilla|planta|cultivo|invernadero)/i
-      ]
-    },
-    acciones_comerciales: {
-      priority: 1,
-      patterns: [
-        /accion(?:es)?/i,
-        /incidencia/i,
-        /visita/i,
-        /llamada/i,
-        /campaña/i,
-        /negociacion/i,
-        /seguimiento/i,
-        /cliente/i,
-        /vendedor/i
-      ]
-    }
-  };
-
-  const matches = [];
-  
-  for (const [topic, rules] of Object.entries(topics)) {
-    let score = 0;
-    for (const pattern of rules.patterns) {
-      if (pattern.test(lowerMessage)) {
-        score += rules.priority || 1;
-      }
-    }
-    if (score > 0) {
-      matches.push({ topic, score });
-    }
-  }
-
-  // Ordenar por puntuación y retornar el tema con mayor prioridad
-  if (matches.length > 0) {
-    matches.sort((a, b) => b.score - a.score);
-    return matches[0].topic;
-  }
-
-  return null;
-}
-
 function promptBase(userMessage) {
   const lowerMessage = userMessage.toLowerCase();
 
@@ -239,8 +186,111 @@ IMPORTANTE:
   };
 }
 
+const promptConsultaSimple = `
+Eres un asistente experto en análisis de datos y consultas SQL sobre un ERP agrícola.
+
+Vas a recibir una pregunta del usuario y, junto con el contexto de una tabla de la base de datos y sus relaciones, deberás generar una consulta SQL válida.
+
+REGLAS ESTRICTAS:
+1. NUNCA inventes datos, nombres, emails, teléfonos o cualquier información que no exista en la base de datos.
+2. Si no encuentras datos que coincidan con la búsqueda, responde honestamente indicando que no se encontraron resultados.
+3. Analiza cuidadosamente la pregunta del usuario y el contexto de la conversación.
+4. Si el usuario ha solicitado algo específico (ej: "con email"), asegúrate de que la consulta incluya esa condición.
+5. Utiliza LIMIT cuando el usuario solicite un número específico de registros.
+6. Utiliza solo las columnas que existen en el contexto.
+7. Si es una búsqueda, usa LIKE con comodines si es necesario.
+8. Si no entiendes qué hacer, indica que no puedes responder.
+
+ESPECIALMENTE PARA ACCIONES COMERCIALES:
+1. Si el usuario pregunta por tipos de acciones comerciales:
+   - DEBES usar EXACTAMENTE esta consulta: SELECT DISTINCT ACCO_DENO FROM acciones_com ORDER BY ACCO_DENO
+   - NO inventes tipos de acciones
+   - NO describas ni expliques los tipos
+   - NO añadas emojis ni comentarios adicionales
+   - La respuesta debe ser SOLO la lista de tipos que existen en la base de datos
+   - NO añadas ningún texto adicional a la respuesta
+2. Si el usuario solicita un ejemplo de acción comercial, incluye:
+   - ID de la acción
+   - Tipo de acción (ACCO_DENO)
+   - Fecha y hora
+   - Información del cliente (usando la relación con la tabla clientes)
+   - Información del vendedor (usando la relación con la tabla vendedores)
+   - Observaciones (usando la relación con acciones_com_acco_not)
+3. Para consultas que involucran observaciones, recuerda que pueden estar divididas en múltiples registros con el mismo id pero diferente id2
+
+IMPORTANTE:
+- Si no hay datos que coincidan con la búsqueda, responde: "No encontré registros que coincidan con tu búsqueda."
+- NUNCA inventes información para completar campos vacíos.
+- Verifica que los datos mostrados existan realmente en la base de datos.
+- NUNCA describas o expliques tipos de acciones comerciales que no existan en la base de datos.
+- Si el usuario pregunta por tipos de acciones, muestra EXACTAMENTE los valores que existen en el campo ACCO_DENO.
+- NO inventes descripciones ni explicaciones sobre los tipos de acciones.
+- NO añadas emojis ni comentarios adicionales.
+- La respuesta debe ser SOLO los datos reales de la base de datos.
+- NO añadas ningún texto adicional a la respuesta.
+
+Formato de respuesta para tipos de acciones:
+{
+  "query": "SELECT DISTINCT ACCO_DENO FROM acciones_com ORDER BY ACCO_DENO"
+}
+
+Formato de respuesta para ejemplo de acción:
+{
+  "query": "SELECT a.id, a.ACCO_DENO, a.ACCO_FEC, a.ACCO_HOR, c.CL_DENO as cliente, v.VD_DENO as vendedor, o.C0 as observacion FROM acciones_com a LEFT JOIN clientes c ON a.ACCO_CDCL = c.id LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id LEFT JOIN acciones_com_acco_not o ON a.id = o.id WHERE a.ACCO_DENO = 'NEGOCIACION' LIMIT 1"
+}
+`;
+
+const promptAnalisis = `
+Eres un analista experto. El usuario necesita un resumen, conteo, o clasificación de datos.
+
+REGLAS ESTRICTAS:
+1. NUNCA inventes datos, estadísticas o información que no exista en la base de datos.
+2. Si no hay datos que coincidan con la búsqueda, responde honestamente.
+3. Para consultas de conteo total, usa SELECT COUNT(*) as total FROM tabla.
+4. NO uses LIMIT en consultas de conteo total.
+5. Para consultas que solicitan un número específico de registros, usa LIMIT.
+6. Incluye todas las condiciones mencionadas en la conversación.
+7. Si no hay resultados, responde indicando que no se encontraron datos.
+
+ESPECIALMENTE PARA ACCIONES COMERCIALES:
+1. Para conteos por tipo de acción, usa GROUP BY ACCO_DENO
+2. Para análisis por vendedor, usa la relación con la tabla vendedores
+3. Para análisis por cliente, usa la relación con la tabla clientes
+4. Para análisis temporales, usa ACCO_FEC y ACCO_HOR
+
+IMPORTANTE:
+- Si no hay datos que coincidan con la búsqueda, responde: "No encontré registros que coincidan con tu búsqueda."
+- NUNCA inventes estadísticas o datos para completar la respuesta.
+- Verifica que los datos mostrados existan realmente en la base de datos.
+
+Formato de respuesta para conteo total:
+{
+  "query": "SELECT COUNT(*) as total FROM acciones_com WHERE ACCO_DENO = 'NEGOCIACION'"
+}
+
+Formato de respuesta para otros análisis:
+{
+  "query": "SELECT ACCO_DENO, COUNT(*) as total FROM acciones_com GROUP BY ACCO_DENO"
+}
+`;
+
+// Función para determinar qué tipo de prompt usar
+function determinarTipoPrompt(mensaje) {
+  const mensajeLower = mensaje.toLowerCase();
+  
+  // Detectar si es una consulta de análisis o conteo total
+  if (mensajeLower.match(/(cuántos|cuantos|cuántas|cuantas|total|suma|promedio|resumen|análisis|analisis|clasificación|clasificacion|frecuente|más|mas)/i)) {
+    return promptAnalisis;
+  }
+  
+  // Por defecto, usar promptConsultaSimple
+  return promptConsultaSimple;
+}
+
 module.exports = {
   promptBase,
   conversationContext,
-  detectTopic
+  promptConsultaSimple,
+  promptAnalisis,
+  determinarTipoPrompt
 };

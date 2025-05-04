@@ -1,18 +1,7 @@
 const axios = require('axios');
 const db = require('../db');
-const { processAccionesComercialesMessage } = require('./accionescomercialesclientes');
-const { processProveedoresMessage } = require('./proveedores');
-const { processBandejasMessage } = require('./bandejas');
-const { processCasasComercialesMessage } = require('./casascomerciales');
-const { processClientesMessage } = require('./clientes');
-const { processVendedoresMessage } = require('./vendedores');
-const { processArticulosMessage } = require('./articulos');
-const { processCreditosCaucionMessage } = require('./creditocaucion');
-const { processDispositivosMovilesMessage } = require('./dispositivosmoviles');
-const { processEnvasesVentaMessage } = require('./envasesventa');
-const { processInvernaderosMessage } = require('./invernaderos');
-const { processMotivosMessage } = require('./motivos');
-const { processPaisesMessage } = require('./paises');
+const { mapaERP } = require('../mapaERP');
+const { determinarTipoPrompt } = require('../promptBase');
 
 // Configuración de la API de DeepSeek
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -22,70 +11,12 @@ if (!DEEPSEEK_API_KEY) {
   console.error('Error: DEEPSEEK_API_KEY no está configurada en las variables de entorno');
 }
 
-// Prompt base para la IA
-const SYSTEM_PROMPT = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en analizar consultas y derivarlas al módulo correspondiente.
-
-Tu Objetivo Principal: Analizar la consulta del usuario y determinar a qué módulo debe ser derivada, basándote en:
-1. El contexto de la conversación
-2. El tema actual
-3. La intención de la consulta
-
-Módulos Disponibles:
-1. Artículos: Consultas sobre productos, inventario, catálogo, semillas, plantas, etc.
-2. Acciones Comerciales: Consultas sobre interacciones con clientes, incidencias, observaciones, etc.
-3. Proveedores: Consultas sobre suministradores, compras, etc.
-4. Clientes: Consultas sobre clientes, pedidos, etc.
-5. Vendedores: Consultas sobre el equipo comercial, etc.
-6. Bandejas: Consultas sobre contenedores, etc.
-7. Casas Comerciales: Consultas sobre distribuidores, etc.
-8. Créditos Caución: Consultas sobre seguros de crédito, pólizas y garantías.
-9. Dispositivos Móviles: Consultas sobre PDAs, terminales portátiles y sus características.
-10. Envases de Venta: Consultas sobre tipos de envases, presentaciones y formatos de venta.
-11. Invernaderos: Consultas sobre invernaderos, sus almacenes asociados y características.
-12. Motivos: Consultas sobre motivos, razones, causas, etc.
-13. Países: Consultas sobre países registrados, sus relaciones y uso en el sistema.
-
-Proceso de Análisis:
-1. Lee la consulta del usuario
-2. Analiza el contexto de la conversación
-3. Identifica el tema principal
-4. Determina el módulo más apropiado
-5. Deriva la consulta al módulo correspondiente
-
-Ejemplos de Derivación:
-- "¿Cuántos artículos tenemos?" → Módulo de Artículos
-- "¿Cuál es el problema más común?" → Módulo de Acciones Comerciales
-- "¿Quién es nuestro proveedor principal?" → Módulo de Proveedores
-- "¿Cuántos créditos caución hay?" → Módulo de Créditos Caución
-- "¿Cuántos dispositivos móviles tenemos?" → Módulo de Dispositivos Móviles
-- "¿Qué tipos de envases tenemos?" → Módulo de Envases de Venta
-- "¿Cuántos invernaderos hay?" → Módulo de Invernaderos
-- "¿Qué países tenemos registrados?" → Módulo de Países
-
-Reglas Fundamentales:
-1. NUNCA inventes respuestas
-2. SIEMPRE deriva la consulta al módulo correcto
-3. Mantén el contexto de la conversación
-4. Si no estás seguro, pregunta al usuario para clarificar
-
-Recuerda:
-- Analiza el contexto completo de la conversación
-- Identifica cambios de tema
-- Deriva la consulta al módulo más apropiado
-- Mantén un tono profesional pero amigable`;
-
 // Sistema de contexto para el asistente
 const assistantContext = {
   currentTopic: null,
   lastQuery: null,
   lastResponse: null,
   conversationHistory: [],
-  lastIndex: 0,
-  lastCreditoCaucion: null,
-  lastAccionComercial: null,
-  lastAccionesComerciales: [],
-  lastArticulo: null,
-  lastArticulos: [],
   isFirstMessage: true
 };
 
@@ -96,16 +27,9 @@ async function getDeepSeekResponse(prompt, context) {
     }
 
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: prompt }
+      { role: "system", content: prompt },
+      { role: "user", content: context }
     ];
-
-    if (context) {
-      messages.push({
-        role: "system",
-        content: `Contexto adicional: ${JSON.stringify(context)}`
-      });
-    }
 
     const response = await axios.post(DEEPSEEK_API_URL, {
       model: "deepseek-chat",
@@ -133,24 +57,129 @@ async function getDeepSeekResponse(prompt, context) {
   }
 }
 
-async function analyzeAndRouteMessage(message, context) {
-  const prompt = `Analiza la siguiente consulta y determina a qué módulo debe ser derivada:
+function esConsultaDeDatos(mensaje) {
+  const mensajeLower = mensaje.toLowerCase();
   
-  Consulta: "${message}"
-  
-  Contexto actual: ${JSON.stringify(context)}
-  
-  Por favor, responde con el nombre del módulo al que debe ser derivada la consulta (artículos, acciones_comerciales, proveedores, clientes, vendedores, bandejas, casas_comerciales, creditos_caucion, dispositivos_moviles, envases_venta, invernaderos, motivos, paises) y una breve explicación de por qué.`;
+  // Palabras clave que indican una consulta de datos
+  const palabrasClaveDatos = [
+    'cuántos', 'cuantos', 'cuántas', 'cuantas',
+    'mostrar', 'muestra', 'dame', 'buscar',
+    'encontrar', 'listar', 'lista', 'datos',
+    'información', 'informacion', 'cliente',
+    'clientes', 'artículo', 'articulo', 'artículos',
+    'articulos', 'proveedor', 'proveedores'
+  ];
 
-  const analysis = await getDeepSeekResponse(prompt, context);
+  // Verificar si el mensaje contiene palabras clave de datos
+  return palabrasClaveDatos.some(palabra => mensajeLower.includes(palabra));
+}
+
+function esSaludo(mensaje) {
+  const mensajeLower = mensaje.toLowerCase();
+  return mensajeLower.match(/^(hola|buenos días|buenas tardes|buenas noches|hey|hi|hello|que tal|qué tal|como estas|cómo estás)/i);
+}
+
+function esPreguntaGeneral(mensaje) {
+  const mensajeLower = mensaje.toLowerCase();
+  return mensajeLower.match(/^(quién eres|quien eres|qué eres|que eres|qué puedes hacer|que puedes hacer|ayuda|help)/i);
+}
+
+async function generarRespuestaConversacional(mensaje) {
+  const prompt = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en ayudar con consultas sobre la base de datos de la empresa.
+
+  Contexto de la conversación:
+  ${JSON.stringify(assistantContext.conversationHistory.slice(-3))}
+
+  El usuario ha dicho: "${mensaje}"
+
+  Proporciona una respuesta natural y conversacional, manteniendo un tono profesional pero amigable.
+  Si el usuario necesita información específica de la base de datos, sugiérele que formule su pregunta de manera más específica.
+  Si es un saludo o una pregunta general, responde de manera natural sin mencionar la base de datos a menos que sea relevante.`;
+
+  return await getDeepSeekResponse(prompt, mensaje);
+}
+
+async function generarConsultaSQL(tabla, mensaje) {
+  const prompt = determinarTipoPrompt(mensaje);
   
-  if (!analysis) {
+  const contexto = {
+    tabla: tabla,
+    estructura: mapaERP[tabla],
+    mensaje: mensaje,
+    historial: assistantContext.conversationHistory.slice(-3)
+  };
+
+  const respuesta = await getDeepSeekResponse(prompt, JSON.stringify(contexto));
+  
+  if (!respuesta) {
     return null;
   }
 
-  // Extraer el módulo de la respuesta
-  const moduleMatch = analysis.match(/(artículos|acciones_comerciales|proveedores|clientes|vendedores|bandejas|casas_comerciales|creditos_caucion|dispositivos_moviles|envases_venta|invernaderos|motivos|paises)/i);
-  return moduleMatch ? moduleMatch[0].toLowerCase() : null;
+  try {
+    const { query } = JSON.parse(respuesta);
+    return query;
+  } catch (error) {
+    console.error('Error al parsear la respuesta de la IA:', error);
+    return null;
+  }
+}
+
+async function ejecutarConsultaSQL(consulta) {
+  try {
+    const [rows] = await db.query(consulta);
+    return rows;
+  } catch (error) {
+    console.error('Error al ejecutar la consulta SQL:', error);
+    throw error;
+  }
+}
+
+async function formatearRespuesta(tabla, resultados, userMessage) {
+  if (!resultados || resultados.length === 0) {
+    return "No encontré registros que coincidan con tu búsqueda.";
+  }
+
+  const messageLower = userMessage.toLowerCase();
+  
+  // Si es una consulta de tipos de acciones comerciales
+  if (messageLower.includes('tipos') && messageLower.includes('acciones')) {
+    let respuesta = "";
+    resultados.forEach(accion => {
+      respuesta += `${accion.ACCO_DENO}\n`;
+    });
+    return respuesta;
+  }
+
+  // Si es una consulta de conteo total
+  if (messageLower.includes('total') || messageLower.includes('cuántos') || messageLower.includes('cuantos')) {
+    return `En total hay ${resultados[0].total} registros que coinciden con tu búsqueda.`;
+  }
+
+  // Para otros tipos de consultas
+  let respuesta = "Aquí tienes los resultados de tu búsqueda:\n\n";
+  
+  resultados.forEach((registro, index) => {
+    if (tabla === 'clientes') {
+      respuesta += `Cliente ${index + 1}:\n`;
+      if (registro.CL_DENO) respuesta += `Nombre del cliente: ${registro.CL_DENO}\n`;
+      if (registro.CL_POB) respuesta += `Población: ${registro.CL_POB}\n`;
+      if (registro.CL_PROV) respuesta += `Provincia: ${registro.CL_PROV}\n`;
+      if (registro.CL_TEL) respuesta += `Teléfono: ${registro.CL_TEL}\n`;
+      if (registro.CL_EMA) respuesta += `Email: ${registro.CL_EMA}\n`;
+      if (registro.CL_CIF) respuesta += `CIF: ${registro.CL_CIF}\n`;
+    } else if (tabla === 'acciones_com') {
+      respuesta += `Acción ${index + 1}:\n`;
+      if (registro.ACCO_DENO) respuesta += `Tipo de acción: ${registro.ACCO_DENO}\n`;
+      if (registro.ACCO_FEC) respuesta += `Fecha: ${registro.ACCO_FEC}\n`;
+      if (registro.ACCO_HOR) respuesta += `Hora: ${registro.ACCO_HOR}\n`;
+      if (registro.cliente) respuesta += `Cliente: ${registro.cliente}\n`;
+      if (registro.vendedor) respuesta += `Vendedor: ${registro.vendedor}\n`;
+      if (registro.observacion) respuesta += `Observación: ${registro.observacion}\n`;
+    }
+    respuesta += "\n";
+  });
+
+  return respuesta;
 }
 
 // Función principal para procesar mensajes
@@ -159,164 +188,82 @@ async function processMessage(userMessage) {
     console.log('Procesando mensaje en deepseek.js:', userMessage);
     const messageLower = userMessage.toLowerCase();
 
-    // Detectar si es un saludo o mensaje inicial
-    if (messageLower.match(/^(hola|buenos días|buenas tardes|buenas noches|hey|hi|hello)/i) && assistantContext.isFirstMessage) {
-      const prompt = `El usuario ha iniciado la conversación con: "${userMessage}". 
-      Por favor, proporciona una respuesta cálida y profesional, presentándote como un asistente virtual de Semilleros Deitana S.L. 
-      y sugiriendo amablemente las áreas sobre las que puedes ayudar.`;
-      
-      const aiResponse = await getDeepSeekResponse(prompt, assistantContext);
-      if (!aiResponse) {
-        throw new Error('No se pudo obtener respuesta de la IA');
-      }
-      
+    // Determinar el tipo de mensaje
+    if (esSaludo(userMessage) && assistantContext.isFirstMessage) {
+      const respuesta = await generarRespuestaConversacional(userMessage);
       assistantContext.isFirstMessage = false;
       assistantContext.conversationHistory.push(
         { role: "user", content: userMessage },
-        { role: "assistant", content: aiResponse }
+        { role: "assistant", content: respuesta }
       );
-      
       return {
-        message: aiResponse,
+        message: respuesta,
         context: assistantContext
       };
     }
 
-    // Analizar y enrutar el mensaje
-    const targetModule = await analyzeAndRouteMessage(userMessage, assistantContext);
-    
-    if (targetModule) {
-      let result;
-      
-      switch (targetModule) {
-        case 'artículos':
-          result = await processArticulosMessage(userMessage);
-          if (result.data) {
-            if (Array.isArray(result.data)) {
-              assistantContext.lastArticulos = result.data.map(art => art.id);
-            } else {
-              assistantContext.lastArticulo = result.data.id;
-              assistantContext.lastArticulos.push(result.data.id);
-            }
-          }
-          break;
-          
-        case 'acciones_comerciales':
-          result = await processAccionesComercialesMessage(userMessage);
-          if (result.contextType === 'ultima_accion' && result.data) {
-            assistantContext.lastAccionComercial = result.data.id;
-            assistantContext.lastAccionesComerciales.push(result.data.id);
-          }
-          break;
-          
-        case 'proveedores':
-          result = await processProveedoresMessage(userMessage);
-          break;
-          
-        case 'clientes':
-          result = await processClientesMessage(userMessage);
-          break;
-          
-        case 'vendedores':
-          result = await processVendedoresMessage(userMessage);
-          break;
-          
-        case 'bandejas':
-          result = await processBandejasMessage(userMessage);
-          break;
-          
-        case 'casas_comerciales':
-          result = await processCasasComercialesMessage(userMessage);
-          break;
-          
-        case 'creditos_caucion':
-          result = await processCreditosCaucionMessage(userMessage);
-          if (result.data) {
-            assistantContext.lastCreditoCaucion = result.data.id;
-          }
-          break;
-          
-        case 'dispositivos_moviles':
-          result = await processDispositivosMovilesMessage(userMessage);
-          if (result.data) {
-            assistantContext.lastDispositivoMovil = result.data.id;
-          }
-          break;
-          
-        case 'envases_venta':
-          result = await processEnvasesVentaMessage(userMessage);
-          if (result.data) {
-            assistantContext.lastEnvaseVenta = result.data.id;
-          }
-          break;
-          
-        case 'invernaderos':
-          result = await processInvernaderosMessage(userMessage);
-          if (result.data) {
-            assistantContext.lastInvernadero = result.data.id;
-          }
-          break;
-          
-        case 'motivos':
-          result = await processMotivosMessage(userMessage);
-          if (result.data) {
-            assistantContext.lastMotivo = result.data.id;
-          }
-          break;
-          
-        case 'paises':
-          result = await processPaisesMessage(userMessage);
-          if (result.data) {
-            assistantContext.lastPais = result.data.id;
-          }
-          break;
-          
-        default:
-          result = { message: "Lo siento, no he podido determinar a qué módulo derivar tu consulta. ¿Podrías reformularla?" };
-      }
-      
-      // Actualizar el contexto
-      assistantContext.currentTopic = targetModule;
-      assistantContext.lastQuery = userMessage;
-      assistantContext.lastResponse = result.message;
-      
+    if (esPreguntaGeneral(userMessage)) {
+      const respuesta = await generarRespuestaConversacional(userMessage);
       assistantContext.conversationHistory.push(
         { role: "user", content: userMessage },
-        { role: "assistant", content: result.message }
+        { role: "assistant", content: respuesta }
       );
-      
       return {
-        message: result.message,
+        message: respuesta,
         context: assistantContext
       };
     }
 
-    // Si no se pudo determinar el módulo, pedir clarificación
-    const prompt = `El usuario ha enviado el mensaje: "${userMessage}", pero no he podido determinar a qué módulo derivarlo.
-    Por favor, proporciona una respuesta amable y profesional que:
-    1. Indique que no se ha entendido completamente la consulta
-    2. Sugiera los diferentes módulos disponibles
-    3. Ofrezca ejemplos de consultas para cada módulo
-    4. Mantenga un tono amigable y de ayuda`;
-    
-    const aiResponse = await getDeepSeekResponse(prompt, assistantContext);
-    if (!aiResponse) {
-      throw new Error('No se pudo obtener respuesta de la IA');
+    // Si no es una consulta de datos, responder de manera conversacional
+    if (!esConsultaDeDatos(userMessage)) {
+      const respuesta = await generarRespuestaConversacional(userMessage);
+      assistantContext.conversationHistory.push(
+        { role: "user", content: userMessage },
+        { role: "assistant", content: respuesta }
+      );
+      return {
+        message: respuesta,
+        context: assistantContext
+      };
     }
+
+    // Si es una consulta de datos, procesarla
+    const tabla = 'clientes'; // Por ahora solo manejamos clientes
+    const consultaSQL = await generarConsultaSQL(tabla, userMessage);
     
+    if (!consultaSQL) {
+      const respuesta = await generarRespuestaConversacional(userMessage);
+      assistantContext.conversationHistory.push(
+        { role: "user", content: userMessage },
+        { role: "assistant", content: respuesta }
+      );
+      return {
+        message: respuesta,
+        context: assistantContext
+      };
+    }
+
+    const resultados = await ejecutarConsultaSQL(consultaSQL);
+    const respuestaFormateada = await formatearRespuesta(tabla, resultados, userMessage);
+
+    // Actualizar el contexto
+    assistantContext.currentTopic = tabla;
+    assistantContext.lastQuery = userMessage;
+    assistantContext.lastResponse = respuestaFormateada;
     assistantContext.conversationHistory.push(
       { role: "user", content: userMessage },
-      { role: "assistant", content: aiResponse }
+      { role: "assistant", content: respuestaFormateada }
     );
-    
+
     return {
-      message: aiResponse,
+      message: respuestaFormateada,
       context: assistantContext
     };
+
   } catch (error) {
     console.error('Error en processMessage:', error);
     return {
-      message: "Lo siento, estoy teniendo problemas para procesar tu consulta en este momento. Por favor, intenta de nuevo más tarde.",
+      message: "Lo siento, he tenido un problema al procesar tu consulta. Por favor, intenta de nuevo más tarde.",
       context: assistantContext
     };
   }
