@@ -105,59 +105,45 @@ async function generarRespuestaConversacional(mensaje) {
 
 async function processMessage(userMessage) {
   try {
+    // Paso 1: IA genera la consulta SQL
     const { system } = promptBase(userMessage);
     const messages = [
       { role: "system", content: system },
-      ...assistantContext.conversationHistory.slice(-3), // últimos 3 mensajes
+      ...assistantContext.conversationHistory.slice(-3),
       { role: "user", content: userMessage }
     ];
-    const respuesta = await getDeepSeekResponse(messages);
+    const respuestaIA = await getDeepSeekResponse(messages);
 
-    console.log("Respuesta de la IA:", respuesta);
-
-    const sqlMatch = respuesta.match(/SELECT[\s\S]+?;/i);
+    // Extrae la consulta SQL de la respuesta de la IA
+    const sqlMatch = respuestaIA.match(/SELECT[\s\S]+?;/i);
     if (sqlMatch) {
       const sql = sqlMatch[0];
-      console.log("Consulta SQL detectada:", sql);
-
       try {
         const [rows] = await db.query(sql);
-        const tableMatch = sql.match(/FROM\s+(\w+)/i);
-        let tabla = tableMatch ? tableMatch[1] : null;
-        let columnas = tabla && mapaERP[tabla] ? (mapaERP[tabla].columnas || mapaERP[tabla].campos) : {};
 
-        let camposValidos = Object.keys(columnas);
+        // Paso 2: IA analiza los datos reales
+        const datosReales = rows.length === 0
+          ? "No se encontraron resultados en la base de datos."
+          : JSON.stringify(rows, null, 2);
 
-            let respuestaFormateada = rows.map((registro, idx) => {
-              let texto = `Registro ${idx + 1}:\n`;
-              // Muestra los campos definidos en el esquema
-              for (let campo of camposValidos) {
-                if (registro[campo] !== undefined) {
-                  let nombreCampo = columnas[campo];
-                  texto += `${nombreCampo}: ${registro[campo]}\n`;
-                }
-              }
-              // Muestra cualquier otro campo extra que venga en el resultado (por ejemplo, cliente, observacion)
-              for (let campo in registro) {
-                if (!camposValidos.includes(campo)) {
-                  texto += `${campo}: ${registro[campo]}\n`;
-                }
-              }
-              texto += '\n';
-              return texto;
-            }).join('\n');
+        const promptAnalisis = `
+El usuario preguntó: ${userMessage}
+El resultado real de la base de datos es:
+${datosReales}
+Por favor, analiza estos datos y responde en lenguaje natural, explicando el resultado y sugiriendo acciones si corresponde.
+        `;
+        const analisis = await getDeepSeekResponse([
+          { role: "system", content: promptAnalisis }
+        ]);
 
-        console.log("Respuesta generada:", respuestaFormateada);
-
-        if (rows.length === 0) {
-          return {
-            message: "No se encontraron resultados reales en la base de datos para tu consulta.",
-            context: assistantContext
-          };
-        }
+        // Guarda el historial de conversación
+        assistantContext.conversationHistory.push(
+          { role: "user", content: userMessage },
+          { role: "assistant", content: analisis }
+        );
 
         return {
-          message: `${respuestaFormateada}\n¿Te gustaría ver más resultados o buscar por algún criterio específico?`,
+          message: analisis,
           context: assistantContext
         };
       } catch (sqlError) {
@@ -168,7 +154,6 @@ async function processMessage(userMessage) {
         };
       }
     } else {
-      console.log("No se detectó consulta SQL en la respuesta.");
       return {
         message: "No he encontrado información real en la base de datos para tu consulta. ¿Quieres intentar con otra pregunta?",
         context: assistantContext
@@ -182,7 +167,6 @@ async function processMessage(userMessage) {
     };
   }
 }
-
 module.exports = {
   processMessage
 };
