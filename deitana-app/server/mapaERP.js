@@ -66,6 +66,52 @@ const mapaERP = {
 
 
 
+/* ================================================*/
+/* Archivos – Generales – Artículos */
+/* ================================================*/
+articulos: {
+    descripcion: "La tabla 'articulos' en el ERP de Semilleros Deitana contiene el inventario completo de productos. Cada registro representa un artículo único, identificado por un código (id). Esta tabla almacena información esencial de cada artículo, incluyendo su descripción (AR_DENO), códigos de barras (AR_BAR), proveedor asignado (AR_PRV), clasificación por grupo y familia (AR_GRP, AR_FAM), precio (AR_PUD, AR_POP, AR_PST, AR_PVME), stock (AR_STOK), y otros datos relevantes como tipo de IVA (AR_TIVA) y estado (AR_EST).",
+    tabla: "articulos",
+    columnas: {
+        id: "Código único del artículo",
+        AR_DENO: "Denominación o descripción del artículo",
+        AR_REF: "Referencia adicional del artículo (Sin información específica en el ejemplo)",
+        AR_BAR: "Código de barras del artículo",
+        AR_TIVA: "Tipo de IVA aplicado al artículo",
+        AR_GRP: "Código del grupo al que pertenece el artículo",
+        AR_FAM: "Código de la familia del artículo",
+        AR_PRV: "Código del proveedor principal del artículo. Referencia al campo 'id' en la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma.",
+        AR_WEB: "Información adicional para la web",
+        AR_DCG: "(Sin información específica)",
+        AR_IVAP: "IVA aplicado al precio",
+        AR_PGE: "% de germinación",
+        // Nota: Los campos de precio (AR_PUD, AR_POP, AR_PST, AR_PVME) y stock (AR_STOK) mencionados en la descripción general no están detallados individualmente en la lista de campos proporcionada, pero se infiere su existencia.
+    },
+    relaciones: {
+        proveedores: {
+            tabla_relacionada: "proveedores",
+            tipo: "Uno a muchos (un proveedor puede proveer muchos artículos)",
+            campo_enlace_local: "AR_PRV",
+            campo_enlace_externo: "id",
+            descripcion: "Permite identificar qué proveedor principal suministra cada artículo. Si el campo 'AR_PRV' está vacío en un registro de artículo, significa que el proveedor principal no está registrado para ese artículo en este sistema."
+        }
+    },
+    ejemplos: {
+        consulta_proveedor: "Un artículo con id '00000042' y AR_DENO 'TOMATE RIO GRANDE( PERA RASTRERO)' tiene AR_PRV '00040'. Esto significa que el proveedor con id '00040' en la tabla 'proveedores' es el encargado de proveer este artículo.",
+        consulta_grupo_familia: "Se puede filtrar o agrupar artículos por su código de grupo (AR_GRP) o familia (AR_FAM).",
+        consulta_barra: "Buscar un artículo por su código de barras utilizando el campo AR_BAR."
+    }
+},
+
+
+
+
+
+
+
+
+
+
 
 
 
