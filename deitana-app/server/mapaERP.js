@@ -9,7 +9,7 @@ const mapaERP = {
     /* ================================================*/
     acciones_com: {
         descripcion: "Registro de acciones comerciales realizadas con clientes",
-        campos: {
+        columnas: {
             id: "Identificador único de la acción comercial",
             ACCO_DENO: "Denominación o tipo de acción comercial",
             ACCO_CDCL: "Código del cliente",

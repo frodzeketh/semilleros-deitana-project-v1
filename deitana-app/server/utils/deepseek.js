@@ -113,16 +113,27 @@ async function processMessage(userMessage) {
         let tabla = tableMatch ? tableMatch[1] : null;
         let columnas = tabla && mapaERP[tabla] ? mapaERP[tabla].columnas : {};
 
-        let respuestaFormateada = rows.map((registro, idx) => {
-          let texto = `**Registro ${idx + 1}:**\n`;
-          for (let campo in registro) {
-            let nombreCampo = columnas && columnas[campo] ? columnas[campo] : campo;
-            texto += `**${nombreCampo}:** ${registro[campo]}\n`;
-          }
-          texto += '\n'; // Espacio entre registros
-          return texto;
-        }).join('\n');
+        let camposValidos = Object.keys(columnas);
 
+
+
+
+                    let respuestaFormateada = rows.map((registro, idx) => {
+                      let texto = `Registro ${idx + 1}:\n`;
+                      for (let campo of camposValidos) {
+                        if (registro[campo] !== undefined) {
+                          let nombreCampo = columnas[campo];
+                          texto += `${nombreCampo}: ${registro[campo]}\n`;
+                        }
+                      }
+                      texto += '\n';
+                      return texto;
+                    }).join('\n');
+
+
+
+
+                    
         return {
           message: respuestaFormateada,
           context: assistantContext
