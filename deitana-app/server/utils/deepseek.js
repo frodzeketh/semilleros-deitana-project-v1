@@ -87,55 +87,70 @@ async function generarRespuestaConversacional(mensaje) {
 
 
 
-async function processMessage(userMessage) {
-  try {
-    // ... saludos y preguntas generales ...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Usar promptBase para generar el prompt
-    const { system, user } = promptBase(userMessage);
+// ... imports y funciones previas ...
 
-    // Generar la respuesta usando la IA con el prompt base
+// ... imports y funciones previas ...
+
+async function processMessage(userMessage) {
+  try {
+    const { system, user } = promptBase(userMessage);
     const respuesta = await getDeepSeekResponse(system, user);
 
-    if (!respuesta) throw new Error('No se pudo obtener una respuesta de la IA');
+    console.log("Respuesta de la IA:", respuesta);
 
-    // 1. Buscar si la respuesta contiene una consulta SQL
     const sqlMatch = respuesta.match(/SELECT[\s\S]+?;/i);
     if (sqlMatch) {
       const sql = sqlMatch[0];
+      console.log("Consulta SQL detectada:", sql);
 
       try {
-        // 2. Ejecutar la consulta en la base de datos
         const [rows] = await db.query(sql);
-
-        // 3. Formatear los resultados usando mapaERP
         const tableMatch = sql.match(/FROM\s+(\w+)/i);
         let tabla = tableMatch ? tableMatch[1] : null;
-        let columnas = tabla && mapaERP[tabla] ? mapaERP[tabla].columnas : {};
+        let columnas = tabla && mapaERP[tabla] ? (mapaERP[tabla].columnas || mapaERP[tabla].campos) : {};
 
         let camposValidos = Object.keys(columnas);
 
+        let respuestaFormateada = rows.map((registro, idx) => {
+          let texto = `Registro ${idx + 1}:\n`;
+          for (let campo of camposValidos) {
+            if (registro[campo] !== undefined) {
+              let nombreCampo = columnas[campo];
+              texto += `${nombreCampo}: ${registro[campo]}\n`;
+            }
+          }
+          texto += '\n';
+          return texto;
+        }).join('\n');
 
+        console.log("Respuesta generada:", respuestaFormateada);
 
+        if (rows.length === 0) {
+          return {
+            message: "No se encontraron resultados reales en la base de datos para tu consulta.",
+            context: assistantContext
+          };
+        }
 
-                    let respuestaFormateada = rows.map((registro, idx) => {
-                      let texto = `Registro ${idx + 1}:\n`;
-                      for (let campo of camposValidos) {
-                        if (registro[campo] !== undefined) {
-                          let nombreCampo = columnas[campo];
-                          texto += `${nombreCampo}: ${registro[campo]}\n`;
-                        }
-                      }
-                      texto += '\n';
-                      return texto;
-                    }).join('\n');
-
-
-
-
-                    
         return {
-          message: respuestaFormateada,
+          message: `${respuestaFormateada}\n¿Te gustaría ver más resultados o buscar por algún criterio específico?`,
           context: assistantContext
         };
       } catch (sqlError) {
@@ -145,18 +160,17 @@ async function processMessage(userMessage) {
           context: assistantContext
         };
       }
+    } else {
+      console.log("No se detectó consulta SQL en la respuesta.");
+      return {
+        message: "No he encontrado información real en la base de datos para tu consulta. ¿Quieres intentar con otra pregunta?",
+        context: assistantContext
+      };
     }
-
-    // Si no hay SQL, devolver la respuesta de la IA
-    return {
-      message: respuesta,
-      context: assistantContext
-    };
-
   } catch (error) {
     console.error('Error en processMessage:', error);
     return {
-      message: 'Lo siento, ha ocurrido un error al procesar tu consulta.',
+      message: 'Hubo un problema al obtener respuesta.',
       context: assistantContext
     };
   }
