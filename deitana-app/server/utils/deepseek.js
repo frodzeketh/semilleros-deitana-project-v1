@@ -114,12 +114,12 @@ async function processMessage(userMessage) {
         let columnas = tabla && mapaERP[tabla] ? mapaERP[tabla].columnas : {};
 
         let respuestaFormateada = rows.map((registro, idx) => {
-          let texto = `Registro ${idx + 1}:\n----------------------------\n`;
+          let texto = `**Registro ${idx + 1}:**\n`;
           for (let campo in registro) {
             let nombreCampo = columnas && columnas[campo] ? columnas[campo] : campo;
-            texto += `${nombreCampo}: ${registro[campo]}\n`;
+            texto += `**${nombreCampo}:** ${registro[campo]}\n`;
           }
-          texto += '----------------------------\n';
+          texto += '\n'; // Espacio entre registros
           return texto;
         }).join('\n');
 
