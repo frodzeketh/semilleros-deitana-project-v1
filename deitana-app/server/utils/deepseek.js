@@ -117,6 +117,33 @@ async function generarConsultaSQL(tabla, mensaje) {
 
   try {
     const { query } = JSON.parse(respuesta);
+    
+    // Si es una consulta de acciones comerciales, asegurarnos de incluir las relaciones
+    if (tabla === 'acciones_com') {
+      // Construir la consulta con todas las relaciones
+      return `
+        SELECT 
+          a.id,
+          a.ACCO_DENO,
+          a.ACCO_FEC,
+          a.ACCO_HOR,
+          c.CL_DENO,
+          c.CL_POB,
+          c.CL_PROV,
+          c.CL_TEL,
+          c.CL_EMA,
+          v.VD_DENO,
+          GROUP_CONCAT(n.C0 ORDER BY n.id2 SEPARATOR ' ') as observaciones
+        FROM acciones_com a
+        LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
+        LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
+        LEFT JOIN acciones_com_acco_not n ON a.id = n.id
+        GROUP BY a.id, a.ACCO_DENO, a.ACCO_FEC, a.ACCO_HOR, c.CL_DENO, c.CL_POB, c.CL_PROV, c.CL_TEL, c.CL_EMA, v.VD_DENO
+        ORDER BY a.ACCO_FEC DESC, a.ACCO_HOR DESC
+        LIMIT 10
+      `;
+    }
+    
     return query;
   } catch (error) {
     console.error('Error al parsear la respuesta de la IA:', error);
@@ -161,22 +188,44 @@ async function formatearRespuesta(tabla, resultados, userMessage) {
   resultados.forEach((registro, index) => {
     if (tabla === 'clientes') {
       respuesta += `Cliente ${index + 1}:\n`;
+      respuesta += `----------------------------\n`;
       if (registro.CL_DENO) respuesta += `Nombre del cliente: ${registro.CL_DENO}\n`;
       if (registro.CL_POB) respuesta += `Población: ${registro.CL_POB}\n`;
       if (registro.CL_PROV) respuesta += `Provincia: ${registro.CL_PROV}\n`;
       if (registro.CL_TEL) respuesta += `Teléfono: ${registro.CL_TEL}\n`;
       if (registro.CL_EMA) respuesta += `Email: ${registro.CL_EMA}\n`;
       if (registro.CL_CIF) respuesta += `CIF: ${registro.CL_CIF}\n`;
+      respuesta += `----------------------------\n\n`;
     } else if (tabla === 'acciones_com') {
-      respuesta += `Acción ${index + 1}:\n`;
+      respuesta += `Acción Comercial ${index + 1}:\n`;
+      respuesta += `----------------------------\n`;
       if (registro.ACCO_DENO) respuesta += `Tipo de acción: ${registro.ACCO_DENO}\n`;
       if (registro.ACCO_FEC) respuesta += `Fecha: ${registro.ACCO_FEC}\n`;
       if (registro.ACCO_HOR) respuesta += `Hora: ${registro.ACCO_HOR}\n`;
-      if (registro.cliente) respuesta += `Cliente: ${registro.cliente}\n`;
-      if (registro.vendedor) respuesta += `Vendedor: ${registro.vendedor}\n`;
-      if (registro.observacion) respuesta += `Observación: ${registro.observacion}\n`;
+      
+      // Información del cliente
+      if (registro.CL_DENO) {
+        respuesta += `\nCliente:\n`;
+        respuesta += `Nombre: ${registro.CL_DENO}\n`;
+        if (registro.CL_POB) respuesta += `Población: ${registro.CL_POB}\n`;
+        if (registro.CL_PROV) respuesta += `Provincia: ${registro.CL_PROV}\n`;
+        if (registro.CL_TEL) respuesta += `Teléfono: ${registro.CL_TEL}\n`;
+        if (registro.CL_EMA) respuesta += `Email: ${registro.CL_EMA}\n`;
+      }
+      
+      // Información del vendedor
+      if (registro.VD_DENO) {
+        respuesta += `\nVendedor:\n`;
+        respuesta += `Nombre: ${registro.VD_DENO}\n`;
+      }
+      
+      // Observaciones
+      if (registro.observaciones) {
+        respuesta += `\nObservaciones:\n`;
+        respuesta += `${registro.observaciones}\n`;
+      }
+      respuesta += `----------------------------\n\n`;
     }
-    respuesta += "\n";
   });
 
   return respuesta;
@@ -227,8 +276,15 @@ async function processMessage(userMessage) {
       };
     }
 
-    // Si es una consulta de datos, procesarla
-    const tabla = 'clientes'; // Por ahora solo manejamos clientes
+    // Determinar la tabla según el contexto de la consulta
+    let tabla = 'clientes'; // Por defecto
+    
+    // Detectar si es una consulta específica de acciones comerciales
+    if ((messageLower.includes('acciones') || messageLower.includes('comerciales')) && 
+        !messageLower.includes('cliente') && !messageLower.includes('clientes')) {
+      tabla = 'acciones_com';
+    }
+
     const consultaSQL = await generarConsultaSQL(tabla, userMessage);
     
     if (!consultaSQL) {
@@ -243,7 +299,10 @@ async function processMessage(userMessage) {
       };
     }
 
+    console.log('Consulta SQL generada:', consultaSQL);
     const resultados = await ejecutarConsultaSQL(consultaSQL);
+    console.log('Resultados de la consulta:', resultados);
+    
     const respuestaFormateada = await formatearRespuesta(tabla, resultados, userMessage);
 
     // Actualizar el contexto
