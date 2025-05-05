@@ -1,7 +1,8 @@
 const axios = require('axios');
 const db = require('../db');
 const { mapaERP } = require('../mapaERP');
-const { determinarTipoPrompt } = require('../promptBase');
+const { promptBase } = require('../promptBase');
+const mysql = require('mysql2/promise'); // Asegúrate de tener mysql2 instalado
 
 // Configuración de la API de DeepSeek
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -57,15 +58,6 @@ async function getDeepSeekResponse(prompt, context) {
   }
 }
 
-
-
-
-
-
-
-
-
-
 function esSaludo(mensaje) {
   const mensajeLower = mensaje.toLowerCase();
   return mensajeLower.match(/^(hola|buenos días|buenas tardes|buenas noches|hey|hi|hello|que tal|qué tal|como estas|cómo estás)/i);
@@ -91,135 +83,69 @@ async function generarRespuestaConversacional(mensaje) {
   return await getDeepSeekResponse(prompt, mensaje);
 }
 
-async function ejecutarConsultaSQL(consulta) {
-  try {
-    const [rows] = await db.query(consulta);
-    return rows;
-  } catch (error) {
-    console.error('Error al ejecutar la consulta SQL:', error);
-    throw error;
-  }
-}
 
-async function formatearRespuesta(resultados, userMessage) {
-  if (!resultados || resultados.length === 0) {
-    return "No encontré registros que coincidan con tu búsqueda.";
-  }
 
-  // Si es una consulta de conteo total
-  if (userMessage.toLowerCase().includes('total') || 
-      userMessage.toLowerCase().includes('cuántos') || 
-      userMessage.toLowerCase().includes('cuantos')) {
-    return `En total hay ${resultados.length} registros que coinciden con tu búsqueda.`;
-  }
 
-  // Para otros tipos de consultas
-  let respuesta = "Aquí tienes los resultados de tu búsqueda:\n\n";
-  
-  resultados.forEach((registro, index) => {
-    respuesta += `Registro ${index + 1}:\n`;
-    respuesta += `----------------------------\n`;
-    
-    // Mostrar todos los campos del registro
-    Object.entries(registro).forEach(([campo, valor]) => {
-      if (valor !== null && valor !== undefined) {
-        respuesta += `${campo}: ${valor}\n`;
-      }
-    });
-    
-    respuesta += `----------------------------\n\n`;
-  });
 
-  return respuesta;
-}
-
-// Función principal para procesar mensajes
 async function processMessage(userMessage) {
   try {
-    console.log('Procesando mensaje en deepseek.js:', userMessage);
+    // ... saludos y preguntas generales ...
 
-    // Determinar el tipo de mensaje
-    if (esSaludo(userMessage) && assistantContext.isFirstMessage) {
-      const respuesta = await generarRespuestaConversacional(userMessage);
-      assistantContext.isFirstMessage = false;
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: respuesta }
-      );
-      return {
-        message: respuesta,
-        context: assistantContext
-      };
+    // Usar promptBase para generar el prompt
+    const { system, user } = promptBase(userMessage);
+
+    // Generar la respuesta usando la IA con el prompt base
+    const respuesta = await getDeepSeekResponse(system, user);
+
+    if (!respuesta) throw new Error('No se pudo obtener una respuesta de la IA');
+
+    // 1. Buscar si la respuesta contiene una consulta SQL
+    const sqlMatch = respuesta.match(/SELECT[\s\S]+?;/i);
+    if (sqlMatch) {
+      const sql = sqlMatch[0];
+
+      try {
+        // 2. Ejecutar la consulta en la base de datos
+        const [rows] = await db.query(sql);
+
+        // 3. Formatear los resultados usando mapaERP
+        const tableMatch = sql.match(/FROM\s+(\w+)/i);
+        let tabla = tableMatch ? tableMatch[1] : null;
+        let columnas = tabla && mapaERP[tabla] ? mapaERP[tabla].columnas : {};
+
+        let respuestaFormateada = rows.map((registro, idx) => {
+          let texto = `Registro ${idx + 1}:\n----------------------------\n`;
+          for (let campo in registro) {
+            let nombreCampo = columnas && columnas[campo] ? columnas[campo] : campo;
+            texto += `${nombreCampo}: ${registro[campo]}\n`;
+          }
+          texto += '----------------------------\n';
+          return texto;
+        }).join('\n');
+
+        return {
+          message: respuestaFormateada,
+          context: assistantContext
+        };
+      } catch (sqlError) {
+        console.error('Error ejecutando SQL:', sqlError);
+        return {
+          message: 'La consulta generada no pudo ejecutarse en la base de datos. Por favor, intenta con otra pregunta.',
+          context: assistantContext
+        };
+      }
     }
 
-    if (esPreguntaGeneral(userMessage)) {
-      const respuesta = await generarRespuestaConversacional(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: respuesta }
-      );
-      return {
-        message: respuesta,
-        context: assistantContext
-      };
-    }
-
-    // Generar la consulta SQL usando la IA
-    const prompt = `Eres un experto en SQL y análisis de datos. Tu tarea es generar una consulta SQL válida basada en la siguiente pregunta del usuario y el esquema de la base de datos.
-
-    Pregunta del usuario: "${userMessage}"
-
-    Esquema de la base de datos:
-    ${JSON.stringify(mapaERP, null, 2)}
-
-    Reglas:
-    1. Genera SOLO la consulta SQL, sin explicaciones adicionales
-    2. Usa solo las tablas y campos definidos en el esquema
-    3. Incluye todas las condiciones necesarias para responder la pregunta
-    4. Usa LIMIT cuando se solicite un número específico de registros
-    5. Para búsquedas de texto, usa LIKE con comodines (%)
-    6. Para consultas que involucran múltiples tablas, usa JOINs apropiados
-    7. Para observaciones en acciones_com_acco_not, recuerda que pueden estar divididas en múltiples registros
-
-    La respuesta debe ser SOLO la consulta SQL, sin ningún texto adicional.`;
-
-    const consultaSQL = await getDeepSeekResponse(prompt, userMessage);
-    
-    if (!consultaSQL) {
-      const respuesta = await generarRespuestaConversacional(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: respuesta }
-      );
-      return {
-        message: respuesta,
-        context: assistantContext
-      };
-    }
-
-    console.log('Consulta SQL generada:', consultaSQL);
-    const resultados = await ejecutarConsultaSQL(consultaSQL);
-    console.log('Resultados de la consulta:', resultados);
-    
-    const respuestaFormateada = await formatearRespuesta(resultados, userMessage);
-
-    // Actualizar el contexto
-    assistantContext.lastQuery = userMessage;
-    assistantContext.lastResponse = respuestaFormateada;
-    assistantContext.conversationHistory.push(
-      { role: "user", content: userMessage },
-      { role: "assistant", content: respuestaFormateada }
-    );
-
+    // Si no hay SQL, devolver la respuesta de la IA
     return {
-      message: respuestaFormateada,
+      message: respuesta,
       context: assistantContext
     };
 
   } catch (error) {
     console.error('Error en processMessage:', error);
     return {
-      message: "Lo siento, he tenido un problema al procesar tu consulta. Por favor, intenta de nuevo más tarde.",
+      message: 'Lo siento, ha ocurrido un error al procesar tu consulta.',
       context: assistantContext
     };
   }
