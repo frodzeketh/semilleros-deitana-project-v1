@@ -57,6 +57,15 @@ async function getDeepSeekResponse(prompt, context) {
   }
 }
 
+
+
+
+
+
+
+
+
+
 function esSaludo(mensaje) {
   const mensajeLower = mensaje.toLowerCase();
   return mensajeLower.match(/^(hola|buenos días|buenas tardes|buenas noches|hey|hi|hello|que tal|qué tal|como estas|cómo estás)/i);

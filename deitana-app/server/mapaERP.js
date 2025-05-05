@@ -110,6 +110,56 @@ const mapaERP = {
 
 
 
+
+
+
+/* ================================================*/
+/* Archivos – Generales – Proveedores */
+/* ================================================*/
+proveedores: {
+    descripcion: "La tabla 'proveedores' dentro del sistema ERP centraliza la información detallada de todos los proveedores con los que opera Semilleros Deitana. Cada registro representa un proveedor único, identificado mediante un código (id). Esta tabla almacena datos cruciales que abarcan información fiscal, detalles de contacto, datos bancarios y aspectos administrativos, incluyendo domicilio, provincia, CIF, y registros de la última compra, entre otros. Disponer de esta información completa y organizada es esencial para la gestión eficiente de la cadena de suministro y las relaciones con los proveedores.",
+    tabla: "proveedores",
+    columnas: {
+        id: "Código único que identifica a cada proveedor",
+        PR_DENO: "Nombre del proveedor",
+        PR_DOM: "Domicilio del proveedor",
+        PR_POB: "Población",
+        PR_PROV: "Provincia",
+        PR_CDP: "Código postal del proveedor",
+        PR_TEL: "Número(s) de teléfono del proveedor",
+        PR_FAX: "Número de FAX del proveedor",
+        PR_CIF: "Código de Identificación Fiscal (CIF) del proveedor",
+        PR_EMA: "Dirección de correo electrónico del proveedor",
+        PR_WEB: "Dirección de la página web del proveedor",
+        PR_DOMEN: "Domicilio o detalles para el envío de facturas"
+        // Nota sobre campos vacíos: Si un campo no tiene información, se asume 'No hay información disponible'.
+    },
+    relaciones: {
+        // Aquí se pueden añadir las relaciones con otras tablas cuando sea necesario (ej: con pedidos de compra, facturas recibidas)
+    },
+    ejemplos: {
+        consulta_provincia: "Para encontrar proveedores ubicados en la provincia de 'Almeria', se consultaría la tabla proveedores filtrando por el campo PR_PROV con el valor 'ALMERIA'.",
+        consulta_email: "Si se buscan proveedores con un correo electrónico registrado, se verificaría la existencia de un valor en el campo PR_EMA.",
+        consulta_completa: "Al solicitar la información completa de un proveedor, se proporcionarían los datos cargados en los campos correspondientes (PR_DENO, PR_DOM, PR_POB, etc.)"
+    }
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /* ================================================*/
     /* Archivos – Generales – Vendedores/Usuarios */
