@@ -128,17 +128,24 @@ async function processMessage(userMessage) {
 
         let camposValidos = Object.keys(columnas);
 
-        let respuestaFormateada = rows.map((registro, idx) => {
-          let texto = `Registro ${idx + 1}:\n`;
-          for (let campo of camposValidos) {
-            if (registro[campo] !== undefined) {
-              let nombreCampo = columnas[campo];
-              texto += `${nombreCampo}: ${registro[campo]}\n`;
-            }
-          }
-          texto += '\n';
-          return texto;
-        }).join('\n');
+            let respuestaFormateada = rows.map((registro, idx) => {
+              let texto = `Registro ${idx + 1}:\n`;
+              // Muestra los campos definidos en el esquema
+              for (let campo of camposValidos) {
+                if (registro[campo] !== undefined) {
+                  let nombreCampo = columnas[campo];
+                  texto += `${nombreCampo}: ${registro[campo]}\n`;
+                }
+              }
+              // Muestra cualquier otro campo extra que venga en el resultado (por ejemplo, cliente, observacion)
+              for (let campo in registro) {
+                if (!camposValidos.includes(campo)) {
+                  texto += `${campo}: ${registro[campo]}\n`;
+                }
+              }
+              texto += '\n';
+              return texto;
+            }).join('\n');
 
         console.log("Respuesta generada:", respuestaFormateada);
 
