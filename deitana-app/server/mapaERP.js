@@ -106,16 +106,6 @@ articulos: {
 
 
 
-
-
-
-
-
-
-
-
-
-
     /* ================================================*/
     /* Archivos – Generales – Clientes */
     /* ================================================*/
@@ -250,7 +240,88 @@ proveedores: {
             observacion: "Texto de la observación o nota",
             fecha: "Fecha de registro de la observación"
         }
+    },
+
+
+
+
+
+    /* ================================================*/
+/* Archivos – Auxiliares – Bandejas */
+/* ================================================*/
+bandejas: {
+    descripcion: "La tabla 'bandejas' dentro del sistema ERP contiene un listado exhaustivo y detallado de las características técnicas y económicas asociadas a los diferentes tipos de bandejas (ya sean físicas, reutilizables o desechables) que se emplean en los procesos de siembra y cultivo en alvéolos. Es importante notar que esta sección también puede incluir información relativa a macetas u otros contenedores utilizados en estos procesos.",
+    tabla: "bandejas",
+    columnas: {
+        id: "Identificador único asignado a cada bandeja.", // Clave Primaria
+        BN_DENO: "Nombre descriptivo que identifica la bandeja",
+        BN_ALV: "Número total de alvéolos",
+        BN_RET: "Reutilizable",
+        BN_PVP: "Precio de venta de la bandeja",
+        BN_COS: "Coste",
+        BN_IVA1: "Información IVA 1",
+        BN_IVA2: "Información IVA 2",
+        BN_ART: "Identificador",
+        BN_ALVC: "Número de alvéolos.",
+        BN_EM2: "Especifica los metros cuadrados que ocupa la bandeja",
+        BN_ALVG: "Número de alvéolos considerados",
+    },
+    relaciones: {
+        // Se menciona una posible relación con 'articulos' a través del campo BN_ART, pero no se proporcionan detalles suficientes para estructurarla aquí.
+    },
+    ejemplos: {
+        // El texto proporcionado no incluye ejemplos de consultas o uso específicos de la tabla 'bandejas'.
+        // Los ejemplos dados son valores de ejemplo para campos específicos.
     }
+},
+
+
+
+
+
+
+/* ================================================*/
+/* Archivos – Auxiliares – Casas comerciales */
+/* ================================================*/
+casas_com: { // Usamos el nombre de la tabla como clave principal
+    descripcion: "Gestión y almacenamiento de información de las casas comerciales con las que Semilleros Deitana interactúa. Es fundamental para mantener un registro organizado de socios comerciales y sus datos clave.",
+    tabla: "casas_com",
+    columnas: {
+        id: "Identificador único de la casa comercial (Clave Primaria)",
+        CC_DENO: "Denominación social legal",
+        CC_NOM: "Nombre comercial",
+        CC_DOM: "Domicilio físico",
+        CC_POB: "Población",
+        CC_PROV: "Provincia",
+        CC_CDP: "Código Postal",
+        CC_TEL: "Número de teléfono",
+        CC_FAX: "Número de fax",
+        CC_CIF: "Código de Identificación Fiscal (CIF)",
+        CC_EMA: "Dirección de correo electrónico",
+        CC_WEB: "Dirección del sitio web",
+        CC_PAIS: "País de ubicación",
+        CC_DFEC: "Fecha de inicio de validez de tarifa",
+        CC_HFEC: "Fecha de fin de validez de tarifa"
+        // Nota sobre datos: La completitud de CC_DOM, CC_TEL, CC_FAX, CC_CIF, CC_EMA, CC_WEB, CC_DFEC, CC_HFEC puede variar (pueden ser NULL o vacíos).
+    },
+    relaciones: {
+        // No se especifican relaciones explícitas con otras tablas en el texto proporcionado.
+    },
+    ejemplos: {
+        // El texto proporcionado no incluye ejemplos de consultas o uso específicos de la tabla 'casas_comerciales'.
+        // Se menciona la variabilidad de los datos en ciertos campos.
+    }
+},
+
+
+
+
+
+
+
+
+
+
 };
 
 module.exports = { mapaERP };
