@@ -1,5 +1,6 @@
 const fs = require("fs")
 const path = require("path")
+const { mapaERP } = require("./mapaERP")
 
 const schemaPath = path.join(__dirname, "schema.json")
 const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"))
@@ -101,43 +102,12 @@ const conversationContext = {
   clearContext() {
     this.lastQuery = null;
     this.lastResponse = null;
-    if (this.currentTopic) {
-      this[this.currentTopic] = {
-        lastResults: null,
-        lastAnalysis: null,
-        lastQueryTime: null,
-        relatedTopics: [],
-        pendingQuestions: []
-      };
-    }
+    this.currentTopic = null;
   }
 };
 
 function promptBase(userMessage) {
   const lowerMessage = userMessage.toLowerCase();
-
-  // Detectar el tema principal de la consulta
-  const topic = detectTopic(lowerMessage);
-  
-  // Actualizar el contexto si se detecta un nuevo tema
-  if (topic) {
-    conversationContext.updateCurrentTopic(topic);
-  } else if (conversationContext.currentTopic) {
-    // Si no se detecta un tema nuevo pero hay uno activo,
-    // verificar si el mensaje actual está relacionado
-    const currentTopicPatterns = topics[conversationContext.currentTopic]?.patterns;
-    if (!currentTopicPatterns?.some(pattern => pattern.test(lowerMessage))) {
-      // Si el mensaje no está relacionado con el tema actual, limpiar contexto
-      conversationContext.clearContext();
-    }
-  }
-
-  // Obtener definiciones específicas del tema si existen
-  const topicDefinitions = topic && conversationContext[topic]?.definitions 
-    ? Object.entries(conversationContext[topic].definitions)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join('\n')
-    : '';
 
   // Construir el prompt base con contexto
   let systemPrompt = `Eres un experto analista de Semilleros Deitana con acceso directo a la base de datos.
@@ -147,9 +117,20 @@ SOBRE SEMILLEROS DEITANA:
 - Maneja información de artículos, clientes, acciones comerciales, y seguimiento de cultivos
 - Utiliza un sistema ERP para gestionar todas sus operaciones
 
-${topic ? `TEMA ACTUAL: ${topic}
-DEFINICIONES RELEVANTES:
-${topicDefinitions}` : ''}
+ESTRUCTURA DE LA BASE DE DATOS:
+${Object.entries(mapaERP).map(([tabla, info]) => {
+  let prompt = `\nTABLA: ${tabla}
+Descripción: ${info.descripcion}
+Campos: ${Object.entries(info.campos || info.columnas).map(([campo, desc]) => `\n  - ${campo}: ${desc}`).join('')}`;
+  
+  if (info.relaciones) {
+    prompt += `\nRelaciones: ${Array.isArray(info.relaciones) 
+      ? info.relaciones.map(rel => `\n  - ${rel.tablaDestino} (${rel.tipo}): ${rel.uso}`).join('')
+      : Object.entries(info.relaciones).map(([dest, rel]) => `\n  - ${dest}: ${rel}`).join('')}`;
+  }
+  
+  return prompt;
+}).join('\n')}
 
 CONTEXTO ACTUAL:
 ${conversationContext.currentTopic ? `- Tema actual: ${conversationContext.currentTopic}` : ''}
@@ -158,27 +139,26 @@ ${conversationContext.lastQuery ? `- Última consulta: ${conversationContext.las
 HISTORIAL RECIENTE:
 ${conversationContext.getRecentHistory(3).map(h => `${h.role}: ${h.content}`).join('\n')}
 
-INSTRUCCIONES:
-1. Mantén la continuidad de la conversación
-2. Si el usuario cambia de tema, adáptate al nuevo tema
-3. Proporciona análisis detallados usando los datos disponibles
-4. Sugiere siempre próximos pasos o aspectos a profundizar
-5. Mantén un tono profesional pero conversacional
-6. Explica los términos técnicos cuando sea necesario
-7. Relaciona la información con el contexto del negocio
-8. Proporciona ejemplos específicos cuando sea relevante
+INSTRUCCIONES PARA GENERAR CONSULTAS SQL:
+1. Analiza la pregunta del usuario y determina qué tablas y relaciones son necesarias
+2. Usa solo los campos y relaciones que existen en el esquema proporcionado
+3. Incluye todas las condiciones necesarias para responder la pregunta
+4. Usa LIMIT cuando se solicite un número específico de registros
+5. Para búsquedas de texto, usa LIKE con comodines (%)
+6. Para consultas que involucran múltiples tablas, usa JOINs apropiados
+7. Para observaciones en acciones_com_acco_not, recuerda que pueden estar divididas en múltiples registros
 
 FORMATO DE RESPUESTA:
-1. Primero responde la pregunta directamente
-2. Luego proporciona contexto adicional si es relevante
-3. Finalmente, sugiere preguntas relacionadas o próximos pasos
+1. Genera una consulta SQL válida que responda a la pregunta
+2. La consulta debe ser ejecutable directamente en la base de datos
+3. Incluye todos los campos necesarios para responder la pregunta
+4. Usa alias de tabla cuando sea necesario para claridad
 
 IMPORTANTE:
-- NO inventes datos
+- NO inventes datos, campos o relaciones que no existan
 - Si no entiendes la consulta, pide aclaración
 - Si la consulta es ambigua, pide más detalles
-- Mantén las respuestas concisas y relevantes
-- Usa los nombres de campos correctos según el esquema de la base de datos`;
+- Verifica que la consulta generada use solo campos y relaciones existentes`;
 
   return {
     system: systemPrompt,

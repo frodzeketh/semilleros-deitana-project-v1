@@ -57,23 +57,6 @@ async function getDeepSeekResponse(prompt, context) {
   }
 }
 
-function esConsultaDeDatos(mensaje) {
-  const mensajeLower = mensaje.toLowerCase();
-  
-  // Palabras clave que indican una consulta de datos
-  const palabrasClaveDatos = [
-    'cuántos', 'cuantos', 'cuántas', 'cuantas',
-    'mostrar', 'muestra', 'dame', 'buscar',
-    'encontrar', 'listar', 'lista', 'datos',
-    'información', 'informacion', 'cliente',
-    'clientes', 'artículo', 'articulo', 'artículos',
-    'articulos', 'proveedor', 'proveedores'
-  ];
-
-  // Verificar si el mensaje contiene palabras clave de datos
-  return palabrasClaveDatos.some(palabra => mensajeLower.includes(palabra));
-}
-
 function esSaludo(mensaje) {
   const mensajeLower = mensaje.toLowerCase();
   return mensajeLower.match(/^(hola|buenos días|buenas tardes|buenas noches|hey|hi|hello|que tal|qué tal|como estas|cómo estás)/i);
@@ -99,58 +82,6 @@ async function generarRespuestaConversacional(mensaje) {
   return await getDeepSeekResponse(prompt, mensaje);
 }
 
-async function generarConsultaSQL(tabla, mensaje) {
-  const prompt = determinarTipoPrompt(mensaje);
-  
-  const contexto = {
-    tabla: tabla,
-    estructura: mapaERP[tabla],
-    mensaje: mensaje,
-    historial: assistantContext.conversationHistory.slice(-3)
-  };
-
-  const respuesta = await getDeepSeekResponse(prompt, JSON.stringify(contexto));
-  
-  if (!respuesta) {
-    return null;
-  }
-
-  try {
-    const { query } = JSON.parse(respuesta);
-    
-    // Si es una consulta de acciones comerciales, asegurarnos de incluir las relaciones
-    if (tabla === 'acciones_com') {
-      // Construir la consulta con todas las relaciones
-      return `
-        SELECT 
-          a.id,
-          a.ACCO_DENO,
-          a.ACCO_FEC,
-          a.ACCO_HOR,
-          c.CL_DENO,
-          c.CL_POB,
-          c.CL_PROV,
-          c.CL_TEL,
-          c.CL_EMA,
-          v.VD_DENO,
-          GROUP_CONCAT(n.C0 ORDER BY n.id2 SEPARATOR ' ') as observaciones
-        FROM acciones_com a
-        LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
-        LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
-        LEFT JOIN acciones_com_acco_not n ON a.id = n.id
-        GROUP BY a.id, a.ACCO_DENO, a.ACCO_FEC, a.ACCO_HOR, c.CL_DENO, c.CL_POB, c.CL_PROV, c.CL_TEL, c.CL_EMA, v.VD_DENO
-        ORDER BY a.ACCO_FEC DESC, a.ACCO_HOR DESC
-        LIMIT 10
-      `;
-    }
-    
-    return query;
-  } catch (error) {
-    console.error('Error al parsear la respuesta de la IA:', error);
-    return null;
-  }
-}
-
 async function ejecutarConsultaSQL(consulta) {
   try {
     const [rows] = await db.query(consulta);
@@ -161,71 +92,33 @@ async function ejecutarConsultaSQL(consulta) {
   }
 }
 
-async function formatearRespuesta(tabla, resultados, userMessage) {
+async function formatearRespuesta(resultados, userMessage) {
   if (!resultados || resultados.length === 0) {
     return "No encontré registros que coincidan con tu búsqueda.";
   }
 
-  const messageLower = userMessage.toLowerCase();
-  
-  // Si es una consulta de tipos de acciones comerciales
-  if (messageLower.includes('tipos') && messageLower.includes('acciones')) {
-    let respuesta = "";
-    resultados.forEach(accion => {
-      respuesta += `${accion.ACCO_DENO}\n`;
-    });
-    return respuesta;
-  }
-
   // Si es una consulta de conteo total
-  if (messageLower.includes('total') || messageLower.includes('cuántos') || messageLower.includes('cuantos')) {
-    return `En total hay ${resultados[0].total} registros que coinciden con tu búsqueda.`;
+  if (userMessage.toLowerCase().includes('total') || 
+      userMessage.toLowerCase().includes('cuántos') || 
+      userMessage.toLowerCase().includes('cuantos')) {
+    return `En total hay ${resultados.length} registros que coinciden con tu búsqueda.`;
   }
 
   // Para otros tipos de consultas
   let respuesta = "Aquí tienes los resultados de tu búsqueda:\n\n";
   
   resultados.forEach((registro, index) => {
-    if (tabla === 'clientes') {
-      respuesta += `Cliente ${index + 1}:\n`;
-      respuesta += `----------------------------\n`;
-      if (registro.CL_DENO) respuesta += `Nombre del cliente: ${registro.CL_DENO}\n`;
-      if (registro.CL_POB) respuesta += `Población: ${registro.CL_POB}\n`;
-      if (registro.CL_PROV) respuesta += `Provincia: ${registro.CL_PROV}\n`;
-      if (registro.CL_TEL) respuesta += `Teléfono: ${registro.CL_TEL}\n`;
-      if (registro.CL_EMA) respuesta += `Email: ${registro.CL_EMA}\n`;
-      if (registro.CL_CIF) respuesta += `CIF: ${registro.CL_CIF}\n`;
-      respuesta += `----------------------------\n\n`;
-    } else if (tabla === 'acciones_com') {
-      respuesta += `Acción Comercial ${index + 1}:\n`;
-      respuesta += `----------------------------\n`;
-      if (registro.ACCO_DENO) respuesta += `Tipo de acción: ${registro.ACCO_DENO}\n`;
-      if (registro.ACCO_FEC) respuesta += `Fecha: ${registro.ACCO_FEC}\n`;
-      if (registro.ACCO_HOR) respuesta += `Hora: ${registro.ACCO_HOR}\n`;
-      
-      // Información del cliente
-      if (registro.CL_DENO) {
-        respuesta += `\nCliente:\n`;
-        respuesta += `Nombre: ${registro.CL_DENO}\n`;
-        if (registro.CL_POB) respuesta += `Población: ${registro.CL_POB}\n`;
-        if (registro.CL_PROV) respuesta += `Provincia: ${registro.CL_PROV}\n`;
-        if (registro.CL_TEL) respuesta += `Teléfono: ${registro.CL_TEL}\n`;
-        if (registro.CL_EMA) respuesta += `Email: ${registro.CL_EMA}\n`;
+    respuesta += `Registro ${index + 1}:\n`;
+    respuesta += `----------------------------\n`;
+    
+    // Mostrar todos los campos del registro
+    Object.entries(registro).forEach(([campo, valor]) => {
+      if (valor !== null && valor !== undefined) {
+        respuesta += `${campo}: ${valor}\n`;
       }
-      
-      // Información del vendedor
-      if (registro.VD_DENO) {
-        respuesta += `\nVendedor:\n`;
-        respuesta += `Nombre: ${registro.VD_DENO}\n`;
-      }
-      
-      // Observaciones
-      if (registro.observaciones) {
-        respuesta += `\nObservaciones:\n`;
-        respuesta += `${registro.observaciones}\n`;
-      }
-      respuesta += `----------------------------\n\n`;
-    }
+    });
+    
+    respuesta += `----------------------------\n\n`;
   });
 
   return respuesta;
@@ -235,7 +128,6 @@ async function formatearRespuesta(tabla, resultados, userMessage) {
 async function processMessage(userMessage) {
   try {
     console.log('Procesando mensaje en deepseek.js:', userMessage);
-    const messageLower = userMessage.toLowerCase();
 
     // Determinar el tipo de mensaje
     if (esSaludo(userMessage) && assistantContext.isFirstMessage) {
@@ -263,29 +155,26 @@ async function processMessage(userMessage) {
       };
     }
 
-    // Si no es una consulta de datos, responder de manera conversacional
-    if (!esConsultaDeDatos(userMessage)) {
-      const respuesta = await generarRespuestaConversacional(userMessage);
-      assistantContext.conversationHistory.push(
-        { role: "user", content: userMessage },
-        { role: "assistant", content: respuesta }
-      );
-      return {
-        message: respuesta,
-        context: assistantContext
-      };
-    }
+    // Generar la consulta SQL usando la IA
+    const prompt = `Eres un experto en SQL y análisis de datos. Tu tarea es generar una consulta SQL válida basada en la siguiente pregunta del usuario y el esquema de la base de datos.
 
-    // Determinar la tabla según el contexto de la consulta
-    let tabla = 'clientes'; // Por defecto
-    
-    // Detectar si es una consulta específica de acciones comerciales
-    if ((messageLower.includes('acciones') || messageLower.includes('comerciales')) && 
-        !messageLower.includes('cliente') && !messageLower.includes('clientes')) {
-      tabla = 'acciones_com';
-    }
+    Pregunta del usuario: "${userMessage}"
 
-    const consultaSQL = await generarConsultaSQL(tabla, userMessage);
+    Esquema de la base de datos:
+    ${JSON.stringify(mapaERP, null, 2)}
+
+    Reglas:
+    1. Genera SOLO la consulta SQL, sin explicaciones adicionales
+    2. Usa solo las tablas y campos definidos en el esquema
+    3. Incluye todas las condiciones necesarias para responder la pregunta
+    4. Usa LIMIT cuando se solicite un número específico de registros
+    5. Para búsquedas de texto, usa LIKE con comodines (%)
+    6. Para consultas que involucran múltiples tablas, usa JOINs apropiados
+    7. Para observaciones en acciones_com_acco_not, recuerda que pueden estar divididas en múltiples registros
+
+    La respuesta debe ser SOLO la consulta SQL, sin ningún texto adicional.`;
+
+    const consultaSQL = await getDeepSeekResponse(prompt, userMessage);
     
     if (!consultaSQL) {
       const respuesta = await generarRespuestaConversacional(userMessage);
@@ -303,10 +192,9 @@ async function processMessage(userMessage) {
     const resultados = await ejecutarConsultaSQL(consultaSQL);
     console.log('Resultados de la consulta:', resultados);
     
-    const respuestaFormateada = await formatearRespuesta(tabla, resultados, userMessage);
+    const respuestaFormateada = await formatearRespuesta(resultados, userMessage);
 
     // Actualizar el contexto
-    assistantContext.currentTopic = tabla;
     assistantContext.lastQuery = userMessage;
     assistantContext.lastResponse = respuestaFormateada;
     assistantContext.conversationHistory.push(
