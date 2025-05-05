@@ -21,20 +21,15 @@ const assistantContext = {
   isFirstMessage: true
 };
 
-async function getDeepSeekResponse(prompt, context) {
+async function getDeepSeekResponse(messages) {
   try {
     if (!DEEPSEEK_API_KEY) {
       throw new Error('API key no configurada');
     }
 
-    const messages = [
-      { role: "system", content: prompt },
-      { role: "user", content: context }
-    ];
-
     const response = await axios.post(DEEPSEEK_API_URL, {
       model: "deepseek-chat",
-      messages: messages,
+      messages: messages, // <-- aquí usas el array recibido
       temperature: 0.7,
       max_tokens: 1000,
       top_p: 0.9,
@@ -110,8 +105,13 @@ async function generarRespuestaConversacional(mensaje) {
 
 async function processMessage(userMessage) {
   try {
-    const { system, user } = promptBase(userMessage);
-    const respuesta = await getDeepSeekResponse(system, user);
+    const { system } = promptBase(userMessage);
+    const messages = [
+      { role: "system", content: system },
+      ...assistantContext.conversationHistory.slice(-3), // últimos 3 mensajes
+      { role: "user", content: userMessage }
+    ];
+    const respuesta = await getDeepSeekResponse(messages);
 
     console.log("Respuesta de la IA:", respuesta);
 
