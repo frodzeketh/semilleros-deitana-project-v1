@@ -899,7 +899,7 @@ tareas_per: {
 /* ================================================*/
 p_siembras: { // Usamos p_siembras como clave
     descripcion: "Documenta las 'partes' o eventos específicos de siembra. Registra cuándo, dónde, qué artículo (semilla) se sembró, quién realizó la operación y bajo qué estado. Base para seguimiento de siembra, materiales, personal y ubicación inicial de cultivos.",
-    tabla: "p-siembras", // Nombre de tabla original
+    tabla: `p-siembras`, // Nombre de tabla original
     columnas: {
         id: "Código único del registro de parte de siembra (Clave Primaria)",
         PSI_FEC: "Fecha de la operación de siembra",
@@ -948,6 +948,75 @@ p_siembras: { // Usamos p_siembras como clave
         consultar_siembras_de_semilla: "Encontrar todas las siembras registradas para un artículo/semilla particular (filtrando por PSI_SEM)."
     }
 },
+
+
+
+
+
+
+
+/* ================================================*/
+/* Archivos - Produccion - Partes - Partes Extendido */
+/* ================================================*/
+p_extension: { // Usamos p_extension como clave
+    descripcion: "Documenta operaciones de 'extendido' o movimiento interno de material (plántulas/bandejas) entre ubicaciones, principalmente invernaderos. Fundamental para seguimiento de ubicación y trazabilidad interna.",
+    tabla: `p-extension`, // Nombre de tabla original
+    columnas: {
+        id: "Número único del registro de extendido (Clave Primaria)",
+        PEX_NPA: "Número de partida asociado a la operación", // Probablemente clave foránea a tabla de partidas
+        PEX_FEC: "Fecha de la operación de extendido",
+        PEX_HORA: "Hora de la operación de extendido",
+        PEX_USU: "Identificador del usuario o responsable que realizó el extendido. Clave foránea a la tabla 'vendedores'.",
+        PEX_TIPO: "Tipo de operación de extendido (Ej: 'P', 'C'). El significado depende de la configuración.",
+        PEX_IOR: "Identificador del invernadero de origen. Clave foránea a la tabla 'invernaderos'.",
+        PEX_IDE: "Identificador del invernadero de destino. Clave foránea a la tabla 'invernaderos'."
+    },
+    relaciones: {
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PEX_USU",
+            campo_enlace_externo: "id",
+            descripcion: "Permite obtener el nombre (VD_DENO) del usuario que realizó el extendido."
+        },
+        invernaderos_origen: { // Relación para el invernadero de origen
+            tabla_relacionada: "invernaderos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PEX_IOR",
+            campo_enlace_externo: "id",
+            descripcion: "Permite obtener la denominación (INV_DENO) del invernadero desde donde se movió el material."
+        },
+        invernaderos_destino: { // Relación para el invernadero de destino
+            tabla_relacionada: "invernaderos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PEX_IDE",
+            campo_enlace_externo: "id",
+            descripcion: "Permite obtener la denominación (INV_DENO) del invernadero hacia donde se movió el material."
+        }
+        // Relación probable con una tabla de 'partidas' a través del campo PEX_NPA, no detallada en el texto.
+    },
+    ejemplos: {
+        consulta_por_id: "Obtener los detalles de una operación de extendido específica usando su 'id'.",
+        consulta_por_fecha: "Listar operaciones de extendido realizadas en una fecha o rango de fechas específico (filtrando por PEX_FEC).",
+        obtener_invernaderos_usuario: "Para un registro de extendido, usar PEX_IOR, PEX_IDE y PEX_USU para consultar 'invernaderos' y 'vendedores' y obtener los nombres del origen, destino y usuario.",
+        filtrar_por_origen_destino: "Encontrar extendidos realizados desde/hacia un invernadero específico (filtrando por PEX_IOR o PEX_IDE).",
+        filtrar_por_usuario_fecha: "Buscar extendidos realizados por un usuario específico en un período de tiempo (filtrando por PEX_USU y PEX_FEC)."
+    }
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
