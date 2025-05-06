@@ -90,6 +90,9 @@ LIMIT 1;
 
 
 
+
+
+
 Usuario: Muéstrame algunos ejemplos.
 Asistente: Aquí tienes algunos tipos de melón registrados:
 - MELÓN PIEL DE SAPO
