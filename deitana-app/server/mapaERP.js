@@ -4,6 +4,17 @@ const mapaERP = {
 
 
 
+/* ======================================================================================================================================================================*/
+/* ARCHIVOS                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
+
+
     /* ================================================*/
     /* Archivos – Generales – Acciones Comerciales */
     /* ================================================*/
@@ -140,7 +151,48 @@ articulos: {
 
 
 
-
+/* ================================================*/
+/* Archivos – Generales – Formas de pago/cobro */
+/* ================================================*/
+fpago: { // Usamos fpago como clave, ya que es la tabla principal descrita
+    descripcion: "Define y gestiona las formas de pago y cobro utilizadas en transacciones comerciales. Actúa como un catálogo maestro para estandarizar operaciones financieras, vincular transacciones y gestionar vencimientos.",
+    tabla: "fpago", // Nombre de tabla original
+    columnas: {
+        id: "Código único de la forma de pago/cobro (Clave Primaria)",
+        FP_DENO: "Denominación o descripción de la forma de pago (ej: 'RECIBO 90 DIAS F.F.')",
+        FP_NVT: "Número de vencimientos asociados",
+        FP_CART: "Indica si se gestiona en cartera de cobros/pagos",
+        FP_RW: "Referencia relacionada con la web (propósito no especificado)"
+    },
+    relaciones: {
+        // Esta tabla es referenciada por muchas otras tablas en relaciones Muchos a Uno (varias transacciones usan la misma forma de pago).
+        // Es clave foránea en tablas de Ventas, Compras, Cobros, Pagos, etc.
+        // Ejemplos de tablas que la referencian (a través de campos como ENG_FP, AC_FP, PP_FP, FR_FP, AV_FP, CB_FP, PG_FP que apuntan a fpago.id):
+        // Ventas - Encargos de siembra
+        // Compras - Albarenes compra
+        // Compras - Pedidos a Proveedor
+        // Compras - Registro de Facturas Recibidas
+        // Ornamental - Ventas - Albaran Venta Ornamental
+        // Cobros - Cartera de cobros
+        // Pagos - Cartera de pagos
+        referenciada_por: {
+            tablas: [
+                "Encargos de siembra", "Albarenes compra", "Pedidos a Proveedor",
+                "Registro de Facturas Recibidas", "Albaran Venta Ornamental",
+                "Cartera de cobros", "Cartera de pagos"
+            ],
+            tipo: "Uno a muchos (una forma de pago puede estar en muchos registros de otras tablas)",
+            campo_enlace_externo: "id",
+            campo_enlace_local_ejemplos: ["*_FP"], // Patrón típico de nombres de campos en tablas que referencian a fpago
+            descripcion: "Esta tabla es referenciada por numerosas tablas de transacciones y documentos para especificar la forma de pago/cobro utilizada."
+        }
+    },
+    ejemplos: {
+        consulta_fpago_por_id: "Obtener los detalles de una forma de pago/cobro específica usando su 'id'.",
+        consulta_fpago_por_denominacion: "Buscar una forma de pago/cobro por su denominación (FP_DENO).",
+        consultar_transacciones_por_fpago: "Listar todas las transacciones (pedidos, facturas, etc.) que utilizan una forma de pago específica (requiere consultar las tablas que referencian a fpago)."
+    }
+},
 
 
 
@@ -240,7 +292,7 @@ proveedores: {
     /* Archivos – Generales – Vendedores/Usuarios */
     /* ================================================*/
     vendedores: {
-        descripcion: "La sección 'Archivos – Generales – Vendedores/Usuarios' del sistema ERP de Semilleros Deitana constituye el repositorio centralizado para la gestión de la información de los usuarios internos que desempeñan funciones de venta o que simplemente tienen acceso al sistema como usuarios.",
+        descripcion: "La tabla 'vendedores'  del sistema ERP de Semilleros Deitana constituye el repositorio centralizado para la gestión de la información de los usuarios internos que desempeñan funciones de venta o que simplemente tienen acceso al sistema como usuarios.",
         tabla: "vendedores",
         columnas: {
             id: "Código único que identifica a cada vendedor/usuario",
@@ -257,30 +309,7 @@ proveedores: {
         }
     },
 
-    tecnicos: {
-        descripcion: "Tabla que almacena información más exhaustiva y detallada para aquellos usuarios que, además de su rol como vendedores o usuarios generales, también cumplen funciones técnicas.",
-        tabla: "tecnicos",
-        columnas: {
-            id: "Código único identificador del técnico",
-            TN_TEL: "Teléfono de contacto",
-            TN_EMA: "Email de contacto",
-            TN_DOM: "Domicilio completo",
-            TN_POB: "Población",
-            TN_PROV: "Provincia",
-            TN_CIF: "Código de Identificación Fiscal"
-        }
-    },
-
-    vendedores_vd_obs: {
-        descripcion: "Tabla destinada exclusivamente a la documentación y almacenamiento de observaciones, notas o comentarios adicionales asociados a un vendedor o usuario particular.",
-        tabla: "vendedores_vd_obs",
-        columnas: {
-            id_vendedor: "Código del vendedor al que se refiere la observación",
-            observacion: "Texto de la observación o nota",
-            fecha: "Fecha de registro de la observación"
-        }
-    },
-
+   
 
 
 
@@ -431,6 +460,60 @@ creditocau: {
 
 
 
+
+
+
+
+
+
+/* ================================================*/
+/* Archivos – Auxiliares – Delegaciones */
+/* ================================================*/
+almacenes: { // Usamos almacenes como clave, ya que es la tabla principal descrita
+    descripcion: "Representa las delegaciones o almacenes físicos y operativos de la empresa. Sirve como referencia para identificar la ubicación asociada a una acción en el ERP y vincular recursos financieros por defecto.",
+    tabla: "almacenes", // Nombre de tabla original
+    columnas: {
+        id: "Código único de la delegación o almacén (Clave Primaria)",
+        AM_DENO: "Denominación o nombre de la delegación/almacén (Ej: 'GARDEN')",
+        AM_CAJA: "Denominación de la 'Caja Almacen / Sucursal Efectivo' por defecto. Se relaciona con 'bancos' (id) para obtener la denominación (BA_DENO).", // Descripción basada estrictamente en el texto provisto
+        AM_BCO: "Denominación del 'Banco Cobros / Pagos Defectos' por defecto. Se relaciona con 'bancos' (id) para obtener la denominación (BA_DENO)." // Descripción basada estrictamente en el texto provisto
+    },
+    relaciones: {
+         bancos_caja_defecto: {
+             tabla_relacionada: "bancos",
+             tipo: "Muchos a uno (varios almacenes pueden usar la misma caja por defecto)", // Implícito
+             campo_enlace_local: "AM_CAJA", // El campo local que contiene el ID del banco/caja
+             campo_enlace_externo: "id", // El campo referenciado en la tabla bancos
+             descripcion: "Vincula la delegación/almacén con la caja de efectivo por defecto, obteniendo su denominación desde la tabla 'bancos'." // Adaptado a la descripción del texto
+        },
+         bancos_banco_defecto: {
+              tabla_relacionada: "bancos",
+              tipo: "Muchos a uno (varios almacenes pueden usar el mismo banco por defecto)", // Implícito
+              campo_enlace_local: "AM_BCO", // El campo local que contiene el ID del banco
+              campo_enlace_externo: "id", // El campo referenciado en la tabla bancos
+              descripcion: "Vincula la delegación/almacén con el banco por defecto para cobros/pagos, obteniendo su denominación desde la tabla 'bancos'." // Adaptado a la descripción del texto
+        }
+        // En esta versión de la descripción, no se menciona explícitamente que otras tablas referencien a 'almacenes'.
+    },
+    ejemplos: {
+        consulta_almacen_por_id: "Obtener los detalles de una delegación/almacén específico usando su 'id'.",
+        consulta_almacen_por_denominacion: "Buscar una delegación/almacén por su denominación (AM_DENO).",
+        consultar_bancos_defecto: "Para una delegación/almacén, usar AM_CAJA y AM_BCO para consultar la tabla 'bancos' y obtener los nombres de la caja y el banco por defecto asociados."
+    }
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ================================================*/
 /* Archivos – Auxiliares – Dispositivos móviles */
 /* ================================================*/
@@ -492,6 +575,14 @@ envases_vta: {
         consulta_presentacion: "Obtener el número de unidades por presentación (EV_UDSS) si aplica para un envase específico."
     }
 },
+
+
+
+
+
+
+
+
 
 
 
@@ -757,6 +848,38 @@ sustratos: {
 
 
 /* ================================================*/
+/* Archivos – Auxiliares – Ubicaciones */
+/* ================================================*/
+ubicaciones: {
+    descripcion: "Catálogo centralizado de ubicaciones físicas o lógicas (invernaderos, semilleros, almacenes) relevantes para las operaciones. Proporciona referencia espacial estandarizada para organizar, trazar y optimizar actividades y recursos.",
+    tabla: "ubicaciones", // Nombre de tabla original
+    columnas: {
+        id: "Código único de la ubicación (Clave Primaria)",
+        UBI_DENO: "Denominación o nombre descriptivo de la ubicación (Ej: 'SEMILLERO A', 'Semillero C')"
+    },
+    relaciones: {
+        // La descripción no detalla explícitamente relaciones formales (claves foráneas) desde otras tablas.
+        // Sin embargo, se infiere que esta tabla es referenciada por numerosas tablas en módulos como inventario, producción y logística (relaciones Muchos a Uno)
+        // para asignar y gestionar elementos o actividades por ubicación, utilizando ubicaciones.id como clave foránea.
+    },
+    ejemplos: {
+        listar_ubicaciones: "Obtener el listado de todas las ubicaciones registradas (id y UBI_DENO).",
+        consulta_denominacion_por_id: "Buscar la denominación (UBI_DENO) de una ubicación dado su código (id).",
+        consulta_id_por_denominacion: "Buscar el código (id) de una ubicación dada su denominación (UBI_DENO).",
+        // Ejemplos de uso potencial en combinación con otras tablas (si las relaciones se confirman):
+        // filtrar_inventario_por_ubicacion: "Ver el inventario disponible en una ubicación específica (requiere que la tabla de inventario referencie a 'ubicaciones')."
+        // registrar_proceso_en_ubicacion: "Asignar una ubicación (invernadero, etc.) a un registro de proceso productivo (requiere que la tabla de procesos referencie a 'ubicaciones')."
+    }
+},
+
+
+
+
+
+
+
+
+/* ================================================*/
 /* Archivos – Auxiliares – Zonas */
 /* ================================================*/
 zonas: {
@@ -880,6 +1003,15 @@ tareas_per: {
 
 
 
+/* ======================================================================================================================================================================*/
+/* PRODUCCION                                                                                                                                                             */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
 
 
 
@@ -895,7 +1027,7 @@ tareas_per: {
 
 
 /* ================================================*/
-/* Archivos - Produccion - Partes - Partes de siembra */
+/* Produccion - Partes - Partes de siembra */
 /* ================================================*/
 p_siembras: { // Usamos p_siembras como clave
     descripcion: "Documenta las 'partes' o eventos específicos de siembra. Registra cuándo, dónde, qué artículo (semilla) se sembró, quién realizó la operación y bajo qué estado. Base para seguimiento de siembra, materiales, personal y ubicación inicial de cultivos.",
@@ -956,7 +1088,7 @@ p_siembras: { // Usamos p_siembras como clave
 
 
 /* ================================================*/
-/* Archivos - Produccion - Partes - Partes Extendido */
+/* Produccion - Partes - Partes Extendido */
 /* ================================================*/
 p_extension: { // Usamos p_extension como clave
     descripcion: "Documenta operaciones de 'extendido' o movimiento interno de material (plántulas/bandejas) entre ubicaciones, principalmente invernaderos. Fundamental para seguimiento de ubicación y trazabilidad interna.",
@@ -1012,12 +1144,245 @@ p_extension: { // Usamos p_extension como clave
 
 
 
+/* ======================================================================================================================================================================*/
+/* INJERTOS                                                                                                                                                             */
+/* ======================================================================================================================================================================*/
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* VENTAS                                                                                                                                                       */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* COBROS                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* COMPRAS                                                                                                                                                             */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* ORNAMENTAL                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* ALMACEN                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
 
 
 
