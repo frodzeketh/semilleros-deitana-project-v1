@@ -11,7 +11,7 @@ const mapaERP = {
         /* Archivos – Generales – Acciones Comerciales */
         /* ================================================*/
         acciones_com: {
-            descripcion: "Registro de acciones comerciales realizadas con clientes",
+            descripcion: "Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido.",
             columnas: {
                 id: "Identificador único de la acción comercial",
                 ACCO_DENO: "Denominación o tipo de acción comercial",
@@ -71,19 +71,17 @@ const mapaERP = {
     /* Archivos – Generales – Artículos */
     /* ================================================*/
     articulos: {
-        descripcion: "La tabla 'articulos' en el ERP de Semilleros Deitana contiene el inventario completo de productos. Cada registro representa un artículo único, identificado por un código (id). Esta tabla almacena información esencial de cada artículo, incluyendo su descripción (AR_DENO), códigos de barras (AR_BAR), proveedor asignado (AR_PRV), clasificación por grupo y familia (AR_GRP, AR_FAM), precio (AR_PUD, AR_POP, AR_PST, AR_PVME), stock (AR_STOK), y otros datos relevantes como tipo de IVA (AR_TIVA) y estado (AR_EST).",
-        tabla: "articulos",
+        descripcion: "Nuestros artículos son los productos, insumos o bienes con los que trabajamos en Semilleros Deitana. Para cada uno registramos información clave como su descripción, categoría, unidad de medida, precio y características específicas, lo que nos permite asegurar su correcta gestión, control y trazabilidad en cada etapa del proceso.",
         columnas: {
             id: "Código único del artículo",
             AR_DENO: "Denominación o descripción del artículo",
-            AR_REF: "Referencia adicional del artículo (Sin información específica en el ejemplo)",
+            AR_REF: "Referencia adicional del artículo",
             AR_BAR: "Código de barras del artículo",
             AR_TIVA: "Tipo de IVA aplicado al artículo",
             AR_GRP: "Código del grupo al que pertenece el artículo",
             AR_FAM: "Código de la familia del artículo",
             AR_PRV: "Código del proveedor principal del artículo. Referencia al campo 'id' en la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma.",
             AR_WEB: "Información adicional para la web",
-            AR_DCG: "(Sin información específica)",
             AR_IVAP: "IVA aplicado al precio",
             AR_PGE: "% de germinación",
             // Nota: Los campos de precio (AR_PUD, AR_POP, AR_PST, AR_PVME) y stock (AR_STOK) mencionados en la descripción general no están detallados individualmente en la lista de campos proporcionada, pero se infiere su existencia.
@@ -111,6 +109,7 @@ const mapaERP = {
         clientes: {
             descripcion: "En Semilleros Deitana, la sección de 'Clientes' dentro del ERP centraliza la información detallada de nuestra cartera de clientes. Cada registro contiene datos esenciales como teléfono, domicilio, código postal, población, provincia, entre otros. Disponer de esta información de manera organizada es fundamental para la accesibilidad, la vinculación con otros registros del sistema y la gestión eficiente de la información relevante de cada cliente.",
             tabla: "clientes",
+            alias: "Clientes",
             columnas: {
                 id: "Códoig único que identifica a cada cliente",
                 CL_DENO: "Denominación o nombre completo del cliente",
@@ -137,12 +136,41 @@ const mapaERP = {
     
     
     
+
+
+
+
+
+
+
+
+
+   /* ================================================*/
+    /* Archivos – Generales – Familias y Grupos	 */
+    /* ================================================*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /* ================================================*/
     /* Archivos – Generales – Formas de pago/cobro */
     /* ================================================*/
     fpago: { // Usamos fpago como clave, ya que es la tabla principal descrita
         descripcion: "Define y gestiona las formas de pago y cobro utilizadas en transacciones comerciales. Actúa como un catálogo maestro para estandarizar operaciones financieras, vincular transacciones y gestionar vencimientos.",
         tabla: "fpago", // Nombre de tabla original
+        alias: "Formas de pago/cobro",
         columnas: {
             id: "Código único de la forma de pago/cobro (Clave Primaria)",
             FP_DENO: "Denominación o descripción de la forma de pago (ej: 'RECIBO 90 DIAS F.F.')",
@@ -188,6 +216,7 @@ const mapaERP = {
     bancos: { // Usamos el nombre de la tabla principal, que es la misma
         descripcion: "Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros.",
         tabla: "bancos",
+        alias: "Nuestros bancos",
         columnas: {
             id: "Código único del banco (Clave Primaria)",
             BA_DENO: "Denominación o nombre del banco",
@@ -444,7 +473,9 @@ const mapaERP = {
     },
     
     
-    /* ================================================*/
+   
+
+  /* ================================================*/
     /* Archivos – Auxiliares – Dispositivos móviles */
     /* ================================================*/
     dispositivos: {
@@ -461,22 +492,28 @@ const mapaERP = {
             DIS_KEY: "Clave o identificador de seguridad",
             DIS_BAJA: "Estado operativo (0: Activo, 1: Dado de baja)"
         },
-        relaciones: {
-            dispositivos_dis_obs: {
-                tabla_relacionada: "dispositivos_dis_obs",
-                tipo: "Uno a muchos (un dispositivo puede tener varias observaciones)",
-                campo_enlace_local: "id", // El id del dispositivo
-                campo_enlace_externo: "id", // El campo id en dispositivos_dis_obs que referencia al dispositivo
-                descripcion: "Almacena observaciones o comentarios complementarios. Las observaciones completas para un dispositivo se reconstruyen concatenando el campo 'C0' de los registros vinculados por 'id', posiblemente ordenados por 'id2'."
+        relaciones: [
+            {
+            tablaDestino: "dispositivos_dis_obs",
+                    campoOrigen: "id",
+                    campoDestino: "id",
+                    tipo: "uno-a-muchos",
+                    uso: "Para obtener las observaciones asociadas a los dispositivos"
             }
-        },
+        ],
         ejemplos: {
             consulta_basica: "Obtener información principal de un dispositivo directamente de la tabla 'dispositivos' usando su 'id'.",
             consulta_observaciones: "Para ver las observaciones de un dispositivo, consultar 'dispositivos_dis_obs' usando el 'id' del dispositivo. Concatenar 'C0' de las filas resultantes. Nota: No todos los dispositivos pueden tener observaciones.",
             consulta_estado: "Filtrar dispositivos por su estado operativo (DIS_BAJA)."
         }
     },
-    
+
+
+
+
+
+
+
     
     /* ================================================*/
     /* Archivos – Auxiliares – Envases de venta */
@@ -628,9 +665,11 @@ const mapaERP = {
     /* ================================================*/
     /* Archivos – Auxiliares – Productos Fitosanitarios */
     /* ================================================*/
-    productos_fitosanitarios: {
+   
+    tipo_trat: {
         descripcion: "Gestión y registro detallado de productos fitosanitarios para tratamientos agronómicos (prevención, control de plagas/enfermedades). Centraliza información técnica y de uso para aplicación segura y trazabilidad.",
         tabla: "tipo_trat",
+        alias: "Productos Fitosanitarios",
         columnas: {
             id: "Identificador único del producto fitosanitario (Clave Primaria)",
             TTR_NOM: "Nombre comercial del producto (Ej: PREVICUR ENERGY)",
@@ -868,12 +907,59 @@ const mapaERP = {
     },
     
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /* ======================================================================================================================================================================*/
     /* PRODUCCION                                                                                                                                                             */
     /* ======================================================================================================================================================================*/
     
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /* ================================================*/
     /* Produccion - Partes - Partes de siembra */
@@ -986,11 +1072,73 @@ const mapaERP = {
     },
     
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 /* ======================================================================================================================================================================*/
 /* INJERTOS                                                                                                                                                             */
 /* ======================================================================================================================================================================*/
     
+
+
+/* ================================================*/
+/* Injertos - Injertos – Medias bandejas */
+/* ================================================*/
+p_medias_band: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra datos asociados a 'Medias Bandejas' o a mediciones específicas relacionadas con ellas en el proceso productivo (probablemente injertos). Documenta conteos (alveolos, huecos, plantas, bandejas), fecha, hora, partida y operario.", // Descripción inferida del contexto y campos
+    tabla: "p-medias-band", // Nombre de tabla original
+    columnas: {
+        id: "Código único del registro (Clave Primaria)",
+        PMB_PAR: "Código de Partida asociada.", // Sugiere relación con tabla de partidas
+        PMB_ALV: "Número de Alveolos registrados.",
+        PMB_HUE: "Número de Huecos registrados.",
+        PMB_ETIQ: "Etiqueta asociada.",
+        PMB_PLAN: "Cantidad de Plantas registradas.",
+        PMB_BAND: "Cantidad de Bandejas registradas.",
+        PMB_FEC: "Fecha del registro.",
+        PMB_HORA: "Hora del registro.",
+        PMB_CDOP: "Código del Operario responsable. Sugiere relación con tabla de operarios/vendedores/técnicos."
+    },
+    relaciones: {
+        observaciones: "La información proporcionada no detalla explícitamente relaciones formales (claves foráneas) con otras tablas.",
+        inferidas: {
+            partidas: {
+                campo_local: "PMB_PAR",
+                descripcion_inferida: "Sugiere relación con una tabla que gestione las partidas de producción (similar a otros 'partes' de producción)."
+            },
+            operarios: {
+                campo_local: "PMB_CDOP",
+                descripcion_inferida: "Sugiere posible relación con una tabla que gestione operarios/usuarios (vendedores/técnicos), similar a otros 'partes'."
+            }
+        }
+    },
+    ejemplos: {
+        consulta_registro_por_id: "Obtener los detalles de un registro específico de 'Medias Bandejas' usando su 'id'.",
+        filtrar_por_partida: "Listar registros asociados a un código de partida específico (filtrando por PMB_PAR).",
+        filtrar_por_fecha_operario: "Buscar registros realizados en una fecha específica (filtrando por PMB_FEC) o por un operario determinado (filtrando por PMB_CDOP).",
+        consultar_conteos: "Obtener los valores de Alveolos (PMB_ALV), Huecos (PMB_HUE), Plantas (PMB_PLAN) o Bandejas (PMB_BAND) registrados."
+    }
+},
+
+
+
+
     /* ================================================*/
 /* Injertos – Utilidades – Escandallo Injerto */
 /* ================================================*/
@@ -1152,11 +1300,58 @@ p_inj_tomate: { // Clave principal
         filtrar_por_operario: "Encontrar registros asociados a un operario usando PIT_OPE o PIT_CDOP (filtrando por uno de estos campos)."
     }
 },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /* ======================================================================================================================================================================*/
     /* VENTAS                                                                                                                                                       */
     /* ======================================================================================================================================================================*/
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /* ======================================================================================================================================================================*/
     /* COBROS                                                                                                                                                            */
