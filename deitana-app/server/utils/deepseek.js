@@ -63,6 +63,11 @@ function esPreguntaGeneral(mensaje) {
   return mensajeLower.match(/^(quién eres|quien eres|qué eres|que eres|qué puedes hacer|que puedes hacer|ayuda|help)/i);
 }
 
+
+
+
+
+
 async function generarRespuestaConversacional(mensaje) {
   const prompt = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en ayudar con consultas sobre la base de datos de la empresa.
 
@@ -77,7 +82,6 @@ async function generarRespuestaConversacional(mensaje) {
 
   return await getDeepSeekResponse([{ role: "system", content: prompt }]);
 }
-
 
 
 
