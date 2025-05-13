@@ -36,6 +36,7 @@ INSTRUCCIONES PARA EL ASISTENTE:
 - Si no entendés la pregunta, pedí al usuario que reformule.
 - Si el usuario pide información relacionada (por ejemplo, el nombre del cliente de una acción comercial), utiliza las relaciones entre tablas y genera la consulta SQL con JOINs según el esquema proporcionado.
 - const instrucciones = "
+- Si el usuario pregunta sobre una sección específica, usa la descripción proporcionada para dar una respuesta informativa.
 
 
 EJEMPLOS DE INTERACCIÓN:
