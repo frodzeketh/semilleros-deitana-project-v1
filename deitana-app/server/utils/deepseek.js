@@ -75,9 +75,8 @@ async function generarRespuestaConversacional(mensaje) {
   Si el usuario necesita información específica de la base de datos, sugiérele que formule su pregunta de manera más específica.
   Si es un saludo o una pregunta general, responde de manera natural sin mencionar la base de datos a menos que sea relevante.`;
 
-  return await getDeepSeekResponse(prompt, mensaje);
+  return await getDeepSeekResponse([{ role: "system", content: prompt }]);
 }
-
 
 
 
@@ -105,6 +104,37 @@ async function generarRespuestaConversacional(mensaje) {
 
 async function processMessage(userMessage) {
   try {
+
+
+
+
+
+
+ // Primero verificar si es un saludo o pregunta general
+ if (esSaludo(userMessage) || esPreguntaGeneral(userMessage)) {
+  const respuestaConversacional = await generarRespuestaConversacional(userMessage);
+  
+  // Guardar en el historial
+  assistantContext.conversationHistory.push(
+    { role: "user", content: userMessage },
+    { role: "assistant", content: respuestaConversacional }
+  );
+
+  return {
+    message: respuestaConversacional,
+    context: assistantContext
+  };
+}
+
+
+
+
+
+
+
+
+
+
     // Paso 1: IA genera la consulta SQL
     const { system } = promptBase(userMessage);
     const messages = [
