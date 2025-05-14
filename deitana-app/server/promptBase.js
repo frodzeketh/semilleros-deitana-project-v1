@@ -23,6 +23,8 @@ ${camposTexto}
 ${relacionesTexto ? `Relaciones:\n${relacionesTexto}` : ''}`;
   }).join('\n\n');
 
+  // Resto del código original...
+
   // Instrucciones universales y ejemplos de interacción
   const instrucciones = `
 INSTRUCCIONES PARA EL ASISTENTE:
@@ -90,6 +92,18 @@ INSTRUCCIONES PARA CONSULTAS DE SECCIONES:
   3. Consulta los datos relacionados
   4. Presenta la información de manera organizada
   5. Incluye observaciones relevantes
+  6. Busca en el campo 'alias' de cada sección (ej: "Productos Fitosanitarios")
+  7. Si encuentra coincidencia, usa el campo 'tabla' para generar la consulta SQL
+  8. Si no encuentra coincidencia, busca en el nombre de la sección
+  9. Si el usuario pregunta "qué productos fitosanitarios existen", busca en el alias "Productos Fitosanitarios"
+
+INSTRUCCIONES PARA TABLAS CON NOMBRES TÉCNICOS:
+- Reconoce los siguientes mapeos entre nombres técnicos y descriptivos por alias:
+  * "p-siembras" o "p_siembras" = "Partes de Siembra"
+  * "p-extension" o "p_extension" = "Partes Extendido"
+  * "p-medias-band" o "p_medias_band" = "Medias Bandejas"
+  * "p-inj-sandia" o "p_inj_sandia" = "Partes Injertos Sandías"
+  * "p-inj-tomate" o "p_inj_tomate" = "Partes Injertos Tomate"
 
 INSTRUCCIONES PARA CONSULTAS SQL:
 - Al consultar una sección:
@@ -104,6 +118,39 @@ INSTRUCCIONES PARA BÚSQUEDA DE SECCIONES:
   2. Si encuentra coincidencia, usa el campo 'tabla' para generar la consulta SQL
   3. Si no encuentra coincidencia, busca en el nombre de la sección
   4. Si el usuario pregunta "qué productos fitosanitarios existen", busca en el alias "Productos Fitosanitarios"
+
+
+
+INSTRUCCIONES CRÍTICAS PARA IDENTIFICACIÓN DE TABLAS POR DESCRIPCIÓN:
+
+- SIEMPRE identifica la tabla correcta por su DESCRIPCIÓN, no solo por su nombre.
+- Cuando el usuario mencione términos como "partes de siembra", "operaciones de siembra" o similares:
+  1. PRIMERO busca en todas las descripciones de las tablas
+  2. Identifica qué tabla tiene una descripción que mejor coincide con lo que busca el usuario
+  3. Usa el nombre técnico de esa tabla en la consulta SQL
+
+- EJEMPLO ESPECÍFICO:
+  Cuando el usuario mencione "partes de siembra", debes identificar la tabla con descripción: 
+  "Registra operaciones de siembra documentando cuándo, partes de siembra, quién, qué semilla, dónde se sembró (almacén)..."
+  Esta descripción corresponde a la tabla \`p-siembras\`, por lo que debes usar \`p-siembras\` en la consulta SQL.
+
+- Si la tabla tiene guiones (-) en su nombre, SIEMPRE encierra el nombre entre backticks (\` \` ) en la consulta SQL.
+  Ejemplo: SELECT * FROM \`p-siembras\` WHERE ...
+
+- RECUERDA: No uses nombres descriptivos en las consultas SQL, usa SIEMPRE el nombre técnico de la tabla.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

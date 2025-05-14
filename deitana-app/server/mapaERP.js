@@ -938,87 +938,118 @@ const mapaERP = {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    /* ================================================*/
-    /* Produccion - Partes - Partes de siembra */
-    /* ================================================*/
-    p_siembras: { // Usamos p_siembras como clave
-        descripcion: "Documenta las 'partes' o eventos específicos de siembra. Registra cuándo, dónde, qué artículo (semilla) se sembró, quién realizó la operación y bajo qué estado. Base para seguimiento de siembra, materiales, personal y ubicación inicial de cultivos.",
-        tabla: `p-siembras`, // Nombre de tabla original
-        columnas: {
-            id: "Código único del registro de parte de siembra (Clave Primaria)",
-            PSI_FEC: "Fecha de la operación de siembra",
-            PSI_HOR: "Hora de la operación de siembra",
-            PSI_OPE: "Identificador del operario responsable. Clave foránea a la tabla 'vendedores'.",
-            PSI_SEM: "Identificador de la semilla o artículo sembrado. Clave foránea a la tabla 'articulos'.",
-            PSI_EST: "Estado actual del registro de la parte de siembra (Ej: 'S').",
-            PSI_ALM: "Identificador del almacén o ubicación asociado. Clave foránea a la tabla 'almacenes'.",
-            PSI_TIPO: "Clasificador o tipo específico para la parte de siembra (Ej: 'A').",
-            PSI_CCOM: "Identificador de la casa comercial asociada. Clave foránea a la tabla 'casas_com'."
+/* ================================================*/
+/* Producción - Partes – Partes de Siembra */
+/* ================================================*/
+p_siembras: { // Clave principal (nombre de tabla)
+    descripcion: "Registra operaciones de siembra documentando cuándo,partes de siembra, quién, qué semilla, dónde se sembró (almacén), lote y resultados globales (bandejas/palet, total bandejas). Fundamental para documentar el proceso, vincular insumos/personal/ubicación y controlar la producción desde el inicio.",
+    tabla: `p-siembras`, // Nombre de tabla principal
+    columnas: {
+        id: "Número identificador único del parte de siembra (Clave Primaria)",
+        PSI_FEC: "Fecha en que se realizó el parte de siembra.",
+        PSI_HORA: "Hora en que se realizó el parte de siembra.",
+        PSI_OPE: "Número de código del operador. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+        PSI_SEM: "Código de la semilla o artículo utilizado. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+        PSI_CONP: "Consumo previo (propósito no especificado).",
+        PSI_EST: "Estado del parte de siembra.",
+        PSI_ALM: "Código del almacén principal donde se realizó el parte de siembra. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        PSI_LOTE: "Número de lote de la semilla utilizada.",
+        PSI_BAPP: "Bandejas por Palet en este parte.",
+        PSI_TBAN: "Número Total de Bandejas en este parte."
+    },
+    relaciones: {
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PSI_OPE",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de siembra con el operador que lo realizó."
         },
-        relaciones: {
-            vendedores: {
-                tabla_relacionada: "vendedores",
-                tipo: "Muchos a uno",
-                campo_enlace_local: "PSI_OPE",
-                campo_enlace_externo: "id",
-                descripcion: "Permite obtener la denominación (VD_DENO) del operario que realizó la siembra."
+        articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PSI_SEM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de siembra con el artículo/semilla utilizado."
+        },
+        almacenes_principal: { // Relación para el almacén principal del parte
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PSI_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de siembra con el almacén principal donde se realizó la operación."
+        },
+        p_siembras_psi_semb: {
+            tabla_relacionada: `p-siembras_psi_semb`,
+            tipo: "Uno a muchos (un parte puede tener múltiples líneas de sembrado de partidas)",
+            campo_enlace_local: "id", // El id del parte en p-siembras
+            campo_enlace_externo: "id", // El campo id en p-siembras_psi_semb que referencia al parte principal
+            descripcion: "Almacena los detalles de cada partida sembrada dentro de un parte de siembra.",
+            estructura_relacionada: { // Estructura de la tabla de detalle
+                id: "ID del parte de siembra principal asociado",
+                id2: "Línea o cantidad de sembrados dentro de este parte (Ej: 1, 2, 3)",
+                C0: "Número de partida sembrada en esta línea. Clave foránea a la tabla 'partidas'.",
+                C1: "Número de bandejas sembradas para esta partida en esta línea (Ej: '49').",
+                C2: "Número de palet (Ej: '01').",
+                C3: "Número de delegación o almacén específico donde se colocaron las bandejas. Clave foránea a la tabla 'almacenes'." // Nota: Este es un almacén/sub-ubicación dentro del almacén principal del parte
             },
-            articulos: {
-                tabla_relacionada: "articulos",
-                tipo: "Muchos a uno",
-                campo_enlace_local: "PSI_SEM",
-                campo_enlace_externo: "id",
-                descripcion: "Permite obtener la denominación (AR_DENO) exacta de la semilla o artículo sembrado."
-            },
-            almacenes: {
-                tabla_relacionada: "almacenes",
-                tipo: "Muchos a uno",
-                campo_enlace_local: "PSI_ALM",
-                campo_enlace_externo: "id",
-                descripcion: "Permite obtener la denominación (AM_DENO) del almacén o ubicación donde se registró la siembra."
-            },
-            casas_com: {
-                tabla_relacionada: "casas_com",
-                tipo: "Muchos a uno",
-                campo_enlace_local: "PSI_CCOM",
-                campo_enlace_externo: "id",
-                descripcion: "Permite identificar la casa comercial asociada (obteniendo su denominación SC_DENO o CC_DENO de casas_com)." // Asumiendo SC_DENO o CC_DENO por ejemplos previos
+            relaciones_internas_de_detalle: { // Relaciones que parten de la tabla de detalle
+                 partidas: {
+                    tabla_relacionada: "partidas",
+                    tipo: "Muchos a uno (varias líneas pueden referenciar a la misma partida)",
+                    campo_enlace_local: "C0", // El campo local que contiene el número de partida
+                    campo_enlace_externo: "id", // El campo referenciado en la tabla partidas
+                    descripcion: "Vincula la línea de detalle con la partida sembrada específica.",
+                    relaciones_externas_de_partida: { // Relaciones que parten de la tabla relacionada (partidas)
+                         clientes: {
+                             tabla_relacionada: "clientes",
+                             tipo: "Muchos a uno (una partida pertenece a un cliente)",
+                             campo_enlace_local: "PAR_CCL", // Campo en partidas que apunta a clientes
+                             campo_enlace_externo: "id", // Campo en clientes
+                             descripcion: "La tabla 'partidas' se relaciona con 'clientes' para obtener la denominación (CL_DENO) del cliente asociado a la partida sembrada (ruta: p-siembras_psi_semb.C0 -> partidas.id -> partidas.PAR_CCL -> clientes.id)."
+                         }
+                         // La tabla 'partidas' también se relaciona con 'articulos' (PAR_SEM -> articulos.id)
+                    }
+                 },
+                 almacenes_ubicacion_especifica: { // Relación para la ubicación específica del sembrado (C3)
+                     tabla_relacionada: "almacenes",
+                     tipo: "Muchos a uno (varias líneas de detalle pueden referenciar al mismo almacén/delegación)",
+                     campo_enlace_local: "C3", // El campo local que contiene el código del almacén/delegación
+                     campo_enlace_externo: "id", // El campo referenciado en la tabla almacenes
+                     descripcion: "Vincula la línea de detalle con la delegación o almacén específico donde se colocaron las bandejas sembradas (sub-ubicación)."
+                 }
             }
-        },
-        ejemplos: {
-            consulta_parte_siembra: "Obtener los detalles de un registro de siembra específico usando su 'id'.",
-            obtener_info_relacionada: "Para un registro de siembra, usar los campos PSI_OPE, PSI_SEM, PSI_ALM, PSI_CCOM para consultar las tablas 'vendedores', 'articulos', 'almacenes' y 'casas_com' y obtener nombres/denominaciones.",
-            consultar_siembras_por_operario: "Listar todas las partes de siembra realizadas por un operario específico (filtrando por PSI_OPE).",
-            consultar_siembras_de_semilla: "Encontrar todas las siembras registradas para un artículo/semilla particular (filtrando por PSI_SEM)."
         }
     },
-    
-    
-    
-    
+    ejemplos: {
+        consulta_parte_principal_por_id: "Obtener los detalles de cabecera de un parte de siembra (fecha, hora, operador, semilla, almacén principal, etc.) usando su 'id'.",
+        consultar_info_cabecera_relacionada: "Para un parte principal, usar PSI_OPE, PSI_SEM y PSI_ALM para consultar 'vendedores', 'articulos' y 'almacenes' y obtener los nombres del operador, semilla y almacén principal.",
+        consultar_detalles_partidas_sembradas: "Para un parte de siembra específico (usando su id), consultar la tabla relacionada 'p-siembras_psi_semb' para ver cada partida que fue sembrada, cuántas bandejas, en qué palet y dónde (sub-ubicación).",
+        obtener_info_detalle_relacionada: "Desde una línea de detalle en 'p-siembras_psi_semb', usar C0 (partida) y C3 (sub-ubicación) para consultar 'partidas' y 'almacenes' y obtener detalles de la partida y el nombre de la ubicación específica.",
+        trazar_cliente_desde_sembrado: "Desde una línea de detalle en 'p-siembras_psi_semb' (usando C0), consultar la tabla 'partidas' para obtener el PAR_CCL, y luego consultar la tabla 'clientes' para obtener la denominación (CL_DENO) del cliente para quien se sembró esa partida.",
+        filtrar_partes_por_fecha_operador_o_semilla: "Listar partes de siembra por fecha (filtrando por PSI_FEC), operador (filtrando por PSI_OPE) o semilla utilizada (filtrando por PSI_SEM).",
+        filtrar_lineas_por_partida_o_ubicacion_especifica: "Buscar líneas de detalle en 'p-siembras_psi_semb' para una partida específica (filtrando por C0) o una ubicación de sembrado particular (filtrando por C3)."
+    }
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     
     
