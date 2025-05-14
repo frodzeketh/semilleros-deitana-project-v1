@@ -2,14 +2,17 @@ const axios = require('axios');
 const db = require('../db');
 const { mapaERP } = require('../mapaERP');
 const { promptBase } = require('../promptBase');
-const mysql = require('mysql2/promise'); // Asegúrate de tener mysql2 instalado
+const mysql = require('mysql2/promise');
+const { OpenAI } = require('openai');
+require('dotenv').config();
 
-// Configuración de la API de DeepSeek
-const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+// Configuración de OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
-if (!DEEPSEEK_API_KEY) {
-  console.error('Error: DEEPSEEK_API_KEY no está configurada en las variables de entorno');
+if (!process.env.OPENAI_API_KEY) {
+  console.error('Error: OPENAI_API_KEY no está configurada en las variables de entorno');
 }
 
 // Sistema de contexto para el asistente
@@ -21,34 +24,66 @@ const assistantContext = {
   isFirstMessage: true
 };
 
-async function getDeepSeekResponse(messages) {
+async function getOpenAIResponse(messages) {
   try {
-    if (!DEEPSEEK_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       throw new Error('API key no configurada');
     }
 
-    const response = await axios.post(DEEPSEEK_API_URL, {
-      model: "deepseek-chat",
-      messages: messages, // <-- aquí usas el array recibido
+    // Dividir el prompt si es muy grande
+    const systemContent = messages[0]?.content || '';
+    if (systemContent.length > 12000) {
+      // Primera llamada: Generar la consulta SQL
+      const firstHalf = systemContent.substring(0, 12000);
+      const response1 = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: firstHalf },
+          { role: "user", content: messages[messages.length - 1].content }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      });
+
+      // Si la primera respuesta contiene SQL, usarla
+      const firstResponse = response1.choices[0].message.content;
+      if (firstResponse.includes("SELECT")) {
+        return firstResponse;
+      }
+
+      // Segunda llamada: Con el resto del contexto
+      const secondHalf = systemContent.substring(12000);
+      const response2 = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: secondHalf },
+          { role: "user", content: messages[messages.length - 1].content }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      });
+
+      return response2.choices[0].message.content;
+    }
+
+    // Si el prompt no es muy grande, hacer una sola llamada
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: messages,
       temperature: 0.7,
       max_tokens: 1000,
       top_p: 0.9,
       frequency_penalty: 0.5,
       presence_penalty: 0.5
-    }, {
-      headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
     });
 
-    if (!response.data || !response.data.choices || !response.data.choices[0]) {
+    if (!response.choices || !response.choices[0]) {
       throw new Error('Respuesta inválida de la API');
     }
 
-    return response.data.choices[0].message.content.trim();
+    return response.choices[0].message.content.trim();
   } catch (error) {
-    console.error('Error al llamar a la API de DeepSeek:', error.message);
+    console.error('Error en getOpenAIResponse:', error);
     return null;
   }
 }
@@ -63,11 +98,6 @@ function esPreguntaGeneral(mensaje) {
   return mensajeLower.match(/^(quién eres|quien eres|qué eres|que eres|qué puedes hacer|que puedes hacer|ayuda|help)/i);
 }
 
-
-
-
-
-
 async function generarRespuestaConversacional(mensaje) {
   const prompt = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en ayudar con consultas sobre la base de datos de la empresa.
 
@@ -80,64 +110,25 @@ async function generarRespuestaConversacional(mensaje) {
   Si el usuario necesita información específica de la base de datos, sugiérele que formule su pregunta de manera más específica.
   Si es un saludo o una pregunta general, responde de manera natural sin mencionar la base de datos a menos que sea relevante.`;
 
-  return await getDeepSeekResponse([{ role: "system", content: prompt }]);
+  return await getOpenAIResponse([{ role: "system", content: prompt }]);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Usar promptBase para generar el prompt
-// ... imports y funciones previas ...
-
-// ... imports y funciones previas ...
 
 async function processMessage(userMessage) {
   try {
+    // Primero verificar si es un saludo o pregunta general
+    if (esSaludo(userMessage) || esPreguntaGeneral(userMessage)) {
+      const respuestaConversacional = await generarRespuestaConversacional(userMessage);
+      
+      assistantContext.conversationHistory.push(
+        { role: "user", content: userMessage },
+        { role: "assistant", content: respuestaConversacional }
+      );
 
-
-
-
-
-
- // Primero verificar si es un saludo o pregunta general
- if (esSaludo(userMessage) || esPreguntaGeneral(userMessage)) {
-  const respuestaConversacional = await generarRespuestaConversacional(userMessage);
-  
-  // Guardar en el historial
-  assistantContext.conversationHistory.push(
-    { role: "user", content: userMessage },
-    { role: "assistant", content: respuestaConversacional }
-  );
-
-  return {
-    message: respuestaConversacional,
-    context: assistantContext
-  };
-}
-
-
-
-
-
-
-
-
-
+      return {
+        message: respuestaConversacional,
+        context: assistantContext
+      };
+    }
 
     // Paso 1: IA genera la consulta SQL
     const { system } = promptBase(userMessage);
@@ -146,16 +137,19 @@ async function processMessage(userMessage) {
       ...assistantContext.conversationHistory.slice(-3),
       { role: "user", content: userMessage }
     ];
-    const respuestaIA = await getDeepSeekResponse(messages);
+    const respuestaIA = await getOpenAIResponse(messages);
+
+    if (!respuestaIA) {
+      throw new Error('No se recibió respuesta de OpenAI');
+    }
 
     // Extrae la consulta SQL de la respuesta de la IA
-    const sqlMatch = respuestaIA.match(/SELECT[\s\S]+?;/i);
+    const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
     if (sqlMatch) {
-      const sql = sqlMatch[0];
+      const sql = sqlMatch[1] || sqlMatch[0];
       try {
         const [rows] = await db.query(sql);
 
-        // Paso 2: IA analiza los datos reales
         const datosReales = rows.length === 0
           ? "No se encontraron resultados en la base de datos."
           : JSON.stringify(rows, null, 2);
@@ -166,11 +160,10 @@ El resultado real de la base de datos es:
 ${datosReales}
 Por favor, analiza estos datos y responde en lenguaje natural, explicando el resultado y sugiriendo acciones si corresponde.
         `;
-        const analisis = await getDeepSeekResponse([
+        const analisis = await getOpenAIResponse([
           { role: "system", content: promptAnalisis }
         ]);
 
-        // Guarda el historial de conversación
         assistantContext.conversationHistory.push(
           { role: "user", content: userMessage },
           { role: "assistant", content: analisis }
@@ -201,6 +194,7 @@ Por favor, analiza estos datos y responde en lenguaje natural, explicando el res
     };
   }
 }
+
 module.exports = {
   processMessage
 };
