@@ -1172,6 +1172,8 @@ p_escan_inj: { // Usamos p_escan_inj como clave
 },
 
 
+
+
 /* ================================================*/
 /* Injertos – Injertos por Fases – Técnicos Fases */
 /* ================================================*/
@@ -1332,6 +1334,57 @@ p_inj_tomate: { // Clave principal
     /* ======================================================================================================================================================================*/
     
 
+/* ================================================*/
+/* Ventas – Gestión – Encargos de siembra */
+/* ================================================*/
+encargos: { // Clave principal (nombre de tabla)
+    descripcion: "Registra y administra los 'encargos de siembra' de clientes, documentando sus órdenes para sembrar semillas/artículos. Esencial para planificación de producción según demanda, gestión de ventas, facturación y seguimiento comercial.",
+    tabla: "encargos", // Nombre de tabla original
+    columnas: {
+        id: "Número único que identifica cada encargo de siembra (Clave Primaria)",
+        ENG_CCL: "Código del cliente que realizó el encargo. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+        ENG_ALM: "Código del almacén asociado al encargo. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        ENG_FEC: "Fecha en que se registró el encargo de siembra.",
+        ENG_VD: "Vendedor que gestionó el encargo de siembra. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+        ENG_FP: "Forma de pago acordada para el encargo. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO)."
+    },
+    relaciones: {
+        clientes: {
+            tabla_relacionada: "clientes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "ENG_CCL",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el encargo con el cliente que lo realizó."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "ENG_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el encargo con el almacén asociado."
+        },
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "ENG_VD",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el encargo con el vendedor que lo gestionó."
+        },
+        fpago: {
+            tabla_relacionada: "fpago",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "ENG_FP",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el encargo con la forma de pago acordada."
+        }
+    },
+    ejemplos: {
+        consulta_encargo_por_id: "Obtener los detalles de un encargo de siembra específico usando su 'id'.",
+        consultar_info_relacionada: "Para un encargo, usar ENG_CCL, ENG_ALM, ENG_VD y ENG_FP para consultar 'clientes', 'almacenes', 'vendedores' y 'fpago' y obtener los nombres del cliente, almacén, vendedor y forma de pago.",
+        filtrar_encargos_por_cliente_o_fecha: "Listar encargos realizados por un cliente específico (filtrando por ENG_CCL) o registrados en una fecha o rango de fechas (filtrando por ENG_FEC).",
+        filtrar_encargos_por_vendedor_o_almacen: "Buscar encargos gestionados por un vendedor (filtrando por ENG_VD) o asociados a un almacén particular (filtrando por ENG_ALM)."
+    }
+},
 
 
 
@@ -1344,6 +1397,63 @@ p_inj_tomate: { // Clave principal
 
 
 
+/* ================================================*/
+/* Ventas – Gestión - Devoluciones Clientes */
+/* ================================================*/
+devol_clientes: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra y administra las devoluciones de productos realizadas por los clientes. Documenta el retorno de mercancía para control de inventario, ajuste de ventas, seguimiento de incidencias y gestión post-venta.",
+    tabla: "devol-clientes", // Nombre de tabla original
+    columna: {
+        id: "Número único que identifica cada devolución (Clave Primaria)",
+        DV_FEC: "Fecha en que se registró la devolución.",
+        DV_USU: "Usuario o vendedor que gestionó la devolución. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+        DV_DEL: "Delegación o almacén donde se realizó la devolución. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        DV_CCL: "Cliente que realizó la devolución. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO)."
+        // Observaciones se almacenan en una tabla separada (devol-clientes_dv_obs)
+    },
+    relaciones: {
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "DV_USU",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la devolución con el usuario/vendedor interno que la gestionó."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "DV_DEL",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la devolución con la delegación o almacén donde se gestionó."
+        },
+        clientes: {
+            tabla_relacionada: "clientes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "DV_CCL",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la devolución con el cliente que la realizó."
+        },
+        devol_clientes_dv_obs: {
+            tabla_relacionada: "devol-clientes_dv_obs",
+            tipo: "Uno a muchos (una devolución puede tener múltiples observaciones)",
+            campo_enlace_local: "id", // El id de la devolución
+            campo_enlace_externo: "id", // El campo id en devol-clientes_dv_obs que referencia a la devolución
+            descripcion: "Almacena observaciones o comentarios complementarios sobre la devolución. La lógica de almacenamiento (ej: fragmentación en campo C0, orden por id2) no se detalla explícitamente en el texto, pero se infiere similar a otras tablas de observaciones.",
+            estructura_relacionada: { // Estructura inferida basada en patrones de otras tablas de observaciones
+                id: "ID de la devolución asociada",
+                id2: "Identificador secundario/orden de la línea",
+                C0: "Texto de la observación"
+            }
+        }
+    },
+    ejemplos: {
+        consulta_devolucion_por_id: "Obtener los detalles de una devolución de cliente específica usando su 'id'.",
+        consultar_info_relacionada: "Para una devolución, usar DV_USU, DV_DEL y DV_CCL para consultar 'vendedores', 'almacenes' y 'clientes' y obtener los nombres del usuario, almacén y cliente.",
+        filtrar_devoluciones_por_cliente_o_fecha: "Listar devoluciones realizadas por un cliente específico (filtrando por DV_CCL) o registradas en una fecha o rango de fechas (filtrando por DV_FEC).",
+        filtrar_devoluciones_por_usuario_o_almacen: "Buscar devoluciones gestionadas por un usuario (filtrando por DV_USU) o en un almacén particular (filtrando por DV_DEL).",
+        consultar_observaciones: "Buscar observaciones detalladas para una devolución específica en la tabla 'devol-clientes_dv_obs' (requiere implementar la lógica de recuperación y reconstrucción del texto)."
+    }
+},
 
 
 
@@ -1497,6 +1607,19 @@ movimientos_caja_bancos: { // Clave principal (basada en el nombre de la secció
 },
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     /* ======================================================================================================================================================================*/
     /* COMPRAS                                                                                                                                                             */
@@ -1629,6 +1752,8 @@ pedidos_pr: { // Clave principal (nombre de tabla)
         filtrar_pedidos_por_solicitante: "Encontrar pedidos realizados por una persona específica dentro de la empresa (filtrando por PP_DPP)."
     }
 }, 
+
+
 
 
 /* ================================================*/
@@ -1831,17 +1956,834 @@ transferencias: { // Clave principal (nombre de tabla)
 
 
     
-    /* ======================================================================================================================================================================*/
-    /* ORNAMENTAL                                                                                                                                                            */
-    /* ======================================================================================================================================================================*/
+/* ======================================================================================================================================================================*/
+/* ORNAMENTAL                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+
+
+
+
+
+
+
+
+
     
-    
+/* ================================================*/
+/* Ornamental – Compras – Albarán Compra Ornamental */
+/* (Nota: La descripción proporcionada es idéntica a "Compras – Gestión Compras – Albaranes Compra") */
+/* ================================================*/
+alb_compra: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra y administra los albaranes de compra, documentando la recepción de mercancías o servicios de proveedores. Crucial para control de inventario, verificación de pedidos, validación de facturas y seguimiento de condiciones comerciales.",
+    tabla: "alb-compra", // Nombre de tabla original
+    columnas: {
+        id: "Código único que identifica cada albarán de compra (Clave Primaria)",
+        AC_NPD: "Número del pedido de compra asociado.", // Sugiere relación con tabla de pedidos de compra
+        AC_CPR: "Número del proveedor. Clave foránea a la tabla 'proveedores' para obtener la denominación (PR_DENO).",
+        AC_ALM: "Almacén de recepción en Semilleros Deitana. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        AC_FEC: "Fecha en que se registró el albarán de compra.",
+        AC_SUA: "Número del albarán proporcionado por el proveedor.",
+        AC_FP: "Forma de pago acordada. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+        AC_FRA: "Número de la factura del proveedor asociada.", // Sugiere relación con tabla de facturas proveedor
+        AC_FFR: "Fecha de la factura del proveedor asociada.", // Sugiere relación con tabla de facturas proveedor
+        AC_BRU: "Monto bruto total del albarán.",
+        AC_NETO: "Monto neto del albarán.",
+        AC_IMPU: "Costo total de los impuestos aplicados.",
+        AC_TTT: "Monto total final del albarán."
+    },
+    relaciones: {
+        proveedores: {
+            tabla_relacionada: "proveedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AC_CPR",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con el proveedor que emitió la entrega."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AC_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con el almacén de Semilleros Deitana donde se recibieron los artículos."
+        },
+        fpago: {
+            tabla_relacionada: "fpago",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AC_FP",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con la forma de pago acordada para la transacción."
+        },
+        // Relaciones potenciales inferidas:
+        pedidos_compra: {
+            tabla_relacionada: "[Tabla de Pedidos de Compra]", // Nombre de tabla no especificado
+            tipo: "Muchos a uno (un albarán puede provenir de un pedido)", // Tipo inferido
+            campo_enlace_local: "AC_NPD", // El campo que contiene el número/id del pedido
+            campo_enlace_externo: "[Campo id/número en tabla de pedidos]", // Nombre de campo no especificado
+            descripcion_inferida: "Sugiere vínculo con una tabla de pedidos de compra, permitiendo trazar el albarán al pedido original."
+        },
+        facturas_proveedor: {
+             tabla_relacionada: "[Tabla de Facturas de Proveedor]", // Nombre de tabla no especificado
+             tipo: "Uno a uno o Uno a cero-o-uno (un albarán se asocia a una factura o ninguna)", // Tipo inferido
+             campo_enlace_local: "AC_FRA", // El campo que contiene el número/id de la factura
+             campo_enlace_externo: "[Campo id/número en tabla de facturas]", // Nombre de campo no especificado
+             descripcion_inferida: "Sugiere vínculo con una tabla de facturas de proveedor, permitiendo asociar el albarán a la factura emitida."
+        }
+    },
+    ejemplos: {
+        consulta_albaran_por_id: "Obtener los detalles de un albarán de compra específico usando su 'id'.",
+        consultar_info_relacionada: "Para un albarán, usar AC_CPR, AC_ALM y AC_FP para consultar 'proveedores', 'almacenes' y 'fpago' y obtener los nombres del proveedor, almacén y forma de pago.",
+        filtrar_albaranes_por_proveedor_o_fecha: "Listar albaranes recibidos de un proveedor específico (filtrando por AC_CPR) o en un rango de fechas (filtrando por AC_FEC).",
+        filtrar_albaranes_por_usuario_o_forma_pago: "Buscar albaranes registrados por un usuario específico (filtrando por FR_USU, si existiera este campo aquí) o con una forma de pago particular (filtrando por AC_FP)." // Nota: FR_USU es de facturas-r, no de alb-compra. Corregido en ejemplo.
+        // Ejemplo corregido: filtrar_albaranes_por_almacen_o_forma_pago: "Buscar albaranes recibidos en un almacén (filtrando por AC_ALM) o con una forma de pago particular (filtrando por AC_FP)."
+    }
+},
+
+
+
+
+
+
+
+/* ================================================*/
+/* Ornamental – Ventas – Albarán venta Ornamental */
+/* ================================================*/
+albaran_venta_ornamental: { // Clave principal (basada en el nombre de la sección)
+    descripcion: "Registra y gestiona los albaranes de venta específicos para productos ornamentales. Documenta la salida de productos hacia clientes, crucial para control de inventario, confirmación de entregas y base para facturación.",
+    tabla: "[Tabla Albaran Venta Ornamental]", // Nombre de tabla inferido (campos con prefijo AV_)
+    columnas: {
+        id: "Identificador único de cada albarán de venta ornamental (Clave Primaria)",
+        AV_NPD: "Número del pedido de venta del cliente asociado, si lo hay.", // Sugiere relación con tabla de pedidos de venta
+        AV_CCL: "Número del cliente que recibió la mercancía. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+        AV_VD: "Vendedor que gestionó la venta. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+        AV_ALM: "Almacén de Semilleros Deitana desde donde se expidió la mercancía. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        AV_FEC: "Fecha en que se emitió el albarán.",
+        AV_TIP: "Tipo de albarán o venta.",
+        AV_FRA: "Número de la factura asociada a este albarán.", // Sugiere relación con tabla de facturas de venta
+        AV_FFR: "Fecha de la factura asociada.", // Sugiere relación con tabla de facturas de venta
+        AV_BRU: "Monto bruto total del albarán.",
+        AV_NETO: "Monto neto del albarán.",
+        AV_IMPU: "Importe total de los impuestos aplicados.",
+        AV_TTT: "Monto total final del albarán.",
+        AV_ORIVTA: "Origen o canal específico de esta venta ornamental.",
+        AV_FP: "Forma de pago acordada para esta venta. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO)."
+    },
+    relaciones: {
+        clientes: {
+            tabla_relacionada: "clientes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AV_CCL",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con el cliente que recibió la mercancía."
+        },
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AV_VD",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con el vendedor que gestionó la venta."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AV_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con el almacén desde donde se expidió la mercancía."
+        },
+        fpago: {
+            tabla_relacionada: "fpago",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "AV_FP",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el albarán con la forma de pago acordada para la venta."
+        },
+        // Relaciones potenciales inferidas:
+        pedidos_venta: {
+            tabla_relacionada: "[Tabla de Pedidos de Venta]", // Nombre de tabla no especificado
+            tipo: "Muchos a uno (un albarán puede provenir de un pedido)", // Tipo inferido
+            campo_enlace_local: "AV_NPD", // El campo que contiene el número/id del pedido
+            campo_enlace_externo: "[Campo id/número en tabla de pedidos de venta]", // Nombre de campo no especificado
+            descripcion_inferida: "Sugiere vínculo con una tabla de pedidos de venta, permitiendo trazar el albarán al pedido original si existe."
+        },
+        facturas_venta: {
+             tabla_relacionada: "[Tabla de Facturas de Venta]", // Nombre de tabla no especificado (ej: facturas-e)
+             tipo: "Uno a uno o Uno a cero-o-uno (un albarán se asocia a una factura o ninguna)", // Tipo inferido
+             campo_enlace_local: "AV_FRA", // El campo que contiene el número/id de la factura
+             campo_enlace_externo: "[Campo id/número en tabla de facturas de venta]", // Nombre de campo no especificado
+             descripcion_inferida: "Sugiere vínculo con una tabla de facturas de venta, permitiendo asociar el albarán a la factura emitida."
+        }
+    },
+    ejemplos: {
+        consulta_albaran_por_id: "Obtener los detalles de un albarán de venta ornamental específico usando su 'id'.",
+        consultar_info_relacionada: "Para un albarán, usar AV_CCL, AV_VD, AV_ALM y AV_FP para consultar 'clientes', 'vendedores', 'almacenes' y 'fpago' y obtener los nombres del cliente, vendedor, almacén y forma de pago.",
+        filtrar_albaranes_por_cliente_o_fecha: "Listar albaranes de venta ornamental emitidos a un cliente específico (filtrando por AV_CCL) o en una fecha o rango de fechas (filtrando por AV_FEC).",
+        filtrar_albaranes_por_vendedor_o_almacen: "Buscar albaranes gestionados por un vendedor (filtrando por AV_VD) o expedidos desde un almacén particular (filtrando por AV_ALM).",
+        filtrar_albaranes_por_origen_venta: "Encontrar albaranes asociados a un origen o canal de venta específico (filtrando por AV_ORIVTA)."
+    }
+},
+
+
+
+
+
+
+/* ================================================*/
+/* Ornamental – Ventas – Registro Facturas Emitidas */
+/* ================================================*/
+facturas_e: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra las facturas de venta emitidas por la empresa. Incluye información sobre el cliente, almacén, vendedor, fecha, montos y forma de pago.", // Descripción sintetizada de los campos
+    tabla: "facturas-e", // Nombre de tabla original
+    columnas: {
+        id: "Número de factura (Clave Primaria)",
+        FE_CCL: "Código de cliente. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+        FE_ALM: "Información del almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        FE_VD: "Vendedor. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+        FE_FEC: "Fecha.",
+        FE_BRU: "Monto bruto.",
+        FE_NETO: "Monto neto.",
+        FE_IMPU: "Monto de impuesto.",
+        FE_TTT: "Total.",
+        FE_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO)."
+    },
+    relaciones: {
+        clientes: {
+            tabla_relacionada: "clientes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "FE_CCL",
+            campo_enlace_externo: "id",
+            descripcion: "Relación con la tabla 'clientes' para obtener detalles del cliente emisor."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "FE_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Relación con la tabla 'almacenes' para obtener detalles del almacén asociado."
+        },
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "FE_VD",
+            campo_enlace_externo: "id",
+            descripcion: "Relación con la tabla 'vendedores' para obtener detalles del vendedor asociado."
+        },
+        fpago: {
+            tabla_relacionada: "fpago",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "FE_FP",
+            campo_enlace_externo: "id",
+            descripcion: "Relación con la tabla 'fpago' para obtener detalles de la forma de pago."
+        }
+        // Esta descripción no menciona explícitamente otras relaciones, como con albaranes de venta.
+    },
+    ejemplos: {
+        consulta_factura_por_id: "Obtener todos los datos de una factura emitida usando su 'id'.",
+        consultar_info_relacionada: "Para una factura, usar FE_CCL, FE_ALM, FE_VD y FE_FP para consultar 'clientes', 'almacenes', 'vendedores' y 'fpago' y obtener los nombres/denominaciones.",
+        filtrar_facturas_por_cliente_o_fecha: "Listar facturas emitidas a un cliente específico (filtrando por FE_CCL) o en una fecha determinada (filtrando por FE_FEC).",
+        consultar_montos: "Obtener los valores bruto (FE_BRU), neto (FE_NETO), impuesto (FE_IMPU) y total (FE_TTT) de una factura."
+    }
+},
+
+
+
+
+
+/* ================================================*/
+/* Ornamental – Producción – Partes */
+/* ================================================*/
+partes_orn: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra operaciones/partes de producción en partidas de plantas ornamentales (cambios de envase, traslados, etc.). Formaliza y traza actividades, documentando cantidades, envases y ubicaciones antes/después. Crucial para control, trazabilidad y gestión del inventario por ubicación/envase.",
+    tabla: "partes_orn", // Nombre de tabla original
+    columnas: {
+        id: "Código o identificador único del registro de parte de producción (Clave Primaria)",
+        PTO_FEC: "Fecha en que se realizó la operación.",
+        PTO_FAR: "Número de partida de producción asociada. Clave foránea a la tabla 'partidas'.", // Se relaciona con 'partidas' que a su vez se relaciona con 'articulos'
+        PTO_PRO: "Proceso productivo realizado (Ej: 'CAMBIO DE SOPORTE'). Clave foránea a la tabla 'procesos' para obtener la denominación (PRO_DENO).",
+        PTO_OUDS: "Cantidad de 'Anteriores unidades' afectadas.",
+        PTO_OCAR: "Denominación del tipo de envase o maceta anterior. Clave foránea a la tabla 'envases_vta' para obtener la denominación (EV_DENO).",
+        PTO_INV: "Valor del 'anterior invernadero' (campo de texto, sin relación definida a tabla 'invernaderos').", // Nota basada en la descripción
+        PTO_OSEC: "Valor de la 'anterior secc' (sección) (campo de texto, sin relación definida a tabla de secciones).", // Nota basada en la descripción
+        PTO_NUDS: "Cantidad de 'unidades afectadas' o nuevas unidades.",
+        PTO_NCAR: "Denominación del tipo de envase o maceta nuevo. Clave foránea a la tabla 'envases_vta' para obtener la denominación (EV_DENO).",
+        PTO_NINV: "Valor del 'nuevo invernadero' (campo de texto, sin relación definida a tabla 'invernaderos').", // Nota basada en la descripción
+        // La segunda mención de PTO_OSEC en la descripción probablemente se refiere a la 'nueva secc'.
+        // Se asume un campo implícito o el mismo campo se reutiliza, pero sin detalles claros.
+        // Si hubiera un campo distinto para la nueva sección, seguiría la misma lógica:
+        // PTO_NSEC_inferido: "Valor de la 'nueva secc' (sección) (campo de texto, sin relación definida)."
+    },
+    relaciones: {
+        partidas: {
+            tabla_relacionada: "partidas",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PTO_FAR",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de producción con la partida a la que se refiere la operación.",
+            relaciones_externas_de_partida: { // Relaciones que parten de la tabla relacionada (partidas)
+                articulos: {
+                    tabla_relacionada: "articulos",
+                    tipo: "Muchos a uno (una partida tiene un artículo)", // Implícito
+                    campo_enlace_local: "PAR_SEM", // Campo en partidas que apunta a articulos
+                    campo_enlace_externo: "id", // Campo en articulos
+                    descripcion_inferida: "La tabla 'partidas' se relaciona con 'articulos' para obtener la denominación (AR_DENO) de la semilla/artículo de la partida." // Inferido de la descripción de PTO_FAR
+                }
+            }
+        },
+        procesos: {
+            tabla_relacionada: "procesos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PTO_PRO",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de producción con el proceso productivo realizado."
+        },
+        envases_vta_anterior: { // Relación para el envase anterior
+            tabla_relacionada: "envases_vta",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PTO_OCAR",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de producción con la denominación del tipo de envase anterior a la operación."
+        },
+        envases_vta_nuevo: { // Relación para el envase nuevo
+            tabla_relacionada: "envases_vta",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PTO_NCAR",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de producción con la denominación del tipo de envase nuevo después de la operación."
+        },
+        // Observaciones sobre campos sin relación definida según la descripción:
+        ubicaciones_texto: {
+             campos_texto: ["PTO_INV", "PTO_NINV", "PTO_OSEC"], // Campos que almacenan valores de ubicación como texto
+             relacion_formal_no_definida: true,
+             tablas_relacionadas_esperadas: ["invernaderos", "secciones"],
+             descripcion: "Los campos de invernadero (anterior/nuevo) y sección (anterior/nuevo) almacenan valores de ubicación como texto. Según la descripción, NO tienen relación formal (clave foránea) definida con las tablas maestras 'invernaderos' o 'secciones'."
+        }
+    },
+    ejemplos: {
+        consulta_parte_por_id: "Obtener los detalles de un parte de producción ornamental específico usando su 'id'.",
+        consultar_info_relacionada: "Para un parte, usar PTO_FAR, PTO_PRO, PTO_OCAR y PTO_NCAR para consultar 'partidas' (y 'articulos'), 'procesos' y 'envases_vta' (para ambos envases) y obtener sus nombres/denominaciones.",
+        filtrar_por_partida_o_proceso: "Listar partes de producción asociados a una partida específica (filtrando por PTO_FAR) o que corresponden a un proceso particular (filtrando por PTO_PRO).",
+        filtrar_por_fecha_o_envase: "Buscar partes realizados en una fecha (filtrando por PTO_FEC) o que implicaron un cambio a/desde un tipo de envase específico (filtrando por PTO_OCAR o PTO_NCAR).",
+        filtrar_por_ubicacion_texto: "Buscar partes relacionados con un invernadero o sección específica (requiere filtrar por texto en los campos PTO_INV, PTO_NINV, PTO_OSEC)."
+    }
+},
+
+
     
     /* ======================================================================================================================================================================*/
     /* ALMACEN                                                                                                                                                            */
     /* ======================================================================================================================================================================*/
     
     
+
+    /* ================================================*/
+/* Almacen - General - Telefonos */
+/* ================================================*/
+telefonos: { // Clave principal (basada en el nombre de la sección o prefijo de campo)
+    descripcion: "Catálogo centralizado para el registro y administración de los números de teléfono utilizados por la empresa. Documenta números, extensiones, estado, operadora y otros detalles para gestión interna de comunicaciones.",
+    tabla: "telefonos", // Nombre de tabla inferido (campos con prefijo TLF_)
+    columnas: {
+        id: "Número de teléfono principal (Clave Primaria)", // Nota: el ID es el número de teléfono
+        TLF_DENO: "Denominación o descripción asociada al teléfono.",
+        TLF_EXT: "Número de extensión telefónica, si aplica.",
+        TLF_BAJA: "Indica si el teléfono está dado de baja (1: sí, 0: no).",
+        TLF_OPER: "Operadora o compañía de telecomunicaciones que provee el servicio (Ej: VODAFONE).",
+        TLF_TITE: "Indicador relacionado con el 'título empresa' (1: sí, 0: no). Uso específico no detallado."
+    },
+    relaciones: {
+        observaciones: "La descripción proporcionada no detalla explícitamente relaciones formales (claves foráneas) con otras tablas del sistema. Esta tabla parece funcionar como un catálogo independiente de números de teléfono."
+    },
+    ejemplos: {
+        consulta_telefono_por_numero: "Obtener los detalles de un número de teléfono específico usando su 'id' (el propio número).",
+        listar_telefonos: "Obtener el listado de todos los números de teléfono registrados.",
+        filtrar_por_estado: "Listar teléfonos que están activos (TLF_BAJA = 0) o dados de baja (TLF_BAJA = 1).",
+        filtrar_por_operadora: "Buscar teléfonos provistos por una operadora específica (filtrando por TLF_OPER)."
+    }
+}, 
+
+
+
+
+/* ================================================*/
+/* Almacen - Almacen - Recuento inventario */
+/* ================================================*/
+recuento_inventario: { // Clave principal (basada en el nombre de la sección)
+    descripcion: "Registra los eventos de recuento físico de inventario. Documenta cuándo y dónde se realizó un recuento, quién fue el vendedor/usuario responsable, y las unidades contadas o la diferencia encontrada.", // Descripción sintetizada actualizada
+    tabla: "inventario", // Nombre de tabla original (Nota: Aunque la tabla se llama 'inventario', la descripción se refiere al evento de 'recuento')
+    columnas: {
+        id: "Número de inventario o identificador único del registro de recuento (Clave Primaria)",
+        IN_FEC: "Fecha del recuento.",
+        IN_VEN: "Vendedor o usuario responsable del recuento. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+        IN_ALM: "Almacén donde se realizó el recuento. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        IN_UDS: "Representa Uds/Diferencia (Unidades contadas o la diferencia encontrada)." // Nuevo campo añadido
+    },
+    relaciones: {
+        vendedores: {
+            tabla_relacionada: "vendedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "IN_VEN",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el recuento de inventario con el vendedor o usuario responsable."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "IN_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el recuento de inventario con el almacén donde se realizó."
+        },
+        observaciones: "La descripción proporcionada se centra en los datos de 'cabecera' del recuento (quién, cuándo, dónde) y el total de unidades/diferencia (IN_UDS), pero no detalla cómo se registran los elementos específicos contados por artículo y su cantidad individual, lo cual normalmente requeriría una tabla de detalle relacionada."
+    },
+    ejemplos: {
+        consulta_recuento_por_id: "Obtener los detalles de cabecera de un recuento de inventario específico usando su 'id'.",
+        consultar_info_relacionada: "Para un recuento, usar IN_VEN y IN_ALM para consultar 'vendedores' y 'almacenes' y obtener los nombres del vendedor y almacén.",
+        filtrar_recuentos_por_fecha: "Listar recuentos de inventario realizados en una fecha o rango de fechas específico (filtrando por IN_FEC).",
+        filtrar_recuentos_por_vendedor_o_almacen: "Buscar recuentos realizados por un vendedor (filtrando por IN_VEN) o en un almacén particular (filtrando por IN_ALM).",
+        consultar_unidades_diferencia: "Obtener el valor de unidades contadas o la diferencia (IN_UDS) para un recuento.",
+        filtrar_por_unidades_diferencia: "Buscar recuentos con un valor específico o rango de valores en IN_UDS."
+    }
+},
+
+
+
+
+
+
+/* ================================================*/
+/* Almacen - Almacen - Consumo */
+/* ================================================*/
+consumo: { // Clave principal (basada en el nombre de la sección)
+    descripcion: "Registra eventos de 'consumo', es decir, salidas de inventario por motivos distintos a ventas (uso interno, mermas, etc.). Documenta la salida de inventario por almacén y fecha, con una descripción del responsable y el valor total.",
+    tabla: "[Tabla Consumos]", // Nombre de tabla inferido (campos con prefijo TC_)
+    columnas: {
+        id: "Código identificador único del registro de consumo (Clave Primaria)",
+        TC_FEC: "Fecha en que se registró el consumo.",
+        TC_AMO: "Código del almacén donde se realizó el consumo. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        TC_PDP: "Descripción de quién realizó el consumo (campo de texto descriptivo, no clave foránea a tabla de personal/usuarios según descripción).", // Nota basada en el texto fuente
+        TC_TTT: "Monto total asociado al consumo."
+    },
+    relaciones: {
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "TC_AMO",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el registro de consumo con el almacén donde ocurrió la salida de inventario."
+        },
+        observaciones: "La descripción proporcionada no detalla explícitamente otras relaciones formales (claves foráneas), como una relación para el campo TC_PDP con una tabla de personal o usuarios."
+        // Lógicamente, podría haber una tabla de detalle que registre los artículos específicos consumidos en cada registro de consumo (Ej: con campos como TC_ID, ARTICULO_ID, CANTIDAD), pero esto no se detalla en la descripción.
+    },
+    ejemplos: {
+        consulta_consumo_por_id: "Obtener los detalles de un registro de consumo específico usando su 'id'.",
+        consultar_almacen_consumo: "Para un registro de consumo, usar TC_AMO para consultar la tabla 'almacenes' y obtener el nombre del almacén (AM_DENO).",
+        filtrar_consumos_por_fecha_o_almacen: "Listar consumos registrados en una fecha o rango de fechas específico (filtrando por TC_FEC) o en un almacén particular (filtrando por TC_AMO).",
+        buscar_consumos_por_responsable: "Buscar registros de consumo que contengan cierta descripción en el campo TC_PDP ('quién realizó el consumo').",
+        consultar_valor_total: "Obtener el valor total (TC_TTT) asociado a un registro de consumo."
+    }
+}, 
+
+
+
+/* ================================================*/
+/* Almacen - Varios - Remesas */
+/* ================================================*/
+remesas_art: { // Clave principal (nombre de tabla)
+    descripcion: "Registra envíos o movimientos específicos de artículos del almacén, vinculados a lotes y clientes. Permite documentar salidas de inventario por consumo/envío no estándar y adjuntar observaciones detalladas. Crucial para trazabilidad por lote y documentación de movimientos específicos.",
+    tabla: "remesas_art", // Nombre de tabla principal
+    columnas: {
+        id: "Código identificador único del registro de remesa (Clave Primaria)",
+        REA_AR: "Código del artículo que se remite. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+        REA_LOTE: "Número de lote del artículo remitido.",
+        REA_CCL: "Código del cliente asociado a la remesa. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+        REA_UXE: "Unidades por Envase en la remesa."
+        // Observaciones se almacenan en una tabla separada (remesas_art_rea_obs)
+    },
+    relaciones: {
+        articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "REA_AR",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la remesa con el artículo específico que se remite."
+        },
+        clientes: {
+            tabla_relacionada: "clientes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "REA_CCL",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la remesa con el cliente o destinatario asociado."
+        },
+        remesas_art_rea_obs: {
+            tabla_relacionada: "remesas_art_rea_obs",
+            tipo: "Uno a muchos (una remesa puede tener múltiples observaciones)",
+            campo_enlace_local: "id", // El id del registro en remesas_art
+            campo_enlace_externo: "id", // El campo id en remesas_art_rea_obs que referencia al registro principal
+            descripcion: "Almacena observaciones o comentarios detallados sobre la remesa. Las observaciones completas se reconstruyen concatenando el campo 'C0' de las filas vinculadas por 'id', ordenadas por 'id2'.",
+             estructura_relacionada: { // Estructura de la tabla relacionada
+                 id: "ID de la remesa asociada",
+                 id2: "Identificador secundario/orden de la línea",
+                 C0: "Texto de la observación"
+            }
+        }
+    },
+    ejemplos: {
+        consulta_remesa_por_id: "Obtener los detalles básicos de un registro de remesa usando su 'id'.",
+        consultar_info_relacionada: "Para una remesa, usar REA_AR y REA_CCL para consultar 'articulos' y 'clientes' y obtener los nombres del artículo y cliente.",
+        filtrar_remesas_por_articulo_o_cliente: "Listar remesas para un artículo específico (filtrando por REA_AR) o un cliente particular (filtrando por REA_CCL).",
+        filtrar_remesas_por_lote: "Buscar remesas asociadas a un número de lote específico (filtrando por REA_LOTE).",
+        consultar_observaciones: "Buscar y reconstruir las observaciones detalladas para una remesa específica en la tabla 'remesas_art_rea_obs'."
+    }
+}, 
+
+
+
+/* ================================================*/
+/* Almacén - Varios - Carros */
+/* ================================================*/
+carros: { // Clave principal (basada en el nombre de la sección/entidad)
+    descripcion: "Registra y gestiona 'Carros' (trolleys/racks móviles) utilizados para mover o enviar bandejas/plantas. Rastrea su identificación, estado, cliente asociado y fecha de retirada. Útil para gestión de activos de transporte.",
+    tabla: "carros", // Nombre de tabla inferido (campos con prefijo CA_)
+    columnas: {
+        id: "Código identificador único del registro del carro (Clave Primaria)",
+        CA_IDEN: "Identificación o nombre asignado al carro (Ej: 'CARRO-01').",
+        CA_EST: "Estado actual del carro (Ej: 'R' - disponible, etc.).",
+        CA_CLI: "Código del cliente asociado al carro. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+        CA_FEC: "Fecha de retirada (propósito específico puede variar)."
+    },
+    relaciones: {
+        clientes: {
+            tabla_relacionada: "clientes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "CA_CLI",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el carro con el cliente asociado para seguimiento."
+        }
+        // No se detallan otras relaciones explícitamente en esta descripción.
+    },
+    ejemplos: {
+        consulta_carro_por_id: "Obtener los detalles de un carro específico usando su 'id'.",
+        filtrar_carros_por_estado: "Listar carros que se encuentran en un estado particular (filtrando por CA_EST).",
+        consultar_cliente_carro: "Para un carro, usar CA_CLI para consultar la tabla 'clientes' y obtener el nombre del cliente asociado (CL_DENO).",
+        filtrar_carros_por_cliente: "Buscar carros asociados a un cliente específico (filtrando por CA_CLI).",
+        consultar_fecha_retirada: "Obtener la fecha de retirada (CA_FEC) para un carro."
+    }
+}, 
+
+
+
+/* ================================================*/
+/* Almacén - Varios - Depositos */
+/* ================================================*/
+depositos: { // Clave principal (basada en el nombre de la sección)
+    descripcion: "Registra información sobre 'Depósitos' (monetarios o de mercancía) asociados a encargos de siembra. Documenta el depósito, su fecha, almacén y el encargo de siembra relacionado. Crucial para seguimiento de depósitos vinculados a órdenes de siembra.",
+    tabla: "depositos", // Nombre de tabla inferido (campos con prefijo DE_)
+    columnas: {
+        id: "Código identificador único del registro de depósito (Clave Primaria)",
+        DE_FEC: "Fecha en que se realizó el Depósito.",
+        DE_AM: "Código del almacén asociado al depósito. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        DE_ENG: "Número del Encargo de siembra relacionado. Sugiere una relación con la tabla 'encargos'." // Nota basada en la descripción
+    },
+    relaciones: {
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "DE_AM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el depósito con el almacén asociado."
+        },
+        // Relación potencial inferida:
+        encargos: {
+            tabla_relacionada: "encargos", // Nombre de tabla inferido (basado en la sección "Encargos de siembra")
+            tipo: "Muchos a uno (varios depósitos pueden estar relacionados con el mismo encargo)", // Tipo inferido
+            campo_enlace_local: "DE_ENG", // El campo que contiene el número/id del encargo
+            campo_enlace_externo: "id", // Asumimos 'id' es el campo identificador en la tabla 'encargos'
+            descripcion_inferida: "Sugiere vínculo con la tabla 'encargos', permitiendo asociar el depósito al encargo de siembra correspondiente."
+        }
+    },
+    ejemplos: {
+        consulta_deposito_por_id: "Obtener los detalles de un registro de depósito específico usando su 'id'.",
+        filtrar_depositos_por_fecha: "Listar depósitos realizados en una fecha o rango de fechas específico (filtrando por DE_FEC).",
+        consultar_almacen_deposito: "Para un depósito, usar DE_AM para consultar la tabla 'almacenes' y obtener el nombre del almacén asociado (AM_DENO).",
+        filtrar_depositos_por_almacen: "Buscar depósitos realizados en un almacén particular (filtrando por DE_AM).",
+        filtrar_depositos_por_encargo: "Encontrar depósitos relacionados con un número de encargo específico (filtrando por DE_ENG).",
+        obtener_info_encargo: "Para un depósito, usar DE_ENG para consultar la tabla 'encargos' y obtener detalles del encargo de siembra relacionado (requiere que la relación esté implementada)."
+    }
+},
+
+
+/* ================================================*/
+/* Almacén – Maquinaria - Maquinaria */
+/* ================================================*/
+maquinaria: { // Clave principal (basada en el nombre de la sección)
+    descripcion: "Registra y administra las máquinas y equipos utilizados por la empresa como un inventario detallado. Permite mantener un registro completo de características, adquisición, seguro, operador actual y tipo de maquinaria. Crucial para gestión de activos, mantenimiento, control y asignación.",
+    tabla: "maquinaria", // Nombre de tabla inferido (campos con prefijo MA_)
+    columnas: {
+        id: "Código identificador único de cada máquina o equipo (Clave Primaria)",
+        MA_MOD: "Modelo de la maquinaria (Ej: 'Balanza-2 CABEZAL INV.B COBOS').",
+        MA_TIPO: "Tipo de maquinaria (campo genérico, distinto de MA_TP).",
+        MA_NU: "Información relacionada con el uso de la maquinaria.",
+        MA_AFAB: "Año de Fabricación.",
+        MA_FCOM: "Año de compra.",
+        MA_BAS: "Número de Bastidor.",
+        MA_VSE: "Fecha de vencimiento del seguro.",
+        MA_COM: "Nombre de la compañía de seguro (campo de texto).",
+        MA_TRAB: "Código del trabajador técnico conductor actual. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+        MA_TP: "Código del tipo general de maquinaria. Clave foránea a la tabla 'tipo-maq' para obtener la denominación (TM_DENO)."
+    },
+    relaciones: {
+        tecnicos: {
+            tabla_relacionada: "tecnicos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "MA_TRAB",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la maquinaria con el trabajador técnico que la opera/conduce actualmente."
+        },
+        tipo_maquinaria: { // Usamos un nombre más descriptivo para la relación con tipo-maq
+            tabla_relacionada: "tipo-maq",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "MA_TP",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la maquinaria con su tipo general, definido en la tabla 'tipo-maq'."
+        }
+        // La descripción no detalla explícitamente otras relaciones formales.
+    },
+    ejemplos: {
+        consulta_maquinaria_por_id: "Obtener todos los detalles de una máquina específica usando su 'id'.",
+        consultar_info_relacionada: "Para una máquina, usar MA_TRAB y MA_TP para consultar 'tecnicos' y 'tipo-maq' y obtener el nombre del conductor actual (TN_DENO) y la denominación del tipo de maquinaria (TM_DENO).",
+        filtrar_por_tipo_general: "Listar maquinaria de un tipo general específico usando el campo MA_TP (vinculando con 'tipo-maq' si es necesario filtrar por nombre de tipo).",
+        filtrar_por_conductor_actual: "Buscar maquinaria asignada a un trabajador específico (filtrando por MA_TRAB).",
+        consultar_fechas_clave: "Obtener el año de fabricación (MA_AFAB), año de compra (MA_FCOM) o fecha de vencimiento del seguro (MA_VSE) de una máquina.",
+        buscar_por_modelo_o_bastidor: "Encontrar maquinaria usando su modelo (MA_MOD) o número de bastidor (MA_BAS)."
+    }
+},
+
+
+
+
+/* ================================================*/
+/* Almacén – Maquinaria - Tipo Maquinaria */
+/* ================================================*/
+tipo_maq: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Define y gestiona las categorías o tipos de maquinaria utilizados por la empresa. Funciona como un catálogo maestro para estandarizar la clasificación de equipos y sirve como referencia para otros módulos.",
+    tabla: "tipo-maq", // Nombre de tabla original
+    columnas: {
+        id: "Código identificador único asignado a cada tipo de maquinaria (Clave Primaria)",
+        TM_DENO: "Denominación o nombre descriptivo del tipo de máquina (Ej: 'CAMION')."
+    },
+    relaciones: {
+        // Esta tabla es referenciada por la tabla que registra la maquinaria individual.
+        maquinaria: { // Usamos 'maquinaria' para describir la tabla que referencia
+            tabla_relacionada: "maquinaria", // Nombre inferido de la tabla que contiene los registros individuales de máquinas
+            tipo: "Uno a muchos (un tipo puede aplicarse a muchas máquinas)",
+            campo_enlace_local: "id", // El id en tipo-maq
+            campo_enlace_externo: "MA_TP", // El campo en la tabla 'maquinaria' que referencia a tipo-maq.id
+            descripcion: "Es referenciada por la tabla 'maquinaria' (mediante el campo MA_TP) para clasificar cada máquina individual por su tipo."
+        }
+    },
+    ejemplos: {
+        consulta_tipo_por_id: "Obtener los detalles de un tipo de maquinaria específico usando su 'id'.",
+        consulta_tipo_por_denominacion: "Buscar un tipo de maquinaria por su denominación (TM_DENO).",
+        consultar_maquinas_por_tipo: "Listar todas las máquinas individuales que pertenecen a un tipo específico (requiere consultar la tabla 'maquinaria' filtrando por MA_TP)."
+    }
+}, 
+
+
+
+/* ================================================*/
+/* Almacén – Maquinaria - Reparaciones */
+/* ================================================*/
+reparacion: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra el historial de reparaciones de maquinaria y equipos. Documenta qué máquina se arregló, cuándo, quién (técnico/proveedor), dónde (almacén) y cuánto costó. Fundamental para seguimiento de mantenimiento, costos y rendimiento de equipos.", // Descripción sintetizada
+    tabla: "reparacion", // Nombre de tabla original
+    columnas: {
+        id: "Código único que identifica cada registro de reparación (Clave Primaria)",
+        REP_MAQ: "Código de la máquina que se reparó. Clave foránea a la tabla 'maquinaria' para obtener detalles como el modelo (MA_MOD).",
+        REP_FEC: "Fecha en que se realizó la reparación.",
+        REP_MEC: "Código del mecánico o técnico que realizó el arreglo. Clave foránea a la tabla 'tecnicos' para obtener el nombre (TN_DENO).",
+        REP_SUC: "Código del almacén o sucursal donde se hizo o gestionó el arreglo. Clave foránea a la tabla 'almacenes' para obtener el nombre (AM_DENO).",
+        REP_PRV: "Código del proveedor que hizo el arreglo o vendió las partes. Clave foránea a la tabla 'proveedores' para obtener el nombre (PR_DENO).",
+        REP_NETO: "Costo neto de la reparación.",
+        REP_IMPU: "Impuestos del costo de la reparación.",
+        REP_TTT: "Costo total de la reparación.",
+        REP_BRU: "Costo bruto de la reparación."
+    },
+    relaciones: {
+        maquinaria: {
+            tabla_relacionada: "maquinaria",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "REP_MAQ",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el registro de reparación con la máquina específica que fue reparada."
+        },
+        tecnicos: {
+            tabla_relacionada: "tecnicos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "REP_MEC",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el registro de reparación con el técnico o mecánico que realizó el arreglo."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "REP_SUC",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el registro de reparación con el almacén o sucursal donde se gestionó la reparación."
+        },
+        proveedores: {
+            tabla_relacionada: "proveedores",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "REP_PRV",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el registro de reparación con el proveedor que realizó el arreglo o proveyó las partes."
+        }
+    },
+    ejemplos: {
+        consulta_reparacion_por_id: "Obtener todos los detalles de un registro de reparación específico usando su 'id'.",
+        consultar_info_relacionada: "Para una reparación, usar REP_MAQ, REP_MEC, REP_SUC y REP_PRV para consultar 'maquinaria', 'tecnicos', 'almacenes' y 'proveedores' y obtener detalles (modelo de máquina, nombre de técnico, nombre de almacén, nombre de proveedor).",
+        filtrar_reparaciones_por_maquina_o_fecha: "Listar todas las reparaciones realizadas para una máquina específica (filtrando por REP_MAQ) o en un rango de fechas (filtrando por REP_FEC).",
+        filtrar_reparaciones_por_tecnico_o_proveedor: "Buscar reparaciones realizadas por un técnico específico (filtrando por REP_MEC) o por un proveedor particular (filtrando por REP_PRV).",
+        analizar_costos_reparacion: "Obtener y comparar los costos (REP_BRU, REP_NETO, REP_IMPU, REP_TTT) para una o varias reparaciones."
+    }
+},
+
+
+/* ================================================*/
+/* Almacén – Maquinaria - Partes Gasoil */
+/* ================================================*/
+partes_gas: { // Clave principal (nombre de tabla)
+    descripcion: "Registra y gestiona los 'Partes de Gasoil', documentando la carga o el consumo de combustible asociado a máquinas y vehículos. Permite control detallado de quién carga, en qué máquina, fecha, almacén y tipo de combustible para control de costes y gestión de maquinaria.",
+    tabla: "partes_gas", // Nombre de tabla principal
+    columnas: {
+        id: "Código identificador único del registro de parte de gasoil (Clave Primaria)",
+        PGL_FEC: "Fecha en que se realizó el registro o la carga.",
+        PGL_ALM: "Código del almacén asociado al registro. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO)."
+    },
+    relaciones: {
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PGL_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de gasoil con el almacén donde se realizó la carga o donde se asocia la operación."
+        },
+        partes_gas_pgl_lna: {
+            tabla_relacionada: "partes_gas_pgl_lna",
+            tipo: "Uno a muchos (un parte de gasoil puede tener múltiples líneas de detalle)",
+            campo_enlace_local: "id", // El id del registro en partes_gas
+            campo_enlace_externo: "id", // El campo id en partes_gas_pgl_lna que referencia al registro principal
+            descripcion: "Almacena las líneas de detalle de cada parte de gasoil, conteniendo información específica de la transacción de combustible (máquina, técnico, artículo, cantidades/valores).",
+            estructura_relacionada: { // Estructura de la tabla de detalle
+                id: "ID del parte de gasoil principal asociado",
+                id2: "Identificador secundario/orden de la línea de detalle",
+                C0: "Código de la maquinaria involucrada. Clave foránea a la tabla 'maquinaria'.",
+                C1: "Código del técnico/operario que realizó la carga. Sugiere clave foránea a la tabla 'tecnicos' o 'personal'.", // Nota: Relación inferida en texto
+                C2: "Nombre o denominación del técnico/operario (puede ser redundante si C1 se relaciona con una tabla de técnicos).", // Nota: Interpretación basada en ejemplo/texto
+                C3: "Código del artículo de combustible suministrado. Clave foránea a la tabla 'articulos'.",
+                C4: "Campo numérico adicional (significado no detallado, Ej: '0.00').",
+                C5: "Campo numérico adicional (significado no detallado, Ej: '50.00', posible Cantidad).",
+                C6: "Campo numérico adicional (significado no detallado, Ej: '9950.00', posible Coste o Lectura).",
+                C7: "Campo numérico adicional (significado no detallado, Ej: '0.0')."
+            },
+            relaciones_internas_de_detalle: { // Relaciones que parten de la tabla de detalle
+                 maquinaria: {
+                    tabla_relacionada: "maquinaria",
+                    tipo: "Muchos a uno (varias líneas de detalle pueden referenciar a la misma máquina)",
+                    campo_enlace_local: "C0", // El campo local que contiene el código de la maquinaria
+                    campo_enlace_externo: "id", // El campo referenciado en la tabla maquinaria
+                    descripcion: "Vincula la línea de detalle con la maquinaria involucrada para obtener sus datos (Ej: modelo, matrícula)."
+                 },
+                 tecnicos: {
+                     tabla_relacionada: "tecnicos",
+                     tipo: "Muchos a uno (varias líneas de detalle pueden referenciar al mismo técnico)", // Tipo inferido
+                     campo_enlace_local: "C1", // El campo local que contiene el código del técnico
+                     campo_enlace_externo: "id", // Asumimos 'id' es el campo identificador en la tabla tecnicos
+                     descripcion_inferida: "Sugiere vínculo con la tabla 'tecnicos' para identificar al técnico que realizó la carga (basado en C1)." // Nota: Relación inferida
+                 },
+                 articulos: {
+                     tabla_relacionada: "articulos",
+                     tipo: "Muchos a uno (varias líneas de detalle pueden referenciar al mismo artículo)",
+                     campo_enlace_local: "C3", // El campo local que contiene el código del artículo
+                     campo_enlace_externo: "id", // El campo referenciado en la tabla articulos
+                     descripcion: "Vincula la línea de detalle con el artículo (combustible) suministrado para obtener su denominación (AR_DENO)."
+                 }
+            }
+        }
+        // Se infieren otras relaciones para campos numéricos C4-C7, pero su significado no se detalla.
+    },
+    ejemplos: {
+        consulta_parte_principal_por_id: "Obtener la fecha y almacén de un parte de gasoil usando su 'id'.",
+        consultar_almacen_parte: "Para un parte, usar PGL_ALM para consultar la tabla 'almacenes' y obtener el nombre del almacén (AM_DENO).",
+        consultar_detalles_carga: "Para un parte de gasoil específico (usando su id), consultar la tabla relacionada 'partes_gas_pgl_lna' para ver cada línea de carga (máquina, técnico, artículo, cantidades).",
+        obtener_info_detalle: "Desde una línea de detalle en 'partes_gas_pgl_lna', usar C0, C1 (inferido), C3 para consultar 'maquinaria', 'tecnicos' y 'articulos' y obtener los detalles de la máquina, técnico y artículo.",
+        filtrar_partes_por_fecha_o_almacen: "Listar partes de gasoil por fecha (filtrando por PGL_FEC) o por almacén (filtrando por PGL_ALM).",
+        filtrar_lineas_por_maquina_o_articulo: "Buscar líneas de detalle de carga para una máquina específica (filtrando partes_gas_pgl_lna por C0) o un tipo de combustible (filtrando por C3)."
+    }
+},
+
+
+
+/* ================================================*/
+/* Almacén – Maquinaria - Entregas Material(EPI) */
+/* ================================================*/
+entregas_mat: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra entregas de material (específicamente EPI u otros artículos) desde el almacén al personal/técnicos. Documenta y traza qué se entrega, a quién, cuándo y desde dónde. Crucial para gestión de inventario de EPI, cumplimiento de normativas y control de costes.",
+    tabla: "entregas-mat", // Nombre de tabla principal
+    columnas: {
+        id: "Código identificador único del registro de entrega (Clave Primaria)",
+        EM_FEC: "Fecha en que se realizó la entrega.",
+        EM_PER: "Código de la persona o técnico que recibió el material. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+        EM_TIPO: "Tipo de entrega.",
+        EM_ALM: "Código del almacén desde donde se realizó la entrega. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO)."
+    },
+    relaciones: {
+        tecnicos: {
+            tabla_relacionada: "tecnicos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "EM_PER",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la entrega con la persona o técnico que recibió el material."
+        },
+        almacenes: {
+            tabla_relacionada: "almacenes",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "EM_ALM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la entrega con el almacén desde donde se realizó."
+        },
+        entregas_mat_em_lna: {
+            tabla_relacionada: "entregas-mat_em_lna",
+            tipo: "Uno a muchos (un registro de entrega puede tener múltiples líneas de detalle)",
+            campo_enlace_local: "id", // El id del registro en entregas-mat
+            campo_enlace_externo: "id", // El campo id en entregas-mat_em_lna que referencia al registro principal
+            descripcion: "Almacena las líneas de detalle de cada entrega, especificando los artículos que fueron entregados y posiblemente la cantidad.",
+            estructura_relacionada: { // Estructura de la tabla de detalle
+                id: "ID del registro de entrega principal asociado",
+                id2: "Identificador secundario/orden de la línea de detalle",
+                C0: "Código del artículo que fue entregado. Clave foránea a la tabla 'articulos'.",
+                C1: "Campo adicional asociado al artículo (significado no detallado, Ej: '000').",
+                C2: "Campo adicional asociado al artículo (significado no detallado, Ej: '1', posible Cantidad).", // Posible cantidad entregada
+                C3: "Campo adicional asociado al artículo (significado no detallado, Ej: '')."
+            },
+            relaciones_internas_de_detalle: { // Relaciones que parten de la tabla de detalle
+                 articulos: {
+                    tabla_relacionada: "articulos",
+                    tipo: "Muchos a uno (varias líneas de detalle pueden referenciar al mismo artículo)",
+                    campo_enlace_local: "C0", // El campo local que contiene el código del artículo
+                    campo_enlace_externo: "id", // El campo referenciado en la tabla articulos
+                    descripcion: "Vincula la línea de detalle con el artículo entregado para obtener su denominación (AR_DENO)."
+                 }
+            }
+        }
+    },
+    ejemplos: {
+        consulta_entrega_principal_por_id: "Obtener los detalles de una entrega (fecha, técnico, tipo, almacén) usando su 'id'.",
+        consultar_info_relacionada: "Para una entrega, usar EM_PER y EM_ALM para consultar 'tecnicos' y 'almacenes' y obtener los nombres del técnico y almacén.",
+        consultar_detalles_articulos_entregados: "Para un registro de entrega específico (usando su id), consultar la tabla relacionada 'entregas-mat_em_lna' para ver qué artículos (C0) se entregaron.",
+         obtener_nombre_articulo_entregado: "Desde una línea de detalle en 'entregas_mat_em_lna', usar C0 para consultar la tabla 'articulos' y obtener la denominación del artículo (AR_DENO).",
+        filtrar_entregas_por_tecnico_o_fecha: "Listar entregas realizadas a un técnico específico (filtrando por EM_PER) o en una fecha o rango de fechas (filtrando por EM_FEC).",
+        filtrar_entregas_por_articulo: "Buscar entregas que incluyeron un artículo específico (requiere consultar la tabla de detalle 'entregas-mat_em_lna' filtrando por C0 y unir con 'entregas-mat')."
+    }
+},
+
+
     
     };
     
