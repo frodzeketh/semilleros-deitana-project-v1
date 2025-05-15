@@ -269,7 +269,8 @@ const mapaERP = {
             PR_CIF: "Código de Identificación Fiscal (CIF) del proveedor",
             PR_EMA: "Dirección de correo electrónico del proveedor",
             PR_WEB: "Dirección de la página web del proveedor",
-            PR_DOMEN: "Domicilio o detalles para el envío de facturas"
+            PR_DOMEN: "Domicilio o detalles para el envío de facturas",
+            PR_PAIS: "País de residencia del proveedor"
             // Nota sobre campos vacíos: Si un campo no tiene información, se asume 'No hay información disponible'.
         },
         relaciones: {
