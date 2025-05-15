@@ -3,112 +3,88 @@ const path = require("path");
 const { mapaERP } = require('./mapaERP');
 
 function promptBase(userMessage) {
-  // Construir la descripción de la estructura de la base de datos
   let estructura = Object.entries(mapaERP).map(([tabla, info]) => {
     const columnas = info.columnas || info.campos || {};
     const relaciones = info.relaciones || [];
+    
+    // Obtener el prefijo de los campos automáticamente
+    const camposArray = Object.keys(columnas);
+    const prefijo = camposArray.length > 1 ? camposArray[1].split('_')[0] + '_' : '';
+    
     let camposTexto = Object.entries(columnas)
       .map(([campo, desc]) => `- ${campo}: ${desc}`)
       .join('\n');
+
     let relacionesTexto = Array.isArray(relaciones)
       ? relaciones.map(rel => `- Relación con ${rel.tablaDestino || rel.tabla_relacionada}: (${rel.uso || rel.descripcion || ''})`).join('\n')
       : Object.entries(relaciones)
           .map(([nombre, rel]) => `- Relación con ${rel.tabla_relacionada}: (${rel.descripcion || ''})`)
           .join('\n');
-    
-    const palabrasClaveTexto = info.palabras_clave ? `\nPalabras clave: ${info.palabras_clave.join(', ')}` : '';
-    
+
     return `TABLA: ${tabla}
-Descripción: ${info.descripcion}${palabrasClaveTexto}
-Campos principales:
+PREFIJO_CAMPOS: ${prefijo}
+DESCRIPCIÓN: ${info.descripcion}
+CAMPOS_DISPONIBLES:
 ${camposTexto}
-${relacionesTexto ? `\nRelaciones principales:\n${relacionesTexto}` : ''}`;
-}).join('\n\n');
+${relacionesTexto ? `\nRELACIONES:\n${relacionesTexto}` : ''}
+----------------------------------------`;
+  }).join('\n\n');
 
   const instrucciones = `
 INSTRUCCIONES PARA EL ASISTENTE:
-1. Cuando recibas una consulta:
-   - PRIMERO identifica la tabla correcta basándote en la descripción y nombre de la tabla
-   - USA SIEMPRE el nombre exacto de la tabla encontrada
-   - MANTÉN el contexto de esa sección específica
-   - NUNCA mezcles información de diferentes tablas
 
-2. Uso correcto de campos:
-   - Para cada tabla, usa SOLO los campos definidos en ella
-   - Respeta los prefijos de campos según la tabla:
-     * almacenes -> AM_*
-     * articulos -> AR_*
-     * clientes -> CL_*
-     * dispositivos -> DIS_*
-     * bancos -> BA_*
-     * proveedores -> PR_*
+1. ANÁLISIS DE LA CONSULTA:
+   - Lee la consulta del usuario
+   - Busca palabras clave en las descripciones de las tablas
+   - Identifica la tabla correcta en la ESTRUCTURA DE LA BASE DE DATOS
 
-3. Campos mínimos a incluir por tabla:
-   - almacenes: id, AM_DENO
-   - articulos: id, AR_DENO, AR_REF
-   - clientes: id, CL_DENO, CL_POB
-   - dispositivos: id, DIS_DENO, DIS_MARCA, DIS_MOD
-   - bancos: id, BA_DENO
-   - proveedores: id, PR_DENO
+2. INTERPRETACIÓN DE ESTRUCTURA:
+   Para cada tabla encontrarás:
+   - DESCRIPCIÓN: Explica el propósito y contenido de la tabla
+   - TABLA: Nombre exacto de la tabla en la base de datos
+   - COLUMNAS: Lista de campos disponibles con sus descripciones
+   - RELACIONES: Conexiones con otras tablas para información complementaria
 
-INSTRUCCIONES CRÍTICAS:
-1. NUNCA respondas "No encontré información" o similar
-2. SIEMPRE genera una consulta SQL válida basada en el esquema
-3. Si no hay datos reales, muestra:
-   - La estructura esperada
-   - Un ejemplo hipotético basado en los campos
-   - La consulta SQL que se ejecutaría
-
-REGLAS PARA RESPUESTAS:
-1. Para consultas generales (ej: "muéstrame tres almacenes"):
-   - Si hay datos: muestra los registros con sus campos principales
-   - Si no hay datos: muestra la estructura con ejemplo formativo
+3. GENERACIÓN DE CONSULTAS SQL:
+   Sigue este proceso:
+   a) Usa el nombre exacto de la TABLA
+   b) Selecciona campos de COLUMNAS según el contexto
+   c) Si hay RELACIONES relevantes, úsalas con LEFT JOIN
    
-2. Formato de respuesta SQL:
-\`\`\`sql
--- Para almacenes
-SELECT id, AM_DENO, AM_CAJA, AM_BCO FROM almacenes LIMIT 3;
+   Ejemplo de estructura:
+   \`\`\`sql
+   -- Consulta básica
+   SELECT id, [CAMPOS_PRINCIPALES]
+   FROM [NOMBRE_TABLA]
+   LIMIT 3;
 
--- Para artículos
-SELECT id, AR_DENO, AR_REF FROM articulos LIMIT 3;
+   -- Consulta con relaciones
+   SELECT t.id, t.[CAMPOS_PRINCIPALES], r.[CAMPOS_RELACIONADOS]
+   FROM [NOMBRE_TABLA] t
+   LEFT JOIN [TABLA_RELACIONADA] r ON t.[CAMPO_LOCAL] = r.[CAMPO_EXTERNO]
+   LIMIT 3;
+   \`\`\`
 
--- Para dispositivos
-SELECT id, DIS_DENO, DIS_MARCA, DIS_MOD FROM dispositivos LIMIT 3;
-\`\`\`
+4. REGLAS IMPORTANTES:
+   - SIEMPRE usa los campos exactos definidos en COLUMNAS
+   - NUNCA inventes campos
+   - Si hay RELACIONES, úsalas para enriquecer la información
+   - Respeta el prefijo de campos de cada tabla
 
-3. Para consultas específicas:
-   - Si no hay coincidencias: muestra campos relevantes
-   - Sugiere alternativas usando los campos disponibles
+5. FORMATO DE RESPUESTA:
+   - Muestra la consulta SQL generada
+   - Explica los resultados encontrados
+   - Si hay relaciones relevantes, inclúyelas en la explicación
 
-ESTRUCTURA DE RESPUESTA:
-1. Consulta SQL (obligatoria)
-2. Explicación:
-   - Si hay datos: resumen estructurado de lo encontrado
-   - Si no hay datos: estructura + ejemplo formativo
-3. Sugerencias si aplica
-
-EJEMPLOS DE INTERACCIÓN:
-Usuario: "muéstrame tres almacenes"
-\`\`\`sql
-SELECT id, AM_DENO, AM_CAJA, AM_BCO 
-FROM almacenes 
-LIMIT 3;
-\`\`\`
-"Encontrados los siguientes almacenes: [Lista con AM_DENO]"
-
-Usuario: "muéstrame dispositivos"
-\`\`\`sql
-SELECT id, DIS_DENO, DIS_MARCA, DIS_MOD 
-FROM dispositivos 
-LIMIT 3;
-\`\`\`
-"Encontrados los siguientes dispositivos: [Lista con DIS_DENO, DIS_MARCA, DIS_MOD]"
-`;
-
+Ejemplo de análisis:
+Si la consulta es "muestra tareas del personal":
+1. Buscar en DESCRIPCIONES -> encontrar tabla "tareas_per"
+2. Leer COLUMNAS -> usar campos como TARP_DENO, TARP_TIPO
+3. Ver RELACIONES -> si hay tabla relacionada como "tareas_seccion"
+4. Generar consulta usando esta información`;
   const system = `${instrucciones}\n\nESTRUCTURA DE LA BASE DE DATOS:\n${estructura}`;
   const user = userMessage;
 
   return { system, user };
 }
-
 module.exports = { promptBase };
