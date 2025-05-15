@@ -113,6 +113,15 @@ async function generarRespuestaConversacional(mensaje) {
   return await getOpenAIResponse([{ role: "system", content: prompt }]);
 }
 
+
+
+
+
+
+
+
+
+
 async function processMessage(userMessage) {
   try {
     // Primero verificar si es un saludo o pregunta general
@@ -130,6 +139,7 @@ async function processMessage(userMessage) {
       };
     }
 
+  
     // Paso 1: IA genera la consulta SQL
     const { system } = promptBase(userMessage);
     const messages = [
