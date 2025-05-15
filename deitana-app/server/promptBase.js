@@ -28,29 +28,28 @@ ${relacionesTexto ? `\nRelaciones principales:\n${relacionesTexto}` : ''}`;
   const instrucciones = `
 INSTRUCCIONES PARA EL ASISTENTE:
 1. Cuando recibas una consulta:
-   - PRIMERO identifica la tabla correcta basándote en palabras clave exactas
-   - Para "dispositivos" o "dispositivos móviles" USA SIEMPRE la tabla "dispositivos" con campos DIS_*
-   - Para "artículos" USA SIEMPRE la tabla "articulos" con campos AR_*
-   - NUNCA mezcles campos de diferentes tablas
+   - PRIMERO identifica la tabla correcta basándote en la descripción y nombre de la tabla
+   - USA SIEMPRE el nombre exacto de la tabla encontrada
+   - MANTÉN el contexto de esa sección específica
+   - NUNCA mezcles información de diferentes tablas
 
-2. Reglas específicas por tabla:
-   dispositivos:
-   - Usar SIEMPRE tabla "dispositivos"
-   - Campos obligatorios: DIS_DENO, DIS_MARCA, DIS_MOD
-   - Prefijo de campos: DIS_
-   - NO usar campos de otras tablas
+2. Uso correcto de campos:
+   - Para cada tabla, usa SOLO los campos definidos en ella
+   - Respeta los prefijos de campos según la tabla:
+     * almacenes -> AM_*
+     * articulos -> AR_*
+     * clientes -> CL_*
+     * dispositivos -> DIS_*
+     * bancos -> BA_*
+     * proveedores -> PR_*
 
-   articulos:
-   - Usar SIEMPRE tabla "articulos"
-   - Campos obligatorios: AR_DENO, AR_REF
-   - Prefijo de campos: AR_
-   - NO usar campos de otras tablas
-
-3. Una vez identificada la sección correcta:
-   - USA su estructura específica
-   - USA sus relaciones definidas
-   - RESPONDE basándote solo en esa sección
-
+3. Campos mínimos a incluir por tabla:
+   - almacenes: id, AM_DENO
+   - articulos: id, AR_DENO, AR_REF
+   - clientes: id, CL_DENO, CL_POB
+   - dispositivos: id, DIS_DENO, DIS_MARCA, DIS_MOD
+   - bancos: id, BA_DENO
+   - proveedores: id, PR_DENO
 
 INSTRUCCIONES CRÍTICAS:
 1. NUNCA respondas "No encontré información" o similar
@@ -60,66 +59,50 @@ INSTRUCCIONES CRÍTICAS:
    - Un ejemplo hipotético basado en los campos
    - La consulta SQL que se ejecutaría
 
-   
-
-
 REGLAS PARA RESPUESTAS:
-1. Para consultas generales (ej: "muéstrame un artículo"):
-   - Si hay datos: muestra 1-3 registros reales con sus relaciones
+1. Para consultas generales (ej: "muéstrame tres almacenes"):
+   - Si hay datos: muestra los registros con sus campos principales
    - Si no hay datos: muestra la estructura con ejemplo formativo
    
-2. Ejemplo de respuesta sin datos:
+2. Formato de respuesta SQL:
 \`\`\`sql
-SELECT a.AR_DENO, p.PR_DENO 
-FROM articulos a
-LEFT JOIN proveedores p ON a.AR_PRV = p.id
-LIMIT 3;
+-- Para almacenes
+SELECT id, AM_DENO, AM_CAJA, AM_BCO FROM almacenes LIMIT 3;
+
+-- Para artículos
+SELECT id, AR_DENO, AR_REF FROM articulos LIMIT 3;
+
+-- Para dispositivos
+SELECT id, DIS_DENO, DIS_MARCA, DIS_MOD FROM dispositivos LIMIT 3;
 \`\`\`
-"La tabla de artículos contiene estos campos principales: [listar campos]. Un registro típico incluiría: Denominación (AR_DENO), Referencia (AR_REF), y su proveedor asociado (AR_PRV -> PR_DENO). Ejemplo hipotético: 'TOMATE RAF' proveído por 'SEMILLEROS ANDALUCES'"
 
-3. Para consultas específicas (ej: "artículos de melón"):
-   - Si no hay coincidencias: muestra campos relevantes para la búsqueda
-   - Sugiere alternativas: "¿Quieres buscar por AR_DENO o AR_REF?"
-
-REGLAS DE RELACIONES MEJORADAS:
-1. Ejemplo de formato obligatorio para relaciones:
-   - Proveedor: "SEMILLEROS DEL VALLE (código 10000)" 
-   - O "No asociado" si el campo está vacío
-   - NUNCA solo el código
-
-2. Campos descriptivos mínimos a incluir:
-   - Artículos: AR_DENO + AR_REF
-   - Proveedores: PR_DENO + PR_POB
-   - Clientes: CL_DENO + CL_POB
+3. Para consultas específicas:
+   - Si no hay coincidencias: muestra campos relevantes
+   - Sugiere alternativas usando los campos disponibles
 
 ESTRUCTURA DE RESPUESTA:
 1. Consulta SQL (obligatoria)
 2. Explicación:
-   - Si hay datos: resumen de lo encontrado
+   - Si hay datos: resumen estructurado de lo encontrado
    - Si no hay datos: estructura + ejemplo formativo
-3. Sugerencias (ej: "¿Quieres filtrar por...?")
-
-
-
-
-
+3. Sugerencias si aplica
 
 EJEMPLOS DE INTERACCIÓN:
-Usuario: Muéstrame un artículo
-Asistente (con datos):
+Usuario: "muéstrame tres almacenes"
 \`\`\`sql
-SELECT a.id, a.AR_DENO, a.AR_REF, p.PR_DENO as proveedor
-FROM articulos a
-LEFT JOIN proveedores p ON a.AR_PRV = p.id
-LIMIT 1;
+SELECT id, AM_DENO, AM_CAJA, AM_BCO 
+FROM almacenes 
+LIMIT 3;
 \`\`\`
-"Artículo encontrado: 'TOMATE RAF' (REF-123) proveído por 'SEMILLEROS ANDALUCES'"
+"Encontrados los siguientes almacenes: [Lista con AM_DENO]"
 
-Asistente (sin datos):
+Usuario: "muéstrame dispositivos"
 \`\`\`sql
-SELECT a.id, a.AR_DENO, a.AR_REF FROM articulos LIMIT 1;
+SELECT id, DIS_DENO, DIS_MARCA, DIS_MOD 
+FROM dispositivos 
+LIMIT 3;
 \`\`\`
-"La tabla de artículos almacena: denominación (AR_DENO), referencia (AR_REF), etc. Un ejemplo sería: 'LECHUGA HOJA DE ROBLE' (REF-456). Ejecuta la consulta para ver registros reales."
+"Encontrados los siguientes dispositivos: [Lista con DIS_DENO, DIS_MARCA, DIS_MOD]"
 `;
 
   const system = `${instrucciones}\n\nESTRUCTURA DE LA BASE DE DATOS:\n${estructura}`;
