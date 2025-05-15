@@ -400,6 +400,7 @@ const mapaERP = {
     
     
     
+    
     /* ================================================*/
     /* Archivos – Auxiliares – Créditos caución */
     /* ================================================*/
@@ -1370,7 +1371,8 @@ p_inj_tomate: { // Clave principal
 /* ================================================*/
 encargos: { // Clave principal (nombre de tabla)
     descripcion: "Registra y administra los 'encargos de siembra' de clientes, documentando sus órdenes para sembrar semillas/artículos. Esencial para planificación de producción según demanda, gestión de ventas, facturación y seguimiento comercial.",
-    tabla: "encargos", // Nombre de tabla original
+    tabla: "encargos",
+    alias: ["encargos de siembra", "orden de siembra", "pedido de siembra", "orden de cliente para sembrar"], // Nombre de tabla original
     columnas: {
         id: "Número único que identifica cada encargo de siembra (Clave Primaria)",
         ENG_CCL: "Código del cliente que realizó el encargo. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",

@@ -7,84 +7,85 @@ function promptBase(userMessage) {
     const columnas = info.columnas || info.campos || {};
     const relaciones = info.relaciones || [];
     
-    // Obtener el prefijo de los campos automáticamente
-    const camposArray = Object.keys(columnas);
-    const prefijo = camposArray.length > 1 ? camposArray[1].split('_')[0] + '_' : '';
-    
     let camposTexto = Object.entries(columnas)
       .map(([campo, desc]) => `- ${campo}: ${desc}`)
       .join('\n');
 
-    let relacionesTexto = Array.isArray(relaciones)
-      ? relaciones.map(rel => `- Relación con ${rel.tablaDestino || rel.tabla_relacionada}: (${rel.uso || rel.descripcion || ''})`).join('\n')
-      : Object.entries(relaciones)
-          .map(([nombre, rel]) => `- Relación con ${rel.tabla_relacionada}: (${rel.descripcion || ''})`)
+    let relacionesTexto = '';
+    if (typeof relaciones === 'object') {
+      if (Array.isArray(relaciones)) {
+        relacionesTexto = relaciones.map(rel => 
+          `- Relación con ${rel.tablaDestino || rel.tabla_relacionada}`
+        ).join('\n');
+      } else {
+        relacionesTexto = Object.entries(relaciones)
+          .map(([nombre, rel]) => {
+            if (rel.tabla_relacionada && rel.campo_enlace_local && rel.campo_enlace_externo) {
+              return `- Relación con ${rel.tabla_relacionada}: ${rel.campo_enlace_local} -> ${rel.campo_enlace_externo}`;
+            }
+            return '';
+          })
+          .filter(text => text !== '')
           .join('\n');
+      }
+    }
 
-    return `TABLA: ${tabla}
-PREFIJO_CAMPOS: ${prefijo}
+    return `TABLA: ${info.tabla || tabla}
 DESCRIPCIÓN: ${info.descripcion}
-CAMPOS_DISPONIBLES:
+CAMPOS:
 ${camposTexto}
-${relacionesTexto ? `\nRELACIONES:\n${relacionesTexto}` : ''}
-----------------------------------------`;
+${relacionesTexto ? `\nRELACIONES:\n${relacionesTexto}` : ''}`;
   }).join('\n\n');
 
   const instrucciones = `
-INSTRUCCIONES PARA EL ASISTENTE:
+ERES UN GENERADOR DE CONSULTAS SQL. TU ÚNICA TAREA ES GENERAR CONSULTAS SQL.
 
-1. ANÁLISIS DE LA CONSULTA:
-   - Lee la consulta del usuario
-   - Busca palabras clave en las descripciones de las tablas
-   - Identifica la tabla correcta en la ESTRUCTURA DE LA BASE DE DATOS
+REGLAS OBLIGATORIAS:
+1. SIEMPRE genera una consulta SQL
+2. NUNCA respondas con texto explicativo
+3. NUNCA pidas más información
+4. Usa EXACTAMENTE los nombres de tablas y campos definidos
+5. Incluye las relaciones definidas cuando sea necesario
 
-2. INTERPRETACIÓN DE ESTRUCTURA:
-   Para cada tabla encontrarás:
-   - DESCRIPCIÓN: Explica el propósito y contenido de la tabla
-   - TABLA: Nombre exacto de la tabla en la base de datos
-   - COLUMNAS: Lista de campos disponibles con sus descripciones
-   - RELACIONES: Conexiones con otras tablas para información complementaria
+FORMATO DE RESPUESTA:
+\`\`\`sql
+SELECT [campos]
+FROM [tabla]
+[joins]
+[where]
+LIMIT 5;
+\`\`\`
 
-3. GENERACIÓN DE CONSULTAS SQL:
-   Sigue este proceso:
-   a) Usa el nombre exacto de la TABLA
-   b) Selecciona campos de COLUMNAS según el contexto
-   c) Si hay RELACIONES relevantes, úsalas con LEFT JOIN
-   
-   Ejemplo de estructura:
-   \`\`\`sql
-   -- Consulta básica
-   SELECT id, [CAMPOS_PRINCIPALES]
-   FROM [NOMBRE_TABLA]
-   LIMIT 3;
+EJEMPLOS DE CONSULTAS CORRECTAS:
 
-   -- Consulta con relaciones
-   SELECT t.id, t.[CAMPOS_PRINCIPALES], r.[CAMPOS_RELACIONADOS]
-   FROM [NOMBRE_TABLA] t
-   LEFT JOIN [TABLA_RELACIONADA] r ON t.[CAMPO_LOCAL] = r.[CAMPO_EXTERNO]
-   LIMIT 3;
-   \`\`\`
+Para créditos caución:
+\`\`\`sql
+SELECT 
+    c.id, c.CAU_CCL, c.CAU_DIAS, c.CAU_TIPO,
+    cl.CL_DENO as Nombre_Cliente
+FROM creditocau c
+LEFT JOIN clientes cl ON c.CAU_CCL = cl.id
+LIMIT 5;
+\`\`\`
 
-4. REGLAS IMPORTANTES:
-   - SIEMPRE usa los campos exactos definidos en COLUMNAS
-   - NUNCA inventes campos
-   - Si hay RELACIONES, úsalas para enriquecer la información
-   - Respeta el prefijo de campos de cada tabla
+Para clientes:
+\`\`\`sql
+SELECT 
+    c.id, c.CL_DENO, c.CL_DOMI, c.CL_POBL
+FROM clientes c
+LIMIT 5;
+\`\`\`
 
-5. FORMATO DE RESPUESTA:
-   - Muestra la consulta SQL generada
-   - Explica los resultados encontrados
-   - Si hay relaciones relevantes, inclúyelas en la explicación
+IMPORTANTE:
+- SOLO genera la consulta SQL
+- NO incluyas explicaciones
+- NO pidas más información
+- Usa los nombres EXACTOS de las tablas y campos`;
 
-Ejemplo de análisis:
-Si la consulta es "muestra tareas del personal":
-1. Buscar en DESCRIPCIONES -> encontrar tabla "tareas_per"
-2. Leer COLUMNAS -> usar campos como TARP_DENO, TARP_TIPO
-3. Ver RELACIONES -> si hay tabla relacionada como "tareas_seccion"
-4. Generar consulta usando esta información`;
   const system = `${instrucciones}\n\nESTRUCTURA DE LA BASE DE DATOS:\n${estructura}`;
   const user = userMessage;
 
   return { system, user };
 }
+
 module.exports = { promptBase };

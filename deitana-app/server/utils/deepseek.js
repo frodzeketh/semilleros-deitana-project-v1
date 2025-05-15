@@ -30,15 +30,31 @@ async function getOpenAIResponse(messages) {
       throw new Error('API key no configurada');
     }
 
-    // Dividir el prompt si es muy grande
-    const systemContent = messages[0]?.content || '';
-    if (systemContent.length > 12000) {
-      // Primera llamada: Generar la consulta SQL
-      const firstHalf = systemContent.substring(0, 12000);
+    // Verificar que messages sea un array y tenga al menos un elemento
+    if (!Array.isArray(messages) || messages.length === 0) {
+      throw new Error('Messages debe ser un array no vacío');
+    }
+
+    // Verificar que el primer mensaje tenga contenido
+    const systemMessage = messages[0];
+    if (!systemMessage || !systemMessage.content) {
+      throw new Error('El mensaje del sistema no puede ser null o vacío');
+    }
+
+    const systemContent = systemMessage.content;
+    
+    // Si el contenido es muy grande, dividirlo en partes
+    if (systemContent.length > 8000) {
+      // Dividir el contenido en dos partes aproximadamente iguales
+      const mitad = Math.floor(systemContent.length / 2);
+      const primeraParte = systemContent.substring(0, mitad);
+      const segundaParte = systemContent.substring(mitad);
+
+      // Primera llamada con la primera parte
       const response1 = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: firstHalf },
+          { role: "system", content: primeraParte },
           { role: "user", content: messages[messages.length - 1].content }
         ],
         temperature: 0.7,
@@ -51,12 +67,11 @@ async function getOpenAIResponse(messages) {
         return firstResponse;
       }
 
-      // Segunda llamada: Con el resto del contexto
-      const secondHalf = systemContent.substring(12000);
+      // Segunda llamada con la segunda parte
       const response2 = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: secondHalf },
+          { role: "system", content: segundaParte },
           { role: "user", content: messages[messages.length - 1].content }
         ],
         temperature: 0.7,
@@ -66,25 +81,18 @@ async function getOpenAIResponse(messages) {
       return response2.choices[0].message.content;
     }
 
-    // Si el prompt no es muy grande, hacer una sola llamada
+    // Si el contenido no es muy grande, hacer una sola llamada
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages,
       temperature: 0.7,
-      max_tokens: 1000,
-      top_p: 0.9,
-      frequency_penalty: 0.5,
-      presence_penalty: 0.5
+      max_tokens: 1000
     });
-
-    if (!response.choices || !response.choices[0]) {
-      throw new Error('Respuesta inválida de la API');
-    }
 
     return response.choices[0].message.content.trim();
   } catch (error) {
     console.error('Error en getOpenAIResponse:', error);
-    return null;
+    throw error;
   }
 }
 
@@ -113,19 +121,13 @@ async function generarRespuestaConversacional(mensaje) {
   return await getOpenAIResponse([{ role: "system", content: prompt }]);
 }
 
-
-
-
-
-
-
-
-
-
 async function processMessage(userMessage) {
   try {
+    console.log('Procesando mensaje:', userMessage);
+
     // Primero verificar si es un saludo o pregunta general
     if (esSaludo(userMessage) || esPreguntaGeneral(userMessage)) {
+      console.log('Mensaje identificado como saludo o pregunta general');
       const respuestaConversacional = await generarRespuestaConversacional(userMessage);
       
       assistantContext.conversationHistory.push(
@@ -139,15 +141,17 @@ async function processMessage(userMessage) {
       };
     }
 
-  
     // Paso 1: IA genera la consulta SQL
+    console.log('Generando consulta SQL...');
     const { system } = promptBase(userMessage);
     const messages = [
       { role: "system", content: system },
       ...assistantContext.conversationHistory.slice(-3),
       { role: "user", content: userMessage }
     ];
+    
     const respuestaIA = await getOpenAIResponse(messages);
+    console.log('Respuesta de IA recibida:', respuestaIA);
 
     if (!respuestaIA) {
       throw new Error('No se recibió respuesta de OpenAI');
@@ -157,22 +161,53 @@ async function processMessage(userMessage) {
     const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
     if (sqlMatch) {
       const sql = sqlMatch[1] || sqlMatch[0];
+      console.log('Consulta SQL generada:', sql);
+
       try {
+        console.log('Ejecutando consulta SQL...');
         const [rows] = await db.query(sql);
+        console.log('Resultados de la consulta:', rows);
 
         const datosReales = rows.length === 0
           ? "No se encontraron resultados en la base de datos."
           : JSON.stringify(rows, null, 2);
 
         const promptAnalisis = `
-El usuario preguntó: ${userMessage}
-El resultado real de la base de datos es:
-${datosReales}
-Por favor, analiza estos datos y responde en lenguaje natural, explicando el resultado y sugiriendo acciones si corresponde.
+        Usuario preguntó: ${userMessage}
+        Datos reales de la base de datos:
+        ${datosReales}
+        
+        Para todas las listas de datos:
+        
+        - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato, por ejemplo:  
+          Para artículos: "Claro, aquí tienes [número] productos que solicitaste:"  
+          Para clientes: "Claro, aquí tienes [número] clientes que solicitaste:"  
+        
+        - Usa negrita SOLO para el nombre o etiqueta principal del elemento, por ejemplo:  
+          **Artículo 1:**, **Cliente 1:**, etc.
+        
+        - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas, sin saltos de línea entre campos.
+        
+        - No agregues líneas vacías entre elementos.
+        
+        - No repitas información ni uses formatos diferentes para el mismo tipo.
+        
+        Ejemplo para clientes:  
+        **Cliente 1:** Nombre, Domicilio, Población, Provincia  
+        **Cliente 2:** Nombre, Domicilio, Población, Provincia
+        
+        Ejemplo para artículos:  
+        **Artículo 1:** Denominación  
+        **Artículo 2:** Denominación
+
+        - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta, si aplica.
         `;
+
+        console.log('Generando análisis de respuesta...');
         const analisis = await getOpenAIResponse([
           { role: "system", content: promptAnalisis }
         ]);
+        console.log('Análisis generado:', analisis);
 
         assistantContext.conversationHistory.push(
           { role: "user", content: userMessage },
@@ -184,22 +219,27 @@ Por favor, analiza estos datos y responde en lenguaje natural, explicando el res
           context: assistantContext
         };
       } catch (sqlError) {
-        console.error('Error ejecutando SQL:', sqlError);
+        console.error('Error detallado en SQL:', {
+          error: sqlError,
+          sql: sql,
+          mensaje: userMessage
+        });
         return {
-          message: 'La consulta generada no pudo ejecutarse en la base de datos. Por favor, intenta con otra pregunta.',
+          message: `Error en la consulta: ${sqlError.message}. Por favor, intenta reformular tu pregunta.`,
           context: assistantContext
         };
       }
     } else {
+      console.log('No se encontró consulta SQL en la respuesta:', respuestaIA);
       return {
-        message: "No he encontrado información real en la base de datos para tu consulta. ¿Quieres intentar con otra pregunta?",
+        message: "No pude generar una consulta válida para tu pregunta. Por favor, intenta reformularla.",
         context: assistantContext
       };
     }
   } catch (error) {
-    console.error('Error en processMessage:', error);
+    console.error('Error completo en processMessage:', error);
     return {
-      message: 'Hubo un problema al obtener respuesta.',
+      message: 'Hubo un problema al procesar tu consulta. Por favor, intenta de nuevo.',
       context: assistantContext
     };
   }
