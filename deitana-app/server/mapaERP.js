@@ -679,7 +679,7 @@ const mapaERP = {
             TTR_ENS: "Campo auxiliar (Información incierta, puede estar vacío)", // Nota sobre validación/significado
             TTR_ECO: "Indica si es ecológico ('S'/'N')",
             TTR_BIO: "Indica si es de origen biológico ('S'/'N')",
-            TTR_ESPE: "Especies vegetales autorizadas o recomendadas (Ej: CALABACÍN - MELÓN)",
+            TTR_ESP: "Especies vegetales autorizadas o recomendadas (Ej: CALABACÍN - MELÓN)",
             TTR_AGN: "Agentes nocivos que combate (Ej: FITOPHTHORA - PITIUM)",
             TTR_INT: "Enlace web (ficha técnica, registro, etc.)",
             TTR_REG: "Número de registro oficial",
@@ -1142,7 +1142,6 @@ p_medias_band: { // Clave principal (basada en el nombre de tabla)
         PMB_HUE: "Número de Huecos registrados.",
         PMB_ETIQ: "Etiqueta asociada.",
         PMB_PLAN: "Cantidad de Plantas registradas.",
-        PMB_BAND: "Cantidad de Bandejas registradas.",
         PMB_FEC: "Fecha del registro.",
         PMB_HORA: "Hora del registro.",
         PMB_CDOP: "Código del Operario responsable. Sugiere relación con tabla de operarios/vendedores/técnicos."
