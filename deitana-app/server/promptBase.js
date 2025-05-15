@@ -137,7 +137,7 @@ INSTRUCCIONES CRÍTICAS PARA IDENTIFICACIÓN DE TABLAS POR DESCRIPCIÓN:
 - Si la tabla tiene guiones (-) en su nombre, SIEMPRE encierra el nombre entre backticks (\` \` ) en la consulta SQL.
   Ejemplo: SELECT * FROM \`p-siembras\` WHERE ...
 
-- RECUERDA: No uses nombres descriptivos en las consultas SQL, usa SIEMPRE el nombre técnico de la tabla.
+- RECUERDA: No uses nombres descriptivos en las consultas SQL, usa SIEMPRE el nombre técnico de la tabla..
 
 
 
