@@ -480,8 +480,7 @@ const mapaERP = {
     /* Archivos – Auxiliares – Dispositivos móviles */
     /* ================================================*/
     dispositivos: {
-        descripcion: "Gestión centralizada de dispositivos móviles (PDAs u otros terminales portátiles) utilizados en Semilleros Deitana. Mantiene un registro detallado con datos técnicos y administrativos para control y seguimiento.",
-        tabla: "dispositivos",
+        descripcion: "Gestión centralizada de dispositivos móviles (PDAs u otros terminales portátiles) utilizados en Semilleros Deitana...",
         columnas: {
             id: "Código único del dispositivo móvil (Clave Primaria)",
             DIS_DENO: "Denominación o nombre descriptivo del dispositivo",
@@ -493,15 +492,15 @@ const mapaERP = {
             DIS_KEY: "Clave o identificador de seguridad",
             DIS_BAJA: "Estado operativo (0: Activo, 1: Dado de baja)"
         },
-        relaciones: [
+        relaciones: 
             {
-            tablaDestino: "dispositivos_dis_obs",
-                    campoOrigen: "id",
-                    campoDestino: "id",
-                    tipo: "uno-a-muchos",
-                    uso: "Para obtener las observaciones asociadas a los dispositivos"
+                tablaDestino: "dispositivos_dis_obs",
+                campoOrigen: "id",
+                campoDestino: "id",
+                tipo: "uno-a-muchos",
+                uso: "Para obtener las observaciones asociadas a los dispositivos"
             }
-        ],
+        ,
         ejemplos: {
             consulta_basica: "Obtener información principal de un dispositivo directamente de la tabla 'dispositivos' usando su 'id'.",
             consulta_observaciones: "Para ver las observaciones de un dispositivo, consultar 'dispositivos_dis_obs' usando el 'id' del dispositivo. Concatenar 'C0' de las filas resultantes. Nota: No todos los dispositivos pueden tener observaciones.",
@@ -943,7 +942,7 @@ const mapaERP = {
 /* Producción - Partes – Partes de Siembra */
 /* ================================================*/
 p_siembras: { // Clave principal (nombre de tabla)
-    descripcion: "Registra operaciones de siembra documentando cuándo,partes de siembra, quién, qué semilla, dónde se sembró (almacén), lote y resultados globales (bandejas/palet, total bandejas). Fundamental para documentar el proceso, vincular insumos/personal/ubicación y controlar la producción desde el inicio.",
+    descripcion: "Parte de siembra. Registra operaciones de siembra documentando cuándo,partes de siembra, quién, qué semilla, dónde se sembró (almacén), lote y resultados globales (bandejas/palet, total bandejas). Fundamental para documentar el proceso, vincular insumos/personal/ubicación y controlar la producción desde el inicio.",
     tabla: `p-siembras`, // Nombre de tabla principal
     columnas: {
         id: "Número identificador único del parte de siembra (Clave Primaria)",

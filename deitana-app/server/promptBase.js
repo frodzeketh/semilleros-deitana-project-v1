@@ -15,14 +15,43 @@ function promptBase(userMessage) {
       : Object.entries(relaciones)
           .map(([nombre, rel]) => `- Relación con ${rel.tabla_relacionada}: (${rel.descripcion || ''})`)
           .join('\n');
+    
+    const palabrasClaveTexto = info.palabras_clave ? `\nPalabras clave: ${info.palabras_clave.join(', ')}` : '';
+    
     return `TABLA: ${tabla}
-Descripción: ${info.descripcion}
+Descripción: ${info.descripcion}${palabrasClaveTexto}
 Campos principales:
 ${camposTexto}
 ${relacionesTexto ? `\nRelaciones principales:\n${relacionesTexto}` : ''}`;
-  }).join('\n\n');
+}).join('\n\n');
 
   const instrucciones = `
+INSTRUCCIONES PARA EL ASISTENTE:
+1. Cuando recibas una consulta:
+   - PRIMERO identifica la tabla correcta basándote en palabras clave exactas
+   - Para "dispositivos" o "dispositivos móviles" USA SIEMPRE la tabla "dispositivos" con campos DIS_*
+   - Para "artículos" USA SIEMPRE la tabla "articulos" con campos AR_*
+   - NUNCA mezcles campos de diferentes tablas
+
+2. Reglas específicas por tabla:
+   dispositivos:
+   - Usar SIEMPRE tabla "dispositivos"
+   - Campos obligatorios: DIS_DENO, DIS_MARCA, DIS_MOD
+   - Prefijo de campos: DIS_
+   - NO usar campos de otras tablas
+
+   articulos:
+   - Usar SIEMPRE tabla "articulos"
+   - Campos obligatorios: AR_DENO, AR_REF
+   - Prefijo de campos: AR_
+   - NO usar campos de otras tablas
+
+3. Una vez identificada la sección correcta:
+   - USA su estructura específica
+   - USA sus relaciones definidas
+   - RESPONDE basándote solo en esa sección
+
+
 INSTRUCCIONES CRÍTICAS:
 1. NUNCA respondas "No encontré información" o similar
 2. SIEMPRE genera una consulta SQL válida basada en el esquema
@@ -30,6 +59,9 @@ INSTRUCCIONES CRÍTICAS:
    - La estructura esperada
    - Un ejemplo hipotético basado en los campos
    - La consulta SQL que se ejecutaría
+
+   
+
 
 REGLAS PARA RESPUESTAS:
 1. Para consultas generales (ej: "muéstrame un artículo"):
@@ -66,6 +98,11 @@ ESTRUCTURA DE RESPUESTA:
    - Si hay datos: resumen de lo encontrado
    - Si no hay datos: estructura + ejemplo formativo
 3. Sugerencias (ej: "¿Quieres filtrar por...?")
+
+
+
+
+
 
 EJEMPLOS DE INTERACCIÓN:
 Usuario: Muéstrame un artículo
