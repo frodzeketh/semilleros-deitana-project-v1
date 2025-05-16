@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { mapaERP } = require('./mapaERP');
-const { procesarRelaciones } = require('./utils/relacionProcessor');
+
 
 function promptBase(userMessage, tablaRelevante) {
   let estructura = Object.entries(mapaERP).map(([tabla, info]) => {
@@ -168,7 +168,16 @@ ${tablaRelevante.relaciones ? `
 11. Los campos de denominación son OBLIGATORIOS
 12. NO está permitido omitir ninguna relación
 13. La información enriquecida (nombres, denominaciones) es OBLIGATORIA
+ ${tablaRelevante.relaciones ? `
+    EJEMPLO DE CONSULTA OBLIGATORIA (DEBES USAR EXACTAMENTE ESTA ESTRUCTURA):
+    \`\`\`sql
+    ${queryConRelaciones}
+    LIMIT 5;
+    \`\`\`
+    ` : ''}
+
 ` : ''}
+
 ` : ''}`;
 
   const system = `${instrucciones}\n\nESTRUCTURA DE LA BASE DE DATOS:\n${estructura}`;
