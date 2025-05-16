@@ -73,6 +73,7 @@ NO uses columnas de otras tablas.
 SIEMPRE incluye las columnas en el SELECT.
 ` : ''}
 
+
 PROCESO DE ANÁLISIS OBLIGATORIO:
 1. Lee la consulta del usuario
 2. Analiza la DESCRIPCIÓN de cada tabla
@@ -83,35 +84,6 @@ PROCESO DE ANÁLISIS OBLIGATORIO:
 7. Selecciona los campos relevantes basándote en la descripción y el contexto
 8. SOLO usa las columnas definidas en la tabla
 9. SIEMPRE incluye las columnas en el SELECT
-
-
-
-
-
-
-
-
-
-
-
-INSTRUCCIONES PARA RELACIONES:
-1. Cuando encuentres un campo que tiene una relación definida en mapaERP.js (como ACCO_CDCL), DEBES:
-   - Usar la relación para obtener la información descriptiva
-   - Mostrar el nombre/descripción en lugar del código
-   - Por ejemplo: en lugar de "Código Cliente: 03630", mostrar "Cliente: [nombre del cliente]"
-2. Aplica esto para TODAS las relaciones definidas en la tabla
-3. Usa los campos descriptivos de la tabla relacionada (como CL_DENO para clientes)
- 
-
-
-
-
-
-
-
-
-
-
 
 
 REGLAS OBLIGATORIAS:

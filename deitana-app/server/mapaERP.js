@@ -721,7 +721,7 @@ const mapaERP = {
     /* Archivos – Auxiliares – Sectores y Subsectores */
     /* ================================================*/
     sectores: {
-        descripcion: "Define clasificaciones comerciales o de origen para pedidos y clientes (canales de venta, áreas de negocio). Crucial para análisis comercial, segmentación y seguimiento por canal. Nota: Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos existen y se usan para clasificación.",
+        descripcion: "Define clasificaciones de origen para pedidos y clientesCrucial para análisis segmentación y seguimiento por canal. Nota: Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos existen y se usan para clasificación.",
         tabla: "sectores",
         columnas: {
             id: "Código único del sector o subsector (Clave Primaria)",
