@@ -400,7 +400,6 @@ const mapaERP = {
     
     
     
-    
     /* ================================================*/
     /* Archivos – Auxiliares – Créditos caución */
     /* ================================================*/
@@ -679,7 +678,7 @@ const mapaERP = {
             TTR_ENS: "Campo auxiliar (Información incierta, puede estar vacío)", // Nota sobre validación/significado
             TTR_ECO: "Indica si es ecológico ('S'/'N')",
             TTR_BIO: "Indica si es de origen biológico ('S'/'N')",
-            TTR_ESP: "Especies vegetales autorizadas o recomendadas (Ej: CALABACÍN - MELÓN)",
+            TTR_ESPE: "Especies vegetales autorizadas o recomendadas (Ej: CALABACÍN - MELÓN)",
             TTR_AGN: "Agentes nocivos que combate (Ej: FITOPHTHORA - PITIUM)",
             TTR_INT: "Enlace web (ficha técnica, registro, etc.)",
             TTR_REG: "Número de registro oficial",
@@ -1142,6 +1141,7 @@ p_medias_band: { // Clave principal (basada en el nombre de tabla)
         PMB_HUE: "Número de Huecos registrados.",
         PMB_ETIQ: "Etiqueta asociada.",
         PMB_PLAN: "Cantidad de Plantas registradas.",
+        PMB_BAND: "Cantidad de Bandejas registradas.",
         PMB_FEC: "Fecha del registro.",
         PMB_HORA: "Hora del registro.",
         PMB_CDOP: "Código del Operario responsable. Sugiere relación con tabla de operarios/vendedores/técnicos."
@@ -1370,8 +1370,7 @@ p_inj_tomate: { // Clave principal
 /* ================================================*/
 encargos: { // Clave principal (nombre de tabla)
     descripcion: "Registra y administra los 'encargos de siembra' de clientes, documentando sus órdenes para sembrar semillas/artículos. Esencial para planificación de producción según demanda, gestión de ventas, facturación y seguimiento comercial.",
-    tabla: "encargos",
-    alias: ["encargos de siembra", "orden de siembra", "pedido de siembra", "orden de cliente para sembrar"], // Nombre de tabla original
+    tabla: "encargos", // Nombre de tabla original
     columnas: {
         id: "Número único que identifica cada encargo de siembra (Clave Primaria)",
         ENG_CCL: "Código del cliente que realizó el encargo. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",

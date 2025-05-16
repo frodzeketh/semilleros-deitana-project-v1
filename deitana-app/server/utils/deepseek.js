@@ -4,7 +4,9 @@ const { mapaERP } = require('../mapaERP');
 const { promptBase } = require('../promptBase');
 const mysql = require('mysql2/promise');
 const { OpenAI } = require('openai');
+const { procesarConsulta } = require('./semanticProcessor');
 require('dotenv').config();
+
 
 // Configuración de OpenAI
 const openai = new OpenAI({
@@ -141,9 +143,20 @@ async function processMessage(userMessage) {
       };
     }
 
+    // Procesar la consulta para encontrar la tabla relevante
+    console.log('Analizando consulta para encontrar tabla relevante...');
+    const tablaRelevante = procesarConsulta(userMessage);
+    
+    if (tablaRelevante) {
+      console.log('Tabla relevante encontrada:', tablaRelevante.tabla);
+      console.log('Descripción:', tablaRelevante.descripcion);
+    } else {
+      console.log('No se encontró una tabla relevante para la consulta');
+    }
+
     // Paso 1: IA genera la consulta SQL
     console.log('Generando consulta SQL...');
-    const { system } = promptBase(userMessage);
+    const { system } = promptBase(userMessage, tablaRelevante);
     const messages = [
       { role: "system", content: system },
       ...assistantContext.conversationHistory.slice(-3),
@@ -152,6 +165,7 @@ async function processMessage(userMessage) {
     
     const respuestaIA = await getOpenAIResponse(messages);
     console.log('Respuesta de IA recibida:', respuestaIA);
+
 
     if (!respuestaIA) {
       throw new Error('No se recibió respuesta de OpenAI');
