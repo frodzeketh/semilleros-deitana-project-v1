@@ -154,8 +154,8 @@ async function processMessage(userMessage) {
       console.log('No se encontró una tabla relevante para la consulta');
     }
 
-    // Paso 1: IA genera la consulta SQL
-    console.log('Generando consulta SQL...');
+    // Paso 1: IA genera la respuesta
+    console.log('Generando respuesta...');
     const { system } = promptBase(userMessage, tablaRelevante);
     const messages = [
       { role: "system", content: system },
@@ -166,14 +166,15 @@ async function processMessage(userMessage) {
     const respuestaIA = await getOpenAIResponse(messages);
     console.log('Respuesta de IA recibida:', respuestaIA);
 
-
     if (!respuestaIA) {
       throw new Error('No se recibió respuesta de OpenAI');
     }
 
-    // Extrae la consulta SQL de la respuesta de la IA
+    // Verificar si la respuesta contiene una consulta SQL
     const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
+    
     if (sqlMatch) {
+      // Si hay SQL, ejecutar la consulta
       const sql = sqlMatch[1] || sqlMatch[0];
       console.log('Consulta SQL generada:', sql);
 
@@ -193,35 +194,17 @@ async function processMessage(userMessage) {
         
         Para todas las listas de datos:
         
-        - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato, por ejemplo:  
-          Para artículos: "Claro, aquí tienes [número] productos que solicitaste:"  
-          Para clientes: "Claro, aquí tienes [número] clientes que solicitaste:"  
-        
-        - Usa negrita SOLO para el nombre o etiqueta principal del elemento, por ejemplo:  
-          **Artículo 1:**, **Cliente 1:**, etc.
-        
-        - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas, sin saltos de línea entre campos.
-        
-        - No agregues líneas vacías entre elementos.
-        
-        - No repitas información ni uses formatos diferentes para el mismo tipo.
-        
-        Ejemplo para clientes:  
-        **Cliente 1:** Nombre, Domicilio, Población, Provincia  
-        **Cliente 2:** Nombre, Domicilio, Población, Provincia
-        
-        Ejemplo para artículos:  
-        **Artículo 1:** Denominación  
-        **Artículo 2:** Denominación
-
-        - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta, si aplica.
+        - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato
+        - Usa negrita SOLO para el nombre o etiqueta principal del elemento
+        - La información relacionada va en la misma línea o máximo en dos líneas
+        - No agregues líneas vacías entre elementos
+        - No repitas información ni uses formatos diferentes para el mismo tipo
+        - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta, si aplica
         `;
 
-        console.log('Generando análisis de respuesta...');
         const analisis = await getOpenAIResponse([
           { role: "system", content: promptAnalisis }
         ]);
-        console.log('Análisis generado:', analisis);
 
         assistantContext.conversationHistory.push(
           { role: "user", content: userMessage },
@@ -232,28 +215,29 @@ async function processMessage(userMessage) {
           message: analisis,
           context: assistantContext
         };
-      } catch (sqlError) {
-        console.error('Error detallado en SQL:', {
-          error: sqlError,
-          sql: sql,
-          mensaje: userMessage
-        });
+      } catch (error) {
+        console.error('Error al ejecutar la consulta SQL:', error);
         return {
-          message: `Error en la consulta: ${sqlError.message}. Por favor, intenta reformular tu pregunta.`,
+          message: "Lo siento, hubo un error al consultar la base de datos. Por favor, intenta reformular tu pregunta.",
           context: assistantContext
         };
       }
     } else {
-      console.log('No se encontró consulta SQL en la respuesta:', respuestaIA);
+      // Si no hay SQL, usar la respuesta directa de la IA
+      assistantContext.conversationHistory.push(
+        { role: "user", content: userMessage },
+        { role: "assistant", content: respuestaIA }
+      );
+
       return {
-        message: "No pude generar una consulta válida para tu pregunta. Por favor, intenta reformularla.",
+        message: respuestaIA,
         context: assistantContext
       };
     }
   } catch (error) {
-    console.error('Error completo en processMessage:', error);
+    console.error('Error en processMessage:', error);
     return {
-      message: 'Hubo un problema al procesar tu consulta. Por favor, intenta de nuevo.',
+      message: "Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.",
       context: assistantContext
     };
   }

@@ -6,7 +6,7 @@ function promptBase(userMessage, tablaRelevante) {
   let estructura = Object.entries(mapaERP).map(([tabla, info]) => {
     const columnas = info.columnas || info.campos || {};
     const relaciones = info.relaciones || [];
-    
+
     let camposTexto = Object.entries(columnas)
       .map(([campo, desc]) => `- ${campo}: ${desc}`)
       .join('\n');
@@ -14,7 +14,7 @@ function promptBase(userMessage, tablaRelevante) {
     let relacionesTexto = '';
     if (typeof relaciones === 'object') {
       if (Array.isArray(relaciones)) {
-        relacionesTexto = relaciones.map(rel => 
+        relacionesTexto = relaciones.map(rel =>
           `- Relación con ${rel.tablaDestino || rel.tabla_relacionada}`
         ).join('\n');
       } else {
@@ -38,13 +38,18 @@ ${relacionesTexto ? `\nRELACIONES:\n${relacionesTexto}` : ''}`;
   }).join('\n\n');
 
   const instrucciones = `
-ERES UN GENERADOR DE CONSULTAS SQL. TU ÚNICA TAREA ES GENERAR CONSULTAS SQL.
+ERES UN ASISTENTE IA DE SEMILLEROS DEITANA. TU TAREA PRINCIPAL ES AYUDAR A LOS USUARIOS CON INFORMACIÓN SOBRE LA BASE DE DATOS DE LA EMPRESA.
+
+CUANDO NECESITES GENERAR UNA CONSULTA SQL:
+1. Analiza si la pregunta requiere datos de la base de datos
+2. Si es necesario, genera la consulta SQL apropiada
+3. Si no es necesario, responde como un asistente normal
 
 ${tablaRelevante ? `
-IMPORTANTE: La consulta debe realizarse en la tabla ${tablaRelevante.tabla}
+IMPORTANTE: La consulta debe realizarse en la tabla ${tablaRelevante.nombre}
 porque su descripción indica: ${tablaRelevante.descripcion}
 
-COLUMNAS DISPONIBLES EN ${tablaRelevante.tabla}:
+COLUMNAS DISPONIBLES EN ${tablaRelevante.nombre}:
 ${Object.entries(tablaRelevante.columnas || {})
   .map(([campo, desc]) => `- ${campo}: ${desc}`)
   .join('\n')}
@@ -52,9 +57,10 @@ ${Object.entries(tablaRelevante.columnas || {})
 EJEMPLO DE CONSULTA CORRECTA:
 \`\`\`sql
 SELECT ${Object.keys(tablaRelevante.columnas || {}).join(', ')}
-FROM \`${tablaRelevante.tabla}\`
+FROM \`${tablaRelevante.nombre}\`
 LIMIT 5;
 \`\`\`
+` : ''}
 
 INSTRUCCIONES ESPECÍFICAS:
 1. Para consultas generales, NO uses WHERE
@@ -65,14 +71,21 @@ INSTRUCCIONES ESPECÍFICAS:
 6. SIEMPRE incluye TODAS las columnas en el SELECT
 7. NUNCA dejes el SELECT vacío
 
+INSTRUCCIONES DE RELACIONES Y CONTEXTO:
+1. Cuando identifiques una tabla con relaciones en mapaERP.js:
+   - Incluye los JOINs necesarios en la consulta SQL
+   - Muestra tanto el código como la información descriptiva
+   - Usa los campos descriptivos de las tablas relacionadas
 
-DEBES usar SOLO estas columnas en tu consulta SQL.
-NO inventes nombres de columnas.
-NO uses columnas que no estén en la lista anterior.
-NO uses columnas de otras tablas.
-SIEMPRE incluye las columnas en el SELECT.
-` : ''}
+2. Para consultas de ejemplos:
+   - Si piden "un ejemplo", usa LIMIT 1
+   - Si piden "dos ejemplos", usa LIMIT 2
+   - Si no especifican cantidad, usa LIMIT 5
 
+3. Formato de respuesta:
+   - Muestra la información de manera descriptiva
+   - Incluye los nombres/denominaciones de las relaciones
+   - Proporciona contexto relevante cuando sea apropiado
 
 PROCESO DE ANÁLISIS OBLIGATORIO:
 1. Lee la consulta del usuario
@@ -85,54 +98,60 @@ PROCESO DE ANÁLISIS OBLIGATORIO:
 8. SOLO usa las columnas definidas en la tabla
 9. SIEMPRE incluye las columnas en el SELECT
 
-
 REGLAS OBLIGATORIAS:
-1. SIEMPRE genera una consulta SQL
-2. NUNCA respondas con texto explicativo
-3. NUNCA pidas más información
-4. Usa EXACTAMENTE los nombres de tablas y campos definidos
-5. Incluye las relaciones definidas cuando sea necesario
-6. SIEMPRE encierra los nombres de tablas con guiones o espacios entre backticks (\`)
-7. NO uses columnas que no estén definidas en la tabla
-8. NO inventes nombres de columnas
-9. SIEMPRE incluye las columnas en el SELECT
+1. Si la pregunta requiere datos de la base de datos, genera una consulta SQL
+2. Si la pregunta es general o conceptual, responde como asistente
+3. Usa EXACTAMENTE los nombres de tablas y campos definidos
+4. Incluye las relaciones definidas cuando sea necesario
+5. SIEMPRE encierra los nombres de tablas con guiones o espacios entre backticks (\`)
+6. NO uses columnas que no estén definidas en la tabla
+7. NO inventes nombres de columnas
+8. SIEMPRE incluye las columnas en el SELECT cuando generes una consulta
 
 FORMATO DE RESPUESTA:
+Para consultas SQL:
 \`\`\`sql
 SELECT [campos]
 FROM \`[tabla]\`
 [joins]
 [where]
-LIMIT 5;
+LIMIT [cantidad];
 \`\`\`
 
+Para respuestas generales:
+- Responde de manera natural y conversacional
+- Proporciona contexto relevante
+- Explica conceptos cuando sea necesario
+- Mantén un tono profesional pero amigable
+
 IMPORTANTE:
-- SOLO genera la consulta SQL
-- NO incluyas explicaciones
-- NO pidas más información
-- Usa los nombres EXACTOS de las tablas y campos
+- Analiza si la pregunta requiere datos de la base de datos
+- Si es necesario, genera la consulta SQL apropiada
+- Si no es necesario, responde como un asistente normal
 - La descripción es el ÚNICO criterio para identificar la tabla correcta
 - NO busques coincidencias literales con palabras clave en los nombres de las tablas
 - NO asumas que la tabla debe contener las palabras clave de la consulta
 - Identifica la tabla correcta basándote en el CONTEXTO de la descripción
 - SOLO usa las columnas definidas en la tabla
 - NO inventes nombres de columnas
-- SIEMPRE incluye las columnas en el SELECT
+- SIEMPRE incluye las columnas en el SELECT cuando generes una consulta
 
 ${tablaRelevante ? `
-RECUERDA: 
-1. DEBES usar la tabla ${tablaRelevante.tabla} para esta consulta
+RECUERDA:
+1. DEBES usar la tabla ${tablaRelevante.nombre} para esta consulta
 2. SOLO puedes usar las columnas definidas arriba
 3. NO inventes nombres de columnas
 4. Si necesitas filtrar, usa las columnas existentes
 5. NO uses columnas de otras tablas
 6. SIEMPRE incluye las columnas en el SELECT
 7. NUNCA dejes el SELECT vacío
-` : ''}`;
+` : ''}
+`;
 
   const system = `${instrucciones}\n\nESTRUCTURA DE LA BASE DE DATOS:\n${estructura}`;
   const user = userMessage;
 
   return { system, user };
 }
+
 module.exports = { promptBase };
