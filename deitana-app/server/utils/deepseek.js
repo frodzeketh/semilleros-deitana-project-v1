@@ -166,20 +166,31 @@ async function processMessage(userMessage) {
                     ? "No se encontraron resultados en la base de datos."
                     : JSON.stringify(rows, null, 2);
 
-                const promptAnalisis = `
-                Usuario preguntó: ${userMessage}
-                Datos reales de la base de datos:
-                ${datosReales}
-                
-                Para todas las listas de datos:
-                
-                - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato
-                - Usa negrita SOLO para el nombre o etiqueta principal del elemento
-                - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas
-                - No agregues líneas vacías entre elementos
-                - No repitas información ni uses formatos diferentes para el mismo tipo
-                - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta
-                `;
+                    const promptAnalisis = `
+                    Usuario preguntó: ${userMessage}
+                    Datos reales de la base de datos:
+                    ${datosReales}
+                    
+                    IMPORTANTE: Cuando muestres los resultados, **nunca uses los nombres crudos de las columnas** (por ejemplo: ACCO_DENO, ACCO_FEC, ACCO_HOR).
+                    Usa en su lugar nombres más claros y legibles:
+                    
+                    - ACCO_DENO → Tipo de Acción
+                    - ACCO_FEC → Fecha
+                    - ACCO_HOR → Hora
+                    - CL_DENO → Cliente
+                    - USU_NOMB → Vendedor
+                    - ACCO_OBS → Observación
+                    
+                    Para todas las listas de datos:
+                    
+                    - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato
+                    - Usa negrita SOLO para el nombre o etiqueta principal del elemento
+                    - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas
+                    - No agregues líneas vacías entre elementos
+                    - No repitas información ni uses formatos diferentes para el mismo tipo
+                    - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta
+                    `;
+                    
 
                 console.log('Generando análisis de respuesta...');
                 const analisis = await getOpenAIResponse([

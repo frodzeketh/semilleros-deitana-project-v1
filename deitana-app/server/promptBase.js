@@ -131,6 +131,7 @@ SIEMPRE DEBES RESPONDER BASADO EN RESULTADOS REALES O ADMITIR CLARAMENTE LA AUSE
     9. SI la tabla tiene relaciones con otras tablas (como clientes o vendedores), DEBES incluir en el SELECT los campos de denominación, por ejemplo:
    - clientes.CL_DENO como cliente
    - vendedores.VD_DENO como vendedor
+
     
     
     REGLAS OBLIGATORIAS:
@@ -191,6 +192,8 @@ SIEMPRE DEBES RESPONDER BASADO EN RESULTADOS REALES O ADMITIR CLARAMENTE LA AUSE
 
   const system = `${instrucciones}\n\nESTRUCTURA DE LA BASE DE DATOS:\n${estructura}`;
   const user = userMessage;
+  
+
 
   return { system, user };
 }
