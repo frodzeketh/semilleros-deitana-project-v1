@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown'
 const API_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3001/api"
-    : "https://semilleros-deitana-project-v1.onrender.com/api"
+    : "https://semilleros-deitana-project-v1-production.up.railway.app/api"
 
 const Home = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
