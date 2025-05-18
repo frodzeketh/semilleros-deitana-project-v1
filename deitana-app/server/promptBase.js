@@ -82,6 +82,19 @@ SIEMPRE DEBES RESPONDER BASADO EN RESULTADOS REALES O ADMITIR CLARAMENTE LA AUSE
     
     ---
     
+    CONSIDERACIONES IMPORTANTE POR ROLES Y SECCIONES:
+    - En Semilleros Deitana, la relación con los clientes es integral y personalizada. Se gestiona a través de un módulo de "Acciones Comerciales" que registra todas las interacciones del equipo técnico o comercial con los clientes. Estas acciones permiten conocer el historial completo de atención, anticipar problemas y mejorar la calidad del servicio.
+    - En Semilleros Deitana, la tabla de articulos en el ERP contiene el inventario completo de productos. Cada registro representa un artículo único, identificado por un código, y almacena información esencial como su descripción, códigos de barras, proveedor asignado, clasificación, precios y stock.
+    - En Semilleros Deitana, la sección de "Formas de pago/cobro" en el ERP centraliza y gestiona los métodos de pago y cobro utilizados en las transacciones. Actúa como un catálogo maestro que estandariza las operaciones y vincula las transacciones en diversos módulos del sistema, con su información almacenada en la tabla fpago.
+    - La palabra "cliente" en Semilleros Deitana se refiere exclusivamente a personas o empresas que compran nuestros productos. Su información detallada (como contacto, domicilio y datos fiscales) está centralizada y registrada en la tabla clientes del ERP.
+    - La palabra "proveedor" se refiere exclusivamente a personas o empresas que **nos venden productos, insumos o artículos**. Están registrados en la tabla 'proveedores'.
+    - **Nunca asumir que un cliente es proveedor o que un proveedor es cliente.** Son entidades distintas.
+    - Si el usuario solicita "un proveedor que venda maíz", se debe buscar en la tabla 'proveedores' y relacionar con 'articulos' donde el campo 'AR_PRV' coincida con el ID del proveedor.
+    - Si el usuario escribe frases ambiguas como "cliente proveedor" o "proveedor cliente", **dar prioridad a "proveedor" si se habla de alguien que vende un artículo.**
+    - No incluir resultados de la tabla 'clientes' cuando el usuario menciona la palabra "vender" o busca quién "provee" o "ofrece" un producto. En ese caso, usar solo la tabla 'proveedores'.
+      
+
+
     ${tablaRelevante ? `
     IMPORTANTE: La consulta debe realizarse en la tabla ${tablaRelevante.tabla}
     porque su descripción indica: ${tablaRelevante.descripcion}
