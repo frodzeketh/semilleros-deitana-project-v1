@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const path = require('path');
 const { processMessage } = require('./utils/deepseek');
 
 dotenv.config();
@@ -23,10 +24,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Ruta principal
-app.get('/', (req, res) => {
-  res.json({ message: 'API de Semilleros Deitana funcionando correctamente' });
-});
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '../build')));
 
 // Ruta del chat
 app.post('/api/chat', async (req, res) => {
@@ -59,6 +58,11 @@ app.post('/api/chat', async (req, res) => {
       details: error.message 
     });
   }
+});
+
+// Para cualquier otra ruta, servir el index.html del frontend
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
 
 const port = process.env.PORT || 3001;
