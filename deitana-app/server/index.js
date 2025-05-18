@@ -21,6 +21,8 @@ app.use(bodyParser.json());
 // Middleware para logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
   next();
 });
 
@@ -29,7 +31,9 @@ app.use(express.static(path.join(__dirname, '../build')));
 
 // Ruta del chat
 app.post('/api/chat', async (req, res) => {
+  console.log('=== INICIO DE PETICIÓN DE CHAT ===');
   console.log('Recibida petición de chat:', req.body);
+  console.log('Headers:', req.headers);
   
   const { message } = req.body;
   
@@ -52,12 +56,14 @@ app.post('/api/chat', async (req, res) => {
     });
   } catch (error) {
     console.error('Error en el chat:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false,
       error: 'Error procesando el mensaje',
       details: error.message 
     });
   }
+  console.log('=== FIN DE PETICIÓN DE CHAT ===');
 });
 
 // Para cualquier otra ruta, servir el index.html del frontend
