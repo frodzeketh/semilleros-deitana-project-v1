@@ -133,12 +133,37 @@ async function processMessage(userMessage) {
             };
         }
 
-        // 2. Flujo normal para todas las consultas
+        // 2. NUEVO: Verificación de preguntas ambiguas
+        const esPreguntaAmbigua = userMessage.toLowerCase().match(/^(tiene|cuál es|dónde está|dónde se|hay|existe|muestra|busca|encuentra|dime|mostrar|buscar|encontrar)/i);
+        
+        if (esPreguntaAmbigua) {
+            const prompt = `Eres un asistente virtual especializado en la base de datos de Semilleros Deitana.
+            
+            El usuario ha preguntado: "${userMessage}"
+            
+            Esta pregunta es ambigua porque no especifica el contexto.
+            Analiza la pregunta y sugiere cómo reformularla para obtener la información deseada.
+            Mantén un tono profesional pero amigable.`;
+
+            const respuesta = await getOpenAIResponse([{ role: "system", content: prompt }]);
+            
+            assistantContext.conversationHistory.push(
+                { role: "user", content: userMessage },
+                { role: "assistant", content: respuesta }
+            );
+
+            return {
+                message: respuesta,
+                context: assistantContext
+            };
+        }
+
+        // 3. Flujo normal para preguntas con contexto
         console.log('Generando prompt base...');
         const { system } = promptBase(userMessage);
         
-        // Generar la respuesta
-        console.log('Generando respuesta...');
+        // Generar la consulta SQL
+        console.log('Generando consulta SQL...');
         const messages = [
             { role: "system", content: system },
             ...assistantContext.conversationHistory.slice(-3),
@@ -152,78 +177,71 @@ async function processMessage(userMessage) {
             throw new Error('No se recibió respuesta de OpenAI');
         }
 
-        // Extrae la consulta SQL de la respuesta de la IA si existe
+        // Extrae la consulta SQL de la respuesta de la IA
         const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
-        
-        // Si es una respuesta conceptual (sin SQL), la devolvemos directamente
-        if (!sqlMatch) {
-            assistantContext.conversationHistory.push(
-                { role: "user", content: userMessage },
-                { role: "assistant", content: respuestaIA }
-            );
+        if (sqlMatch) {
+            const sql = sqlMatch[1] || sqlMatch[0];
+            console.log('Consulta SQL generada:', sql);
 
+            try {
+                console.log('Ejecutando consulta SQL...');
+                const [rows] = await db.query(sql);
+                console.log('Resultados de la consulta:', rows);
+
+                const datosReales = rows.length === 0
+                    ? "No se encontraron resultados en la base de datos."
+                    : JSON.stringify(rows, null, 2);
+
+                const promptAnalisis = `
+                Usuario preguntó: ${userMessage}
+                Datos reales de la base de datos:
+                ${datosReales}
+                
+                IMPORTANTE: Cuando muestres los resultados, **nunca uses los nombres crudos de las columnas** (por ejemplo: ACCO_DENO, ACCO_FEC, ACCO_HOR).
+                Usa en su lugar nombres más claros y legibles:
+                
+                - ACCO_DENO → Tipo de Acción
+                - ACCO_FEC → Fecha
+                - ACCO_HOR → Hora
+                - CL_DENO → Cliente
+                - USU_NOMB → Vendedor
+                - ACCO_OBS → Observación
+                
+                Para todas las listas de datos:
+                
+                - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato
+                - Usa negrita SOLO para el nombre o etiqueta principal del elemento
+                - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas
+                - No agregues líneas vacías entre elementos
+                - No repitas información ni uses formatos diferentes para el mismo tipo
+                - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta
+                `;
+
+                console.log('Generando análisis de respuesta...');
+                const analisis = await getOpenAIResponse([
+                    { role: "system", content: promptAnalisis }
+                ]);
+
+                assistantContext.conversationHistory.push(
+                    { role: "user", content: userMessage },
+                    { role: "assistant", content: analisis }
+                );
+
+                return {
+                    message: analisis,
+                    context: assistantContext
+                };
+            } catch (sqlError) {
+                console.error('Error en SQL:', sqlError);
+                return {
+                    message: `Error en la consulta: ${sqlError.message}. Por favor, intenta reformular tu pregunta.`,
+                    context: assistantContext
+                };
+            }
+        } else {
+            console.log('No se encontró consulta SQL en la respuesta:', respuestaIA);
             return {
-                message: respuestaIA,
-                context: assistantContext
-            };
-        }
-
-        // Si hay una consulta SQL, la procesamos
-        const sql = sqlMatch[1] || sqlMatch[0];
-        console.log('Consulta SQL generada:', sql);
-
-        try {
-            console.log('Ejecutando consulta SQL...');
-            const [rows] = await db.query(sql);
-            console.log('Resultados de la consulta:', rows);
-
-            const datosReales = rows.length === 0
-                ? "No se encontraron resultados en la base de datos."
-                : JSON.stringify(rows, null, 2);
-
-            const promptAnalisis = `
-            Usuario preguntó: ${userMessage}
-            Datos reales de la base de datos:
-            ${datosReales}
-            
-            IMPORTANTE: Cuando muestres los resultados, **nunca uses los nombres crudos de las columnas** (por ejemplo: ACCO_DENO, ACCO_FEC, ACCO_HOR).
-            Usa en su lugar nombres más claros y legibles:
-            
-            - ACCO_DENO → Tipo de Acción
-            - ACCO_FEC → Fecha
-            - ACCO_HOR → Hora
-            - CL_DENO → Cliente
-            - USU_NOMB → Vendedor
-            - ACCO_OBS → Observación
-            
-            Para todas las listas de datos:
-            
-            - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato
-            - Usa negrita SOLO para el nombre o etiqueta principal del elemento
-            - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas
-            - No agregues líneas vacías entre elementos
-            - No repitas información ni uses formatos diferentes para el mismo tipo
-            - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta
-            `;
-
-            console.log('Generando análisis de respuesta...');
-            const analisis = await getOpenAIResponse([
-                { role: "system", content: promptAnalisis }
-            ]);
-
-            assistantContext.conversationHistory.push(
-                { role: "user", content: userMessage },
-                { role: "assistant", content: analisis }
-            );
-
-            return {
-                message: analisis,
-                context: assistantContext
-            };
-        } catch (sqlError) {
-            console.error('Error en SQL:', sqlError);
-            return {
-                message: `Error en la consulta: ${sqlError.message}. Por favor, intenta reformular tu pregunta.`,
+                message: "No pude generar una consulta válida para tu pregunta. Por favor, intenta reformularla.",
                 context: assistantContext
             };
         }
