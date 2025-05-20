@@ -113,6 +113,11 @@ async function generarRespuestaConversacional(mensaje) {
     return await getOpenAIResponse([{ role: "system", content: prompt }]);
 }
 
+
+
+
+
+
 async function processMessage(userMessage) {
     try {
         console.log('Procesando mensaje:', userMessage);
@@ -133,7 +138,7 @@ async function processMessage(userMessage) {
             };
         }
 
-        // 2. NUEVO: Verificación de preguntas ambiguas
+        // 2. Verificación de preguntas ambiguas
         const esPreguntaAmbigua = userMessage.toLowerCase().match(/^(tiene|cuál es|dónde está|dónde se|hay|existe|muestra|busca|encuentra|dime|mostrar|buscar|encontrar)/i);
         
         if (esPreguntaAmbigua) {
@@ -180,8 +185,20 @@ async function processMessage(userMessage) {
         // Extrae la consulta SQL de la respuesta de la IA
         const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
         if (sqlMatch) {
-            const sql = sqlMatch[1] || sqlMatch[0];
-            console.log('Consulta SQL generada:', sql);
+            let sql = sqlMatch[1] || sqlMatch[0];
+            
+            // Modificar la consulta para usar LIKE con comodines
+            if (sql.includes('WHERE')) {
+                // Si ya hay un WHERE, agregar OR con LIKE
+                sql = sql.replace(/WHERE\s+([^=]+)=\s*'([^']+)'/i, 
+                    "WHERE $1 = '$2' OR $1 LIKE '%$2%'");
+            } else {
+                // Si no hay WHERE, agregar uno con LIKE
+                sql = sql.replace(/FROM\s+([^;]+)/i, 
+                    "FROM $1 WHERE $1 LIKE '%$2%'");
+            }
+            
+            console.log('Consulta SQL modificada:', sql);
 
             try {
                 console.log('Ejecutando consulta SQL...');
