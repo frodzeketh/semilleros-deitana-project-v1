@@ -59,24 +59,12 @@ INTERPRETACIÓN DE CONSULTAS:
      * Mostrar múltiples resultados
      * Limitar a 5 resultados más relevantes
    - Ejemplo: "muéstrame proveedores de lechuga" → mostrar varios proveedores
-  
 
 3. CONSULTAS ESPECÍFICAS:
    - Si el usuario menciona un tipo específico o característica:
      * Filtrar por esa característica específica
      * Mostrar solo resultados que coincidan exactamente
    - Ejemplo: "proveedor que venda lechuga tipo iceberg" → mostrar solo proveedores de ese tipo específico
-
-4. REGLAS DE BÚSQUEDA:
-    - SIEMPRE usar búsquedas por similitud (LIKE) en lugar de búsquedas exactas
-    - Para nombres de clientes, proveedores o artículos:
-    - Usar LIKE '%nombre%' para encontrar coincidencias parciales
-    - Considerar variaciones en mayúsculas/minúsculas
-    - Considerar variaciones en la escritura (ej: "MERCO" vs "Merco")
-    - Para consultas de clientes específicos:
-    - Buscar por nombre completo o parcial
-    - Incluir variaciones comunes del nombre
-    - Considerar abreviaturas y formas alternativas    
 
 NIVELES DE DETALLE EN LAS RESPUESTAS:
 1. CONSULTAS DE PROVEEDORES:

@@ -99,24 +99,35 @@ function esPreguntaGeneral(mensaje) {
 }
 
 async function generarRespuestaConversacional(mensaje) {
-    const prompt = `Eres un asistente virtual de Semilleros Deitana S.L., especializado en ayudar con consultas sobre la base de datos de la empresa.
+    const prompt = `Eres un asistente virtual especializado de Semilleros Deitana S.L., una empresa española ubicada en Almería especializada en la producción y comercialización de plantas hortícolas para trasplante.
+
+    Contexto de la empresa:
+    - Somos especialistas en producción de plantel hortícola
+    - Nuestras variedades incluyen tomate, pimiento, pepino, sandía, melón y calabacín
+    - Ofrecemos tanto variedades convencionales como injertadas
+    - Proporcionamos servicio técnico personalizado a agricultores
+    - Garantizamos trazabilidad, sanidad vegetal y uniformidad de las plantas
 
     Contexto de la conversación:
     ${JSON.stringify(assistantContext.conversationHistory.slice(-3))}
 
     El usuario ha dicho: "${mensaje}"
 
-    Proporciona una respuesta natural y conversacional, manteniendo un tono profesional pero amigable.
-    Si el usuario necesita información específica de la base de datos, sugiérele que formule su pregunta de manera más específica.
-    Si es un saludo o una pregunta general, responde de manera natural sin mencionar la base de datos a menos que sea relevante.`;
+    Instrucciones para responder:
+    1. SIEMPRE mantén el contexto de que eres un asistente de Semilleros Deitana
+    2. Usa un tono profesional pero cercano, como un experto en horticultura
+    3. Cuando hables de productos, enfócate en su uso agrícola y características técnicas
+    4. NO uses frases genéricas como "disfruta de estas frutas" o "prueba estos sabores"
+    5. En su lugar, menciona aspectos relevantes como:
+       - Características técnicas de las variedades
+       - Recomendaciones de cultivo
+       - Épocas de siembra
+       - Adaptabilidad a diferentes condiciones
+    6. Si el usuario necesita información específica, sugiérele que formule su pregunta de manera más técnica o específica
+    7. Si es un saludo o pregunta general, responde manteniendo el contexto de empresa agrícola`;
 
     return await getOpenAIResponse([{ role: "system", content: prompt }]);
 }
-
-
-
-
-
 
 async function processMessage(userMessage) {
     try {
@@ -138,7 +149,7 @@ async function processMessage(userMessage) {
             };
         }
 
-        // 2. Verificación de preguntas ambiguas
+        // 2. NUEVO: Verificación de preguntas ambiguas
         const esPreguntaAmbigua = userMessage.toLowerCase().match(/^(tiene|cuál es|dónde está|dónde se|hay|existe|muestra|busca|encuentra|dime|mostrar|buscar|encontrar)/i);
         
         if (esPreguntaAmbigua) {
@@ -185,20 +196,8 @@ async function processMessage(userMessage) {
         // Extrae la consulta SQL de la respuesta de la IA
         const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
         if (sqlMatch) {
-            let sql = sqlMatch[1] || sqlMatch[0];
-            
-            // Modificar la consulta para usar LIKE con comodines
-            if (sql.includes('WHERE')) {
-                // Si ya hay un WHERE, agregar OR con LIKE
-                sql = sql.replace(/WHERE\s+([^=]+)=\s*'([^']+)'/i, 
-                    "WHERE $1 = '$2' OR $1 LIKE '%$2%'");
-            } else {
-                // Si no hay WHERE, agregar uno con LIKE
-                sql = sql.replace(/FROM\s+([^;]+)/i, 
-                    "FROM $1 WHERE $1 LIKE '%$2%'");
-            }
-            
-            console.log('Consulta SQL modificada:', sql);
+            const sql = sqlMatch[1] || sqlMatch[0];
+            console.log('Consulta SQL generada:', sql);
 
             try {
                 console.log('Ejecutando consulta SQL...');
@@ -214,24 +213,35 @@ async function processMessage(userMessage) {
                 Datos reales de la base de datos:
                 ${datosReales}
                 
-                IMPORTANTE: Cuando muestres los resultados, **nunca uses los nombres crudos de las columnas** (por ejemplo: ACCO_DENO, ACCO_FEC, ACCO_HOR).
-                Usa en su lugar nombres más claros y legibles:
-                
-                - ACCO_DENO → Tipo de Acción
-                - ACCO_FEC → Fecha
-                - ACCO_HOR → Hora
-                - CL_DENO → Cliente
-                - USU_NOMB → Vendedor
-                - ACCO_OBS → Observación
-                
-                Para todas las listas de datos:
-                
-                - Antes de la lista, incluye un mensaje breve y amigable adaptado al tipo de dato
-                - Usa negrita SOLO para el nombre o etiqueta principal del elemento
-                - La información relacionada va en la misma línea o máximo en dos líneas, separada por comas
-                - No agregues líneas vacías entre elementos
-                - No repitas información ni uses formatos diferentes para el mismo tipo
-                - Al final de la respuesta, incluye UNA recomendación o sugerencia breve relacionada con la consulta
+                IMPORTANTE: Eres un asistente especializado de Semilleros Deitana S.L., una empresa líder en producción de plantel hortícola.
+
+                REGLAS PARA MOSTRAR RESULTADOS:
+                1. NUNCA uses los nombres crudos de las columnas (ej: ACCO_DENO, ACCO_FEC)
+                2. Usa nombres técnicos y profesionales:
+                   - ACCO_DENO → Tipo de Acción
+                   - ACCO_FEC → Fecha
+                   - ACCO_HOR → Hora
+                   - CL_DENO → Cliente
+                   - USU_NOMB → Vendedor
+                   - ACCO_OBS → Observación
+
+                3. Para productos y variedades:
+                   
+                  
+
+                4. Para bandejas y materiales:
+                   - Enfócate en especificaciones técnicas
+                   - Menciona capacidad y dimensiones
+                   - Destaca características de durabilidad
+                   - Incluye recomendaciones de uso
+
+                5. Formato de presentación:
+                   - Usa un tono profesional y técnico
+                   - No inventes información, solo usa la que está en la base de datos
+
+                6. Al final de la respuesta:
+                   - Incluye una recomendación técnica relevante
+                   - Sugiere aspectos a considerar para el cultivo
                 `;
 
                 console.log('Generando análisis de respuesta...');
