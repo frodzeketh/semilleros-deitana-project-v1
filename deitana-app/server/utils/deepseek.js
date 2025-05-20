@@ -98,6 +98,85 @@ function esPreguntaGeneral(mensaje) {
     return mensajeLower.match(/^(quién eres|quien eres|qué eres|que eres|qué puedes hacer|que puedes hacer|ayuda|help)/i);
 }
 
+// Nueva función para analizar la intención de la consulta
+async function analizarIntencionConsulta(userMessage) {
+    const prompt = `Eres un asistente especializado de Semilleros Deitana S.L. 
+    Analiza la siguiente consulta y determina qué información necesita el usuario:
+
+    Consulta: "${userMessage}"
+
+    Identifica:
+    1. ¿Es una consulta simple o compleja?
+    2. ¿Qué elementos menciona? (productos, cantidades, bandejas, etc.)
+    3. ¿Qué relaciones necesita establecer?
+    4. ¿Qué tipo de respuesta necesita?
+
+    Responde en formato JSON con esta estructura:
+    {
+        "tipo": "simple|compleja",
+        "elementos": ["lista", "de", "elementos"],
+        "relaciones": ["lista", "de", "relaciones"],
+        "tipo_respuesta": "informacion|recomendacion|analisis"
+    }`;
+
+    const respuesta = await getOpenAIResponse([{ role: "system", content: prompt }]);
+    return JSON.parse(respuesta);
+}
+
+// Nueva función para generar consultas necesarias
+async function generarConsultasNecesarias(analisis) {
+    const prompt = `Eres un experto en bases de datos de Semilleros Deitana S.L.
+    Genera las consultas SQL necesarias para obtener la información requerida.
+
+    Análisis de la consulta:
+    ${JSON.stringify(analisis, null, 2)}
+
+    Genera las consultas SQL necesarias para obtener:
+    1. Información principal
+    2. Información relacionada
+    3. Datos de soporte
+
+    Responde en formato JSON con esta estructura:
+    {
+        "consultas": [
+            {
+                "tipo": "principal|relacionada|soporte",
+                "sql": "consulta SQL",
+                "descripcion": "qué información obtiene"
+            }
+        ]
+    }`;
+
+    const respuesta = await getOpenAIResponse([{ role: "system", content: prompt }]);
+    return JSON.parse(respuesta);
+}
+
+// Nueva función para analizar resultados
+async function analizarResultados(consultas, resultados, userMessage) {
+    const prompt = `Eres un asistente especializado de Semilleros Deitana S.L.
+    Analiza los siguientes resultados y genera una respuesta completa.
+
+    Consulta original: "${userMessage}"
+
+    Resultados obtenidos:
+    ${JSON.stringify(resultados, null, 2)}
+
+    Genera una respuesta que incluya:
+    1. Análisis de los datos
+    2. Recomendaciones basadas en los datos reales
+    3. Consideraciones técnicas
+    4. Sugerencias adicionales
+
+    IMPORTANTE:
+    - Usa un tono profesional y técnico
+    - Solo usa información real de la base de datos
+    - No inventes datos
+    - Menciona limitaciones si los datos son insuficientes
+    - Proporciona alternativas cuando sea posible`;
+
+    return await getOpenAIResponse([{ role: "system", content: prompt }]);
+}
+
 async function generarRespuestaConversacional(mensaje) {
     const prompt = `Eres un asistente virtual especializado de Semilleros Deitana S.L., una empresa española ubicada en Almería especializada en la producción y comercialización de plantas hortícolas para trasplante.
 
@@ -149,133 +228,111 @@ async function processMessage(userMessage) {
             };
         }
 
-        // 2. NUEVO: Verificación de preguntas ambiguas
-        const esPreguntaAmbigua = userMessage.toLowerCase().match(/^(tiene|cuál es|dónde está|dónde se|hay|existe|muestra|busca|encuentra|dime|mostrar|buscar|encontrar)/i);
+        // 2. Análisis de la intención de la consulta
+        console.log('Analizando intención de la consulta...');
+        const analisis = await analizarIntencionConsulta(userMessage);
         
-        if (esPreguntaAmbigua) {
-            const prompt = `Eres un asistente virtual especializado en la base de datos de Semilleros Deitana.
+        // Si es una consulta simple, usar el flujo normal
+        if (analisis.tipo === 'simple') {
+            console.log('Mensaje identificado como consulta simple');
+            const { system } = promptBase(userMessage);
             
-            El usuario ha preguntado: "${userMessage}"
+            const messages = [
+                { role: "system", content: system },
+                ...assistantContext.conversationHistory.slice(-3),
+                { role: "user", content: userMessage }
+            ];
             
-            Esta pregunta es ambigua porque no especifica el contexto.
-            Analiza la pregunta y sugiere cómo reformularla para obtener la información deseada.
-            Mantén un tono profesional pero amigable.`;
-
-            const respuesta = await getOpenAIResponse([{ role: "system", content: prompt }]);
+            const respuestaIA = await getOpenAIResponse(messages);
             
-            assistantContext.conversationHistory.push(
-                { role: "user", content: userMessage },
-                { role: "assistant", content: respuesta }
-            );
-
-            return {
-                message: respuesta,
-                context: assistantContext
-            };
-        }
-
-        // 3. Flujo normal para preguntas con contexto
-        console.log('Generando prompt base...');
-        const { system } = promptBase(userMessage);
-        
-        // Generar la consulta SQL
-        console.log('Generando consulta SQL...');
-        const messages = [
-            { role: "system", content: system },
-            ...assistantContext.conversationHistory.slice(-3),
-            { role: "user", content: userMessage }
-        ];
-        
-        const respuestaIA = await getOpenAIResponse(messages);
-        console.log('Respuesta de IA recibida:', respuestaIA);
-
-        if (!respuestaIA) {
-            throw new Error('No se recibió respuesta de OpenAI');
-        }
-
-        // Extrae la consulta SQL de la respuesta de la IA
-        const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
-        if (sqlMatch) {
-            const sql = sqlMatch[1] || sqlMatch[0];
-            console.log('Consulta SQL generada:', sql);
-
-            try {
-                console.log('Ejecutando consulta SQL...');
-                const [rows] = await db.query(sql);
-                console.log('Resultados de la consulta:', rows);
-
-                const datosReales = rows.length === 0
-                    ? "No se encontraron resultados en la base de datos."
-                    : JSON.stringify(rows, null, 2);
-
-                const promptAnalisis = `
-                Usuario preguntó: ${userMessage}
-                Datos reales de la base de datos:
-                ${datosReales}
-                
-                IMPORTANTE: Eres un asistente especializado de Semilleros Deitana S.L., una empresa líder en producción de plantel hortícola.
-
-                REGLAS PARA MOSTRAR RESULTADOS:
-                1. NUNCA uses los nombres crudos de las columnas (ej: ACCO_DENO, ACCO_FEC)
-                2. Usa nombres técnicos y profesionales:
-                   - ACCO_DENO → Tipo de Acción
-                   - ACCO_FEC → Fecha
-                   - ACCO_HOR → Hora
-                   - CL_DENO → Cliente
-                   - USU_NOMB → Vendedor
-                   - ACCO_OBS → Observación
-
-                3. Para productos y variedades:
-                   
-                  
-
-                4. Para bandejas y materiales:
-                   - Enfócate en especificaciones técnicas
-                   - Menciona capacidad y dimensiones
-                   - Destaca características de durabilidad
-                   - Incluye recomendaciones de uso
-
-                5. Formato de presentación:
-                   - Usa un tono profesional y técnico
-                   - No inventes información, solo usa la que está en la base de datos
-
-                6. Al final de la respuesta:
-                   - Incluye una recomendación técnica relevante
-                   - Sugiere aspectos a considerar para el cultivo
-                `;
-
-                console.log('Generando análisis de respuesta...');
-                const analisis = await getOpenAIResponse([
-                    { role: "system", content: promptAnalisis }
-                ]);
-
-                assistantContext.conversationHistory.push(
-                    { role: "user", content: userMessage },
-                    { role: "assistant", content: analisis }
-                );
-
-                return {
-                    message: analisis,
-                    context: assistantContext
-                };
-            } catch (sqlError) {
-                console.error('Error en SQL:', sqlError);
-                return {
-                    message: `Error en la consulta: ${sqlError.message}. Por favor, intenta reformular tu pregunta.`,
-                    context: assistantContext
-                };
+            if (!respuestaIA) {
+                throw new Error('No se recibió respuesta de OpenAI');
             }
-        } else {
-            console.log('No se encontró consulta SQL en la respuesta:', respuestaIA);
-            return {
-                message: "No pude generar una consulta válida para tu pregunta. Por favor, intenta reformularla.",
-                context: assistantContext
-            };
+
+            const sqlMatch = respuestaIA.match(/```sql\s*([\s\S]+?)\s*```|SELECT[\s\S]+?;/i);
+            if (sqlMatch) {
+                const sql = sqlMatch[1] || sqlMatch[0];
+                console.log('Consulta SQL generada:', sql);
+
+                try {
+                    const [rows] = await db.query(sql);
+                    const datosReales = rows.length === 0
+                        ? "No se encontraron resultados en la base de datos."
+                        : JSON.stringify(rows, null, 2);
+
+                    const promptAnalisis = `
+                    Usuario preguntó: ${userMessage}
+                    Datos reales de la base de datos:
+                    ${datosReales}
+                    
+                    IMPORTANTE: Eres un asistente especializado de Semilleros Deitana S.L.
+
+                    REGLAS PARA MOSTRAR RESULTADOS:
+                    1. NUNCA uses los nombres crudos de las columnas
+                    2. Usa nombres técnicos y profesionales
+                    3. Enfócate en aspectos técnicos y agrícolas
+                    4. No inventes información
+                    5. Incluye recomendaciones técnicas relevantes`;
+
+                    const analisis = await getOpenAIResponse([
+                        { role: "system", content: promptAnalisis }
+                    ]);
+
+                    assistantContext.conversationHistory.push(
+                        { role: "user", content: userMessage },
+                        { role: "assistant", content: analisis }
+                    );
+
+                    return {
+                        message: analisis,
+                        context: assistantContext
+                    };
+                } catch (error) {
+                    console.error('Error en SQL:', error);
+                    return {
+                        message: `Error en la consulta: ${error.message}. Por favor, intenta reformular tu pregunta.`,
+                        context: assistantContext
+                    };
+                }
+            }
         }
+        
+        // 3. Para consultas complejas, usar el nuevo sistema
+        console.log('Mensaje identificado como consulta compleja');
+        const consultas = await generarConsultasNecesarias(analisis);
+        
+        // 4. Ejecución de consultas
+        console.log('Ejecutando consultas...');
+        const resultados = {};
+        for (const consulta of consultas.consultas) {
+            try {
+                const [rows] = await db.query(consulta.sql);
+                resultados[consulta.tipo] = rows;
+            } catch (error) {
+                console.error(`Error en consulta ${consulta.tipo}:`, error);
+                resultados[consulta.tipo] = [];
+            }
+        }
+
+        // 5. Análisis de resultados
+        console.log('Analizando resultados...');
+        const respuesta = await analizarResultados(consultas, resultados, userMessage);
+
+        // 6. Actualización del contexto
+        assistantContext.conversationHistory.push(
+            { role: "user", content: userMessage },
+            { role: "assistant", content: respuesta }
+        );
+
+        return {
+            message: respuesta,
+            context: assistantContext
+        };
+
     } catch (error) {
         console.error('Error en processMessage:', error);
         return {
-            message: 'Hubo un problema al procesar tu consulta. Por favor, intenta de nuevo.',
+            message: 'Hubo un problema al procesar tu consulta. Por favor, intenta reformularla.',
             context: assistantContext
         };
     }
