@@ -21,8 +21,79 @@ const assistantContext = {
     lastQuery: null,
     lastResponse: null,
     conversationHistory: [],
-    isFirstMessage: true
+    isFirstMessage: true,
+    lastTableContext: null,
+    lastQueryType: null, // Agregado para rastrear el tipo de consulta anterior
+    lastQueryParams: null // Agregado para rastrear los parámetros de la consulta
 };
+
+// Nueva función para mantener el contexto y generar consultas
+async function mantenerContextoYGenerarConsulta(userMessage) {
+    // Verificar si es una continuación
+    if (userMessage.toLowerCase().includes('mas')) {
+        if (assistantContext.lastQueryType === 'articulos') {
+            // Incrementar el offset para la siguiente consulta
+            const offset = (assistantContext.lastQueryParams?.offset || 0) + 2;
+            assistantContext.lastQueryParams = { offset };
+            
+            // Generar consulta SQL completa con todas las columnas relevantes
+            const consulta = {
+                sql: `SELECT 
+                    id, 
+                    AR_DENO as denominacion,
+                    AR_IVA as tipo_iva,
+                    AR_GER as porcentaje_germinacion,
+                    AR_PREC as precio_venta,
+                    AR_UNI as unidades,
+                    AR_STOCK as stock_actual
+                FROM articulos 
+                ORDER BY id 
+                LIMIT ${offset}, 2`,
+                tipo: 'articulos'
+            };
+            
+            return {
+                tipo: 'continuacion',
+                consulta: consulta,
+                mensaje: userMessage
+            };
+        }
+        return null;
+    }
+
+    // Analizar el tipo de consulta
+    const palabrasClave = userMessage.toLowerCase().split(' ');
+    
+    // Identificar el tipo de consulta basado en palabras clave
+    if (palabrasClave.includes('articulos') || palabrasClave.includes('articulo')) {
+        assistantContext.lastQueryType = 'articulos';
+        assistantContext.lastQueryParams = { offset: 0 };
+        
+        // Generar consulta inicial con todas las columnas relevantes
+        const consulta = {
+            sql: `SELECT 
+                id, 
+                AR_DENO as denominacion,
+                AR_IVA as tipo_iva,
+                AR_GER as porcentaje_germinacion,
+                AR_PREC as precio_venta,
+                AR_UNI as unidades,
+                AR_STOCK as stock_actual
+            FROM articulos 
+            ORDER BY id 
+            LIMIT 2`,
+            tipo: 'articulos'
+        };
+        
+        return {
+            tipo: 'nueva_consulta',
+            consulta: consulta,
+            mensaje: userMessage
+        };
+    }
+    
+    return null;
+}
 
 async function getOpenAIResponse(messages) {
     try {
@@ -98,7 +169,6 @@ function esPreguntaGeneral(mensaje) {
     return mensajeLower.match(/^(quién eres|quien eres|qué eres|que eres|qué puedes hacer|que puedes hacer|ayuda|help)/i);
 }
 
-// Nueva función para analizar la intención de la consulta
 async function analizarIntencionConsulta(userMessage) {
     const prompt = `Eres un asistente especializado de Semilleros Deitana S.L. 
     Analiza la siguiente consulta y determina qué información necesita el usuario:
@@ -123,7 +193,6 @@ async function analizarIntencionConsulta(userMessage) {
     return JSON.parse(respuesta);
 }
 
-// Nueva función para generar consultas necesarias
 async function generarConsultasNecesarias(analisis) {
     const prompt = `Eres un experto en bases de datos de Semilleros Deitana S.L.
     Genera las consultas SQL necesarias para obtener la información requerida.
@@ -151,7 +220,6 @@ async function generarConsultasNecesarias(analisis) {
     return JSON.parse(respuesta);
 }
 
-// Nueva función para analizar resultados
 async function analizarResultados(consultas, resultados, userMessage) {
     const prompt = `Eres un asistente especializado de Semilleros Deitana S.L.
     Analiza los siguientes resultados y genera una respuesta completa.
@@ -212,7 +280,58 @@ async function processMessage(userMessage) {
     try {
         console.log('Procesando mensaje:', userMessage);
 
-        // 1. Verificación de saludos y preguntas generales
+        // Verificar si es una continuación o una nueva consulta
+        const contexto = await mantenerContextoYGenerarConsulta(userMessage);
+        if (contexto) {
+            console.log('Mensaje identificado como continuación o nueva consulta');
+            
+            // Si es una continuación, usar la consulta generada
+            if (contexto.tipo === 'continuacion') {
+                try {
+                    const [rows] = await db.query(contexto.consulta.sql);
+                    const datosReales = rows.length === 0
+                        ? "No se encontraron resultados en la base de datos."
+                        : JSON.stringify(rows, null, 2);
+
+                    const promptAnalisis = `
+                    Usuario preguntó: ${userMessage}
+                    Datos reales de la base de datos:
+                    ${datosReales}
+                    
+                    IMPORTANTE: Eres un asistente especializado de Semilleros Deitana S.L.
+                    Contexto: Continuación de consulta de artículos
+                    
+                    REGLAS PARA MOSTRAR RESULTADOS:
+                    1. NUNCA uses los nombres crudos de las columnas
+                    2. Usa nombres técnicos y profesionales
+                    3. Enfócate en aspectos técnicos y agrícolas
+                    4. No inventes información
+                    5. Incluye recomendaciones técnicas relevantes`;
+
+                    const respuestaIA = await getOpenAIResponse([
+                        { role: "system", content: promptAnalisis }
+                    ]);
+
+                    assistantContext.conversationHistory.push(
+                        { role: "user", content: userMessage },
+                        { role: "assistant", content: respuestaIA }
+                    );
+
+                    return {
+                        message: respuestaIA,
+                        context: assistantContext
+                    };
+                } catch (error) {
+                    console.error('Error en consulta:', error);
+                    return {
+                        message: `Error al obtener más artículos: ${error.message}. Por favor, intenta reformular tu pregunta.`,
+                        context: assistantContext
+                    };
+                }
+            }
+        }
+
+        // Si no es continuación, procesar como consulta normal
         if (esSaludo(userMessage) || esPreguntaGeneral(userMessage)) {
             console.log('Mensaje identificado como saludo o pregunta general');
             const respuestaConversacional = await generarRespuestaConversacional(userMessage);
@@ -228,7 +347,8 @@ async function processMessage(userMessage) {
             };
         }
 
-        // 2. Análisis de la intención de la consulta
+        // Resto del código existente...
+        // 1. Análisis de la intención de la consulta
         console.log('Analizando intención de la consulta...');
         const analisis = await analizarIntencionConsulta(userMessage);
         
