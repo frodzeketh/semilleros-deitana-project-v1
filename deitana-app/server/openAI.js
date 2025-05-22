@@ -2,6 +2,7 @@ const { OpenAI } = require('openai');
 const pool = require('./db');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
+const mapaERP = require('./mapaERP').mapaERP;
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -11,10 +12,16 @@ const openai = new OpenAI({
 // Variable para mantener el historial de mensajes
 let messageHistory = [];
 
+// Función para obtener las relaciones de una tabla
+function obtenerRelaciones(tabla) {
+    const seccion = Object.entries(mapaERP).find(([_, datos]) => datos.tabla === tabla)?.[1];
+    return seccion?.relaciones || {};
+}
+
 // Función para formatear resultados en Markdown
 function formatResultsAsMarkdown(results) {
     if (!results || results.length === 0) {
-        return "No se encontraron resultados.";
+        return "Lo siento, no he encontrado resultados para tu consulta. ¿Te gustaría intentar con otros criterios de búsqueda?";
     }
 
     // Determinar el tipo de datos basado en las columnas presentes
@@ -23,76 +30,81 @@ function formatResultsAsMarkdown(results) {
     
     if (columns.includes('CL_DENO')) {
         // Formato para clientes
-        markdown = "Información de Clientes\nSemilleros Deitana S.L.\n\n";
+        markdown = "He encontrado la siguiente información de clientes:\n\n";
         results.forEach((row, index) => {
-            markdown += `Cliente ${index + 1}\n`;
-            markdown += `Nombre: ${row.CL_DENO || 'No disponible'}\n`;
-            markdown += `Dirección: ${row.CL_DOM || 'No disponible'}\n`;
-            markdown += `Población: ${row.CL_POB || 'No disponible'}\n`;
-            markdown += `Provincia: ${row.CL_PROV || 'No disponible'}\n`;
-            markdown += `Código Postal: ${row.CL_CDP || 'No disponible'}\n`;
-            markdown += `Teléfono: ${row.CL_TEL || 'No disponible'}\n`;
-            markdown += `CIF: ${row.CL_CIF || 'No disponible'}\n`;
+            markdown += `**Cliente ${index + 1}**\n`;
+            markdown += `**Nombre:** ${row.CL_DENO || 'No disponible'}\n`;
+            markdown += `**Dirección:** ${row.CL_DOM || 'No disponible'}\n`;
+            markdown += `**Población:** ${row.CL_POB || 'No disponible'}\n`;
+            markdown += `**Provincia:** ${row.CL_PROV || 'No disponible'}\n`;
+            markdown += `**Código Postal:** ${row.CL_CDP || 'No disponible'}\n`;
+            markdown += `**Teléfono:** ${row.CL_TEL || 'No disponible'}\n`;
+            markdown += `**CIF:** ${row.CL_CIF || 'No disponible'}\n`;
             if (row.CL_PAIS) {
-                markdown += `País: ${row.CL_PAIS}\n`;
+                markdown += `**País:** ${row.CL_PAIS}\n`;
             }
             markdown += "\n";
         });
+        markdown += "¿Te gustaría ver más clientes o buscar por algún criterio específico como provincia o población?";
     } else if (columns.includes('AR_DENO')) {
         // Formato para artículos
-        markdown = "Información de Artículos\nSemilleros Deitana S.L.\n\n";
+        markdown = "Aquí tienes la información de los artículos:\n\n";
         results.forEach((row, index) => {
-            markdown += `Artículo ${index + 1}\n`;
-            markdown += `Código: ${row.id || 'No disponible'}\n`;
-            markdown += `Descripción: ${row.AR_DENO || 'No disponible'}\n`;
-            markdown += `Referencia: ${row.AR_REF || 'No disponible'}\n`;
-            markdown += `Código de Barras: ${row.AR_BAR || 'No disponible'}\n`;
-            markdown += `Grupo: ${row.AR_GRP || 'No disponible'}\n`;
-            markdown += `Familia: ${row.AR_FAM || 'No disponible'}\n\n`;
-            
+            markdown += `**Artículo ${index + 1}**\n`;
+            markdown += `**Descripción:** ${row.AR_DENO || 'No disponible'}\n`;
+            markdown += `**Código:** ${row.id || 'No disponible'}\n`;
+            markdown += `**Referencia:** ${row.AR_REF || 'No disponible'}\n`;
+            markdown += `**Código de Barras:** ${row.AR_BAR || 'No disponible'}\n`;
+            markdown += `**Grupo:** ${row.AR_GRP || 'No disponible'}\n`;
+            markdown += `**Familia:** ${row.AR_FAM || 'No disponible'}\n\n`;
         });
+        markdown += "¿Te gustaría ver más artículos o filtrar por alguna categoría específica?";
     } else if (columns.includes('ACCO_DENO')) {
         // Formato para acciones comerciales
-        markdown = "Información de Acciones Comerciales\nSemilleros Deitana S.L.\n\n";
+        markdown = "Aquí tienes la información de las acciones comerciales:\n\n";
         results.forEach((row, index) => {
-            markdown += `Acción ${index + 1}\n`;
-            markdown += `Tipo: ${row.ACCO_DENO || 'No disponible'}\n`;
-            markdown += `Cliente: ${row.CL_DENO || 'No disponible'}\n`;
-            markdown += `Vendedor: ${row.VD_DENO || 'No disponible'}\n`;
-            markdown += `Fecha: ${row.ACCO_FEC || 'No disponible'}\n`;
-            markdown += `Hora: ${row.ACCO_HOR || 'No disponible'}\n\n`;
+            markdown += `**Acción ${index + 1}**\n`;
+            markdown += `**Tipo:** ${row.ACCO_DENO || 'No disponible'}\n`;
+            markdown += `**Cliente:** ${row.CL_DENO || 'No disponible'}\n`;
+            markdown += `**Vendedor:** ${row.VD_DENO || 'No disponible'}\n`;
+            markdown += `**Fecha:** ${row.ACCO_FEC || 'No disponible'}\n`;
+            markdown += `**Hora:** ${row.ACCO_HOR || 'No disponible'}\n\n`;
         });
+        markdown += "¿Te gustaría ver más acciones comerciales o filtrar por algún criterio específico?";
     } else if (columns.includes('FP_DENO')) {
         // Formato para formas de pago
-        markdown = "Información de Formas de Pago\nSemilleros Deitana S.L.\n\n";
+        markdown = "Aquí tienes la información de las formas de pago:\n\n";
         results.forEach((row, index) => {
-            markdown += `Forma de Pago ${index + 1}\n`;
-            markdown += `Denominación: ${row.FP_DENO || 'No disponible'}\n`;
+            markdown += `**Forma de Pago ${index + 1}**\n`;
+            markdown += `**Denominación:** ${row.FP_DENO || 'No disponible'}\n`;
             if (row.FP_NVT) {
-                markdown += `Número de Vencimientos: ${row.FP_NVT}\n`;
+                markdown += `**Número de Vencimientos:** ${row.FP_NVT}\n`;
             }
             markdown += "\n";
         });
+        markdown += "¿Te gustaría ver más formas de pago o necesitas información adicional sobre alguna en particular?";
     } else {
         // Formato genérico para otros tipos de datos
-        markdown = "Resultados de la Consulta\n\n";
+        markdown = "Aquí tienes la información solicitada:\n\n";
         results.forEach((row, index) => {
-            markdown += `Registro ${index + 1}\n`;
+            markdown += `**Registro ${index + 1}**\n`;
             Object.entries(row).forEach(([key, value]) => {
-                markdown += `${key}: ${value || 'No disponible'}\n`;
+                markdown += `**${key}:** ${value || 'No disponible'}\n`;
             });
             markdown += "\n";
         });
+        markdown += "¿Te gustaría ver más registros o necesitas información adicional sobre algún aspecto en particular?";
     }
 
     // Agregar recomendaciones técnicas cuando sea apropiado
     if (columns.includes('CL_DENO') || columns.includes('AR_DENO')) {
-        markdown += "Recomendaciones Técnicas\n";
-        markdown += "Para estos registros, recomendamos:\n\n";
+        markdown += "\n**Recomendaciones Técnicas**\n";
+        markdown += "Para estos registros, te sugiero considerar:\n\n";
         markdown += "• Asesoramiento personalizado sobre variedades de semillas adaptadas a sus zonas\n";
         markdown += "• Información sobre prácticas agrícolas sostenibles\n";
         markdown += "• Recomendaciones específicas según el clima y tipo de suelo\n";
-        markdown += "• Estrategias para optimizar la productividad y calidad de cultivos\n";
+        markdown += "• Estrategias para optimizar la productividad y calidad de cultivos\n\n";
+        markdown += "¿Te gustaría que profundicemos en alguno de estos aspectos?";
     }
     
     return markdown;
