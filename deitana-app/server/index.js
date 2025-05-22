@@ -3,11 +3,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-const { processMessage } = require('./utils/deepseek');
-
-
+const { processQuery } = require('./openAI');
 
 dotenv.config();
+
+// Verificación de variables de entorno
+console.log('=== VERIFICACIÓN DE VARIABLES DE ENTORNO ===');
+console.log('OPENAI_API_KEY configurada:', process.env.OPENAI_API_KEY ? 'Sí' : 'No');
+console.log('PORT configurado:', process.env.PORT || 'No (usando 3001 por defecto)');
+console.log('=== FIN DE VERIFICACIÓN ===');
 
 const app = express();
 
@@ -35,7 +39,6 @@ app.use(express.static(path.join(__dirname, '../build')));
 app.post('/api/chat', async (req, res) => {
   console.log('=== INICIO DE PETICIÓN DE CHAT ===');
   console.log('Recibida petición de chat:', req.body);
-  console.log('Headers:', req.headers);
   
   const { message } = req.body;
   
@@ -49,13 +52,14 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     console.log('Procesando mensaje:', message);
-    const response = await processMessage(message);
-    console.log('Respuesta generada:', response);
+    const result = await processQuery(message);
+    console.log('Respuesta generada:', result);
     
-    res.json({
-      success: true,
-      data: response
-    });
+    if (!result.success) {
+      return res.status(500).json(result);
+    }
+    
+    res.json(result);
   } catch (error) {
     console.error('Error en el chat:', error);
     console.error('Stack trace:', error.stack);

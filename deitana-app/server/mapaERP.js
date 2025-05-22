@@ -84,6 +84,7 @@ const mapaERP = {
             AR_WEB: "Información adicional para la web",
             AR_IVAP: "IVA aplicado al precio",
             AR_PGE: "% de germinación",
+            AR_PRV: "Código del proveedor principal del artículo. Referencia al campo 'id' en la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma.",
             // Nota: Los campos de precio (AR_PUD, AR_POP, AR_PST, AR_PVME) y stock (AR_STOK) mencionados en la descripción general no están detallados individualmente en la lista de campos proporcionada, pero se infiere su existencia.
         },
         relaciones: {
@@ -107,33 +108,21 @@ const mapaERP = {
         /* Archivos – Generales – Clientes */
         /* ================================================*/
         clientes: {
-            descripcion: "En Semilleros Deitana, la sección de 'Clientes' dentro del ERP centraliza la información detallada de nuestra cartera de clientes. Cada registro contiene datos esenciales como teléfono, domicilio, código postal, población, provincia, entre otros. Disponer de esta información de manera organizada es fundamental para la accesibilidad, la vinculación con otros registros del sistema y la gestión eficiente de la información relevante de cada cliente.",
-            tabla: "clientes",
             alias: "Clientes",
+            descripcion: "Información de clientes activos",
+            tabla: "clientes",
             columnas: {
-                id: "Códoig único que identifica a cada cliente",
-                CL_DENO: "Denominación o nombre completo del cliente",
-                CL_DOM: "Domicilio del cliente",
-                CL_POB: "Población del cliente",
-                CL_PROV: "Provincia del cliente",
-                CL_CDP: "Código postal del cliente",
-                CL_TEL: "Número(s) de teléfono del cliente",
-                CL_FAX: "Número de FAX del cliente",
-                CL_CIF: "Código de Identificación",
-                CL_EMA: "Dirección de correo electrónico del cliente",
-                CL_WEB: "Dirección web del cliente",
-                CL_PAIS: "País de residencia del cliente"
-            },
-            relaciones: {
-                // Aquí se pueden añadir las relaciones con otras tablas cuando sea necesario
-            },
-            ejemplos: {
-                consulta_pais: "Para obtener información de clientes residentes en España, se consultaría el campo CL_PAIS buscando el valor 'España'",
-                consulta_poblacion: "Se puede filtrar por población (CL_POB) o provincia (CL_PROV)",
-                consulta_completa: "Si se solicita la información completa de un cliente, se proporcionarán los datos cargados en los campos correspondientes (CL_DENO, CL_DOM, CL_POB, etc.)"
+              CL_DENO: "Nombre del cliente",
+              CL_DOM: "Dirección",
+              CL_POB: "Población",
+              CL_PROV: "Provincia",
+              CL_CDP: "Código postal",
+              CL_TEL: "Teléfono",
+              CL_CIF: "CIF",
+              CL_PAIS: "País"
             }
-        },
-    
+          },
+        
     
     
 
