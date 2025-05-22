@@ -79,7 +79,11 @@ function formatResultsAsMarkdown(results) {
                 markdown += `**Vendedor:** ${row.vendedor}\n`;
             }
             markdown += `**Fecha:** ${row.ACCO_FEC || 'No disponible'}\n`;
-            markdown += `**Hora:** ${row.ACCO_HOR || 'No disponible'}\n\n`;
+            markdown += `**Hora:** ${row.ACCO_HOR || 'No disponible'}\n`;
+            if (row.observaciones) {
+                markdown += `**Observaciones:** ${row.observaciones}\n`;
+            }
+            markdown += "\n";
         });
         markdown += "¿Te gustaría ver más acciones comerciales o filtrar por algún criterio específico?";
         if (results.some(row => row.cliente)) {

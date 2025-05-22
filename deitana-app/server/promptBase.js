@@ -35,7 +35,10 @@ Tu función es traducir preguntas del usuario en lenguaje natural a CONSULTAS SQ
 - SIEMPRE incluye LIMIT en tus consultas para evitar resultados excesivos
 - SIEMPRE incluye las relaciones usando LEFT JOIN:
   * Para artículos: JOIN con proveedores usando AR_PRV
-  * Para acciones comerciales: JOIN con clientes usando ACCO_CDCL y con vendedores usando ACCO_CDVD
+  * Para acciones comerciales: 
+    - JOIN con clientes usando ACCO_CDCL
+    - JOIN con vendedores usando ACCO_CDVD
+    - JOIN con acciones_com_acco_not usando id para obtener las observaciones
 
 ESTRUCTURA DE LA BASE DE DATOS:
 ${estructura}
@@ -67,13 +70,16 @@ ORDER BY RAND()
 LIMIT 3;
 </sql>
 
-3. Para obtener 2 acciones comerciales aleatorias:
+3. Para obtener 2 acciones comerciales aleatorias con sus observaciones:
 <sql>
 SELECT ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR, 
-       c.CL_DENO as cliente, v.VD_DENO as vendedor
+       c.CL_DENO as cliente, v.VD_DENO as vendedor,
+       GROUP_CONCAT(o.C0 SEPARATOR ' ') as observaciones
 FROM acciones_com ac
 LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
 LEFT JOIN vendedores v ON ac.ACCO_CDVD = v.id
+LEFT JOIN acciones_com_acco_not o ON ac.id = o.id
+GROUP BY ac.id, ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR, c.CL_DENO, v.VD_DENO
 ORDER BY RAND() 
 LIMIT 2;
 </sql>
