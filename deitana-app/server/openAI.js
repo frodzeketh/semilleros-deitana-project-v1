@@ -56,21 +56,38 @@ function formatResultsAsMarkdown(results) {
             markdown += `**Referencia:** ${row.AR_REF || 'No disponible'}\n`;
             markdown += `**Código de Barras:** ${row.AR_BAR || 'No disponible'}\n`;
             markdown += `**Grupo:** ${row.AR_GRP || 'No disponible'}\n`;
-            markdown += `**Familia:** ${row.AR_FAM || 'No disponible'}\n\n`;
+            markdown += `**Familia:** ${row.AR_FAM || 'No disponible'}\n`;
+            if (row.proveedor) {
+                markdown += `**Proveedor:** ${row.proveedor}\n`;
+            }
+            markdown += "\n";
         });
         markdown += "¿Te gustaría ver más artículos o filtrar por alguna categoría específica?";
+        if (results.some(row => row.proveedor)) {
+            markdown += "\n\n¿Te gustaría ver más información sobre los proveedores mencionados?";
+        }
     } else if (columns.includes('ACCO_DENO')) {
         // Formato para acciones comerciales
         markdown = "Aquí tienes la información de las acciones comerciales:\n\n";
         results.forEach((row, index) => {
             markdown += `**Acción ${index + 1}**\n`;
             markdown += `**Tipo:** ${row.ACCO_DENO || 'No disponible'}\n`;
-            markdown += `**Cliente:** ${row.CL_DENO || 'No disponible'}\n`;
-            markdown += `**Vendedor:** ${row.VD_DENO || 'No disponible'}\n`;
+            if (row.cliente) {
+                markdown += `**Cliente:** ${row.cliente}\n`;
+            }
+            if (row.vendedor) {
+                markdown += `**Vendedor:** ${row.vendedor}\n`;
+            }
             markdown += `**Fecha:** ${row.ACCO_FEC || 'No disponible'}\n`;
             markdown += `**Hora:** ${row.ACCO_HOR || 'No disponible'}\n\n`;
         });
         markdown += "¿Te gustaría ver más acciones comerciales o filtrar por algún criterio específico?";
+        if (results.some(row => row.cliente)) {
+            markdown += "\n\n¿Te gustaría ver más información sobre los clientes mencionados?";
+        }
+        if (results.some(row => row.vendedor)) {
+            markdown += "\n\n¿Te gustaría ver más información sobre los vendedores?";
+        }
     } else if (columns.includes('FP_DENO')) {
         // Formato para formas de pago
         markdown = "Aquí tienes la información de las formas de pago:\n\n";

@@ -33,6 +33,9 @@ Tu función es traducir preguntas del usuario en lenguaje natural a CONSULTAS SQ
 - SIEMPRE usa los datos reales de la base de datos
 - SOLO usa las estructuras y campos disponibles en la base de datos
 - SIEMPRE incluye LIMIT en tus consultas para evitar resultados excesivos
+- SIEMPRE incluye las relaciones usando LEFT JOIN:
+  * Para artículos: JOIN con proveedores usando AR_PRV
+  * Para acciones comerciales: JOIN con clientes usando ACCO_CDCL y con vendedores usando ACCO_CDVD
 
 ESTRUCTURA DE LA BASE DE DATOS:
 ${estructura}
@@ -57,10 +60,22 @@ LIMIT 2;
 
 2. Para obtener 3 artículos aleatorios:
 <sql>
-SELECT AR_DENO, AR_REF, AR_BAR, AR_GRP, AR_FAM 
-FROM articulos 
+SELECT a.AR_DENO, a.AR_REF, a.AR_BAR, a.AR_GRP, a.AR_FAM, p.PR_DENO as proveedor
+FROM articulos a
+LEFT JOIN proveedores p ON a.AR_PRV = p.id
 ORDER BY RAND() 
 LIMIT 3;
+</sql>
+
+3. Para obtener 2 acciones comerciales aleatorias:
+<sql>
+SELECT ac.ACCO_DENO, ac.ACCO_FEC, ac.ACCO_HOR, 
+       c.CL_DENO as cliente, v.VD_DENO as vendedor
+FROM acciones_com ac
+LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
+LEFT JOIN vendedores v ON ac.ACCO_CDVD = v.id
+ORDER BY RAND() 
+LIMIT 2;
 </sql>
 
 IMPORTANTE:
@@ -70,6 +85,7 @@ IMPORTANTE:
 - NO inventes datos ni nombres
 - Los datos DEBEN venir de la base de datos
 - Usa EXACTAMENTE los campos definidos en la estructura
+- SIEMPRE incluye los JOINs necesarios para obtener información relacionada
 
 FORMATO DE RESPUESTA:
 1. Incluir la consulta SQL entre las etiquetas <sql> y </sql>
@@ -81,7 +97,8 @@ RECUERDA:
 - SIEMPRE incluye ORDER BY RAND() para selecciones aleatorias
 - SIEMPRE incluye LIMIT para limitar el número de resultados
 - Incluir la consulta SQL entre las etiquetas <sql> y </sql>
-- NUNCA inventes datos ni nombres`;
+- NUNCA inventes datos ni nombres
+- SIEMPRE incluye los JOINs necesarios para obtener información relacionada`;
 
 	return promptBase;
 }
@@ -89,4 +106,3 @@ RECUERDA:
 module.exports = {
 	promptBase: generarPrompt()
 };
-
