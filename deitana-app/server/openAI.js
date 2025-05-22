@@ -24,23 +24,33 @@ function formatResultsAsMarkdown(results) {
         return "Lo siento, no he encontrado resultados para tu consulta. ¿Te gustaría intentar con otros criterios de búsqueda?";
     }
 
+    // Función auxiliar para verificar si un valor está vacío
+    const isEmpty = (value) => {
+        return value === null || value === undefined || value === '' || value === 'No disponible';
+    };
+
+    // Función auxiliar para formatear un valor
+    const formatValue = (value) => {
+        return isEmpty(value) ? 'No disponible' : value;
+    };
+
     // Determinar el tipo de datos basado en las columnas presentes
     const columns = Object.keys(results[0]);
     let markdown = "";
     
     if (columns.includes('CL_DENO')) {
         // Formato para clientes
-        markdown = "He encontrado la siguiente información de clientes:\n\n";
+        markdown = "He encontrado información sobre nuestros clientes:\n\n";
         results.forEach((row, index) => {
             markdown += `**Cliente ${index + 1}**\n`;
-            markdown += `**Nombre:** ${row.CL_DENO || 'No disponible'}\n`;
-            markdown += `**Dirección:** ${row.CL_DOM || 'No disponible'}\n`;
-            markdown += `**Población:** ${row.CL_POB || 'No disponible'}\n`;
-            markdown += `**Provincia:** ${row.CL_PROV || 'No disponible'}\n`;
-            markdown += `**Código Postal:** ${row.CL_CDP || 'No disponible'}\n`;
-            markdown += `**Teléfono:** ${row.CL_TEL || 'No disponible'}\n`;
-            markdown += `**CIF:** ${row.CL_CIF || 'No disponible'}\n`;
-            if (row.CL_PAIS) {
+            markdown += `**Nombre:** ${formatValue(row.CL_DENO)}\n`;
+            markdown += `**Dirección:** ${formatValue(row.CL_DOM)}\n`;
+            markdown += `**Población:** ${formatValue(row.CL_POB)}\n`;
+            markdown += `**Provincia:** ${formatValue(row.CL_PROV)}\n`;
+            markdown += `**Código Postal:** ${formatValue(row.CL_CDP)}\n`;
+            markdown += `**Teléfono:** ${formatValue(row.CL_TEL)}\n`;
+            markdown += `**CIF:** ${formatValue(row.CL_CIF)}\n`;
+            if (!isEmpty(row.CL_PAIS)) {
                 markdown += `**País:** ${row.CL_PAIS}\n`;
             }
             markdown += "\n";
@@ -48,57 +58,57 @@ function formatResultsAsMarkdown(results) {
         markdown += "¿Te gustaría ver más clientes o buscar por algún criterio específico como provincia o población?";
     } else if (columns.includes('AR_DENO')) {
         // Formato para artículos
-        markdown = "Aquí tienes la información de los artículos:\n\n";
+        markdown = "Te presento información sobre nuestros artículos:\n\n";
         results.forEach((row, index) => {
             markdown += `**Artículo ${index + 1}**\n`;
-            markdown += `**Descripción:** ${row.AR_DENO || 'No disponible'}\n`;
-            markdown += `**Código:** ${row.id || 'No disponible'}\n`;
-            markdown += `**Referencia:** ${row.AR_REF || 'No disponible'}\n`;
-            markdown += `**Código de Barras:** ${row.AR_BAR || 'No disponible'}\n`;
-            markdown += `**Grupo:** ${row.AR_GRP || 'No disponible'}\n`;
-            markdown += `**Familia:** ${row.AR_FAM || 'No disponible'}\n`;
-            if (row.proveedor) {
+            markdown += `**Descripción:** ${formatValue(row.AR_DENO)}\n`;
+            markdown += `**Código:** ${formatValue(row.id)}\n`;
+            markdown += `**Referencia:** ${formatValue(row.AR_REF)}\n`;
+            markdown += `**Código de Barras:** ${formatValue(row.AR_BAR)}\n`;
+            markdown += `**Grupo:** ${formatValue(row.AR_GRP)}\n`;
+            markdown += `**Familia:** ${formatValue(row.AR_FAM)}\n`;
+            if (!isEmpty(row.proveedor)) {
                 markdown += `**Proveedor:** ${row.proveedor}\n`;
             }
             markdown += "\n";
         });
         markdown += "¿Te gustaría ver más artículos o filtrar por alguna categoría específica?";
-        if (results.some(row => row.proveedor)) {
+        if (results.some(row => !isEmpty(row.proveedor))) {
             markdown += "\n\n¿Te gustaría ver más información sobre los proveedores mencionados?";
         }
     } else if (columns.includes('ACCO_DENO')) {
         // Formato para acciones comerciales
-        markdown = "Aquí tienes la información de las acciones comerciales:\n\n";
+        markdown = "Te muestro información sobre las acciones comerciales:\n\n";
         results.forEach((row, index) => {
             markdown += `**Acción ${index + 1}**\n`;
-            markdown += `**Tipo:** ${row.ACCO_DENO || 'No disponible'}\n`;
-            if (row.cliente) {
+            markdown += `**Tipo:** ${formatValue(row.ACCO_DENO)}\n`;
+            if (!isEmpty(row.cliente)) {
                 markdown += `**Cliente:** ${row.cliente}\n`;
             }
-            if (row.vendedor) {
+            if (!isEmpty(row.vendedor)) {
                 markdown += `**Vendedor:** ${row.vendedor}\n`;
             }
-            markdown += `**Fecha:** ${row.ACCO_FEC || 'No disponible'}\n`;
-            markdown += `**Hora:** ${row.ACCO_HOR || 'No disponible'}\n`;
-            if (row.observaciones) {
+            markdown += `**Fecha:** ${formatValue(row.ACCO_FEC)}\n`;
+            markdown += `**Hora:** ${formatValue(row.ACCO_HOR)}\n`;
+            if (!isEmpty(row.observaciones)) {
                 markdown += `**Observaciones:** ${row.observaciones}\n`;
             }
             markdown += "\n";
         });
         markdown += "¿Te gustaría ver más acciones comerciales o filtrar por algún criterio específico?";
-        if (results.some(row => row.cliente)) {
+        if (results.some(row => !isEmpty(row.cliente))) {
             markdown += "\n\n¿Te gustaría ver más información sobre los clientes mencionados?";
         }
-        if (results.some(row => row.vendedor)) {
+        if (results.some(row => !isEmpty(row.vendedor))) {
             markdown += "\n\n¿Te gustaría ver más información sobre los vendedores?";
         }
     } else if (columns.includes('FP_DENO')) {
         // Formato para formas de pago
-        markdown = "Aquí tienes la información de las formas de pago:\n\n";
+        markdown = "Te presento información sobre nuestras formas de pago:\n\n";
         results.forEach((row, index) => {
             markdown += `**Forma de Pago ${index + 1}**\n`;
-            markdown += `**Denominación:** ${row.FP_DENO || 'No disponible'}\n`;
-            if (row.FP_NVT) {
+            markdown += `**Denominación:** ${formatValue(row.FP_DENO)}\n`;
+            if (!isEmpty(row.FP_NVT)) {
                 markdown += `**Número de Vencimientos:** ${row.FP_NVT}\n`;
             }
             markdown += "\n";
@@ -106,11 +116,11 @@ function formatResultsAsMarkdown(results) {
         markdown += "¿Te gustaría ver más formas de pago o necesitas información adicional sobre alguna en particular?";
     } else {
         // Formato genérico para otros tipos de datos
-        markdown = "Aquí tienes la información solicitada:\n\n";
+        markdown = "Te presento la información solicitada:\n\n";
         results.forEach((row, index) => {
             markdown += `**Registro ${index + 1}**\n`;
             Object.entries(row).forEach(([key, value]) => {
-                markdown += `**${key}:** ${value || 'No disponible'}\n`;
+                markdown += `**${key}:** ${formatValue(value)}\n`;
             });
             markdown += "\n";
         });
@@ -120,7 +130,7 @@ function formatResultsAsMarkdown(results) {
     // Agregar recomendaciones técnicas cuando sea apropiado
     if (columns.includes('CL_DENO') || columns.includes('AR_DENO')) {
         markdown += "\n**Recomendaciones Técnicas**\n";
-        markdown += "Para estos registros, te sugiero considerar:\n\n";
+        markdown += "Basado en los datos disponibles, te sugiero considerar:\n\n";
         markdown += "• Asesoramiento personalizado sobre variedades de semillas adaptadas a sus zonas\n";
         markdown += "• Información sobre prácticas agrícolas sostenibles\n";
         markdown += "• Recomendaciones específicas según el clima y tipo de suelo\n";
