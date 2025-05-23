@@ -18,126 +18,25 @@ function obtenerRelaciones(tabla) {
     return seccion?.relaciones || {};
 }
 
-// Función para formatear resultados en Markdown
+// Función para formatear resultados en Markdown (solo datos, sin frases automáticas)
 function formatResultsAsMarkdown(results) {
     if (!results || results.length === 0) {
-        return "Lo siento, no he encontrado resultados para tu consulta. ¿Te gustaría intentar con otros criterios de búsqueda?";
+        return "No se han encontrado resultados para tu consulta.";
     }
 
-    // Función auxiliar para verificar si un valor está vacío
-    const isEmpty = (value) => {
-        return value === null || value === undefined || value === '' || value === 'No disponible';
-    };
+    // Si es un conteo simple, devolver solo el número
+    if (results.length === 1 && Object.keys(results[0]).length === 1) {
+        const value = Object.values(results[0])[0];
+        return `Total: ${value}`;
+    }
 
-    // Función auxiliar para formatear un valor
-    const formatValue = (value) => {
-        return isEmpty(value) ? 'No disponible' : value;
-    };
-
-    // Determinar el tipo de datos basado en las columnas presentes
+    // Para otros tipos de resultados, formatear como tabla
     const columns = Object.keys(results[0]);
-    let markdown = "";
-    
-    if (columns.includes('CL_DENO')) {
-        // Formato para clientes
-        markdown = "He encontrado información sobre nuestros clientes:\n\n";
-        results.forEach((row, index) => {
-            markdown += `**Cliente ${index + 1}**\n`;
-            markdown += `**Nombre:** ${formatValue(row.CL_DENO)}\n`;
-            markdown += `**Dirección:** ${formatValue(row.CL_DOM)}\n`;
-            markdown += `**Población:** ${formatValue(row.CL_POB)}\n`;
-            markdown += `**Provincia:** ${formatValue(row.CL_PROV)}\n`;
-            markdown += `**Código Postal:** ${formatValue(row.CL_CDP)}\n`;
-            markdown += `**Teléfono:** ${formatValue(row.CL_TEL)}\n`;
-            markdown += `**CIF:** ${formatValue(row.CL_CIF)}\n`;
-            if (!isEmpty(row.CL_PAIS)) {
-                markdown += `**País:** ${row.CL_PAIS}\n`;
-            }
-            markdown += "\n";
-        });
-        markdown += "¿Te gustaría ver más clientes o buscar por algún criterio específico como provincia o población?";
-    } else if (columns.includes('AR_DENO')) {
-        // Formato para artículos
-        markdown = "Te presento información sobre nuestros artículos:\n\n";
-        results.forEach((row, index) => {
-            markdown += `**Artículo ${index + 1}**\n`;
-            markdown += `**Descripción:** ${formatValue(row.AR_DENO)}\n`;
-            markdown += `**Código:** ${formatValue(row.id)}\n`;
-            markdown += `**Referencia:** ${formatValue(row.AR_REF)}\n`;
-            markdown += `**Código de Barras:** ${formatValue(row.AR_BAR)}\n`;
-            markdown += `**Grupo:** ${formatValue(row.AR_GRP)}\n`;
-            markdown += `**Familia:** ${formatValue(row.AR_FAM)}\n`;
-            if (!isEmpty(row.proveedor)) {
-                markdown += `**Proveedor:** ${row.proveedor}\n`;
-            }
-            markdown += "\n";
-        });
-        markdown += "¿Te gustaría ver más artículos o filtrar por alguna categoría específica?";
-        if (results.some(row => !isEmpty(row.proveedor))) {
-            markdown += "\n\n¿Te gustaría ver más información sobre los proveedores mencionados?";
-        }
-    } else if (columns.includes('ACCO_DENO')) {
-        // Formato para acciones comerciales
-        markdown = "Te muestro información sobre las acciones comerciales:\n\n";
-        results.forEach((row, index) => {
-            markdown += `**Acción ${index + 1}**\n`;
-            markdown += `**Tipo:** ${formatValue(row.ACCO_DENO)}\n`;
-            if (!isEmpty(row.cliente)) {
-                markdown += `**Cliente:** ${row.cliente}\n`;
-            }
-            if (!isEmpty(row.vendedor)) {
-                markdown += `**Vendedor:** ${row.vendedor}\n`;
-            }
-            markdown += `**Fecha:** ${formatValue(row.ACCO_FEC)}\n`;
-            markdown += `**Hora:** ${formatValue(row.ACCO_HOR)}\n`;
-            if (!isEmpty(row.observaciones)) {
-                markdown += `**Observaciones:** ${row.observaciones}\n`;
-            }
-            markdown += "\n";
-        });
-        markdown += "¿Te gustaría ver más acciones comerciales o filtrar por algún criterio específico?";
-        if (results.some(row => !isEmpty(row.cliente))) {
-            markdown += "\n\n¿Te gustaría ver más información sobre los clientes mencionados?";
-        }
-        if (results.some(row => !isEmpty(row.vendedor))) {
-            markdown += "\n\n¿Te gustaría ver más información sobre los vendedores?";
-        }
-    } else if (columns.includes('FP_DENO')) {
-        // Formato para formas de pago
-        markdown = "Te presento información sobre nuestras formas de pago:\n\n";
-        results.forEach((row, index) => {
-            markdown += `**Forma de Pago ${index + 1}**\n`;
-            markdown += `**Denominación:** ${formatValue(row.FP_DENO)}\n`;
-            if (!isEmpty(row.FP_NVT)) {
-                markdown += `**Número de Vencimientos:** ${row.FP_NVT}\n`;
-            }
-            markdown += "\n";
-        });
-        markdown += "¿Te gustaría ver más formas de pago o necesitas información adicional sobre alguna en particular?";
-    } else {
-        // Formato genérico para otros tipos de datos
-        markdown = "Te presento la información solicitada:\n\n";
-        results.forEach((row, index) => {
-            markdown += `**Registro ${index + 1}**\n`;
-            Object.entries(row).forEach(([key, value]) => {
-                markdown += `**${key}:** ${formatValue(value)}\n`;
-            });
-            markdown += "\n";
-        });
-        markdown += "¿Te gustaría ver más registros o necesitas información adicional sobre algún aspecto en particular?";
-    }
-
-    // Agregar recomendaciones técnicas cuando sea apropiado
-    if (columns.includes('CL_DENO') || columns.includes('AR_DENO')) {
-        markdown += "\n**Recomendaciones Técnicas**\n";
-        markdown += "Basado en los datos disponibles, te sugiero considerar:\n\n";
-        markdown += "• Asesoramiento personalizado sobre variedades de semillas adaptadas a sus zonas\n";
-        markdown += "• Información sobre prácticas agrícolas sostenibles\n";
-        markdown += "• Recomendaciones específicas según el clima y tipo de suelo\n";
-        markdown += "• Estrategias para optimizar la productividad y calidad de cultivos\n\n";
-        markdown += "¿Te gustaría que profundicemos en alguno de estos aspectos?";
-    }
-    
+    let markdown = "| " + columns.join(" | ") + " |\n";
+    markdown += "| " + columns.map(() => "---").join(" | ") + " |\n";
+    results.forEach(row => {
+        markdown += "| " + columns.map(col => (row[col] ?? "No disponible")).join(" | ") + " |\n";
+    });
     return markdown;
 }
 
@@ -191,7 +90,7 @@ async function processQuery(userQuery) {
                 role: "system",
                 content: promptBase
             },
-            ...messageHistory // Incluir todo el historial de mensajes
+            ...messageHistory
         ];
 
         // Realizar la llamada a la API de OpenAI
@@ -206,17 +105,6 @@ async function processQuery(userQuery) {
         const response = completion.choices[0].message.content;
         console.log('Respuesta generada:', response);
 
-        // Agregar la respuesta al historial
-        messageHistory.push({
-            role: "assistant",
-            content: response
-        });
-
-        // Mantener solo los últimos 10 mensajes para no exceder el límite de tokens
-        if (messageHistory.length > 10) {
-            messageHistory = messageHistory.slice(-10);
-        }
-
         // Extraer la consulta SQL de la respuesta usando las etiquetas <sql>
         const sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/i);
         if (sqlMatch) {
@@ -225,14 +113,53 @@ async function processQuery(userQuery) {
             
             // Ejecutar la consulta
             const results = await executeQuery(sql);
+            console.log('Resultados de la consulta:', results);
             
-            // Formatear la respuesta con los resultados en Markdown
+            // Formatear los resultados en Markdown
             const markdownResults = formatResultsAsMarkdown(results);
+
+            // Crear un nuevo mensaje para que la IA analice los resultados
+            const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n\n${markdownResults}\n\n
+            INSTRUCCIONES ESTRICTAS:
+            1. Usa SOLO los números y datos mostrados en la tabla arriba
+            2. NO inventes números ni datos
+            3. NO uses placeholders como [número] o [cantidad]
+            4. NO muestres la consulta SQL
+            5. Si es un conteo, muestra EXACTAMENTE el número que aparece en la tabla
+            6. NO redondees ni modifiques los números
+            7. Si la tabla está vacía, di que no hay datos
+            8. Si hay un error en la consulta, di que no se pudieron obtener los datos
+            9. NO agregues información adicional que no esté en los datos
+            10. NO hagas suposiciones sobre los datos
+            11. Formatea los datos en un texto legible y conversacional
+            12. Mantén un tono amigable y profesional
+            13. Ofrece ayuda adicional al final de tu respuesta
+            14. IMPORTANTE: Si ves un número en la tabla, úsalo EXACTAMENTE como está, sin modificarlo ni usar placeholders`;
+
+            // Obtener el análisis de la IA
+            const analysisCompletion = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Eres un asistente amigable y conversacional que muestra los datos exactos de la base de datos en un formato legible. NUNCA uses placeholders o variables, muestra los números exactos como aparecen en los datos."
+                    },
+                    {
+                        role: "user",
+                        content: analysisPrompt
+                    }
+                ],
+                temperature: 0.1, // Reducimos la temperatura para respuestas más precisas
+                max_tokens: 1000
+            });
+
+            const analysis = analysisCompletion.choices[0].message.content;
+            console.log('Análisis generado:', analysis);
             
             return {
                 success: true,
                 data: {
-                    message: markdownResults
+                    message: analysis
                 }
             };
         }
