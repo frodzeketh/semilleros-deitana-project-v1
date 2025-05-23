@@ -11,7 +11,7 @@ const openai = new OpenAI({
 
 // Variable para mantener el historial de mensajes
 let messageHistory = [];
-const MAX_HISTORY_LENGTH = 10; // Límite de mensajes en el historial
+const MAX_HISTORY_LENGTH = 5;
 
 // Función para limpiar el historial
 function clearHistory() {
@@ -26,25 +26,17 @@ function updateHistory(role, content) {
     }
 }
 
-// Función para obtener las relaciones de una tabla
-function obtenerRelaciones(tabla) {
-    const seccion = Object.entries(mapaERP).find(([_, datos]) => datos.tabla === tabla)?.[1];
-    return seccion?.relaciones || {};
-}
-
-// Función para formatear resultados en Markdown (solo datos, sin frases automáticas)
+// Función para formatear resultados en Markdown
 function formatResultsAsMarkdown(results) {
     if (!results || results.length === 0) {
         return "No se han encontrado resultados para tu consulta.";
     }
 
-    // Si es un conteo simple, devolver solo el número
     if (results.length === 1 && Object.keys(results[0]).length === 1) {
         const value = Object.values(results[0])[0];
         return `Total: ${value}`;
     }
 
-    // Para otros tipos de resultados, formatear como tabla
     const columns = Object.keys(results[0]);
     let markdown = "| " + columns.join(" | ") + " |\n";
     markdown += "| " + columns.map(() => "---").join(" | ") + " |\n";
@@ -61,19 +53,9 @@ async function executeQuery(sql) {
         const [rows] = await pool.query(sql);
         console.log('Resultados de la consulta:', rows);
         
-        // Verificar si hay resultados vacíos
         if (rows.length === 0) {
             console.log('La consulta no devolvió resultados');
             return [];
-        }
-
-        // Verificar si los campos están vacíos
-        const hasEmptyFields = rows.some(row => 
-            Object.values(row).every(value => value === null || value === '')
-        );
-
-        if (hasEmptyFields) {
-            console.log('Advertencia: Algunos campos están vacíos en los resultados');
         }
 
         return rows;
@@ -83,14 +65,107 @@ async function executeQuery(sql) {
     }
 }
 
+// Función para validar que la respuesta contiene una consulta SQL
+function validarRespuestaSQL(respuesta) {
+    // Buscar la consulta SQL entre etiquetas <sql>
+    const sqlMatch = respuesta.match(/<sql>([\s\S]*?)<\/sql>/i);
+    if (!sqlMatch) {
+        console.error('Respuesta sin formato SQL válido:', respuesta);
+        throw new Error('La respuesta debe contener la consulta SQL entre etiquetas <sql> y </sql>');
+    }
+    
+    const sql = sqlMatch[1].trim();
+    if (!sql) {
+        throw new Error('La consulta SQL está vacía');
+    }
+    
+    // Validar que es una consulta SQL válida
+    if (!sql.toLowerCase().startsWith('select')) {
+        throw new Error('La consulta debe comenzar con SELECT');
+    }
+    
+    return sql;
+}
+
+// Función para validar que la tabla existe en mapaERP
+function validarTablaEnMapaERP(sql) {
+    const tablas = Object.keys(mapaERP);
+    const tablasEnConsulta = sql.match(/FROM\s+(\w+)|JOIN\s+(\w+)/gi)?.map(t => 
+        t.replace(/FROM\s+|JOIN\s+/gi, '').toLowerCase()
+    ) || [];
+    
+    for (const tabla of tablasEnConsulta) {
+        if (!tablas.includes(tabla)) {
+            throw new Error(`La tabla ${tabla} no existe en el mapaERP. Tablas disponibles: ${tablas.join(', ')}`);
+        }
+    }
+}
+
+// Función para validar que las columnas existen en mapaERP
+function validarColumnasEnMapaERP(sql, tabla) {
+    const columnas = Object.keys(mapaERP[tabla].columnas);
+    const columnasEnConsulta = sql.match(/SELECT\s+([\s\S]*?)\s+FROM/i)?.[1]
+        .split(',')
+        .map(c => c.trim().replace(/^[a-z]+\./, '').replace(/\s+as\s+.*$/i, ''))
+        .filter(c => c !== '*') || [];
+
+    for (const columna of columnasEnConsulta) {
+        if (!columnas.includes(columna)) {
+            throw new Error(`La columna ${columna} no existe en la tabla ${tabla}. Columnas disponibles: ${columnas.join(', ')}`);
+        }
+    }
+}
+
+// Función para obtener el contenido relevante de mapaERP
+function obtenerContenidoMapaERP(consulta) {
+    try {
+        const palabrasClave = consulta.toLowerCase().split(' ');
+        const seccionesRelevantes = [];
+
+        // Buscar secciones relevantes basadas en palabras clave
+        for (const [clave, seccion] of Object.entries(mapaERP)) {
+            if (!seccion || typeof seccion !== 'object') continue;
+
+            const descripcion = (seccion.descripcion || '').toLowerCase();
+            const alias = (seccion.alias || '').toLowerCase();
+            
+            if (palabrasClave.some(palabra => 
+                descripcion.includes(palabra) || 
+                alias.includes(palabra) || 
+                clave.toLowerCase().includes(palabra)
+            )) {
+                // Solo incluir la información esencial
+                seccionesRelevantes.push({
+                    tabla: seccion.tabla,
+                    columnas: seccion.columnas,
+                    relaciones: seccion.relaciones ? {
+                        tipo: seccion.relaciones.tipo,
+                        campo_enlace_externo: seccion.relaciones.campo_enlace_externo
+                    } : null
+                });
+            }
+        }
+
+        // Si no se encontraron secciones, incluir solo las tablas principales
+        if (seccionesRelevantes.length === 0) {
+            return `TABLAS DISPONIBLES:\n${Object.keys(mapaERP).join(', ')}`;
+        }
+
+        // Formatear las secciones relevantes de manera concisa
+        return `ESTRUCTURA RELEVANTE:\n${JSON.stringify(seccionesRelevantes, null, 2)}`;
+    } catch (error) {
+        console.error('Error al obtener contenido de mapaERP:', error);
+        return `TABLAS DISPONIBLES:\n${Object.keys(mapaERP).join(', ')}`;
+    }
+}
+
 // Función para procesar la consulta del usuario
 async function processQuery(userQuery) {
     try {
         console.log('Procesando consulta:', userQuery);
-        console.log('API Key configurada:', process.env.OPENAI_API_KEY ? 'Sí' : 'No');
 
-        // Obtener el prompt base del esquema de la base de datos
-        const promptBase = require('./promptBase').promptBase;
+        // Obtener el contenido relevante de mapaERP
+        const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
         // Actualizar el historial con el mensaje del usuario
         updateHistory("user", userQuery);
@@ -99,7 +174,7 @@ async function processQuery(userQuery) {
         const messages = [
             {
                 role: "system",
-                content: promptBase + "\n\nRecuerda: Mantén un tono conversacional y natural. Si el usuario parece confundido o no entiende algo, aclara y ofrece ayuda. Haz preguntas de seguimiento relevantes."
+                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: La consulta SQL DEBE estar entre etiquetas <sql> y </sql>"
             },
             ...messageHistory
         ];
@@ -108,7 +183,7 @@ async function processQuery(userQuery) {
         const completion = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: messages,
-            temperature: 0.5, // Temperatura más balanceada
+            temperature: 0.3,
             max_tokens: 1000
         });
 
@@ -116,72 +191,63 @@ async function processQuery(userQuery) {
         const response = completion.choices[0].message.content;
         console.log('Respuesta generada:', response);
 
+        // Validar que la respuesta contiene una consulta SQL
+        const sql = validarRespuestaSQL(response);
+        
+        // Validar que las tablas existen en mapaERP
+        validarTablaEnMapaERP(sql);
+
+        // Validar que las columnas existen en mapaERP
+        const tabla = sql.match(/FROM\s+(\w+)/i)?.[1].toLowerCase();
+        if (tabla) {
+            validarColumnasEnMapaERP(sql, tabla);
+        }
+
         // Actualizar el historial con la respuesta del asistente
         updateHistory("assistant", response);
 
-        // Extraer la consulta SQL de la respuesta usando las etiquetas <sql>
-        const sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/i);
-        if (sqlMatch) {
-            const sql = sqlMatch[1].trim();
-            console.log('Ejecutando consulta SQL:', sql);
-            
-            // Ejecutar la consulta
-            const results = await executeQuery(sql);
-            console.log('Resultados de la consulta:', results);
-            
-            // Formatear los resultados en Markdown
-            const markdownResults = formatResultsAsMarkdown(results);
+        // Ejecutar la consulta
+        const results = await executeQuery(sql);
+        
+        // Formatear los resultados en Markdown
+        const markdownResults = formatResultsAsMarkdown(results);
 
-            // Crear un nuevo mensaje para que la IA analice los resultados
-            const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n\n${markdownResults}\n\n
-            INSTRUCCIONES ESTRICTAS:
-            1. Usa SOLO los números y datos mostrados en la tabla arriba
-            2. NO inventes números ni datos
-            3. NO uses placeholders como [número] o [cantidad]
-            4. NO muestres la consulta SQL
-            5. Si es un conteo, muestra EXACTAMENTE el número que aparece en la tabla
-            6. NO redondees ni modifiques los números
-            7. Si la tabla está vacía, di que no hay datos
-            8. Si hay un error en la consulta, di que no se pudieron obtener los datos
-            9. NO agregues información adicional que no esté en los datos
-            10. NO hagas suposiciones sobre los datos
-            11. Formatea los datos en un texto legible y conversacional
-            12. Mantén un tono amigable y profesional
-            13. Ofrece ayuda adicional al final de tu respuesta
-            14. IMPORTANTE: Si ves un número en la tabla, úsalo EXACTAMENTE como está, sin modificarlo ni usar placeholders`;
+        // Crear un nuevo mensaje para que la IA analice los resultados
+        const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n\n${markdownResults}\n\n
+        INSTRUCCIONES:
+        1. Usa SOLO los datos mostrados
+        2. NO inventes números ni datos
+        3. NO uses placeholders
+        4. NO muestres la consulta SQL
+        5. Muestra los números exactos
+        6. Si no hay datos, di que no hay datos
+        7. Formatea en texto legible
+        8. Mantén un tono conversacional`;
 
-            // Obtener el análisis de la IA
-            const analysisCompletion = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
-                messages: [
-                    {
-                        role: "system",
-                        content: "Eres un asistente amigable y conversacional que muestra los datos exactos de la base de datos en un formato legible. NUNCA uses placeholders o variables, muestra los números exactos como aparecen en los datos."
-                    },
-                    {
-                        role: "user",
-                        content: analysisPrompt
-                    }
-                ],
-                temperature: 0.1, // Reducimos la temperatura para respuestas más precisas
-                max_tokens: 1000
-            });
-
-            const analysis = analysisCompletion.choices[0].message.content;
-            console.log('Análisis generado:', analysis);
-            
-            return {
-                success: true,
-                data: {
-                    message: analysis
+        // Obtener el análisis de la IA
+        const analysisCompletion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {
+                    role: "system",
+                    content: "Eres un asistente que muestra datos exactos de la base de datos en formato legible."
+                },
+                {
+                    role: "user",
+                    content: analysisPrompt
                 }
-            };
-        }
+            ],
+            temperature: 0.1,
+            max_tokens: 500
+        });
 
+        const analysis = analysisCompletion.choices[0].message.content;
+        console.log('Análisis generado:', analysis);
+        
         return {
             success: true,
             data: {
-                message: response
+                message: response + "\n\n" + analysis
             }
         };
 
@@ -196,5 +262,6 @@ async function processQuery(userQuery) {
 
 // Exportar la función para su uso en otros archivos
 module.exports = {
-    processQuery
+    processQuery,
+    clearHistory
 }; 
