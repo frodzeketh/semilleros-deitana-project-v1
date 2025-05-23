@@ -11,6 +11,20 @@ const openai = new OpenAI({
 
 // Variable para mantener el historial de mensajes
 let messageHistory = [];
+const MAX_HISTORY_LENGTH = 10; // Límite de mensajes en el historial
+
+// Función para limpiar el historial
+function clearHistory() {
+    messageHistory = [];
+}
+
+// Función para mantener el historial actualizado
+function updateHistory(role, content) {
+    messageHistory.push({ role, content });
+    if (messageHistory.length > MAX_HISTORY_LENGTH) {
+        messageHistory = messageHistory.slice(-MAX_HISTORY_LENGTH);
+    }
+}
 
 // Función para obtener las relaciones de una tabla
 function obtenerRelaciones(tabla) {
@@ -78,17 +92,14 @@ async function processQuery(userQuery) {
         // Obtener el prompt base del esquema de la base de datos
         const promptBase = require('./promptBase').promptBase;
 
-        // Agregar el mensaje del usuario al historial
-        messageHistory.push({
-            role: "user",
-            content: userQuery
-        });
+        // Actualizar el historial con el mensaje del usuario
+        updateHistory("user", userQuery);
 
         // Construir el mensaje completo para el modelo
         const messages = [
             {
                 role: "system",
-                content: promptBase
+                content: promptBase + "\n\nRecuerda: Mantén un tono conversacional y natural. Si el usuario parece confundido o no entiende algo, aclara y ofrece ayuda. Haz preguntas de seguimiento relevantes."
             },
             ...messageHistory
         ];
@@ -97,13 +108,16 @@ async function processQuery(userQuery) {
         const completion = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: messages,
-            temperature: 0.7,
+            temperature: 0.5, // Temperatura más balanceada
             max_tokens: 1000
         });
 
         // Extraer la respuesta
         const response = completion.choices[0].message.content;
         console.log('Respuesta generada:', response);
+
+        // Actualizar el historial con la respuesta del asistente
+        updateHistory("assistant", response);
 
         // Extraer la consulta SQL de la respuesta usando las etiquetas <sql>
         const sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/i);

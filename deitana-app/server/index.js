@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-const { processQuery } = require('./openAI');
+const { processQuery, resetContext } = require('./openAI');
 
 dotenv.config();
 
@@ -35,41 +35,31 @@ app.use((req, res, next) => {
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../build')));
 
-// Ruta del chat
+// Ruta para procesar mensajes
 app.post('/api/chat', async (req, res) => {
-  console.log('=== INICIO DE PETICIÓN DE CHAT ===');
-  console.log('Recibida petición de chat:', req.body);
-  
-  const { message } = req.body;
-  
-  if (!message) {
-    console.log('Error: Mensaje vacío');
-    return res.status(400).json({ 
-      success: false,
-      error: 'El mensaje es requerido' 
-    });
-  }
+    try {
+        const { message } = req.body;
+        
+        // Verificar si es una nueva conexión
+        if (message === 'NUEVA_CONEXION') {
+            resetContext();
+            return res.json({
+                success: true,
+                data: {
+                    message: "¡Hola! Soy Deitana IA, tu asistente virtual. ¿En qué puedo ayudarte hoy?"
+                }
+            });
+        }
 
-  try {
-    console.log('Procesando mensaje:', message);
-    const result = await processQuery(message);
-    console.log('Respuesta generada:', result);
-    
-    if (!result.success) {
-      return res.status(500).json(result);
+        const response = await processQuery(message);
+        res.json(response);
+    } catch (error) {
+        console.error('Error al procesar el mensaje:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al procesar el mensaje'
+        });
     }
-    
-    res.json(result);
-  } catch (error) {
-    console.error('Error en el chat:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ 
-      success: false,
-      error: 'Error procesando el mensaje',
-      details: error.message 
-    });
-  }
-  console.log('=== FIN DE PETICIÓN DE CHAT ===');
 });
 
 // Para cualquier otra ruta, servir el index.html del frontend
