@@ -2618,4 +2618,4 @@ entregas_mat: { // Clave principal (basada en el nombre de tabla)
     
     };
     
-    module.exports = { mapaERP };
+    module.exports = mapaERP;

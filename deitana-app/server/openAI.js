@@ -2,7 +2,13 @@ const { OpenAI } = require('openai');
 const pool = require('./db');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
-const mapaERP = require('./mapaERP').mapaERP;
+const mapaERP = require('./mapaERP');
+
+console.log('=== VERIFICACIÓN DE IMPORTACIÓN ===');
+console.log('mapaERP importado:', !!mapaERP);
+console.log('Tipo de mapaERP importado:', typeof mapaERP);
+console.log('Claves en mapaERP importado:', Object.keys(mapaERP));
+console.log('=== FIN DE VERIFICACIÓN DE IMPORTACIÓN ===');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -119,7 +125,18 @@ function validarColumnasEnMapaERP(sql, tabla) {
 // Función para obtener el contenido relevante de mapaERP
 function obtenerContenidoMapaERP(consulta) {
     try {
+        console.log('=== VERIFICACIÓN DE MAPAERP ===');
+        console.log('mapaERP está definido:', !!mapaERP);
+        console.log('Tipo de mapaERP:', typeof mapaERP);
+        console.log('Claves disponibles:', Object.keys(mapaERP));
+        
+        if (!mapaERP || typeof mapaERP !== 'object') {
+            console.error('mapaERP no está definido o no es un objeto válido');
+            return 'TABLAS DISPONIBLES: clientes, fpago, bancos';
+        }
+
         const palabrasClave = consulta.toLowerCase().split(' ');
+        console.log('Palabras clave de la consulta:', palabrasClave);
         const seccionesRelevantes = [];
 
         // Buscar secciones relevantes basadas en palabras clave
@@ -134,17 +151,17 @@ function obtenerContenidoMapaERP(consulta) {
                 alias.includes(palabra) || 
                 clave.toLowerCase().includes(palabra)
             )) {
-                // Solo incluir la información esencial
+                console.log('Sección relevante encontrada:', clave);
+                // Solo incluimos la información esencial
                 seccionesRelevantes.push({
-                    tabla: seccion.tabla,
-                    columnas: seccion.columnas,
-                    relaciones: seccion.relaciones ? {
-                        tipo: seccion.relaciones.tipo,
-                        campo_enlace_externo: seccion.relaciones.campo_enlace_externo
-                    } : null
+                    tabla: seccion.tabla || clave,
+                    columnas: seccion.columnas || {}
                 });
             }
         }
+
+        console.log('Secciones relevantes encontradas:', seccionesRelevantes.length);
+        console.log('=== FIN DE VERIFICACIÓN ===');
 
         // Si no se encontraron secciones, incluir solo las tablas principales
         if (seccionesRelevantes.length === 0) {
@@ -152,10 +169,20 @@ function obtenerContenidoMapaERP(consulta) {
         }
 
         // Formatear las secciones relevantes de manera concisa
-        return `ESTRUCTURA RELEVANTE:\n${JSON.stringify(seccionesRelevantes, null, 2)}`;
+        let respuesta = "ESTRUCTURA DE LA BASE DE DATOS:\n\n";
+        seccionesRelevantes.forEach(seccion => {
+            respuesta += `Tabla: ${seccion.tabla}\n`;
+            respuesta += "Columnas:\n";
+            Object.entries(seccion.columnas).forEach(([columna, descripcion]) => {
+                respuesta += `- ${columna}\n`;
+            });
+            respuesta += "\n";
+        });
+
+        return respuesta;
     } catch (error) {
         console.error('Error al obtener contenido de mapaERP:', error);
-        return `TABLAS DISPONIBLES:\n${Object.keys(mapaERP).join(', ')}`;
+        return `TABLAS DISPONIBLES:\n${Object.keys(mapaERP || {}).join(', ')}`;
     }
 }
 
@@ -174,7 +201,7 @@ async function processQuery(userQuery) {
         const messages = [
             {
                 role: "system",
-                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: La consulta SQL DEBE estar entre etiquetas <sql> y </sql>"
+                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: La consulta SQL DEBE estar entre etiquetas <sql> y </sql>. NUNCA respondas con preguntas, SIEMPRE genera una consulta SQL."
             },
             ...messageHistory
         ];
@@ -183,7 +210,7 @@ async function processQuery(userQuery) {
         const completion = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: messages,
-            temperature: 0.3,
+            temperature: 0.1,
             max_tokens: 1000
         });
 
@@ -264,4 +291,4 @@ async function processQuery(userQuery) {
 module.exports = {
     processQuery,
     clearHistory
-}; 
+};
