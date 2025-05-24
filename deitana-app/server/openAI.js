@@ -81,22 +81,46 @@ async function executeQuery(sql) {
 }
 
 // Función para validar que la respuesta contiene una consulta SQL
-function validarRespuestaSQL(respuesta) {
-    // Buscar la consulta SQL entre etiquetas <sql>
-    const sqlMatch = respuesta.match(/<sql>([\s\S]*?)<\/sql>/i);
+function validarRespuestaSQL(response) {
+    // Primero intentar con etiquetas <sql>
+    let sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
+    
+    // Si no encuentra, intentar con bloques de código SQL
     if (!sqlMatch) {
-        console.error('Respuesta sin formato SQL válido:', respuesta);
+        sqlMatch = response.match(/```sql\s*([\s\S]*?)```/);
+        if (sqlMatch) {
+            console.log('Advertencia: SQL encontrado en formato markdown, convirtiendo a formato <sql>');
+            // Reemplazar el formato markdown por el formato <sql>
+            response = response.replace(/```sql\s*([\s\S]*?)```/, '<sql>$1</sql>');
+            sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
+        }
+    }
+
+    if (!sqlMatch) {
+        console.error('Respuesta sin formato SQL válido:', response);
         throw new Error('La respuesta debe contener la consulta SQL entre etiquetas <sql> y </sql>');
     }
-    
-    const sql = sqlMatch[1].trim();
+
+    let sql = sqlMatch[1].trim();
     if (!sql) {
         throw new Error('La consulta SQL está vacía');
     }
-    
+
     // Validar que es una consulta SQL válida
     if (!sql.toLowerCase().startsWith('select')) {
         throw new Error('La consulta debe comenzar con SELECT');
+    }
+
+    // Validar y corregir sintaxis común
+    if (sql.includes('OFFSET')) {
+        // Convertir OFFSET a sintaxis MySQL
+        const offsetMatch = sql.match(/LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i);
+        if (offsetMatch) {
+            sql = sql.replace(
+                /LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i,
+                `LIMIT ${offsetMatch[2]}, ${offsetMatch[1]}`
+            );
+        }
     }
     
     return sql;
@@ -244,9 +268,22 @@ async function processQuery(userQuery) {
         // Obtener contenido relevante de mapaERP
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
-        // Preparar mensajes con contexto
-        const contextMessage = conversationContext.lastResults ? 
-            `Última consulta sobre: ${conversationContext.currentTable}\nResultados previos: ${JSON.stringify(conversationContext.lastResults)}` : '';
+        // Preparar el contexto para la consulta
+        let contextMessage = '';
+        if (conversationContext.lastResults) {
+            const resultadosAnteriores = Array.isArray(conversationContext.lastResults) ? 
+                conversationContext.lastResults.map(r => Object.values(r)[0]).join(', ') : 
+                JSON.stringify(conversationContext.lastResults);
+
+            contextMessage = `Última consulta: ${conversationContext.lastQuery}\n` +
+                           `Tabla actual: ${conversationContext.currentTable}\n` +
+                           `Últimos resultados: ${resultadosAnteriores}`;
+
+            // Si la consulta contiene palabras como "más", "otro", "siguiente"
+            if (userQuery.toLowerCase().match(/\b(m[aá]s|otro|siguiente)s?\b/)) {
+                contextMessage += '\nNOTA: Usuario pide más resultados, usa LIMIT con offset';
+            }
+        }
 
         const messages = [
             { role: "system", content: promptBase + "\n\n" + contenidoMapaERP },
