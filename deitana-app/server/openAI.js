@@ -97,8 +97,7 @@ function validarRespuestaSQL(response) {
     }
 
     if (!sqlMatch) {
-        console.error('Respuesta sin formato SQL válido:', response);
-        throw new Error('La respuesta debe contener la consulta SQL entre etiquetas <sql> y </sql>');
+        return null; // Permitir respuestas sin SQL
     }
 
     let sql = sqlMatch[1].trim();
@@ -177,83 +176,15 @@ function validarColumnasEnMapaERP(sql, tabla) {
 // Función para obtener el contenido relevante de mapaERP
 function obtenerContenidoMapaERP(consulta) {
     try {
-        console.log('=== VERIFICACIÓN DE MAPAERP ===');
-        console.log('mapaERP está definido:', !!mapaERP);
-        console.log('Tipo de mapaERP:', typeof mapaERP);
-        console.log('Claves disponibles:', Object.keys(mapaERP));
-        
         if (!mapaERP || typeof mapaERP !== 'object') {
             console.error('mapaERP no está definido o no es un objeto válido');
-            return 'TABLAS DISPONIBLES: clientes, fpago, bancos';
+            return 'Error al procesar la estructura de la base de datos';
         }
 
         const palabrasClave = consulta.toLowerCase().split(' ');
         console.log('Palabras clave de la consulta:', palabrasClave);
-        const seccionesRelevantes = [];
 
-        // Buscar secciones relevantes basadas en palabras clave
-        for (const [clave, seccion] of Object.entries(mapaERP)) {
-            if (!seccion || typeof seccion !== 'object') continue;
-
-            const descripcion = (seccion.descripcion || '').toLowerCase();
-            const alias = (seccion.alias || '').toLowerCase();
-            
-            if (palabrasClave.some(palabra => 
-                descripcion.includes(palabra) || 
-                alias.includes(palabra) || 
-                clave.toLowerCase().includes(palabra)
-            )) {
-                console.log('Sección relevante encontrada:', clave);
-                // Solo incluimos la información esencial
-                seccionesRelevantes.push({
-                    tabla: seccion.tabla || clave,
-                    columnas: seccion.columnas || {}
-                });
-            }
-        }
-
-        console.log('Secciones relevantes encontradas:', seccionesRelevantes.length);
-        console.log('=== FIN DE VERIFICACIÓN ===');
-
-        // Si no se encontraron secciones, incluir solo las tablas principales
-        if (seccionesRelevantes.length === 0) {
-            return `TABLAS DISPONIBLES:\n${Object.keys(mapaERP).join(', ')}`;
-        }
-
-        // Formatear las secciones relevantes de manera concisa
-        let respuesta = "ESTRUCTURA DE LA BASE DE DATOS:\n\n";
-        seccionesRelevantes.forEach(seccion => {
-            respuesta += `Tabla: ${seccion.tabla}\n`;
-            respuesta += "Columnas:\n";
-            Object.entries(seccion.columnas).forEach(([columna, descripcion]) => {
-                respuesta += `- ${columna}\n`;
-            });
-            respuesta += "\n";
-        });
-
-        return respuesta;
-    } catch (error) {
-        console.error('Error al obtener contenido de mapaERP:', error);
-        return `TABLAS DISPONIBLES:\n${Object.keys(mapaERP || {}).join(', ')}`;
-    }
-}
-
-// Función para procesar la consulta del usuario
-async function processQuery(userQuery) {
-    try {
-        console.log('Procesando consulta:', userQuery);
-
-        // Verificar que mapaERP esté definido
-        console.log('=== VERIFICACIÓN DE MAPAERP ===');
-        console.log('mapaERP está definido:', !!mapaERP);
-        console.log('Tipo de mapaERP:', typeof mapaERP);
-        console.log('Claves disponibles:', Object.keys(mapaERP));
-
-        // Analizar palabras clave
-        const palabrasClave = userQuery.toLowerCase().split(' ');
-        console.log('Palabras clave de la consulta:', palabrasClave);
-
-        // Encontrar secciones relevantes
+        // Encontrar secciones relevantes basadas en las palabras clave
         const seccionesRelevantes = Object.keys(mapaERP).filter(seccion => {
             const descripcion = mapaERP[seccion].descripcion?.toLowerCase() || '';
             return palabrasClave.some(palabra => 
@@ -262,9 +193,31 @@ async function processQuery(userQuery) {
             );
         });
 
-        console.log('Secciones relevantes encontradas:', seccionesRelevantes.length);
-        console.log('=== FIN DE VERIFICACIÓN ===');
+        // Mostrar las secciones encontradas
+        seccionesRelevantes.forEach(seccion => {
+            console.log('Sección relevante encontrada:', seccion);
+        });
 
+        // Construir el contenido con la información de las secciones relevantes
+        let contenido = 'TABLAS Y COLUMNAS DISPONIBLES:\n';
+        seccionesRelevantes.forEach(seccion => {
+            const columnas = Object.keys(mapaERP[seccion].columnas || {});
+            if (columnas.length > 0) {
+                contenido += `\n${seccion}: ${columnas.join(', ')}`;
+            }
+        });
+
+        return contenido;
+
+    } catch (error) {
+        console.error('Error al obtener contenido de mapaERP:', error);
+        return 'Error al procesar la estructura de la base de datos';
+    }
+}
+
+// Función para procesar la consulta del usuario
+async function processQuery(userQuery) {
+    try {
         // Obtener contenido relevante de mapaERP
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
@@ -278,11 +231,6 @@ async function processQuery(userQuery) {
             contextMessage = `Última consulta: ${conversationContext.lastQuery}\n` +
                            `Tabla actual: ${conversationContext.currentTable}\n` +
                            `Últimos resultados: ${resultadosAnteriores}`;
-
-            // Si la consulta contiene palabras como "más", "otro", "siguiente"
-            if (userQuery.toLowerCase().match(/\b(m[aá]s|otro|siguiente)s?\b/)) {
-                contextMessage += '\nNOTA: Usuario pide más resultados, usa LIMIT con offset';
-            }
         }
 
         const messages = [
@@ -292,91 +240,82 @@ async function processQuery(userQuery) {
             { role: "user", content: userQuery }
         ];
 
-        // Llamar a la API de OpenAI con el contexto
+        // Obtener la respuesta inicial de la IA
         const completion = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: messages,
             temperature: 0.7,
-            max_tokens: 1000
-        });
-
-        // Extraer la respuesta
-        const response = completion.choices[0].message.content;
-        console.log('Respuesta generada:', response);
-
-        // Validar que la respuesta contiene una consulta SQL
-        const sql = validarRespuestaSQL(response);
-        
-        // Validar que las tablas existen en mapaERP
-        validarTablaEnMapaERP(sql);
-
-        // Validar que las columnas existen en mapaERP
-        const tabla = sql.match(/FROM\s+(\w+)/i)?.[1].toLowerCase();
-        if (tabla) {
-            validarColumnasEnMapaERP(sql, tabla);
-        }
-
-        // Ejecutar la consulta
-        const results = await executeQuery(sql);
-        
-        // Formatear los resultados en Markdown
-        const markdownResults = formatResultsAsMarkdown(results);
-
-        // Actualizar el contexto con los resultados
-        const tablaMatch = sql.match(/FROM\s+(\w+)/i);
-        conversationContext = {
-            lastQuery: sql,
-            lastResults: results,
-            currentTable: tablaMatch ? tablaMatch[1].toLowerCase() : null
-        };
-
-        // Actualizar el historial
-        updateHistory("assistant", response);
-
-        // Crear un nuevo mensaje para que la IA analice los resultados
-        const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n\n${markdownResults}\n\n
-        INSTRUCCIONES:
-        1. Usa SOLO los datos mostrados
-        2. NO inventes números ni datos
-        3. NO uses placeholders
-        4. NO muestres la consulta SQL
-        5. Muestra los números exactos
-        6. Si no hay datos, di que no hay datos
-        7. Formatea en texto legible
-        8. Mantén un tono conversacional`;
-
-        // Obtener el análisis de la IA
-        const analysisCompletion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [
-                {
-                    role: "system",
-                    content: "Eres un asistente que muestra datos exactos de la base de datos en formato legible."
-                },
-                {
-                    role: "user",
-                    content: analysisPrompt
-                }
-            ],
-            temperature: 0.1,
             max_tokens: 500
         });
 
-        const analysis = analysisCompletion.choices[0].message.content;
-        console.log('Análisis generado:', analysis);
-        
-        return {
-            success: true,
-            data: {
-                message: response + "\n\n" + analysis
+        const response = completion.choices[0].message.content;
+        console.log('Respuesta generada:', response);
+
+        // Verificar si la respuesta contiene una consulta SQL
+        const sql = validarRespuestaSQL(response);
+
+        if (sql) {
+            // Modo consulta SQL
+            console.log('Ejecutando consulta SQL:', sql);
+
+            // Validar que la tabla existe
+            validarTablaEnMapaERP(sql);
+
+            // Validar que las columnas existen en mapaERP
+            const tabla = sql.match(/FROM\s+(\w+)/i)?.[1].toLowerCase();
+            if (tabla) {
+                validarColumnasEnMapaERP(sql, tabla);
             }
-        };
+
+            // Ejecutar la consulta
+            const results = await executeQuery(sql);
+            
+            // Formatear los resultados en Markdown
+            const markdownResults = formatResultsAsMarkdown(results);
+
+            // Actualizar el contexto con los resultados
+            const tablaMatch = sql.match(/FROM\s+(\w+)/i);
+            conversationContext = {
+                lastQuery: sql,
+                lastResults: results,
+                currentTable: tablaMatch ? tablaMatch[1].toLowerCase() : null
+            };
+
+            // Crear un nuevo mensaje para analizar los resultados
+            const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n${markdownResults}\n\nINSTRUCCIONES:\n1. Analiza los datos mostrados\n2. Proporciona una respuesta clara y natural\n3. Si es relevante, compara con datos previos\n4. NO generes más consultas SQL\n5. NO inventes datos adicionales`;
+
+            const analysis = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo",
+                messages: [...messages, { role: "system", content: analysisPrompt }],
+                temperature: 0.7,
+                max_tokens: 500
+            });
+
+            // Actualizar el historial
+            updateHistory("assistant", analysis.choices[0].message.content);
+
+            return {
+                success: true,
+                data: {
+                    message: analysis.choices[0].message.content
+                }
+            };
+        } else {
+            // Modo conversacional
+            updateHistory("assistant", response);
+            return {
+                success: true,
+                data: {
+                    message: response
+                }
+            };
+        }
 
     } catch (error) {
         console.error('Error al procesar la consulta:', error);
         return {
             success: false,
-            error: 'Error al procesar la consulta: ' + error.message
+            error: error.message
         };
     }
 }
