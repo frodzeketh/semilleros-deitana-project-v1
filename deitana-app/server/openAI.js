@@ -15,20 +15,29 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-// Variable para mantener el historial de mensajes
+// Variables globales para el historial y contexto
 let messageHistory = [];
-const MAX_HISTORY_LENGTH = 5;
+let conversationContext = {
+    lastQuery: null,
+    lastResults: null,
+    currentTable: null
+};
 
-// Función para limpiar el historial
+// Función para limpiar el historial y contexto
 function clearHistory() {
     messageHistory = [];
+    conversationContext = {
+        lastQuery: null,
+        lastResults: null,
+        currentTable: null
+    };
 }
 
-// Función para mantener el historial actualizado
+// Función para actualizar el historial
 function updateHistory(role, content) {
     messageHistory.push({ role, content });
-    if (messageHistory.length > MAX_HISTORY_LENGTH) {
-        messageHistory = messageHistory.slice(-MAX_HISTORY_LENGTH);
+    if (messageHistory.length > 5) {
+        messageHistory = messageHistory.slice(-5);
     }
 }
 
@@ -111,24 +120,34 @@ function validarTablaEnMapaERP(sql) {
 function validarColumnasEnMapaERP(sql, tabla) {
     const columnas = Object.keys(mapaERP[tabla].columnas);
     
+    // Extraer las columnas de la consulta SQL
+    const selectMatch = sql.match(/SELECT\s+([^\s]*?)\s+FROM/i);
+    if (!selectMatch) return; // Si no podemos extraer las columnas, permitimos la consulta
+
     // Verificar si se está usando SELECT *
-    if (sql.match(/SELECT\s+\*/i)) {
+    if (selectMatch[1].trim() === '*') {
         throw new Error(`No se permite usar SELECT *. Por favor, especifica las columnas definidas en mapaERP: ${columnas.join(', ')}`);
     }
-
-    const columnasEnConsulta = sql.match(/SELECT\s+([\s\S]*?)\s+FROM/i)?.[1]
+    
+    const columnasEnSQL = selectMatch[1]
         .split(',')
-        .map(c => c.trim().replace(/^[a-z]+\./, '').replace(/\s+as\s+.*$/i, ''));
-
-    if (!columnasEnConsulta) {
-        throw new Error('No se encontraron columnas en la consulta SQL');
-    }
-
-    for (const columna of columnasEnConsulta) {
+        .map(col => {
+            col = col.trim();
+            // Si es una función SQL (COUNT, AVG, etc.), la permitimos
+            if (col.match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
+            // Si es un alias (AS), tomamos la parte antes del AS
+            if (col.toLowerCase().includes(' as ')) return col.split(/\s+as\s+/i)[0].trim();
+            // Removemos el prefijo de tabla si existe
+            return col.replace(/^[a-z]+\./, '');
+        })
+        .filter(col => col !== null); // Eliminamos las funciones SQL
+    
+    // Verificar que cada columna existe en mapaERP
+    columnasEnSQL.forEach(columna => {
         if (!columnas.includes(columna)) {
             throw new Error(`La columna ${columna} no existe en la tabla ${tabla}. Columnas disponibles: ${columnas.join(', ')}`);
         }
-    }
+    });
 }
 
 // Función para obtener el contenido relevante de mapaERP
@@ -200,26 +219,47 @@ async function processQuery(userQuery) {
     try {
         console.log('Procesando consulta:', userQuery);
 
-        // Obtener el contenido relevante de mapaERP
+        // Verificar que mapaERP esté definido
+        console.log('=== VERIFICACIÓN DE MAPAERP ===');
+        console.log('mapaERP está definido:', !!mapaERP);
+        console.log('Tipo de mapaERP:', typeof mapaERP);
+        console.log('Claves disponibles:', Object.keys(mapaERP));
+
+        // Analizar palabras clave
+        const palabrasClave = userQuery.toLowerCase().split(' ');
+        console.log('Palabras clave de la consulta:', palabrasClave);
+
+        // Encontrar secciones relevantes
+        const seccionesRelevantes = Object.keys(mapaERP).filter(seccion => {
+            const descripcion = mapaERP[seccion].descripcion?.toLowerCase() || '';
+            return palabrasClave.some(palabra => 
+                seccion.toLowerCase().includes(palabra) || 
+                descripcion.includes(palabra)
+            );
+        });
+
+        console.log('Secciones relevantes encontradas:', seccionesRelevantes.length);
+        console.log('=== FIN DE VERIFICACIÓN ===');
+
+        // Obtener contenido relevante de mapaERP
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
-        // Actualizar el historial con el mensaje del usuario
-        updateHistory("user", userQuery);
+        // Preparar mensajes con contexto
+        const contextMessage = conversationContext.lastResults ? 
+            `Última consulta sobre: ${conversationContext.currentTable}\nResultados previos: ${JSON.stringify(conversationContext.lastResults)}` : '';
 
-        // Construir el mensaje completo para el modelo
         const messages = [
-            {
-                role: "system",
-                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: La consulta SQL DEBE estar entre etiquetas <sql> y </sql>. NUNCA respondas con preguntas, SIEMPRE genera una consulta SQL."
-            },
-            ...messageHistory
+            { role: "system", content: promptBase + "\n\n" + contenidoMapaERP },
+            ...messageHistory,
+            { role: "system", content: contextMessage },
+            { role: "user", content: userQuery }
         ];
 
-        // Realizar la llamada a la API de OpenAI
+        // Llamar a la API de OpenAI con el contexto
         const completion = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: messages,
-            temperature: 0.1,
+            temperature: 0.7,
             max_tokens: 1000
         });
 
@@ -239,14 +279,22 @@ async function processQuery(userQuery) {
             validarColumnasEnMapaERP(sql, tabla);
         }
 
-        // Actualizar el historial con la respuesta del asistente
-        updateHistory("assistant", response);
-
         // Ejecutar la consulta
         const results = await executeQuery(sql);
         
         // Formatear los resultados en Markdown
         const markdownResults = formatResultsAsMarkdown(results);
+
+        // Actualizar el contexto con los resultados
+        const tablaMatch = sql.match(/FROM\s+(\w+)/i);
+        conversationContext = {
+            lastQuery: sql,
+            lastResults: results,
+            currentTable: tablaMatch ? tablaMatch[1].toLowerCase() : null
+        };
+
+        // Actualizar el historial
+        updateHistory("assistant", response);
 
         // Crear un nuevo mensaje para que la IA analice los resultados
         const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n\n${markdownResults}\n\n
