@@ -141,6 +141,10 @@ function validarTablaEnMapaERP(sql) {
 
 // Función para validar que las columnas existen en mapaERP
 function validarColumnasEnMapaERP(sql, tabla) {
+    if (!mapaERP[tabla] || !mapaERP[tabla].columnas) {
+        throw new Error(`La tabla ${tabla} no está definida correctamente en mapaERP`);
+    }
+
     const columnas = Object.keys(mapaERP[tabla].columnas);
     
     // Extraer las columnas de la consulta SQL
@@ -159,18 +163,24 @@ function validarColumnasEnMapaERP(sql, tabla) {
             // Si es una función SQL (COUNT, AVG, etc.), la permitimos
             if (col.match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
             // Si es un alias (AS), tomamos la parte antes del AS
-            if (col.toLowerCase().includes(' as ')) return col.split(/\s+as\s+/i)[0].trim();
+            if (col.toLowerCase().includes(' as ')) {
+                const [columna, alias] = col.split(/\s+as\s+/i);
+                return columna.trim();
+            }
             // Removemos el prefijo de tabla si existe
             return col.replace(/^[a-z]+\./, '');
         })
         .filter(col => col !== null); // Eliminamos las funciones SQL
     
     // Verificar que cada columna existe en mapaERP
-    columnasEnSQL.forEach(columna => {
-        if (!columnas.includes(columna)) {
-            throw new Error(`La columna ${columna} no existe en la tabla ${tabla}. Columnas disponibles: ${columnas.join(', ')}`);
-        }
-    });
+    const columnasNoValidas = columnasEnSQL.filter(columna => !columnas.includes(columna));
+    
+    if (columnasNoValidas.length > 0) {
+        throw new Error(
+            `Las siguientes columnas no existen en la tabla ${tabla}: ${columnasNoValidas.join(', ')}. ` +
+            `Columnas disponibles: ${columnas.join(', ')}`
+        );
+    }
 }
 
 // Función para obtener el contenido relevante de mapaERP
