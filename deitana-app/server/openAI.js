@@ -110,10 +110,19 @@ function validarTablaEnMapaERP(sql) {
 // Función para validar que las columnas existen en mapaERP
 function validarColumnasEnMapaERP(sql, tabla) {
     const columnas = Object.keys(mapaERP[tabla].columnas);
+    
+    // Verificar si se está usando SELECT *
+    if (sql.match(/SELECT\s+\*/i)) {
+        throw new Error(`No se permite usar SELECT *. Por favor, especifica las columnas definidas en mapaERP: ${columnas.join(', ')}`);
+    }
+
     const columnasEnConsulta = sql.match(/SELECT\s+([\s\S]*?)\s+FROM/i)?.[1]
         .split(',')
-        .map(c => c.trim().replace(/^[a-z]+\./, '').replace(/\s+as\s+.*$/i, ''))
-        .filter(c => c !== '*') || [];
+        .map(c => c.trim().replace(/^[a-z]+\./, '').replace(/\s+as\s+.*$/i, ''));
+
+    if (!columnasEnConsulta) {
+        throw new Error('No se encontraron columnas en la consulta SQL');
+    }
 
     for (const columna of columnasEnConsulta) {
         if (!columnas.includes(columna)) {
