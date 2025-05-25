@@ -24,13 +24,6 @@ const Home = () => {
 
   // Datos de ejemplo para el historial de chats
   const chatHistory = {
-    gems: [
-      {
-        id: 1,
-        title: "Asistente de programación",
-        icon: "💎",
-      },
-    ],
     recent: [
       {
         id: 1,
@@ -86,6 +79,13 @@ const Home = () => {
     // Aquí puedes agregar la lógica de logout
     console.log("Cerrando sesión...")
     // Por ejemplo: limpiar localStorage, redirigir, etc.
+  }
+
+  const handleNewChat = () => {
+    // Lógica para crear un nuevo chat
+    console.log("Nuevo chat...")
+    setChatMessages([])
+    // Aquí puedes agregar más lógica como limpiar el estado, generar nuevo ID de sesión, etc.
   }
 
   // Modificar la función handleSubmit para soportar streaming de texto
@@ -375,21 +375,10 @@ const Home = () => {
               )}
 
               {/* Botón Nuevo Chat con estilo consistente */}
-              <button className="ds-footer-button ds-new-chat-highlight">
+              <button className="ds-footer-button ds-new-chat-highlight" onClick={handleNewChat}>
                 <Edit3 size={20} />
                 <span className="options-sidebar">Nuevo chat</span>
               </button>
-
-              {/* Sección Gems */}
-              <div className="ds-chat-section">
-                <h3 className="ds-section-title">Gems</h3>
-                {chatHistory.gems.map((gem) => (
-                  <button key={gem.id} className="ds-chat-item ds-gem-item">
-                    <span className="ds-gem-icon">{gem.icon}</span>
-                    <span className="ds-chat-title">{gem.title}</span>
-                  </button>
-                ))}
-              </div>
 
               {/* Sección Recientes */}
               <div className="ds-chat-section">
@@ -455,8 +444,15 @@ const Home = () => {
               </svg>
             </button>
           )}
-          <h1>New chat</h1>
-          {isMobile && <div className="ds-header-spacer"></div>}
+          <h1>Nuevo chat</h1>
+          {isMobile && (
+            <button className="ds-mobile-new-chat-button" onClick={handleNewChat}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8M8 12h8" />
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="ds-chat-layout">

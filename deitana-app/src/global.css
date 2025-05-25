@@ -505,6 +505,33 @@ input:focus {
   background-color: #f5f5f5;
 }
 
+/* Botón circular de nuevo chat en móvil */
+.ds-mobile-new-chat-button {
+  position: absolute;
+  right: 16px;
+  background-color: transparent;
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.ds-mobile-new-chat-button:hover {
+  background-color: #f5f5f5;
+  transform: scale(1.05);
+}
+
+.ds-mobile-new-chat-button:active {
+  transform: scale(0.95);
+  background-color: #e9ecef;
+}
+
 .ds-header-spacer {
   width: 40px;
 }
@@ -942,5 +969,140 @@ input:focus {
   .ds-sidebar-mobile-open,
   .ds-sidebar-mobile-closed {
     width: 75vw;
+  }
+}
+
+/* Desktop optimizations - more compact design */
+@media (min-width: 769px) {
+  /* Ocultar el botón de nuevo chat en desktop */
+  .ds-mobile-new-chat-button {
+    display: none;
+  }
+
+  .ds-sidebar-header {
+    padding: 12px;
+  }
+
+  .logo-sidebar-open {
+    height: 35px;
+  }
+
+  .ds-search-container {
+    padding: 8px 12px;
+  }
+
+  .ds-search-input {
+    padding: 6px 10px 6px 28px;
+    font-size: 13px;
+  }
+
+  .ds-search-icon {
+    left: 10px;
+  }
+
+  .ds-sidebar-content {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .ds-section-title {
+    font-size: 10px;
+    margin: 0 0 8px 0;
+    padding: 0 6px;
+  }
+
+  .ds-chat-item {
+    padding: 6px 10px;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+
+  .ds-chat-title {
+    font-size: 13px;
+  }
+
+  .ds-chat-timestamp {
+    font-size: 11px;
+  }
+
+  .ds-footer-button {
+    padding: 6px 10px;
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .ds-sidebar-footer {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .ds-chat-header {
+    padding: 12px 20px;
+  }
+
+  .ds-chat-header h1 {
+    font-size: 18px;
+  }
+
+  .ds-welcome-logo img {
+    width: 45px;
+    height: 45px;
+  }
+
+  .ds-welcome-message h2 {
+    font-size: 20px;
+  }
+
+  .ds-welcome-message p {
+    font-size: 14px;
+  }
+
+  .ds-chat-messages {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .ds-avatar-image {
+    height: 32px;
+    width: 32px;
+  }
+
+  .ds-message-content h2 {
+    font-size: 16px;
+  }
+
+  .ds-message-content p {
+    font-size: 14px;
+  }
+
+  .ds-chat-input-container {
+    padding: 12px 20px;
+  }
+
+  .ds-chat-input {
+    padding: 10px 14px;
+    padding-right: 44px;
+    font-size: 14px;
+  }
+
+  .ds-disclaimer {
+    font-size: 11px;
+  }
+
+  .options-sidebar {
+    font-size: 13px;
+  }
+
+  .ds-show-more-button {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .ds-chat-section {
+    margin-bottom: 20px;
+  }
+
+  .ds-new-chat-highlight {
+    margin-bottom: 12px;
   }
 }
