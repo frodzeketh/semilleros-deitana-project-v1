@@ -185,7 +185,7 @@ function validarColumnasEnMapaERP(sql, tabla) {
     }
 }
 
-// Función para obtener el contenido relevante de mapaERP
+// Función para obtener contenido relevante de mapaERP
 function obtenerContenidoMapaERP(consulta) {
     try {
         if (!mapaERP || typeof mapaERP !== 'object') {
@@ -197,26 +197,32 @@ function obtenerContenidoMapaERP(consulta) {
         console.log('Palabras clave de la consulta:', palabrasClave);
 
         // Encontrar secciones relevantes basadas en las palabras clave
-        const seccionesRelevantes = Object.keys(mapaERP).filter(seccion => {
-            const descripcion = mapaERP[seccion].descripcion?.toLowerCase() || '';
+        const seccionesRelevantes = Object.entries(mapaERP).filter(([tabla, info]) => {
+            const descripcion = info.descripcion?.toLowerCase() || '';
             return palabrasClave.some(palabra => 
-                seccion.toLowerCase().includes(palabra) || 
+                tabla.toLowerCase().includes(palabra) || 
                 descripcion.includes(palabra)
             );
         });
 
-        // Mostrar las secciones encontradas
-        seccionesRelevantes.forEach(seccion => {
-            console.log('Sección relevante encontrada:', seccion);
-        });
+        // Si no encontramos secciones relevantes, mostrar todas las tablas
+        if (seccionesRelevantes.length === 0) {
+            console.log('No se encontraron secciones relevantes, mostrando todas las tablas');
+            return Object.entries(mapaERP).map(([tabla, info]) => {
+                return `Tabla: ${tabla}\nDescripción: ${info.descripcion || 'Sin descripción'}\nColumnas: ${Object.keys(info.columnas || {}).join(', ')}\n`;
+            }).join('\n');
+        }
 
-        // Construir el contenido con la información de las secciones relevantes
-        let contenido = 'TABLAS Y COLUMNAS DISPONIBLES:\n';
-        seccionesRelevantes.forEach(seccion => {
-            const columnas = Object.keys(mapaERP[seccion].columnas || {});
-            if (columnas.length > 0) {
-                contenido += `\n${seccion}: ${columnas.join(', ')}`;
-            }
+        // Construir el contenido con la información detallada
+        let contenido = 'ESTRUCTURA DE LA BASE DE DATOS:\n\n';
+        seccionesRelevantes.forEach(([tabla, info]) => {
+            contenido += `Tabla: ${tabla}\n`;
+            contenido += `Descripción: ${info.descripcion || 'Sin descripción'}\n`;
+            contenido += `Columnas:\n`;
+            Object.entries(info.columnas || {}).forEach(([columna, tipo]) => {
+                contenido += `  - ${columna}: ${tipo}\n`;
+            });
+            contenido += '\n';
         });
 
         return contenido;
@@ -227,6 +233,51 @@ function obtenerContenidoMapaERP(consulta) {
     }
 }
 
+// Función para obtener descripción de mapaERP
+function obtenerDescripcionMapaERP(consulta) {
+    try {
+        if (!mapaERP || typeof mapaERP !== 'object') {
+            return null;
+        }
+
+        const palabrasClave = consulta.toLowerCase().split(' ');
+        
+        // Buscar coincidencias en descripciones
+        const coincidencias = Object.entries(mapaERP).filter(([tabla, info]) => {
+            const descripcion = info.descripcion?.toLowerCase() || '';
+            return palabrasClave.some(palabra => 
+                tabla.toLowerCase().includes(palabra) || 
+                descripcion.includes(palabra)
+            );
+        });
+
+        if (coincidencias.length > 0) {
+            // Si encontramos una coincidencia exacta, usamos esa
+            const coincidenciaExacta = coincidencias.find(([tabla, _]) => 
+                palabrasClave.some(palabra => tabla.toLowerCase() === palabra)
+            );
+            
+            if (coincidenciaExacta) {
+                return {
+                    tabla: coincidenciaExacta[0],
+                    descripcion: coincidenciaExacta[1].descripcion
+                };
+            }
+
+            // Si no hay coincidencia exacta, usamos la primera coincidencia
+            return {
+                tabla: coincidencias[0][0],
+                descripcion: coincidencias[0][1].descripcion
+            };
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error al obtener descripción de mapaERP:', error);
+        return null;
+    }
+}
+
 // Función para procesar la consulta del usuario
 async function processQuery(userQuery) {
     try {
@@ -234,7 +285,10 @@ async function processQuery(userQuery) {
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
         const messages = [
-            { role: "system", content: promptBase + "\n\n" + contenidoMapaERP },
+            { 
+                role: "system", 
+                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: Para cualquier consulta que requiera datos, DEBES generar una consulta SQL usando las tablas y columnas definidas arriba. NO inventes datos. Si no puedes generar una consulta SQL válida, indica que necesitas más información. SIEMPRE incluye la consulta SQL entre etiquetas <sql>.</sql>" 
+            },
             { role: "user", content: userQuery }
         ];
 
@@ -242,7 +296,7 @@ async function processQuery(userQuery) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: messages,
-            temperature: 0.2,
+            temperature: 0.3,
             max_tokens: 1000
         });
 
@@ -252,43 +306,64 @@ async function processQuery(userQuery) {
         // Verificar si la respuesta contiene una consulta SQL
         const sql = validarRespuestaSQL(response);
 
-        if (sql) {
-            // Modo consulta SQL
-            console.log('Ejecutando consulta SQL:', sql);
-
-            // Validar que la tabla existe
-            validarTablaEnMapaERP(sql);
-
-            // Validar que las columnas existen en mapaERP
-            const tabla = sql.match(/FROM\s+(\w+)/i)?.[1].toLowerCase();
-            if (tabla) {
-                validarColumnasEnMapaERP(sql, tabla);
-            }
-
-            // Ejecutar la consulta
-            const results = await executeQuery(sql);
-            
-            // Formatear la respuesta final de manera conversacional
-            const finalResponse = formatFinalResponse(results, userQuery);
-
-            return {
-                success: true,
-                data: {
-                    message: finalResponse
-                }
-            };
-        } else {
-            // Si no hay SQL, verificar si la tabla existe en mapaERP
+        if (!sql) {
+            // Si no hay SQL, forzar una consulta básica basada en las palabras clave
             const palabrasClave = userQuery.toLowerCase().split(' ');
-            const tablaEncontrada = Object.keys(mapaERP).find(tabla => 
-                palabrasClave.some(palabra => tabla.toLowerCase().includes(palabra))
-            );
+            const tablaEncontrada = Object.entries(mapaERP).find(([tabla, info]) => {
+                const descripcion = info.descripcion?.toLowerCase() || '';
+                return palabrasClave.some(palabra => 
+                    tabla.toLowerCase().includes(palabra) || 
+                    descripcion.includes(palabra)
+                );
+            });
 
             if (tablaEncontrada) {
-                // Si la tabla existe pero no se generó SQL, forzar una consulta básica
-                const columnas = Object.keys(mapaERP[tablaEncontrada].columnas);
-                const sqlBasico = `SELECT ${columnas.join(', ')} FROM ${tablaEncontrada} LIMIT 5`;
-                const results = await executeQuery(sqlBasico);
+                const [tabla, info] = tablaEncontrada;
+                const columnas = Object.keys(info.columnas || {});
+                const limite = userQuery.toLowerCase().includes('2') ? 2 : 1;
+                const sqlBasico = `SELECT ${columnas.join(', ')} FROM ${tabla} LIMIT ${limite}`;
+                
+                try {
+                    console.log('Ejecutando consulta básica:', sqlBasico);
+                    const results = await executeQuery(sqlBasico);
+                    console.log('Resultados de la consulta básica:', results);
+                    
+                    if (!results || results.length === 0) {
+                        return {
+                            success: true,
+                            data: {
+                                message: "Lo siento, no he encontrado información en la base de datos. ¿Te gustaría intentar con otra búsqueda?"
+                            }
+                        };
+                    }
+
+                    const finalResponse = formatFinalResponse(results, userQuery);
+                    return {
+                        success: true,
+                        data: {
+                            message: finalResponse
+                        }
+                    };
+                } catch (error) {
+                    console.error('Error al ejecutar consulta básica:', error);
+                }
+            }
+        } else {
+            // Ejecutar la consulta SQL generada
+            try {
+                console.log('Ejecutando consulta SQL:', sql);
+                const results = await executeQuery(sql);
+                console.log('Resultados de la consulta SQL:', results);
+                
+                if (!results || results.length === 0) {
+                    return {
+                        success: true,
+                        data: {
+                            message: "Lo siento, no he encontrado información en la base de datos. ¿Te gustaría intentar con otra búsqueda?"
+                        }
+                    };
+                }
+
                 const finalResponse = formatFinalResponse(results, userQuery);
                 return {
                     success: true,
@@ -296,16 +371,16 @@ async function processQuery(userQuery) {
                         message: finalResponse
                     }
                 };
+            } catch (error) {
+                console.error('Error al ejecutar consulta SQL:', error);
             }
-
-            // Si no hay tabla encontrada, permitir respuesta conversacional
-            return {
-                success: true,
-                data: {
-                    message: response
-                }
-            };
         }
+
+        // Si llegamos aquí, algo salió mal
+        return {
+            success: false,
+            error: "No se pudo obtener la información solicitada. Por favor, intenta reformular tu consulta."
+        };
 
     } catch (error) {
         console.error('Error al procesar la consulta:', error);
