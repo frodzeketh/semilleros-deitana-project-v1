@@ -15,32 +15,6 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-// Variables globales para el historial y contexto
-let messageHistory = [];
-let conversationContext = {
-    lastQuery: null,
-    lastResults: null,
-    currentTable: null
-};
-
-// Función para limpiar el historial y contexto
-function clearHistory() {
-    messageHistory = [];
-    conversationContext = {
-        lastQuery: null,
-        lastResults: null,
-        currentTable: null
-    };
-}
-
-// Función para actualizar el historial
-function updateHistory(role, content) {
-    messageHistory.push({ role, content });
-    if (messageHistory.length > 5) {
-        messageHistory = messageHistory.slice(-5);
-    }
-}
-
 // Función para formatear resultados en Markdown
 function formatResultsAsMarkdown(results) {
     if (!results || results.length === 0) {
@@ -59,6 +33,34 @@ function formatResultsAsMarkdown(results) {
         markdown += "| " + columns.map(col => (row[col] ?? "No disponible")).join(" | ") + " |\n";
     });
     return markdown;
+}
+
+// Función para formatear la respuesta final
+function formatFinalResponse(results, query) {
+    if (!results || results.length === 0) {
+        return "Lo siento, no he encontrado información en la base de datos. ¿Te gustaría intentar con otra búsqueda?";
+    }
+
+    // Si es un conteo simple
+    if (results.length === 1 && Object.keys(results[0]).length === 1) {
+        const value = Object.values(results[0])[0];
+        return `He encontrado un total de ${value} registros en la base de datos.`;
+    }
+
+    // Formatear la respuesta de manera conversacional
+    let response = "He encontrado los siguientes registros en la base de datos:\n\n";
+    
+    results.forEach((row, index) => {
+        response += `${index + 1}. `;
+        // Solo mostrar los valores reales de la base de datos
+        const entries = Object.entries(row).filter(([_, value]) => value !== null && value !== undefined);
+        entries.forEach(([key, value]) => {
+            response += `${key}: ${value}\n`;
+        });
+        response += "\n";
+    });
+
+    return response;
 }
 
 // Función para ejecutar consultas SQL
@@ -231,31 +233,17 @@ async function processQuery(userQuery) {
         // Obtener contenido relevante de mapaERP
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
-        // Preparar el contexto para la consulta
-        let contextMessage = '';
-        if (conversationContext.lastResults) {
-            const resultadosAnteriores = Array.isArray(conversationContext.lastResults) ? 
-                conversationContext.lastResults.map(r => Object.values(r)[0]).join(', ') : 
-                JSON.stringify(conversationContext.lastResults);
-
-            contextMessage = `Última consulta: ${conversationContext.lastQuery}\n` +
-                           `Tabla actual: ${conversationContext.currentTable}\n` +
-                           `Últimos resultados: ${resultadosAnteriores}`;
-        }
-
         const messages = [
             { role: "system", content: promptBase + "\n\n" + contenidoMapaERP },
-            ...messageHistory,
-            { role: "system", content: contextMessage },
             { role: "user", content: userQuery }
         ];
 
         // Obtener la respuesta inicial de la IA
         const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4o",
             messages: messages,
-            temperature: 0.7,
-            max_tokens: 500
+            temperature: 0.2,
+            max_tokens: 1000
         });
 
         const response = completion.choices[0].message.content;
@@ -280,39 +268,37 @@ async function processQuery(userQuery) {
             // Ejecutar la consulta
             const results = await executeQuery(sql);
             
-            // Formatear los resultados en Markdown
-            const markdownResults = formatResultsAsMarkdown(results);
-
-            // Actualizar el contexto con los resultados
-            const tablaMatch = sql.match(/FROM\s+(\w+)/i);
-            conversationContext = {
-                lastQuery: sql,
-                lastResults: results,
-                currentTable: tablaMatch ? tablaMatch[1].toLowerCase() : null
-            };
-
-            // Crear un nuevo mensaje para analizar los resultados
-            const analysisPrompt = `Los datos EXACTOS de la base de datos son:\n${markdownResults}\n\nINSTRUCCIONES:\n1. Analiza los datos mostrados\n2. Proporciona una respuesta clara y natural\n3. Si es relevante, compara con datos previos\n4. NO generes más consultas SQL\n5. NO inventes datos adicionales`;
-
-            const analysis = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
-                messages: [...messages, { role: "system", content: analysisPrompt }],
-                temperature: 0.7,
-                max_tokens: 500
-            });
-
-            // Actualizar el historial
-            updateHistory("assistant", analysis.choices[0].message.content);
+            // Formatear la respuesta final de manera conversacional
+            const finalResponse = formatFinalResponse(results, userQuery);
 
             return {
                 success: true,
                 data: {
-                    message: analysis.choices[0].message.content
+                    message: finalResponse
                 }
             };
         } else {
-            // Modo conversacional
-            updateHistory("assistant", response);
+            // Si no hay SQL, verificar si la tabla existe en mapaERP
+            const palabrasClave = userQuery.toLowerCase().split(' ');
+            const tablaEncontrada = Object.keys(mapaERP).find(tabla => 
+                palabrasClave.some(palabra => tabla.toLowerCase().includes(palabra))
+            );
+
+            if (tablaEncontrada) {
+                // Si la tabla existe pero no se generó SQL, forzar una consulta básica
+                const columnas = Object.keys(mapaERP[tablaEncontrada].columnas);
+                const sqlBasico = `SELECT ${columnas.join(', ')} FROM ${tablaEncontrada} LIMIT 5`;
+                const results = await executeQuery(sqlBasico);
+                const finalResponse = formatFinalResponse(results, userQuery);
+                return {
+                    success: true,
+                    data: {
+                        message: finalResponse
+                    }
+                };
+            }
+
+            // Si no hay tabla encontrada, permitir respuesta conversacional
             return {
                 success: true,
                 data: {
@@ -332,6 +318,5 @@ async function processQuery(userQuery) {
 
 // Exportar la función para su uso en otros archivos
 module.exports = {
-    processQuery,
-    clearHistory
+    processQuery
 };
