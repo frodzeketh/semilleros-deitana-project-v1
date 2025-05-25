@@ -60,12 +60,6 @@ async function formatFinalResponse(results, query) {
         return "Lo siento, no he encontrado la información que buscas en nuestra base de datos. ¿Te gustaría intentar con otra búsqueda? Estoy aquí para ayudarte a encontrar exactamente lo que necesitas.";
     }
 
-    // Si es un conteo simple
-    if (results.length === 1 && Object.keys(results[0]).length === 1) {
-        const value = Object.values(results[0])[0];
-        return `¡Interesante! He encontrado un total de ${value} registros en nuestra base de datos. ¿Te gustaría conocer más detalles sobre alguno de ellos?`;
-    }
-
     // Determinar la tabla basada en las columnas del primer resultado
     const columnas = Object.keys(results[0]);
     const tabla = determinarTabla(columnas);
@@ -85,73 +79,25 @@ async function formatFinalResponse(results, query) {
     const messages = [
         {
             role: "system",
-            content: `Eres Deitana IA, un asistente de información especializado en Semilleros Deitana. 
-            Tu objetivo es proporcionar información de manera conversacional y profesional, 
-            utilizando los datos proporcionados para generar respuestas naturales y contextuales.
-            
-            Reglas importantes:
-            1. Sé conversacional pero profesional
-            2. Proporciona contexto relevante sobre Semilleros Deitana
-            3. Haz que la información sea fácil de entender
-            4. Ofrece ayuda adicional cuando sea apropiado
-            5. Mantén un tono amigable pero experto
-            6. Varia tu forma de responder según el contexto de la consulta
-            7. Si la consulta es un saludo o una consulta general, responde de manera conversacional y amigable
-            
-            Mejores Prácticas Integradas:
-            1. Deitana IA mantendrá el historial de la conversación actual para entender mejor el contexto y recordar preferencias implícitas del usuario.
-            2. Internamente validará la lógica de acceso a los datos según su conocimiento de la estructura, evitando consultas maliciosas o ineficientes.
-            
-            Sistema de Historial de Conversación para Deitana IA:
-
-            1. Estructura del Historial:
-            - Última consulta realizada.
-            - Resultados obtenidos.
-            - Tipo de consulta (cliente, artículo, proveedor, etc.).
-            - Estado de la conversación (si hay una consulta activa).
-
-            2. Manejo de Respuestas del Usuario:
-            - Si el usuario responde "sí", "ok", o similar:
-                → Retomar la última consulta.
-                → No iniciar un nuevo tema.
-                → No inventar datos nuevos.
-
-            3. Control de Contexto:
-            - Si es un saludo inicial → Responder normalmente.
-            - Si ya se saludó → No repetir saludos.
-            - Si hay una consulta en curso → Mantener el tema.
-            - Si no hay contexto claro → Pedir más información antes de responder.
-
-            4. Validación de Datos:
-            - Mostrar solo datos reales de la base.
-            - Nunca inventar información si no hay una consulta específica.
-            - Evitar respuestas genéricas o irrelevantes.
-
-            5. Manejo de Errores:
-            - Si se pierde el contexto → Pedir clarificación.
-            - Si no hay datos disponibles → Decirlo claramente.
-            - Si la consulta es ambigua → Pedir más detalles al usuario.
-
-            Estructura de la respuesta:
-            1. Introducción contextual
-            2. Presentación de los datos de manera clara
-            3. Cierre con oferta de ayuda adicional`
+            content: promptBase
         },
         {
             role: "user",
             content: `Por favor, genera una respuesta conversacional para los siguientes datos de la tabla ${tabla}:
             ${JSON.stringify(datosFormateados, null, 2)}
             
-            La consulta original fue: "${query}"`
+            La consulta original fue: "${query}"
+            
+            IMPORTANTE: Si la consulta contiene múltiples preguntas, debes responder cada una en orden y proporcionar un resumen final. NO uses respuestas genéricas.`
         }
     ];
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4-turbo",
             messages: messages,
-            temperature: 0.7,
-            max_tokens: 500
+            temperature: 0.6,
+            max_tokens: 1500
         });
 
         return completion.choices[0].message.content;
@@ -404,10 +350,12 @@ async function processQuery(userQuery) {
 
         // Obtener la respuesta inicial de la IA
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: messages,
-            temperature: 0.3,
-            max_tokens: 1000
+            
+                model: "gpt-4-turbo",
+                messages: messages,
+                temperature: 0.6,
+                max_tokens: 1500
+          
         });
 
         const response = completion.choices[0].message.content;
