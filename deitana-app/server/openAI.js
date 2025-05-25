@@ -35,32 +35,106 @@ function formatResultsAsMarkdown(results) {
     return markdown;
 }
 
+// Función para obtener la descripción de una columna
+function obtenerDescripcionColumna(tabla, columna) {
+    if (mapaERP[tabla] && mapaERP[tabla].columnas && mapaERP[tabla].columnas[columna]) {
+        return mapaERP[tabla].columnas[columna];
+    }
+    return columna;
+}
+
+// Función para determinar la tabla basada en las columnas
+function determinarTabla(columnas) {
+    for (const [tabla, info] of Object.entries(mapaERP)) {
+        const columnasTabla = Object.keys(info.columnas || {});
+        if (columnas.every(col => columnasTabla.includes(col))) {
+            return tabla;
+        }
+    }
+    return null;
+}
+
 // Función para formatear la respuesta final
-function formatFinalResponse(results, query) {
+async function formatFinalResponse(results, query) {
     if (!results || results.length === 0) {
-        return "Lo siento, no he encontrado información en la base de datos. ¿Te gustaría intentar con otra búsqueda?";
+        return "Lo siento, no he encontrado la información que buscas en nuestra base de datos. ¿Te gustaría intentar con otra búsqueda? Estoy aquí para ayudarte a encontrar exactamente lo que necesitas.";
     }
 
     // Si es un conteo simple
     if (results.length === 1 && Object.keys(results[0]).length === 1) {
         const value = Object.values(results[0])[0];
-        return `He encontrado un total de ${value} registros en la base de datos.`;
+        return `¡Interesante! He encontrado un total de ${value} registros en nuestra base de datos. ¿Te gustaría conocer más detalles sobre alguno de ellos?`;
     }
 
-    // Formatear la respuesta de manera conversacional
-    let response = "He encontrado los siguientes registros en la base de datos:\n\n";
-    
-    results.forEach((row, index) => {
-        response += `${index + 1}. `;
-        // Solo mostrar los valores reales de la base de datos
-        const entries = Object.entries(row).filter(([_, value]) => value !== null && value !== undefined);
-        entries.forEach(([key, value]) => {
-            response += `${key}: ${value}\n`;
-        });
-        response += "\n";
+    // Determinar la tabla basada en las columnas del primer resultado
+    const columnas = Object.keys(results[0]);
+    const tabla = determinarTabla(columnas);
+
+    // Preparar los datos para la IA
+    const datosFormateados = results.map(row => {
+        const entries = Object.entries(row)
+            .filter(([_, value]) => value !== null && value !== undefined)
+            .map(([key, value]) => ({
+                campo: tabla ? obtenerDescripcionColumna(tabla, key) : key,
+                valor: value
+            }));
+        return entries;
     });
 
-    return response;
+    // Generar una respuesta contextual usando la IA
+    const messages = [
+        {
+            role: "system",
+            content: `Eres Deitana IA, un asistente de información especializado en Semilleros Deitana. 
+            Tu objetivo es proporcionar información de manera conversacional y profesional, 
+            utilizando los datos proporcionados para generar respuestas naturales y contextuales.
+            
+            Reglas importantes:
+            1. Sé conversacional pero profesional
+            2. Proporciona contexto relevante sobre Semilleros Deitana
+            3. Haz que la información sea fácil de entender
+            4. Ofrece ayuda adicional cuando sea apropiado
+            5. Mantén un tono amigable pero experto
+            
+            Estructura de la respuesta:
+            1. Introducción contextual
+            2. Presentación de los datos de manera clara
+            3. Cierre con oferta de ayuda adicional`
+        },
+        {
+            role: "user",
+            content: `Por favor, genera una respuesta conversacional para los siguientes datos de la tabla ${tabla}:
+            ${JSON.stringify(datosFormateados, null, 2)}
+            
+            La consulta original fue: "${query}"`
+        }
+    ];
+
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 500
+        });
+
+        return completion.choices[0].message.content;
+    } catch (error) {
+        console.error('Error al generar respuesta conversacional:', error);
+        // Fallback a una respuesta básica si hay error
+        let response = "He encontrado la siguiente información:\n\n";
+        results.forEach((row, index) => {
+            response += `${index + 1}. `;
+            Object.entries(row)
+                .filter(([_, value]) => value !== null && value !== undefined)
+                .forEach(([key, value]) => {
+                    const descripcion = tabla ? obtenerDescripcionColumna(tabla, key) : key;
+                    response += `${descripcion}: ${value}\n`;
+                });
+            response += "\n";
+        });
+        return response;
+    }
 }
 
 // Función para ejecutar consultas SQL
@@ -337,7 +411,7 @@ async function processQuery(userQuery) {
                         };
                     }
 
-                    const finalResponse = formatFinalResponse(results, userQuery);
+                    const finalResponse = await formatFinalResponse(results, userQuery);
                     return {
                         success: true,
                         data: {
@@ -364,7 +438,7 @@ async function processQuery(userQuery) {
                     };
                 }
 
-                const finalResponse = formatFinalResponse(results, userQuery);
+                const finalResponse = await formatFinalResponse(results, userQuery);
                 return {
                     success: true,
                     data: {
