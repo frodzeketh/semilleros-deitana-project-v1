@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MessageSquare, PanelLeftClose, Send, ChevronDown } from "lucide-react"
-import ReactMarkdown from 'react-markdown'
+import { MessageSquare, PanelLeftClose, Send, ChevronDown, Search, Settings, LogOut, Edit3, Clock } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -19,7 +19,74 @@ const Home = () => {
   const chatContainerRef = useRef(null)
   const mainContentRef = useRef(null)
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  // Datos de ejemplo para el historial de chats
+  const chatHistory = {
+    gems: [
+      {
+        id: 1,
+        title: "Asistente de programación",
+        icon: "💎",
+      },
+    ],
+    recent: [
+      {
+        id: 1,
+        title: "Saludo Inicial y Asistencia",
+        timestamp: "Hace 2 horas",
+      },
+      {
+        id: 2,
+        title: "Traducción de instrucciones de codificación...",
+        timestamp: "Ayer",
+      },
+      {
+        id: 3,
+        title: "Asistente de Codificación Listo Para Ayud...",
+        timestamp: "Hace 2 días",
+      },
+      {
+        id: 4,
+        title: "Asistente IA: Prompt y Conversación",
+        timestamp: "Hace 3 días",
+      },
+      {
+        id: 5,
+        title: "Modernidad y Posmodernidad: Presentaci...",
+        timestamp: "Hace 1 semana",
+      },
+    ],
+  }
+
+  // Detectar si estamos en móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+      if (window.innerWidth > 768) {
+        setMobileSidebarOpen(false)
+      }
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileSidebarOpen(!mobileSidebarOpen)
+    } else {
+      setSidebarOpen(!sidebarOpen)
+    }
+  }
+
+  const handleLogout = () => {
+    // Aquí puedes agregar la lógica de logout
+    console.log("Cerrando sesión...")
+    // Por ejemplo: limpiar localStorage, redirigir, etc.
+  }
 
   // Modificar la función handleSubmit para soportar streaming de texto
   const handleSubmit = async (e) => {
@@ -78,13 +145,7 @@ const Home = () => {
       const delay = fullText.length > 1000 ? 5 : 10 // Más rápido para textos largos
 
       const updateMessageText = (text, isStreaming) => {
-        setChatMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessageId
-              ? { ...msg, text, isStreaming }
-              : msg,
-          ),
-        )
+        setChatMessages((prev) => prev.map((msg) => (msg.id === botMessageId ? { ...msg, text, isStreaming } : msg)))
       }
 
       try {
@@ -269,25 +330,97 @@ const Home = () => {
   return (
     <div className="ds-home-container">
       {/* Sidebar */}
-      <div className={`ds-sidebar ${sidebarOpen ? "ds-sidebar-expanded" : "ds-sidebar-collapsed"}`}>
-        {sidebarOpen ? (
+      {isMobile && mobileSidebarOpen && (
+        <div className="ds-mobile-overlay" onClick={() => setMobileSidebarOpen(false)}></div>
+      )}
+      <div
+        className={`ds-sidebar ${
+          isMobile
+            ? mobileSidebarOpen
+              ? "ds-sidebar-mobile-open"
+              : "ds-sidebar-mobile-closed"
+            : sidebarOpen
+              ? "ds-sidebar-expanded"
+              : "ds-sidebar-collapsed"
+        }`}
+      >
+        {sidebarOpen || mobileSidebarOpen ? (
           <>
             <div className="ds-sidebar-header">
-              <div className="ds-logo-sidebar-container" onClick={toggleSidebar}>
+              <div className="ds-logo-sidebar-container">
                 <img src="/logo-crop.png" alt="Logo" className="logo-sidebar-open" />
               </div>
+              {isMobile && (
+                <button className="ds-mobile-close-button" onClick={() => setMobileSidebarOpen(false)}>
+                  ×
+                </button>
+              )}
             </div>
+
+            {/* Barra de búsqueda */}
+            <div className="ds-search-container">
+              <div className="ds-search-wrapper">
+                <Search size={16} className="ds-search-icon" />
+                <input type="text" placeholder="Buscar chats" className="ds-search-input" />
+              </div>
+            </div>
+
             <div className="ds-sidebar-content">
-              <button className="ds-video-button" onClick={toggleSidebar}>
-                <PanelLeftClose size={25} />
-                <span className="options-sidebar">Close</span>
+              {/* Botón para cerrar sidebar en desktop */}
+              {!isMobile && (
+                <button className="ds-footer-button" onClick={toggleSidebar}>
+                  <PanelLeftClose size={20} />
+                  <span className="options-sidebar">Cerrar sidebar</span>
+                </button>
+              )}
+
+              {/* Botón Nuevo Chat con estilo consistente */}
+              <button className="ds-footer-button ds-new-chat-highlight">
+                <Edit3 size={20} />
+                <span className="options-sidebar">Nuevo chat</span>
               </button>
-              <button className="ds-new-chat-button">
-                <MessageSquare size={25} />
-                <span className="options-sidebar">New chat</span>
+
+              {/* Sección Gems */}
+              <div className="ds-chat-section">
+                <h3 className="ds-section-title">Gems</h3>
+                {chatHistory.gems.map((gem) => (
+                  <button key={gem.id} className="ds-chat-item ds-gem-item">
+                    <span className="ds-gem-icon">{gem.icon}</span>
+                    <span className="ds-chat-title">{gem.title}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Sección Recientes */}
+              <div className="ds-chat-section">
+                <h3 className="ds-section-title">Recientes</h3>
+                {chatHistory.recent.map((chat) => (
+                  <button key={chat.id} className="ds-chat-item">
+                    <Clock size={16} className="ds-chat-icon" />
+                    <div className="ds-chat-info">
+                      <span className="ds-chat-title">{chat.title}</span>
+                      <span className="ds-chat-timestamp">{chat.timestamp}</span>
+                    </div>
+                  </button>
+                ))}
+                <button className="ds-show-more-button">
+                  <span>Mostrar más</span>
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Footer con configuración y logout */}
+            <div className="ds-sidebar-footer">
+              <button className="ds-footer-button">
+                <Settings size={20} />
+                <span className="options-sidebar">Configuración y ayuda</span>
+              </button>
+              <button className="ds-footer-button ds-logout-button" onClick={handleLogout}>
+                <LogOut size={20} />
+                <span className="options-sidebar">Cerrar sesión</span>
               </button>
             </div>
-            <div className="ds-sidebar-footer"></div>
           </>
         ) : (
           <div className="ds-sidebar-collapsed-content">
@@ -295,7 +428,7 @@ const Home = () => {
               <img src="/logo-crop.png" alt="Logo" className="ds-collapsed-logo-img" />
             </div>
             <div className="ds-collapsed-item" onClick={toggleSidebar}>
-              <PanelLeftClose size={25} />
+              <Edit3 size={25} />
             </div>
             <div className="ds-collapsed-item">
               <MessageSquare size={25} />
@@ -312,8 +445,18 @@ const Home = () => {
 
       {/* Main Content */}
       <div className="ds-main-content" ref={mainContentRef}>
-        <div className="ds-chat-title">
+        <div className="ds-chat-header">
+          {isMobile && (
+            <button className="ds-mobile-menu-button" onClick={toggleSidebar}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          )}
           <h1>New chat</h1>
+          {isMobile && <div className="ds-header-spacer"></div>}
         </div>
 
         <div className="ds-chat-layout">
@@ -355,67 +498,103 @@ const Home = () => {
                         <>
                           <ReactMarkdown
                             components={{
-                              p: ({ children }) => <p style={{ 
-                                whiteSpace: "pre-line", 
-                                color: '#333',
-                                fontSize: '15px',
-                                lineHeight: '1.6',
-                                marginBottom: '12px'
-                              }}>{children}</p>,
-                              strong: ({ children }) => <strong style={{ 
-                                fontWeight: 600, 
-                                fontSize: '15px', 
-                                color: '#333',
-                                display: 'inline',
-                                marginRight: '4px'
-                              }}>{children}</strong>,
-                              em: ({ children }) => <em style={{ 
-                                fontStyle: "italic", 
-                                color: '#333',
-                                fontSize: '15px'
-                              }}>{children}</em>,
-                              ul: ({ children }) => <ul style={{ 
-                                margin: "8px 0", 
-                                paddingLeft: "20px",
-                                color: '#333',
-                                fontSize: '15px'
-                              }}>{children}</ul>,
-                              ol: ({ children }) => <ol style={{ 
-                                margin: "8px 0", 
-                                paddingLeft: "20px",
-                                color: '#333',
-                                fontSize: '15px'
-                              }}>{children}</ol>,
-                              li: ({ children }) => <li style={{ 
-                                margin: "5px 0",
-                                color: '#333',
-                                fontSize: '15px'
-                              }}>{children}</li>,
+                              p: ({ children }) => (
+                                <p
+                                  style={{
+                                    whiteSpace: "pre-line",
+                                    color: "#333",
+                                    fontSize: "15px",
+                                    lineHeight: "1.6",
+                                    marginBottom: "12px",
+                                  }}
+                                >
+                                  {children}
+                                </p>
+                              ),
+                              strong: ({ children }) => (
+                                <strong
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: "15px",
+                                    color: "#333",
+                                    display: "inline",
+                                    marginRight: "4px",
+                                  }}
+                                >
+                                  {children}
+                                </strong>
+                              ),
+                              em: ({ children }) => (
+                                <em
+                                  style={{
+                                    fontStyle: "italic",
+                                    color: "#333",
+                                    fontSize: "15px",
+                                  }}
+                                >
+                                  {children}
+                                </em>
+                              ),
+                              ul: ({ children }) => (
+                                <ul
+                                  style={{
+                                    margin: "8px 0",
+                                    paddingLeft: "20px",
+                                    color: "#333",
+                                    fontSize: "15px",
+                                  }}
+                                >
+                                  {children}
+                                </ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol
+                                  style={{
+                                    margin: "8px 0",
+                                    paddingLeft: "20px",
+                                    color: "#333",
+                                    fontSize: "15px",
+                                  }}
+                                >
+                                  {children}
+                                </ol>
+                              ),
+                              li: ({ children }) => (
+                                <li
+                                  style={{
+                                    margin: "5px 0",
+                                    color: "#333",
+                                    fontSize: "15px",
+                                  }}
+                                >
+                                  {children}
+                                </li>
+                              ),
                               a: ({ href, children }) => (
-                                <a 
-                                  href={href} 
-                                  target="_blank" 
+                                <a
+                                  href={href}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
-                                    color: '#2964aa',
-                                    textDecoration: 'none',
+                                    color: "#2964aa",
+                                    textDecoration: "none",
                                     fontWeight: 500,
-                                    borderBottom: '1px solid #2964aa',
-                                    paddingBottom: '1px',
-                                    transition: 'all 0.2s ease'
+                                    borderBottom: "1px solid #2964aa",
+                                    paddingBottom: "1px",
+                                    transition: "all 0.2s ease",
                                   }}
                                   onMouseEnter={(e) => {
-                                    e.target.style.color = '#1a4b8c';
-                                    e.target.style.borderBottomColor = '#1a4b8c';
+                                    e.target.style.color = "#1a4b8c"
+                                    e.target.style.borderBottomColor = "#1a4b8c"
                                   }}
                                   onMouseLeave={(e) => {
-                                    e.target.style.color = '#2964aa';
-                                    e.target.style.borderBottomColor = '#2964aa';
+                                    e.target.style.color = "#2964aa"
+                                    e.target.style.borderBottomColor = "#2964aa"
                                   }}
                                 >
                                   {children}
                                 </a>
-                              )
+                              ),
                             }}
                           >
                             {msg.text}

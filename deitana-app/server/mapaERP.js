@@ -193,7 +193,6 @@ const mapaERP = {
             BA_IBAN: "Número de cuenta bancaria en formato IBAN",
             BA_COD: "Código de la entidad bancaria",
             BA_OFI: "Código de la oficina bancaria",
-            BA_DCD: "Dígito(s) de control de la cuenta",
             BA_CUEN: "Número de cuenta bancaria tradicional",
             BA_SWI: "Código SWIFT/BIC",
             BA_RIES: "Nivel de riesgo interno",
