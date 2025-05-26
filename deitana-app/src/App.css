@@ -1167,26 +1167,103 @@ input:focus {
 }
 
 /* Fixes adicionales para Safari móvil */
-@media screen and (max-width: 768px) {
-  /* Prevenir el bounce scroll en iOS */
-  body {
-    position: fixed;
-    overflow: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Asegurar que el contenido no se mueva */
+@supports (-webkit-touch-callout: none) {
+  /* Fix para la barra de estado en iOS */
   .ds-home-container {
-    touch-action: none;
-    -webkit-overflow-scrolling: touch;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 
-  /* Mejorar el rendimiento en dispositivos móviles */
-  .ds-sidebar,
+  /* Asegurar que el sidebar móvil respete las safe areas */
+  .ds-sidebar-mobile-open,
+  .ds-sidebar-mobile-closed {
+    padding-top: env(safe-area-inset-top);
+    height: calc(100vh - env(safe-area-inset-top));
+    height: calc(100dvh - env(safe-area-inset-top));
+  }
+
+  /* Fix para el input en la parte inferior */
+  .ds-chat-input-container {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  /* Prevenir el rubber band scrolling */
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  /* Fix para el viewport en landscape */
+  @media screen and (orientation: landscape) {
+    .ds-home-container {
+      height: 100vh;
+      height: 100dvh;
+    }
+  }
+}
+
+/* Fix para dispositivos con notch */
+@media screen and (max-width: 768px) {
+  .ds-chat-header {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+
+  /* Asegurar que el contenido no se oculte detrás del notch */
   .ds-main-content {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Fix para el área de input en dispositivos con home indicator */
+  .ds-chat-input-container {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Fix para prevenir zoom en inputs */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+    transform-origin: left top;
+    transform: scale(1);
+  }
+}
+
+/* Fix para el problema de altura en Safari cuando la barra de direcciones se oculta */
+@media screen and (max-width: 768px) {
+  .ds-chat-layout {
+    min-height: 0;
+    height: calc(100vh - 120px);
+    height: calc(100dvh - 120px);
+  }
+
+  .ds-initial-view {
+    min-height: calc(100vh - 180px);
+    min-height: calc(100dvh - 180px);
+  }
+
+  .ds-chat-messages-container {
+    min-height: calc(100vh - 180px);
+    min-height: calc(100dvh - 180px);
+  }
+}
+
+/* Fix para el problema de scroll en Safari */
+.ds-chat-messages-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevenir selección de texto accidental en móvil */
+@media screen and (max-width: 768px) {
+  .ds-chat-header,
+  .ds-sidebar-header,
+  .ds-footer-button {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 }
