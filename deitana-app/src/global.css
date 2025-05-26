@@ -1,47 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
-/* Reset y configuración base para móviles */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html,
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Previene scroll en la página principal */
-  position: fixed; /* Fija la página para evitar movimiento */
-  width: 100%;
-  height: 100%;
-  /* Soporte para diferentes navegadores móviles */
-  height: 100vh; /* Fallback */
-  height: 100dvh; /* Dynamic viewport height para navegadores modernos */
-  height: -webkit-fill-available; /* Safari específico */
-}
-
-/* Configuración específica para dispositivos móviles */
-@supports (-webkit-touch-callout: none) {
-  html,
-  body {
-    height: -webkit-fill-available;
-  }
-}
-
 .login-page {
   font-family: "Inter", sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
   background-color: #f8f8f8;
   padding: 20px;
-  position: fixed;
-  width: 100%;
-  overflow: hidden;
 }
 
 .login-container {
@@ -58,7 +24,6 @@ body {
 
 .logo {
   height: 70px;
-  /* Ajusta según el tamaño real de tu logo */
 }
 
 .divider {
@@ -143,16 +108,9 @@ input:focus {
   font-family: "Inter", sans-serif;
   display: flex;
   height: 100vh;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  width: 100vw;
-  width: 100dvw;
+  width: 100%;
   overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
 }
 
 /* Sidebar Styles */
@@ -165,7 +123,6 @@ input:focus {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   z-index: 10;
-  height: 100%;
 }
 
 .ds-sidebar-expanded {
@@ -492,8 +449,6 @@ input:focus {
   flex-direction: column;
   background-color: white;
   overflow: hidden;
-  height: 100%;
-  position: relative;
 }
 
 /* Header responsive */
@@ -506,8 +461,6 @@ input:focus {
   align-items: center;
   justify-content: center;
   position: relative;
-  background-color: white;
-  z-index: 5;
 }
 
 .ds-mobile-menu-button {
@@ -573,7 +526,6 @@ input:focus {
   height: 100%;
   overflow: hidden;
   position: relative;
-  flex: 1;
 }
 
 /* Estilo para chat vacío (centrado) */
@@ -584,8 +536,6 @@ input:focus {
   justify-content: center;
   flex: 1;
   padding: 0 24px;
-  height: 100%;
-  overflow: hidden;
 }
 
 .ds-welcome-message {
@@ -620,7 +570,6 @@ input:focus {
   flex: 1;
   overflow-y: auto;
   position: relative;
-  height: 100%;
 }
 
 /* Mensajes del chat */
@@ -632,7 +581,6 @@ input:focus {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  min-height: 100%;
 }
 
 .ds-message {
@@ -800,8 +748,6 @@ input:focus {
   max-width: 800px;
   background-color: white;
   flex-shrink: 0;
-  position: relative;
-  z-index: 10;
 }
 
 .ds-input-wrapper {
@@ -882,9 +828,7 @@ input:focus {
   left: 0;
   top: 0;
   height: 100vh;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  width: 75vw;
+  width: 70vw;
   z-index: 1001;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -895,9 +839,7 @@ input:focus {
   left: 0;
   top: 0;
   height: 100vh;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  width: 75vw;
+  width: 70vw;
   z-index: 1001;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -909,10 +851,6 @@ input:focus {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100vh;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  width: 100vw;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   opacity: 0;
@@ -925,39 +863,49 @@ input:focus {
   }
 }
 
+/* Prevenir overflow horizontal */
+* {
+  box-sizing: border-box;
+}
+
+.ds-home-container {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.ds-main-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.ds-chat-messages-container {
+  min-width: 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .ds-home-container {
-    overflow: hidden;
-    position: fixed;
+    overflow-x: hidden;
+    /* Fixes específicos para Safari móvil */
     height: 100vh;
     height: 100dvh;
     height: -webkit-fill-available;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
   }
 
   /* En móvil, el main content siempre ocupa 100% */
   .ds-main-content {
     width: 100vw;
     margin-left: 0;
-    height: 100%;
-  }
-
-  .ds-chat-layout {
-    height: 100%;
-  }
-
-  .ds-initial-view {
-    height: calc(100% - 120px); /* Resta el header y input */
-  }
-
-  .ds-chat-messages-container {
-    height: calc(100% - 120px); /* Resta el header y input */
   }
 
   .ds-chat-messages {
     padding: 16px;
     max-width: 100%;
-    min-height: calc(100% - 32px);
   }
 
   .ds-message {
@@ -975,10 +923,6 @@ input:focus {
   .ds-chat-input-container {
     padding: 12px 16px;
     max-width: 100%;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
   }
 
   .ds-message-content {
@@ -1000,33 +944,40 @@ input:focus {
   /* Ajustar header en móvil */
   .ds-chat-header {
     padding: 12px 16px;
-    position: relative;
-    z-index: 5;
   }
 
   .ds-mobile-menu-button {
     left: 12px;
   }
 
-  /* Prevenir zoom en inputs en iOS */
-  .ds-chat-input {
-    font-size: 16px; /* Previene zoom en iOS */
+  /* Ajustar sidebar móvil */
+  .ds-sidebar-mobile-open,
+  .ds-sidebar-mobile-closed {
+    width: 75vw;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
 
-  /* Ajustes específicos para Safari móvil */
-  @supports (-webkit-touch-callout: none) {
-    .ds-home-container {
-      height: -webkit-fill-available;
-    }
+  /* Asegurar que el sidebar content sea scrolleable en móvil */
+  .ds-sidebar-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
-    .ds-sidebar-mobile-open,
-    .ds-sidebar-mobile-closed {
-      height: -webkit-fill-available;
-    }
+  /* Prevenir zoom en inputs en iOS */
+  .ds-chat-input {
+    font-size: 16px;
+  }
 
-    .ds-mobile-overlay {
-      height: -webkit-fill-available;
-    }
+  /* Fixes para Safari móvil - prevenir movimiento de página */
+  body {
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
   }
 }
 
@@ -1135,7 +1086,6 @@ input:focus {
 
   .ds-chat-input-container {
     padding: 12px 20px;
-    position: relative;
   }
 
   .ds-chat-input {
@@ -1164,29 +1114,35 @@ input:focus {
   .ds-new-chat-highlight {
     margin-bottom: 12px;
   }
+
+  /* Restaurar body en desktop */
+  body {
+    position: static;
+    overflow: auto;
+    height: auto;
+  }
 }
 
-/* Fixes adicionales para Safari móvil */
-@media screen and (max-width: 768px) {
-  /* Prevenir el bounce scroll en iOS */
-  body {
-    position: fixed;
-    overflow: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
+/* Fixes específicos para Safari móvil */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .ds-home-container {
+      height: -webkit-fill-available;
+    }
 
-  /* Asegurar que el contenido no se mueva */
-  .ds-home-container {
-    touch-action: none;
-    -webkit-overflow-scrolling: touch;
-  }
+    .ds-sidebar-mobile-open,
+    .ds-sidebar-mobile-closed {
+      height: -webkit-fill-available;
+    }
 
-  /* Mejorar el rendimiento en dispositivos móviles */
-  .ds-sidebar,
-  .ds-main-content {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    body {
+      height: -webkit-fill-available;
+    }
+
+    /* Prevenir el rubber band scrolling */
+    body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: auto;
+    }
   }
 }
