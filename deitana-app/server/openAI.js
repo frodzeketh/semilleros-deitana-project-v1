@@ -54,18 +54,28 @@ function determinarTabla(columnas) {
     return null;
 }
 
+// Función para limitar resultados
+function limitarResultados(results, limite = 10) {
+    if (!results || results.length === 0) return [];
+    return results.slice(0, limite);
+}
+
 // Función para formatear la respuesta final
 async function formatFinalResponse(results, query) {
     if (!results || results.length === 0) {
         return "Lo siento, no he encontrado la información que buscas en nuestra base de datos. ¿Te gustaría intentar con otra búsqueda? Estoy aquí para ayudarte a encontrar exactamente lo que necesitas.";
     }
 
+    // Limitar el número de resultados
+    const resultadosLimitados = limitarResultados(results);
+    const totalResultados = results.length;
+
     // Determinar la tabla basada en las columnas del primer resultado
     const columnas = Object.keys(results[0]);
     const tabla = determinarTabla(columnas);
 
     // Preparar los datos para la IA
-    const datosFormateados = results.map(row => {
+    const datosFormateados = resultadosLimitados.map(row => {
         const entries = Object.entries(row)
             .filter(([_, value]) => value !== null && value !== undefined)
             .map(([key, value]) => ({
@@ -88,34 +98,27 @@ async function formatFinalResponse(results, query) {
             
             La consulta original fue: "${query}"
             
-            IMPORTANTE: Si la consulta contiene múltiples preguntas, debes responder cada una en orden y proporcionar un resumen final. NO uses respuestas genéricas.`
+            IMPORTANTE: 
+            1. Proporciona un análisis detallado de los datos mostrados
+            2. Si hay múltiples resultados, destaca los más relevantes
+            3. Incluye insights y observaciones importantes
+            4. Mantén un tono profesional pero conversacional
+            5. Menciona que se están mostrando ${resultadosLimitados.length} de ${totalResultados} resultados totales`
         }
     ];
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo",
+            model: "gpt-4-turbo-preview",
             messages: messages,
-            temperature: 0.6,
-            max_tokens: 1500
+            temperature: 0.5,
+            max_tokens: 800
         });
 
         return completion.choices[0].message.content;
     } catch (error) {
         console.error('Error al generar respuesta conversacional:', error);
-        // Fallback a una respuesta básica si hay error
-        let response = "He encontrado la siguiente información:\n\n";
-        results.forEach((row, index) => {
-            response += `${index + 1}. `;
-            Object.entries(row)
-                .filter(([_, value]) => value !== null && value !== undefined)
-                .forEach(([key, value]) => {
-                    const descripcion = tabla ? obtenerDescripcionColumna(tabla, key) : key;
-                    response += `${descripcion}: ${value}\n`;
-                });
-            response += "\n";
-        });
-        return response;
+        return formatResultsAsMarkdown(resultadosLimitados);
     }
 }
 
@@ -343,19 +346,20 @@ async function processQuery(userQuery) {
         const messages = [
             { 
                 role: "system", 
-                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: Para cualquier consulta que requiera datos, DEBES generar una consulta SQL usando las tablas y columnas definidas arriba. NO inventes datos. Si no puedes generar una consulta SQL válida, indica que necesitas más información. SIEMPRE incluye la consulta SQL entre etiquetas <sql>.</sql>" 
+                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: Para cualquier consulta que requiera datos, DEBES generar una consulta SQL usando las tablas y columnas definidas arriba. La consulta debe ser precisa y eficiente. SIEMPRE incluye un LIMIT en la consulta SQL para evitar resultados excesivos. SIEMPRE incluye la consulta SQL entre etiquetas <sql>.</sql>" 
             },
-            { role: "user", content: userQuery }
+            { 
+                role: "user", 
+                content: userQuery 
+            }
         ];
 
         // Obtener la respuesta inicial de la IA
         const completion = await openai.chat.completions.create({
-            
-                model: "gpt-4-turbo",
-                messages: messages,
-                temperature: 0.6,
-                max_tokens: 1500
-          
+            model: "gpt-4-turbo-preview",
+            messages: messages,
+            temperature: 0.5,
+            max_tokens: 800
         });
 
         const response = completion.choices[0].message.content;
@@ -365,80 +369,52 @@ async function processQuery(userQuery) {
         const sql = validarRespuestaSQL(response);
 
         if (!sql) {
-            // Si no hay SQL, forzar una consulta básica basada en las palabras clave
-            const palabrasClave = userQuery.toLowerCase().split(' ');
-            const tablaEncontrada = Object.entries(mapaERP).find(([tabla, info]) => {
-                const descripcion = info.descripcion?.toLowerCase() || '';
-                return palabrasClave.some(palabra => 
-                    tabla.toLowerCase().includes(palabra) || 
-                    descripcion.includes(palabra)
-                );
-            });
-
-            if (tablaEncontrada) {
-                const [tabla, info] = tablaEncontrada;
-                const columnas = Object.keys(info.columnas || {});
-                const limite = userQuery.toLowerCase().includes('2') ? 2 : 1;
-                const sqlBasico = `SELECT ${columnas.join(', ')} FROM ${tabla} LIMIT ${limite}`;
-                
-                try {
-                    console.log('Ejecutando consulta básica:', sqlBasico);
-                    const results = await executeQuery(sqlBasico);
-                    console.log('Resultados de la consulta básica:', results);
-                    
-                    if (!results || results.length === 0) {
-                        return {
-                            success: true,
-                            data: {
-                                message: "Lo siento, no he encontrado información en la base de datos. ¿Te gustaría intentar con otra búsqueda?"
-                            }
-                        };
-                    }
-
-                    const finalResponse = await formatFinalResponse(results, userQuery);
-                    return {
-                        success: true,
-                        data: {
-                            message: finalResponse
-                        }
-                    };
-                } catch (error) {
-                    console.error('Error al ejecutar consulta básica:', error);
+            return {
+                success: true,
+                data: {
+                    message: "No pude generar una consulta SQL válida. Por favor, reformula tu pregunta para que sea más específica."
                 }
-            }
-        } else {
-            // Ejecutar la consulta SQL generada
-            try {
-                console.log('Ejecutando consulta SQL:', sql);
-                const results = await executeQuery(sql);
-                console.log('Resultados de la consulta SQL:', results);
-                
-                if (!results || results.length === 0) {
-                    return {
-                        success: true,
-                        data: {
-                            message: "Lo siento, no he encontrado información en la base de datos. ¿Te gustaría intentar con otra búsqueda?"
-                        }
-                    };
-                }
+            };
+        }
 
-                const finalResponse = await formatFinalResponse(results, userQuery);
+        // Verificar que la consulta SQL incluye un LIMIT
+        if (!sql.toLowerCase().includes('limit')) {
+            return {
+                success: true,
+                data: {
+                    message: "Por favor, sé más específico en tu consulta. Por ejemplo, puedes pedir un número específico de resultados o agregar más filtros."
+                }
+            };
+        }
+
+        // Ejecutar la consulta SQL generada
+        try {
+            console.log('Ejecutando consulta SQL:', sql);
+            const results = await executeQuery(sql);
+            
+            if (!results || results.length === 0) {
                 return {
                     success: true,
                     data: {
-                        message: finalResponse
+                        message: "No encontré información en la base de datos. ¿Podrías reformular tu consulta o proporcionar más detalles?"
                     }
                 };
-            } catch (error) {
-                console.error('Error al ejecutar consulta SQL:', error);
             }
-        }
 
-        // Si llegamos aquí, algo salió mal
-        return {
-            success: false,
-            error: "No se pudo obtener la información solicitada. Por favor, intenta reformular tu consulta."
-        };
+            const finalResponse = await formatFinalResponse(results, userQuery);
+            return {
+                success: true,
+                data: {
+                    message: finalResponse
+                }
+            };
+        } catch (error) {
+            console.error('Error al ejecutar consulta SQL:', error);
+            return {
+                success: false,
+                error: "Error al ejecutar la consulta SQL. Por favor, intenta con otra pregunta o proporciona más detalles."
+            };
+        }
 
     } catch (error) {
         console.error('Error al procesar la consulta:', error);
