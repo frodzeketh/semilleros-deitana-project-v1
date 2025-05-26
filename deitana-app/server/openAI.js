@@ -376,7 +376,42 @@ async function processQuery(userQuery) {
         const messages = [
             { 
                 role: "system", 
-                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: Para consultas de conteo (cuántos, total, etc.), usa COUNT(*) sin LIMIT. Para consultas de listado, SIEMPRE incluye un LIMIT." 
+                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:
+
+1. SIEMPRE responde de manera útil y completa, sin importar el tipo de consulta
+2. Para consultas sobre datos:
+   - Si la información existe en la base de datos, la obtienes y la explicas
+   - Si la información no existe, lo explicas claramente
+   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural
+   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos
+
+3. Para consultas técnicas (cultivos, siembras, etc.):
+   - Combinas datos reales con conocimiento especializado
+   - Proporcionas recomendaciones prácticas
+   - Incluyes detalles sobre variedades, bandejas y técnicas
+
+4. Para análisis y diagnósticos:
+   - Interpretas los datos de manera inteligente
+   - Identificas patrones y tendencias
+   - Proporcionas insights útiles
+
+5. Para consultas generales o saludos:
+   - Respondes de manera natural y conversacional
+   - Explicas tus capacidades
+   - Ofreces tu ayuda
+
+6. Para consultas que no entiendes:
+   - Lo admites de manera natural
+   - Pides clarificación
+   - Sugieres alternativas
+
+NUNCA:
+- Digas que no puedes responder
+- Pidas reformular la consulta sin intentar entenderla
+- Muestres errores técnicos al usuario
+- Dejes de intentar ser útil
+
+${promptBase}\n\n${contenidoMapaERP}`
             },
             { 
                 role: "user", 
@@ -384,33 +419,12 @@ async function processQuery(userQuery) {
             }
         ];
 
-        // Calcular tokens aproximados del prompt
-        const promptTokens = messages.reduce((acc, msg) => {
-            return acc + Math.ceil(msg.content.length / 4);
-        }, 0);
-
-        console.log('Tokens estimados del prompt:', promptTokens);
-
-        if (promptTokens > 16000) {
-            console.log('ADVERTENCIA: El prompt excede el límite de tokens del modelo');
-            return {
-                success: false,
-                error: "La consulta es demasiado compleja. Por favor, simplifica tu pregunta."
-            };
-        }
-
         // Obtener la respuesta inicial de la IA
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
-            temperature: 0.5,
-            max_tokens: 800
-        });
-
-        console.log('Consumo de tokens:', {
-            prompt_tokens: completion.usage.prompt_tokens,
-            completion_tokens: completion.usage.completion_tokens,
-            total_tokens: completion.usage.total_tokens
+            temperature: 0.7,
+            max_tokens: 1000
         });
 
         const response = completion.choices[0].message.content;
@@ -419,25 +433,27 @@ async function processQuery(userQuery) {
         // Verificar si la respuesta contiene una consulta SQL
         const sql = validarRespuestaSQL(response);
 
+        // Si no hay SQL, devolver la respuesta directamente
         if (!sql) {
             return {
                 success: true,
                 data: {
-                    message: "No pude generar una consulta SQL válida. Por favor, reformula tu pregunta para que sea más específica."
+                    message: response
                 }
             };
         }
 
-        // Ejecutar la consulta SQL generada
+        // Ejecutar la consulta SQL si existe
         try {
             console.log('Ejecutando consulta SQL:', sql);
             const results = await executeQuery(sql);
             
             if (!results || results.length === 0) {
+                // Si no hay resultados, explicar por qué de manera natural
                 return {
                     success: true,
                     data: {
-                        message: "No encontré información en la base de datos. ¿Podrías reformular tu consulta o proporcionar más detalles?"
+                        message: response + "\n\nDespués de revisar nuestra base de datos, no encontré registros que coincidan con tu consulta. Esto puede deberse a que la información solicitada no existe en nuestros registros actuales."
                     }
                 };
             }
@@ -451,20 +467,22 @@ async function processQuery(userQuery) {
             };
         } catch (error) {
             console.error('Error al ejecutar consulta SQL:', error);
+            // Si hay error en la consulta SQL, devolver la respuesta original
             return {
-                success: false,
-                error: "Error al ejecutar la consulta SQL. Por favor, intenta con otra pregunta o proporciona más detalles."
+                success: true,
+                data: {
+                    message: response
+                }
             };
         }
 
     } catch (error) {
         console.error('Error al procesar la consulta:', error);
-        if (error.response?.data?.usage) {
-            console.log('Consumo de tokens (error):', error.response.data.usage);
-        }
         return {
-            success: false,
-            error: error.message
+            success: true,
+            data: {
+                message: "Entiendo tu consulta. Déjame ayudarte con eso. " + error.message
+            }
         };
     }
 }
