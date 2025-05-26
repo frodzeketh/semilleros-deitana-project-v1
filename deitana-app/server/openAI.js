@@ -125,8 +125,10 @@ async function formatFinalResponse(results, query) {
 // Función para ejecutar consultas SQL
 async function executeQuery(sql) {
     try {
-        console.log('Ejecutando consulta SQL:', sql);
-        const [rows] = await pool.query(sql);
+        // Reemplazar los nombres de las tablas con sus nombres reales
+        const sqlModificado = reemplazarNombresTablas(sql);
+        console.log('Ejecutando consulta SQL:', sqlModificado);
+        const [rows] = await pool.query(sqlModificado);
         console.log('Resultados de la consulta:', rows);
         
         if (rows.length === 0) {
@@ -184,6 +186,26 @@ function validarRespuestaSQL(response) {
     }
     
     return sql;
+}
+
+// Función para obtener el nombre real de la tabla desde mapaERP
+function obtenerNombreRealTabla(nombreClave) {
+    if (mapaERP[nombreClave] && mapaERP[nombreClave].tabla) {
+        return mapaERP[nombreClave].tabla;
+    }
+    return nombreClave;
+}
+
+// Función para reemplazar nombres de tablas en la consulta SQL
+function reemplazarNombresTablas(sql) {
+    let sqlModificado = sql;
+    Object.keys(mapaERP).forEach(key => {
+        if (mapaERP[key].tabla && mapaERP[key].tabla.includes('-')) {
+            const regex = new RegExp(`\\b${key}\\b`, 'g');
+            sqlModificado = sqlModificado.replace(regex, `\`${mapaERP[key].tabla}\``);
+        }
+    });
+    return sqlModificado;
 }
 
 // Función para validar que la tabla existe en mapaERP

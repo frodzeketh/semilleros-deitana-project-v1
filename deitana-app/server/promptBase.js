@@ -46,7 +46,16 @@ INSTRUCCIONES PARA CONSULTAS INTELIGENTES:
    WHERE a.AR_DENO LIKE '%tomate%'
    LIMIT 1
 
-4. FORMATO DE RESPUESTA:
+4. NOMBRES DE TABLA IMPORTANTES:
+   - SIEMPRE usa el nombre exacto de la tabla como está definido en la propiedad 'tabla'
+   - Algunas tablas usan guiones (-) en lugar de guiones bajos (_)
+   - Ejemplos importantes:
+     * Usa 'p-siembras' (NO 'p_siembras')
+     * Usa 'alb-compra' (NO 'alb_compra')
+     * Usa 'facturas-r' (NO 'facturas_r')
+     * Usa 'devol-clientes' (NO 'devol_clientes')
+
+5. FORMATO DE RESPUESTA:
    - Responde TODAS las preguntas en una sola respuesta coherente
    - Incluye TODA la información relevante
    - Proporciona contexto adicional
