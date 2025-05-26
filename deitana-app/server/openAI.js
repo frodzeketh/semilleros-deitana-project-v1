@@ -55,7 +55,7 @@ function determinarTabla(columnas) {
 }
 
 // Función para limitar resultados
-function limitarResultados(results, limite = 10) {
+function limitarResultados(results, limite = 5) {
     if (!results || results.length === 0) return [];
     return results.slice(0, limite);
 }
@@ -63,47 +63,53 @@ function limitarResultados(results, limite = 10) {
 // Función para formatear la respuesta final
 async function formatFinalResponse(results, query) {
     if (!results || results.length === 0) {
-        return "Lo siento, no he encontrado la información que buscas en nuestra base de datos. ¿Te gustaría intentar con otra búsqueda? Estoy aquí para ayudarte a encontrar exactamente lo que necesitas.";
+        return "No encontré información que coincida con tu consulta. ¿Podrías reformularla o ser más específico?";
     }
 
     // Limitar el número de resultados
     const resultadosLimitados = limitarResultados(results);
     const totalResultados = results.length;
 
-    // Determinar la tabla basada en las columnas del primer resultado
-    const columnas = Object.keys(results[0]);
-    const tabla = determinarTabla(columnas);
-
-    // Preparar los datos para la IA
-    const datosFormateados = resultadosLimitados.map(row => {
-        const entries = Object.entries(row)
-            .filter(([_, value]) => value !== null && value !== undefined)
-            .map(([key, value]) => ({
-                campo: tabla ? obtenerDescripcionColumna(tabla, key) : key,
-                valor: value
-            }));
-        return entries;
+    // Formatear los datos reales
+    let datosReales = '';
+    resultadosLimitados.forEach((resultado, index) => {
+        datosReales += `\nRegistro ${index + 1}:\n`;
+        Object.entries(resultado).forEach(([campo, valor]) => {
+            if (campo.toLowerCase().includes('fec') && valor) {
+                const fecha = new Date(valor);
+                valor = fecha.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            datosReales += `${campo}: ${valor}\n`;
+        });
     });
 
     // Generar una respuesta contextual usando la IA
     const messages = [
         {
             role: "system",
-            content: promptBase
+            content: `Eres un asistente especializado en Semilleros Deitana. Tu tarea es analizar los datos y proporcionar una respuesta clara y útil.
+            
+            Para consultas de conteo:
+            - Muestra el número total de manera clara
+            - Proporciona contexto sobre qué representa ese número
+            
+            Para consultas de datos:
+            - Explica el significado de los datos mostrados
+            - Destaca la información más relevante
+            - Proporciona contexto sobre por qué es importante
+            - Si hay relaciones (como nombres de clientes o vendedores), explícalas
+            
+            Mantén un tono profesional pero conversacional.
+            Sé conciso pero informativo.
+            No repitas los datos crudos, interpreta su significado.`
         },
         {
             role: "user",
-            content: `Por favor, genera una respuesta conversacional para los siguientes datos de la tabla ${tabla}:
-            ${JSON.stringify(datosFormateados, null, 2)}
-            
-            La consulta original fue: "${query}"
-            
-            IMPORTANTE: 
-            1. Proporciona un análisis detallado de los datos mostrados
-            2. Si hay múltiples resultados, destaca los más relevantes
-            3. Incluye insights y observaciones importantes
-            4. Mantén un tono profesional pero conversacional
-            5. Menciona que se están mostrando ${resultadosLimitados.length} de ${totalResultados} resultados totales`
+            content: `Consulta: "${query}"\n\nDatos encontrados:${datosReales}\n\nPor favor, analiza estos datos y proporciona una respuesta útil que explique su significado y relevancia.`
         }
     ];
 
@@ -111,14 +117,14 @@ async function formatFinalResponse(results, query) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
-            temperature: 0.5,
-            max_tokens: 800
+            temperature: 0.7,
+            max_tokens: 500
         });
 
         return completion.choices[0].message.content;
     } catch (error) {
-        console.error('Error al generar respuesta conversacional:', error);
-        return formatResultsAsMarkdown(resultadosLimitados);
+        console.error('Error al generar respuesta:', error);
+        return `He encontrado la siguiente información:${datosReales}`;
     }
 }
 
@@ -183,6 +189,14 @@ function validarRespuestaSQL(response) {
                 `LIMIT ${offsetMatch[2]}, ${offsetMatch[1]}`
             );
         }
+    }
+
+    // Verificar si es una consulta de conteo
+    const esConsultaConteo = sql.toLowerCase().includes('count(*)');
+    
+    // Solo requerir LIMIT si NO es una consulta de conteo
+    if (!esConsultaConteo && !sql.toLowerCase().includes('limit')) {
+        throw new Error('La consulta debe incluir un LIMIT para evitar resultados excesivos');
     }
     
     return sql;
@@ -269,48 +283,42 @@ function validarColumnasEnMapaERP(sql, tabla) {
 // Función para obtener contenido relevante de mapaERP
 function obtenerContenidoMapaERP(consulta) {
     try {
-        if (!mapaERP || typeof mapaERP !== 'object') {
-            console.error('mapaERP no está definido o no es un objeto válido');
-            return 'Error al procesar la estructura de la base de datos';
-        }
-
+        // Detectar tabla principal basada en palabras clave
         const palabrasClave = consulta.toLowerCase().split(' ');
         console.log('Palabras clave de la consulta:', palabrasClave);
 
-        // Encontrar secciones relevantes basadas en las palabras clave
-        const seccionesRelevantes = Object.entries(mapaERP).filter(([tabla, info]) => {
-            const descripcion = info.descripcion?.toLowerCase() || '';
-            return palabrasClave.some(palabra => 
-                tabla.toLowerCase().includes(palabra) || 
-                descripcion.includes(palabra)
-            );
-        });
+        // Mapeo directo de palabras clave a tablas
+        const mapeoTablas = {
+            'cliente': 'clientes',
+            'proveedor': 'proveedores',
+            'articulo': 'articulos',
+            'bandeja': 'bandejas',
+            'accion': 'acciones_com'
+        };
 
-        // Si no encontramos secciones relevantes, mostrar todas las tablas
-        if (seccionesRelevantes.length === 0) {
-            console.log('No se encontraron secciones relevantes, mostrando todas las tablas');
-            return Object.entries(mapaERP).map(([tabla, info]) => {
-                return `Tabla: ${tabla}\nDescripción: ${info.descripcion || 'Sin descripción'}\nColumnas: ${Object.keys(info.columnas || {}).join(', ')}\n`;
-            }).join('\n');
+        // Buscar tabla principal
+        let tablaPrincipal = null;
+        for (const palabra of palabrasClave) {
+            if (mapeoTablas[palabra]) {
+                tablaPrincipal = mapeoTablas[palabra];
+                break;
+            }
         }
 
-        // Construir el contenido con la información detallada
-        let contenido = 'ESTRUCTURA DE LA BASE DE DATOS:\n\n';
-        seccionesRelevantes.forEach(([tabla, info]) => {
-            contenido += `Tabla: ${tabla}\n`;
-            contenido += `Descripción: ${info.descripcion || 'Sin descripción'}\n`;
-            contenido += `Columnas:\n`;
-            Object.entries(info.columnas || {}).forEach(([columna, tipo]) => {
-                contenido += `  - ${columna}: ${tipo}\n`;
-            });
-            contenido += '\n';
-        });
+        if (!tablaPrincipal || !mapaERP[tablaPrincipal]) {
+            // Si no se encuentra una tabla específica, devolver información mínima
+            return 'Tablas disponibles: ' + Object.keys(mapeoTablas).join(', ');
+        }
 
-        return contenido;
+        // Solo devolver información de la tabla relevante
+        const tabla = mapaERP[tablaPrincipal];
+        return `TABLA ${tablaPrincipal}:\n` +
+               `Descripción: ${tabla.descripcion || 'No disponible'}\n` +
+               `Columnas principales: ${Object.keys(tabla.columnas || {}).slice(0, 5).join(', ')}`;
 
     } catch (error) {
         console.error('Error al obtener contenido de mapaERP:', error);
-        return 'Error al procesar la estructura de la base de datos';
+        return '';
     }
 }
 
@@ -368,7 +376,7 @@ async function processQuery(userQuery) {
         const messages = [
             { 
                 role: "system", 
-                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: Para cualquier consulta que requiera datos, DEBES generar una consulta SQL usando las tablas y columnas definidas arriba. La consulta debe ser precisa y eficiente. SIEMPRE incluye un LIMIT en la consulta SQL para evitar resultados excesivos. SIEMPRE incluye la consulta SQL entre etiquetas <sql>.</sql>" 
+                content: promptBase + "\n\n" + contenidoMapaERP + "\n\nIMPORTANTE: Para consultas de conteo (cuántos, total, etc.), usa COUNT(*) sin LIMIT. Para consultas de listado, SIEMPRE incluye un LIMIT." 
             },
             { 
                 role: "user", 
@@ -376,12 +384,33 @@ async function processQuery(userQuery) {
             }
         ];
 
+        // Calcular tokens aproximados del prompt
+        const promptTokens = messages.reduce((acc, msg) => {
+            return acc + Math.ceil(msg.content.length / 4);
+        }, 0);
+
+        console.log('Tokens estimados del prompt:', promptTokens);
+
+        if (promptTokens > 16000) {
+            console.log('ADVERTENCIA: El prompt excede el límite de tokens del modelo');
+            return {
+                success: false,
+                error: "La consulta es demasiado compleja. Por favor, simplifica tu pregunta."
+            };
+        }
+
         // Obtener la respuesta inicial de la IA
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
             temperature: 0.5,
             max_tokens: 800
+        });
+
+        console.log('Consumo de tokens:', {
+            prompt_tokens: completion.usage.prompt_tokens,
+            completion_tokens: completion.usage.completion_tokens,
+            total_tokens: completion.usage.total_tokens
         });
 
         const response = completion.choices[0].message.content;
@@ -395,16 +424,6 @@ async function processQuery(userQuery) {
                 success: true,
                 data: {
                     message: "No pude generar una consulta SQL válida. Por favor, reformula tu pregunta para que sea más específica."
-                }
-            };
-        }
-
-        // Verificar que la consulta SQL incluye un LIMIT
-        if (!sql.toLowerCase().includes('limit')) {
-            return {
-                success: true,
-                data: {
-                    message: "Por favor, sé más específico en tu consulta. Por ejemplo, puedes pedir un número específico de resultados o agregar más filtros."
                 }
             };
         }
@@ -440,6 +459,9 @@ async function processQuery(userQuery) {
 
     } catch (error) {
         console.error('Error al procesar la consulta:', error);
+        if (error.response?.data?.usage) {
+            console.log('Consumo de tokens (error):', error.response.data.usage);
+        }
         return {
             success: false,
             error: error.message

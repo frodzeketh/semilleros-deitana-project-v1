@@ -105,15 +105,16 @@ const Home = () => {
     const botMessageId = Date.now() + 1
 
     // Añadir un mensaje vacío del bot que se irá llenando
-    setChatMessages((prev) => [
-      ...prev,
-      {
+    setChatMessages((prev) => {
+      const newMessage = {
         id: botMessageId,
         text: "",
         sender: "bot",
         isStreaming: true,
-      },
-    ])
+      }
+      console.log('Creando nuevo mensaje del bot:', newMessage)
+      return [...prev, newMessage]
+    })
 
     try {
       const response = await fetch(`${API_URL}/chat`, {
@@ -127,36 +128,57 @@ const Home = () => {
 
       const data = await response.json()
 
-      // Modificar el manejo de la respuesta
-      const fullText = data.data?.message || "Hubo un problema al obtener respuesta."
-      let displayedText = ""
+      // Asegurarnos de que el texto sea una cadena
+      let fullText = ""
+      if (data.success && data.data && data.data.message) {
+        // Si el mensaje es un objeto JSON, intentamos extraer el mensaje real
+        try {
+          const messageObj = typeof data.data.message === 'string' 
+            ? JSON.parse(data.data.message) 
+            : data.data.message
+          
+          if (messageObj && messageObj.data && messageObj.data.message) {
+            fullText = messageObj.data.message
+          } else {
+            fullText = data.data.message
+          }
+        } catch (e) {
+          // Si no es un objeto JSON, usamos el mensaje directamente
+          fullText = data.data.message
+        }
+      } else {
+        fullText = "Hubo un problema al obtener respuesta."
+      }
 
-      // Ajustamos la velocidad de escritura y el tamaño de los chunks
-      const baseChunkSize = 5 // Tamaño base más pequeño para mejor control
+      let displayedText = ""
+      const baseChunkSize = 5
       const chunkSize = Math.max(baseChunkSize, Math.floor(fullText.length / 200))
-      const delay = fullText.length > 1000 ? 5 : 10 // Más rápido para textos largos
+      const delay = fullText.length > 1000 ? 5 : 10
 
       const updateMessageText = (text, isStreaming) => {
-        setChatMessages((prev) => prev.map((msg) => (msg.id === botMessageId ? { ...msg, text, isStreaming } : msg)))
+        console.log('Actualizando mensaje con texto:', text)
+        setChatMessages((prev) => {
+          const newMessages = prev.map((msg) => 
+            msg.id === botMessageId 
+              ? { ...msg, text: text, isStreaming: isStreaming } 
+              : msg
+          )
+          console.log('Nuevo estado de mensajes:', newMessages)
+          return newMessages
+        })
       }
 
       try {
         for (let i = 0; i < fullText.length; i += chunkSize) {
           const nextChunk = fullText.slice(i, i + chunkSize)
           displayedText += nextChunk
-
-          // Actualizar el mensaje del bot con el texto acumulado
           updateMessageText(displayedText, i + chunkSize < fullText.length)
-
-          // Esperar un poco antes de mostrar el siguiente fragmento
           await new Promise((resolve) => setTimeout(resolve, delay))
         }
-
-        // Asegurarnos de que se muestre todo el texto al final
         updateMessageText(fullText, false)
       } catch (error) {
         console.error("Error en el streaming de texto:", error)
-        updateMessageText(fullText, false) // En caso de error, mostrar todo el texto
+        updateMessageText(fullText, false)
       }
     } catch (error) {
       console.error("Error al conectar con el backend:", error)
@@ -484,21 +506,25 @@ const Home = () => {
                     <div className="ds-message-content">
                       {msg.sender === "bot" ? (
                         <>
+                          {console.log('Renderizando mensaje del bot:', msg)}
                           <ReactMarkdown
                             components={{
-                              p: ({ children }) => (
-                                <p
-                                  style={{
-                                    whiteSpace: "pre-line",
-                                    color: "#333",
-                                    fontSize: "15px",
-                                    lineHeight: "1.6",
-                                    marginBottom: "12px",
-                                  }}
-                                >
-                                  {children}
-                                </p>
-                              ),
+                              p: ({ children }) => {
+                                console.log('Renderizando párrafo con children:', children)
+                                return (
+                                  <p
+                                    style={{
+                                      whiteSpace: "pre-line",
+                                      color: "#333",
+                                      fontSize: "15px",
+                                      lineHeight: "1.6",
+                                      marginBottom: "12px",
+                                    }}
+                                  >
+                                    {children}
+                                  </p>
+                                )
+                              },
                               strong: ({ children }) => (
                                 <strong
                                   style={{
@@ -585,7 +611,7 @@ const Home = () => {
                               ),
                             }}
                           >
-                            {msg.text}
+                            {msg.text || ""}
                           </ReactMarkdown>
                           {msg.isStreaming && !msg.text && (
                             <div className="ds-typing-container">
