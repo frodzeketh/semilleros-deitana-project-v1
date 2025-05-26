@@ -1,11 +1,10 @@
-// src/App.js
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./components/Home";
-import Login from "./components/Login";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./context/AuthContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import Home from "../src/components/Home"
+import Login from "../src/components/Login"
+import ProtectedRoute from "../src/components/ProtectedRoute"
+import { AuthProvider } from "../src/context/AuthContext"
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
       <Router>
@@ -22,7 +21,5 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
-  );
+  )
 }
-
-export default App;

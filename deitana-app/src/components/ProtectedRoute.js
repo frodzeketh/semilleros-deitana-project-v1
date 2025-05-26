@@ -1,14 +1,29 @@
-// src/components/ProtectedRoute.js
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+"use client"
+import { Navigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth()
 
-  if (loading) return <p>Cargando...</p>;
+  // Mostrar loading mientras se verifica la autenticación
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        <p>Cargando...</p>
+      </div>
+    )
+  }
 
-  return user ? children : <Navigate to="/" />;
-};
+  // Si no hay usuario autenticado, redirigir al login
+  return user ? children : <Navigate to="/" replace />
+}
 
-export default ProtectedRoute;
+export default ProtectedRoute

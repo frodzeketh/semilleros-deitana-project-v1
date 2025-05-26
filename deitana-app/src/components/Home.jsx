@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { MessageSquare, PanelLeftClose, Send, ChevronDown, Search, Settings, LogOut, Edit3, Clock } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import { useAuth } from "../context/AuthContext"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -22,6 +23,9 @@ const Home = () => {
   const [isMobile, setIsMobile] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
+  // Obtener la función de logout del contexto de autenticación
+  const { logout } = useAuth()
+
   // Datos de ejemplo para el historial de chats
   const chatHistory = {
     recent: [
@@ -32,23 +36,8 @@ const Home = () => {
       },
       {
         id: 2,
-        title: "Traducción de instrucciones de codificación...",
+        title: "Ejemplo de clientes",
         timestamp: "Ayer",
-      },
-      {
-        id: 3,
-        title: "Asistente de Codificación Listo Para Ayud...",
-        timestamp: "Hace 2 días",
-      },
-      {
-        id: 4,
-        title: "Asistente IA: Prompt y Conversación",
-        timestamp: "Hace 3 días",
-      },
-      {
-        id: 5,
-        title: "Modernidad y Posmodernidad: Presentaci...",
-        timestamp: "Hace 1 semana",
       },
     ],
   }
@@ -75,10 +64,13 @@ const Home = () => {
     }
   }
 
-  const handleLogout = () => {
-    // Aquí puedes agregar la lógica de logout
-    console.log("Cerrando sesión...")
-    // Por ejemplo: limpiar localStorage, redirigir, etc.
+  const handleLogout = async () => {
+    try {
+      await logout()
+      console.log("Sesión cerrada exitosamente")
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error)
+    }
   }
 
   const handleNewChat = () => {
