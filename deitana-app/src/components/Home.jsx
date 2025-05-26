@@ -22,6 +22,7 @@ const Home = () => {
 
   const [isMobile, setIsMobile] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [viewportHeight, setViewportHeight] = useState(0)
 
   // Obtener la función de logout del contexto de autenticación
   const { logout } = useAuth()
@@ -42,18 +43,69 @@ const Home = () => {
     ],
   }
 
-  // Detectar si estamos en móvil
+  // Función para calcular la altura real del viewport en Safari
+  const calculateViewportHeight = () => {
+    // Usar la altura de la ventana real
+    const vh = window.innerHeight
+    setViewportHeight(vh)
+
+    // Aplicar la altura calculada al contenedor principal
+    const homeContainer = document.querySelector(".ds-home-container")
+    if (homeContainer) {
+      homeContainer.style.height = `${vh}px`
+      homeContainer.style.maxHeight = `${vh}px`
+    }
+
+    // Prevenir el scroll de la página
+    document.body.style.height = `${vh}px`
+    document.body.style.maxHeight = `${vh}px`
+    document.body.style.overflow = "hidden"
+    document.body.style.position = "fixed"
+    document.body.style.width = "100%"
+    document.body.style.top = "0"
+    document.body.style.left = "0"
+  }
+
+  // Detectar si estamos en móvil y configurar viewport
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768)
+      const mobile = window.innerWidth <= 768
+      setIsMobile(mobile)
+
+      if (mobile) {
+        calculateViewportHeight()
+      }
+
       if (window.innerWidth > 768) {
         setMobileSidebarOpen(false)
+        // Restaurar body en desktop
+        document.body.style.position = ""
+        document.body.style.height = ""
+        document.body.style.maxHeight = ""
+        document.body.style.overflow = ""
       }
     }
 
     checkMobile()
     window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
+    window.addEventListener("orientationchange", () => {
+      setTimeout(calculateViewportHeight, 100)
+    })
+
+    // Prevenir el bounce scroll en iOS
+    const preventBounce = (e) => {
+      if (e.target === document.body || e.target === document.documentElement) {
+        e.preventDefault()
+      }
+    }
+
+    document.addEventListener("touchmove", preventBounce, { passive: false })
+
+    return () => {
+      window.removeEventListener("resize", checkMobile)
+      window.removeEventListener("orientationchange", calculateViewportHeight)
+      document.removeEventListener("touchmove", preventBounce)
+    }
   }, [])
 
   const toggleSidebar = () => {
@@ -319,8 +371,25 @@ const Home = () => {
     }
   }, [styleAdded])
 
+  // Calcular alturas dinámicamente para móvil
+  const mobileStyles =
+    isMobile && viewportHeight > 0
+      ? {
+          height: `${viewportHeight}px`,
+          maxHeight: `${viewportHeight}px`,
+        }
+      : {}
+
+  const contentHeight =
+    isMobile && viewportHeight > 0
+      ? {
+          height: `${viewportHeight - 120}px`, // Resta header y input
+          maxHeight: `${viewportHeight - 120}px`,
+        }
+      : {}
+
   return (
-    <div className="ds-home-container">
+    <div className="ds-home-container" style={mobileStyles}>
       {/* Sidebar */}
       {isMobile && mobileSidebarOpen && (
         <div className="ds-mobile-overlay" onClick={() => setMobileSidebarOpen(false)}></div>
@@ -335,6 +404,7 @@ const Home = () => {
               ? "ds-sidebar-expanded"
               : "ds-sidebar-collapsed"
         }`}
+        style={isMobile && viewportHeight > 0 ? { height: `${viewportHeight}px` } : {}}
       >
         {sidebarOpen || mobileSidebarOpen ? (
           <>
@@ -425,7 +495,7 @@ const Home = () => {
       </div>
 
       {/* Main Content */}
-      <div className="ds-main-content" ref={mainContentRef}>
+      <div className="ds-main-content" ref={mainContentRef} style={mobileStyles}>
         <div className="ds-chat-header">
           {isMobile && (
             <button className="ds-mobile-menu-button" onClick={toggleSidebar}>
@@ -447,7 +517,7 @@ const Home = () => {
           )}
         </div>
 
-        <div className="ds-chat-layout">
+        <div className="ds-chat-layout" style={contentHeight}>
           {isChatEmpty ? (
             <div className="ds-initial-view">
               <div className="ds-welcome-message">
