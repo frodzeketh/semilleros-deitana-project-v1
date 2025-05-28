@@ -15,6 +15,11 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
+// Historial global de conversación (en memoria, para demo)
+const conversationHistory = [];
+// Contexto de datos reales de la última consulta relevante
+let lastRealData = null;
+
 // Función para formatear resultados en Markdown
 function formatResultsAsMarkdown(results) {
     if (!results || results.length === 0) {
@@ -367,56 +372,68 @@ function obtenerDescripcionMapaERP(consulta) {
     }
 }
 
+// Función auxiliar para detectar si la pregunta es de seguimiento sobre teléfono de cliente
+function esPreguntaTelefonoCliente(userQuery, lastRealData) {
+    if (!lastRealData || lastRealData.type !== 'cliente' || !lastRealData.data) return false;
+    const texto = userQuery.toLowerCase();
+    return (
+        texto.includes('telefono') || texto.includes('teléfono')
+    );
+}
+
 // Función para procesar la consulta del usuario
 async function processQuery(userQuery) {
     try {
         // Obtener contenido relevante de mapaERP
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
 
-        const messages = [
-            { 
-                role: "system", 
-                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:
+        // Agregar la consulta del usuario al historial
+        conversationHistory.push({ role: "user", content: userQuery });
 
-1. SIEMPRE responde de manera útil y completa, sin importar el tipo de consulta
-2. Para consultas sobre datos:
-   - Si la información existe en la base de datos, la obtienes y la explicas
-   - Si la información no existe, lo explicas claramente
-   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural
-   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos
-
-3. Para consultas técnicas (cultivos, siembras, etc.):
-   - Combinas datos reales con conocimiento especializado
-   - Proporcionas recomendaciones prácticas
-   - Incluyes detalles sobre variedades, bandejas y técnicas
-
-4. Para análisis y diagnósticos:
-   - Interpretas los datos de manera inteligente
-   - Identificas patrones y tendencias
-   - Proporcionas insights útiles
-
-5. Para consultas generales o saludos:
-   - Respondes de manera natural y conversacional
-   - Explicas tus capacidades
-   - Ofreces tu ayuda
-
-6. Para consultas que no entiendes:
-   - Lo admites de manera natural
-   - Pides clarificación
-   - Sugieres alternativas
-
-NUNCA:
-- Digas que no puedes responder
-- Pidas reformular la consulta sin intentar entenderla
-- Muestres errores técnicos al usuario
-- Dejes de intentar ser útil
-
-${promptBase}\n\n${contenidoMapaERP}`
-            },
-            { 
-                role: "user", 
-                content: userQuery 
+        // Si la pregunta es de teléfono y hay cliente en contexto, forzar consulta SQL
+        if (esPreguntaTelefonoCliente(userQuery, lastRealData)) {
+            const cliente = lastRealData.data[0];
+            const nombreCliente = cliente.CL_DENO;
+            if (nombreCliente) {
+                // Buscar el teléfono del cliente
+                const sql = `SELECT CL_TEL FROM clientes WHERE CL_DENO = '${nombreCliente.replace(/'/g, "''")}' LIMIT 1`;
+                const results = await executeQuery(sql);
+                if (results && results[0] && results[0].CL_TEL) {
+                    lastRealData = { type: 'telefono_cliente', data: results };
+                    return {
+                        success: true,
+                        data: {
+                            message: `El teléfono de "${nombreCliente}" es: ${results[0].CL_TEL}`
+                        }
+                    };
+                } else {
+                    lastRealData = { type: 'telefono_cliente', data: [] };
+                    return {
+                        success: true,
+                        data: {
+                            message: `No se encontró un número de teléfono registrado para "${nombreCliente}".`
+                        }
+                    };
+                }
             }
+        }
+
+        // Construir el historial para OpenAI (máximo 10 mensajes para evitar desbordes)
+        const historyForAI = conversationHistory.slice(-10);
+
+        // Incluir datos reales del contexto anterior si existen
+        let contextoDatos = '';
+        if (lastRealData && lastRealData.type && lastRealData.data) {
+            contextoDatos = `\n\nDATOS REALES DISPONIBLES DE LA CONSULTA ANTERIOR:\nTipo: ${lastRealData.type}\nDatos: ${JSON.stringify(lastRealData.data)}`;
+        }
+
+        // Insertar el mensaje system y contexto de negocio al inicio
+        const messages = [
+            {
+                role: "system",
+                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:\n\n1. SIEMPRE responde de manera útil y completa, sin importar el tipo de consulta\n2. Para consultas sobre datos:\n   - Si la información existe en la base de datos, la obtienes y la explicas\n   - Si la información no existe, lo explicas claramente\n   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural\n   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos\n\n3. Para consultas técnicas (cultivos, siembras, etc.):\n   - Combinas datos reales con conocimiento especializado\n   - Proporcionas recomendaciones prácticas\n   - Incluyes detalles sobre variedades, bandejas y técnicas\n\n4. Para análisis y diagnósticos:\n   - Interpretas los datos de manera inteligente\n   - Identificas patrones y tendencias\n   - Proporcionas insights útiles\n\n5. Para consultas generales o saludos:\n   - Respondes de manera natural y conversacional\n   - Explicas tus capacidades\n   - Ofreces tu ayuda\n\n6. Para consultas que no entiendes:\n   - Lo admites de manera natural\n   - Pides clarificación\n   - Sugieres alternativas\n\nNUNCA:\n- Digas que no puedes responder\n- Pidas reformular la consulta sin intentar entenderla\n- Muestres errores técnicos al usuario\n- Dejes de intentar ser útil\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`
+            },
+            ...historyForAI
         ];
 
         // Obtener la respuesta inicial de la IA
@@ -430,11 +447,15 @@ ${promptBase}\n\n${contenidoMapaERP}`
         const response = completion.choices[0].message.content;
         console.log('Respuesta generada:', response);
 
+        // Guardar la respuesta de la IA en el historial
+        conversationHistory.push({ role: "assistant", content: response });
+
         // Verificar si la respuesta contiene una consulta SQL
         const sql = validarRespuestaSQL(response);
 
         // Si no hay SQL, devolver la respuesta directamente
         if (!sql) {
+            lastRealData = null; // No hay datos nuevos
             return {
                 success: true,
                 data: {
@@ -447,9 +468,9 @@ ${promptBase}\n\n${contenidoMapaERP}`
         try {
             console.log('Ejecutando consulta SQL:', sql);
             const results = await executeQuery(sql);
-            
+
             if (!results || results.length === 0) {
-                // Si no hay resultados, explicar por qué de manera natural
+                lastRealData = null;
                 return {
                     success: true,
                     data: {
@@ -457,6 +478,13 @@ ${promptBase}\n\n${contenidoMapaERP}`
                     }
                 };
             }
+
+            // Guardar los datos reales para el contexto de la siguiente consulta
+            // Detectar tipo de dato (ej: cliente, articulo, etc) de forma simple
+            let tipo = 'dato';
+            if (results[0] && results[0].CL_DENO) tipo = 'cliente';
+            if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
+            lastRealData = { type: tipo, data: results };
 
             const finalResponse = await formatFinalResponse(results, userQuery);
             return {
@@ -467,7 +495,7 @@ ${promptBase}\n\n${contenidoMapaERP}`
             };
         } catch (error) {
             console.error('Error al ejecutar consulta SQL:', error);
-            // Si hay error en la consulta SQL, devolver la respuesta original
+            lastRealData = null;
             return {
                 success: true,
                 data: {
@@ -478,6 +506,7 @@ ${promptBase}\n\n${contenidoMapaERP}`
 
     } catch (error) {
         console.error('Error al procesar la consulta:', error);
+        lastRealData = null;
         return {
             success: true,
             data: {
