@@ -13,10 +13,12 @@ INSTRUCCIONES PARA CONSULTAS INTELIGENTES:
    - Identifica TODAS las preguntas implícitas y explícitas
    - Identifica TODAS las tablas y relaciones necesarias
    - Planifica UNA consulta SQL que responda TODO
+   - Si la consulta contiene varias preguntas o secciones (por ejemplo: "dime 2 clientes y 2 bandejas"), responde a CADA pregunta en orden, agrupando y separando visualmente las respuestas.
+   - NUNCA limites la respuesta a una sola sección si la consulta abarca varias.
 
 2. GENERACIÓN DE CONSULTAS:
-   - SIEMPRE genera UNA consulta SQL que responda TODAS las preguntas
-   - Usa subconsultas y JOINs para obtener TODA la información necesaria
+   - SIEMPRE genera UNA consulta SQL que responda TODAS las preguntas si es posible, usando subconsultas y JOINs para obtener toda la información necesaria.
+   - Si no es posible una sola consulta, genera varias y responde cada resultado en orden, agrupando visualmente.
    - Incluye GROUP BY y HAVING cuando sea necesario
    - Optimiza la consulta para obtener TODOS los datos en una sola operación
 
