@@ -71,15 +71,17 @@ async function formatFinalResponse(results, query) {
         return "No encontré información que coincida con tu consulta. ¿Podrías reformularla o ser más específico?";
     }
 
-    // Limitar el número de resultados
+    // Detectar si el usuario pide información completa o detalles
+    const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
     const resultadosLimitados = limitarResultados(results);
     const totalResultados = results.length;
-
-    // Formatear los datos reales
     let datosReales = '';
     resultadosLimitados.forEach((resultado, index) => {
         datosReales += `\nRegistro ${index + 1}:\n`;
-        Object.entries(resultado).forEach(([campo, valor]) => {
+        const campos = Object.entries(resultado);
+        // Si no pide información completa, solo mostrar los 2-3 primeros campos relevantes
+        const mostrarCampos = pideCompleto ? campos : campos.slice(0, 3);
+        mostrarCampos.forEach(([campo, valor]) => {
             if (campo.toLowerCase().includes('fec') && valor) {
                 const fecha = new Date(valor);
                 valor = fecha.toLocaleDateString('es-ES', {
@@ -90,6 +92,9 @@ async function formatFinalResponse(results, query) {
             }
             datosReales += `${campo}: ${valor}\n`;
         });
+        if (!pideCompleto && campos.length > 3) {
+            datosReales += '(Para más detalles, pídeme la información completa)\n';
+        }
     });
 
     // Generar una respuesta contextual usando la IA
@@ -431,7 +436,7 @@ async function processQuery(userQuery) {
         const messages = [
             {
                 role: "system",
-                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:\n\n1. SIEMPRE responde de manera útil y completa, sin importar el tipo de consulta\n2. Para consultas sobre datos:\n   - Si la información existe en la base de datos, la obtienes y la explicas\n   - Si la información no existe, lo explicas claramente\n   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural\n   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos\n\n3. Para consultas técnicas (cultivos, siembras, etc.):\n   - Combinas datos reales con conocimiento especializado\n   - Proporcionas recomendaciones prácticas\n   - Incluyes detalles sobre variedades, bandejas y técnicas\n\n4. Para análisis y diagnósticos:\n   - Interpretas los datos de manera inteligente\n   - Identificas patrones y tendencias\n   - Proporcionas insights útiles\n\n5. Para consultas generales o saludos:\n   - Respondes de manera natural y conversacional\n   - Explicas tus capacidades\n   - Ofreces tu ayuda\n\n6. Para consultas que no entiendes:\n   - Lo admites de manera natural\n   - Pides clarificación\n   - Sugieres alternativas\n\nNUNCA:\n- Digas que no puedes responder\n- Pidas reformular la consulta sin intentar entenderla\n- Muestres errores técnicos al usuario\n- Dejes de intentar ser útil\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`
+                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:\n\n1. SIEMPRE responde de manera útil y completa, pero si el usuario NO pide información completa, detalles o explicación, responde SOLO con los datos más relevantes y en formato breve.\n2. Si el usuario pide información completa, detalles o explicación, entonces muestra todos los datos disponibles.\n3. Para consultas sobre datos:\n   - Si la información existe en la base de datos, la obtienes y la explicas\n   - Si la información no existe, lo explicas claramente\n   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural\n   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos\n\n4. Para consultas técnicas (cultivos, siembras, etc.):\n   - Combinas datos reales con conocimiento especializado\n   - Proporcionas recomendaciones prácticas\n   - Incluyes detalles sobre variedades, bandejas y técnicas\n\n5. Para análisis y diagnósticos:\n   - Interpretas los datos de manera inteligente\n   - Identificas patrones y tendencias\n   - Proporcionas insights útiles\n\n6. Para consultas generales o saludos:\n   - Respondes de manera natural y conversacional\n   - Explicas tus capacidades\n   - Ofreces tu ayuda\n\n7. Para consultas que no entiendes:\n   - Lo admites de manera natural\n   - Pides clarificación\n   - Sugieres alternativas\n\nIMPORTANTE:\n- Si el usuario no pide información completa, responde solo con los datos más relevantes y en formato breve.\n- Si el usuario pide información completa, entonces sí muestra todos los detalles.\n- Añade una nota: Para más detalles, pídeme la información completa.\n\nNUNCA:\n- Digas que no puedes responder\n- Pidas reformular la consulta sin intentar entenderla\n- Muestres errores técnicos al usuario\n- Dejes de intentar ser útil\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`
             },
             ...historyForAI
         ];
