@@ -1,19 +1,14 @@
-const { OpenAI } = require('openai');
 const pool = require('./db');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
+const { getDeepseekCompletion } = require('./utils/deepseek');
 
 console.log('=== VERIFICACIÓN DE IMPORTACIÓN ===');
 console.log('mapaERP importado:', !!mapaERP);
 console.log('Tipo de mapaERP importado:', typeof mapaERP);
 console.log('Claves en mapaERP importado:', Object.keys(mapaERP));
 console.log('=== FIN DE VERIFICACIÓN DE IMPORTACIÓN ===');
-
-// Inicializar el cliente de OpenAI
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
 
 // Historial global de conversación (en memoria, para demo)
 const conversationHistory = [];
@@ -122,16 +117,9 @@ async function formatFinalResponse(results, query) {
             content: `Consulta: "${query}"\n\nDatos encontrados:${datosReales}\n\nPor favor, analiza estos datos y proporciona una respuesta útil que explique su significado y relevancia.`
         }
     ];
-
     try {
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 500
-        });
-
-        return completion.choices[0].message.content;
+        const completion = await getDeepseekCompletion(messages, { temperature: 0.7, max_tokens: 500 });
+        return completion;
     } catch (error) {
         console.error('Error al generar respuesta:', error);
         return `He encontrado la siguiente información:${datosReales}`;
@@ -423,10 +411,8 @@ async function processQuery(userQuery) {
             }
         }
 
-        // Construir el historial para OpenAI (máximo 10 mensajes para evitar desbordes)
+        // Construir el historial para Deepseek (máximo 10 mensajes para evitar desbordes)
         const historyForAI = conversationHistory.slice(-10);
-
-        // Incluir datos reales del contexto anterior si existen
         let contextoDatos = '';
         if (lastRealData && lastRealData.type && lastRealData.data) {
             contextoDatos = `\n\nDATOS REALES DISPONIBLES DE LA CONSULTA ANTERIOR:\nTipo: ${lastRealData.type}\nDatos: ${JSON.stringify(lastRealData.data)}`;
@@ -436,20 +422,12 @@ async function processQuery(userQuery) {
         const messages = [
             {
                 role: "system",
-                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:\n\n1. SIEMPRE responde de manera útil y completa, pero si el usuario NO pide información completa, detalles o explicación, responde SOLO con los datos más relevantes y en formato breve.\n2. Si el usuario pide información completa, detalles o explicación, entonces muestra todos los datos disponibles.\n3. Para consultas sobre datos:\n   - Si la información existe en la base de datos, la obtienes y la explicas\n   - Si la información no existe, lo explicas claramente\n   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural\n   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos\n\n4. Para consultas técnicas (cultivos, siembras, etc.):\n   - Combinas datos reales con conocimiento especializado\n   - Proporcionas recomendaciones prácticas\n   - Incluyes detalles sobre variedades, bandejas y técnicas\n\n5. Para análisis y diagnósticos:\n   - Interpretas los datos de manera inteligente\n   - Identificas patrones y tendencias\n   - Proporcionas insights útiles\n\n6. Para consultas generales o saludos:\n   - Respondes de manera natural y conversacional\n   - Explicas tus capacidades\n   - Ofreces tu ayuda\n\n7. Para consultas que no entiendes:\n   - Lo admites de manera natural\n   - Pides clarificación\n   - Sugieres alternativas\n\nIMPORTANTE:\n- Si el usuario no pide información completa, responde solo con los datos más relevantes y en formato breve.\n- Si el usuario pide información completa, entonces sí muestra todos los detalles.\n- Añade una nota: Para más detalles, pídeme la información completa.\n\nNUNCA:\n- Digas que no puedes responder\n- Pidas reformular la consulta sin intentar entenderla\n- Muestres errores técnicos al usuario\n- Dejes de intentar ser útil\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`
+                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:\n\n1. SIEMPRE responde de manera útil y completa, pero si el usuario NO pide información completa, detalles o explicación, responde SOLO con los datos más relevantes y en formato breve.\n2. Si el usuario pide información completa, detalles o explicación, entonces muestra todos los datos disponibles.\n3. Para consultas sobre datos:\n   - Si la información existe en la base de datos, la obtienes y la explicas\n   - Si la información no existe, lo explicas claramente\n   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural\n   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos\n\n4. Para consultas técnicas (cultivos, siembras, etc.):\n   - Combinas datos reales con conocimiento especializado\n   - Proporcionas recomendaciones prácticas\n   - Incluyes detalles sobre variedades, bandejas y técnicas\n\n5. Para análisis y diagnósticos:\n   - Interpretas los datos de manera inteligente\n   - Identificas patrones y tendencias\n   - Proporcionas insights útiles\n\n6. Para consultas generales o saludos:\n   - Respondes de manera natural y conversacional\n   - Explicas tus capacidades\n   - Ofreces tu ayuda\n\n7. Para consultas que no entiendes:\n   - Lo admites de manera natural\n   - Pides clarificación\n   - Sugieres alternativas\n\nIMPORTANTE:\n- SIEMPRE que el usuario haga una pregunta sobre datos, GENERA una consulta SQL válida y en formato <sql>...</sql> para obtener la información REAL de la base de datos.\n- NUNCA inventes datos, solo responde con datos reales de la base de datos.\n- Si no puedes generar una consulta SQL, explica el motivo.\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`
             },
             ...historyForAI
         ];
-
-        // Obtener la respuesta inicial de la IA
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 1000
-        });
-
-        const response = completion.choices[0].message.content;
+        // Obtener la respuesta inicial de la IA (Deepseek)
+        const response = await getDeepseekCompletion(messages, { temperature: 0.7, max_tokens: 1000 });
         console.log('Respuesta generada:', response);
 
         // Guardar la respuesta de la IA en el historial
@@ -464,7 +442,7 @@ async function processQuery(userQuery) {
             return {
                 success: true,
                 data: {
-                    message: response
+                    message: '⚠️ La IA no generó una consulta SQL. Respuesta textual:\n' + response
                 }
             };
         }
@@ -485,7 +463,6 @@ async function processQuery(userQuery) {
             }
 
             // Guardar los datos reales para el contexto de la siguiente consulta
-            // Detectar tipo de dato (ej: cliente, articulo, etc) de forma simple
             let tipo = 'dato';
             if (results[0] && results[0].CL_DENO) tipo = 'cliente';
             if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
