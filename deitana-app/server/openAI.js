@@ -189,14 +189,17 @@ function validarRespuestaSQL(response) {
         }
     }
 
-    // Verificar si es una consulta de conteo
+    // Permitir consultas agregadas sin LIMIT si devuelven solo un registro
     const esConsultaConteo = sql.toLowerCase().includes('count(*)');
-    
-    // Solo requerir LIMIT si NO es una consulta de conteo
-    if (!esConsultaConteo && !sql.toLowerCase().includes('limit')) {
+    const tieneGroupBy = /group by/i.test(sql);
+    const tieneLimit = /limit/i.test(sql);
+    const esAgregadaSinGroupBy = /\b(count|sum|avg|max|min)\b\s*\(/i.test(sql) && !tieneGroupBy;
+
+    // Solo requerir LIMIT si NO es una consulta de conteo, ni una agregada sin GROUP BY
+    if (!esConsultaConteo && !esAgregadaSinGroupBy && !tieneLimit) {
         throw new Error('La consulta debe incluir un LIMIT para evitar resultados excesivos');
     }
-    
+
     return sql;
 }
 
@@ -212,9 +215,20 @@ function obtenerNombreRealTabla(nombreClave) {
 function reemplazarNombresTablas(sql) {
     let sqlModificado = sql;
     Object.keys(mapaERP).forEach(key => {
-        if (mapaERP[key].tabla && mapaERP[key].tabla.includes('-')) {
-            const regex = new RegExp(`\\b${key}\\b`, 'g');
-            sqlModificado = sqlModificado.replace(regex, `\`${mapaERP[key].tabla}\``);
+        const nombreReal = mapaERP[key].tabla || mapaERP[key].tabla_relacionada;
+        if (nombreReal && nombreReal !== key) {
+            // Solo reemplazar si NO está ya entre backticks
+            // Reemplaza la clave (con guion bajo) por el nombre real con backticks, solo si no está precedido o seguido de backtick
+            const regexKey = new RegExp(`(?<! 60)\\b${key}\\b(?! 60)`, 'g');
+            sqlModificado = sqlModificado.replace(regexKey, `\`${nombreReal}\``);
+            // Si la clave tiene guion bajo y el nombre real tiene guion, también reemplaza la versión con guion
+            if (key.includes('_') && nombreReal.includes('-')) {
+                const keyGuionBajo = key.replace(/_/g, '-');
+                const regexGuionBajo = new RegExp(`(?<! 60)\\b${keyGuionBajo}\\b(?! 60)`, 'g');
+                sqlModificado = sqlModificado.replace(regexGuionBajo, `\`${nombreReal}\``);
+            }
+            // Además, si por error hay doble backtick, lo corregimos
+            sqlModificado = sqlModificado.replace(/``+/g, '`');
         }
     });
     return sqlModificado;

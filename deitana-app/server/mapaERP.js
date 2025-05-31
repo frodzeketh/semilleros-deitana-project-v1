@@ -1118,9 +1118,9 @@ tecnicos_fases: {
                 C1: "Número de bandejas manejadas por el técnico en esta línea."
             },
             relaciones_internas_de_detalle: { // Relaciones que parten de la tabla de detalle
-                 tecnicos: {
+                tecnicos: {
                     tabla_relacionada: "tecnicos",
-                    tipo: "Muchos a uno (varias líneas de detalle pueden referenciar al mismo técnico)",
+                    tipo: "Muchos  a uno (varias líneas de detalle pueden referenciar al mismo técnico)",
                     campo_enlace_local: "C0", // El campo local que contiene el código del técnico
                     campo_enlace_externo: "id", // El campo referenciado en la tabla tecnicos
                     descripcion: "Vincula cada línea de detalle de técnico/bandejas con la información del técnico (Ej: TN_DENO para el nombre)."
@@ -2613,6 +2613,122 @@ entregas_mat: { // Clave principal (basada en el nombre de tabla)
         filtrar_entregas_por_articulo: "Buscar entregas que incluyeron un artículo específico (requiere consultar la tabla de detalle 'entregas-mat_em_lna' filtrando por C0 y unir con 'entregas-mat')."
     }
 },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ================================================*/
+/* Tecnicos */
+/* ================================================*/
+tecnicos: {
+    alias: "tecnicos",
+    descripcion: "Información de los técnicos de la empresa, incluyendo su nombre, teléfono, email y otros datos relevantes.",
+    tabla: "tecnicos",
+    columnas: {
+        id: "Código identificador único del técnico (Clave Primaria)",
+        TN_DENO: "Nombre completo del técnico.",
+        TN_TEL: "Número de teléfono del técnico.",
+        TN_DOM: "Domicilio del técnico.",
+        TN_POB: "Población del técnico.",
+        TN_CDP: "Codigo postal del técnico.",
+        TN_CIF: "Número de identificación fiscal del técnico."
+    }
+},
+
+
+
+
+
+
+/* ================================================*/
+/* Partes y Tratamientos – Personal – Fichajes personal */
+/* ================================================*/
+fichajesperso: { // Clave principal (basada en el nombre de tabla)
+    descripcion: "Registra los fichajes diarios de los técnicos, con información general del día. Los detalles de cada fichaje (técnico, ubicación, tarea, hora inicio/fin) se encuentran en la tabla relacionada 'fichajesperso_fpe_lna'.",
+    tabla: "fichajesperso", // Nombre de tabla principal
+    columnas: {
+        id: "Código único que representa un día específico (Clave Primaria)",
+        FPE_FEC: "Fecha del día."
+    },
+    relaciones: {
+        fichajesperso_fpe_lna: {
+            tabla_relacionada: "fichajesperso_fpe_lna",
+            tipo: "Uno a muchos (un día puede tener múltiples fichajes de técnicos)",
+            campo_enlace_local: "id", // El id del día en fichajesperso
+            campo_enlace_externo: "id", // El campo id en fichajesperso_fpe_lna que referencia al día
+            descripcion: "Almacena los detalles de cada fichaje individual de los técnicos para un día específico (técnico, ubicación, tarea, hora de inicio y fin).",
+            estructura_relacionada: {
+                id: "Mismo ID que la tabla 'fichajesperso', repetido para cada fichaje del día.",
+                id2: "Identificador secundario/orden de la línea de fichaje (Ej: '1', '2', etc.).",
+                C0: "ID del técnico. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+                C1: "Ubicación donde trabajó el técnico. Clave foránea a la tabla 'ubicaciones' para obtener la denominación (UBI_DENO).",
+                C2: "Tarea realizada por el técnico. Clave foránea a la tabla 'tareas_per' para obtener la denominación (TARP_DENO).",
+                C3: "Hora de inicio de la tarea (Ej: '00:00').",
+                C4: "Hora de fin de la tarea (Ej: '14:00')."
+            },
+            relaciones_internas_de_detalle: {
+                tecnicos: {
+                    tabla_relacionada: "tecnicos",
+                    tipo: "Muchos a uno",
+                    campo_enlace_local: "C0",
+                    campo_enlace_externo: "id",
+                    descripcion: "Vincula el fichaje con el técnico que lo realizó."
+                },
+                ubicaciones: {
+                    tabla_relacionada: "ubicaciones",
+                    tipo: "Muchos a uno",
+                    campo_enlace_local: "C1",
+                    campo_enlace_externo: "id",
+                    descripcion: "Vincula el fichaje con la ubicación donde trabajó el técnico."
+                },
+                tareas_per: {
+                    tabla_relacionada: "tareas_per",
+                    tipo: "Muchos a uno",
+                    campo_enlace_local: "C2",
+                    campo_enlace_externo: "id",
+                    descripcion: "Vincula el fichaje con la tarea realizada por el técnico."
+                },
+                tecnicos:  {
+                    tabla_relacionada: "tecnicos",
+                    tipo: "Muchos a uno (varios fichajes pueden referenciar al mismo técnico)",
+                    campo_enlace_local: "C0", // El campo local que contiene el código del técnico
+                    campo_enlace_externo: "id", // El campo referenciado en la tabla tecnicos
+                    descripcion: "Vincula la línea de detalle con el técnico que realizó el fichaje para obtener su denominación (TN_DENO)."
+                },
+            }
+        }
+    },
+    ejemplos: {
+        consulta_dia_fichajes: "Obtener la fecha de un día específico de fichajes usando su 'id'.",
+        consultar_fichajes_por_dia: "Para un día específico (usando el id de 'fichajesperso'), consultar la tabla relacionada 'fichajesperso_fpe_lna' para ver todos los fichajes de los técnicos en ese día.",
+        obtener_detalles_fichaje: "Desde una línea en 'fichajesperso_fpe_lna', usar C0, C1 y C2 para consultar 'tecnicos', 'ubicaciones' y 'tareas_per' y obtener el nombre del técnico, la ubicación y la tarea realizada.",
+        filtrar_fichajes_por_tecnico_en_dia: "Para un día específico, listar los fichajes de un técnico en particular (filtrando 'fichajesperso_fpe_lna' por 'id' del día y 'C0' del técnico).",
+        consultar_horario_fichaje: "Obtener la hora de inicio (C3) y fin (C4) de una tarea específica en un fichaje."
+    }
+},
+
+
+
+
+
+
 
     
     };
