@@ -389,18 +389,13 @@ function esPreguntaTelefonoCliente(userQuery, lastRealData) {
 // Función para procesar la consulta del usuario
 async function processQuery(userQuery) {
     try {
-        // Obtener contenido relevante de mapaERP
         const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
-
-        // Agregar la consulta del usuario al historial
         conversationHistory.push({ role: "user", content: userQuery });
 
-        // Si la pregunta es de teléfono y hay cliente en contexto, forzar consulta SQL
         if (esPreguntaTelefonoCliente(userQuery, lastRealData)) {
             const cliente = lastRealData.data[0];
             const nombreCliente = cliente.CL_DENO;
             if (nombreCliente) {
-                // Buscar el teléfono del cliente
                 const sql = `SELECT CL_TEL FROM clientes WHERE CL_DENO = '${nombreCliente.replace(/'/g, "''")}' LIMIT 1`;
                 const results = await executeQuery(sql);
                 if (results && results[0] && results[0].CL_TEL) {
@@ -423,94 +418,78 @@ async function processQuery(userQuery) {
             }
         }
 
-        // Construir el historial para OpenAI (máximo 10 mensajes para evitar desbordes)
         const historyForAI = conversationHistory.slice(-10);
-
-        // Incluir datos reales del contexto anterior si existen
         let contextoDatos = '';
         if (lastRealData && lastRealData.type && lastRealData.data) {
             contextoDatos = `\n\nDATOS REALES DISPONIBLES DE LA CONSULTA ANTERIOR:\nTipo: ${lastRealData.type}\nDatos: ${JSON.stringify(lastRealData.data)}`;
         }
 
-        // Insertar el mensaje system y contexto de negocio al inicio
-        const messages = [
-            {
-                role: "system",
-                content: `Eres Deitana IA, un asistente especializado en Semilleros Deitana. Tu objetivo es ser un verdadero asistente inteligente que:\n\n1. SIEMPRE responde de manera útil y completa, pero si el usuario NO pide información completa, detalles o explicación, responde SOLO con los datos más relevantes y en formato breve.\n2. Si el usuario pide información completa, detalles o explicación, entonces muestra todos los datos disponibles.\n3. Para consultas sobre datos:\n   - Si la información existe en la base de datos, la obtienes y la explicas\n   - Si la información no existe, lo explicas claramente\n   - Si es una consulta imposible (como clientes de Malasia), lo explicas de manera natural\n   - SIEMPRE incluyes relaciones para mostrar nombres descriptivos\n\n4. Para consultas técnicas (cultivos, siembras, etc.):\n   - Combinas datos reales con conocimiento especializado\n   - Proporcionas recomendaciones prácticas\n   - Incluyes detalles sobre variedades, bandejas y técnicas\n\n5. Para análisis y diagnósticos:\n   - Interpretas los datos de manera inteligente\n   - Identificas patrones y tendencias\n   - Proporcionas insights útiles\n\n6. Para consultas generales o saludos:\n   - Respondes de manera natural y conversacional\n   - Explicas tus capacidades\n   - Ofreces tu ayuda\n\n7. Para consultas que no entiendes:\n   - Lo admites de manera natural\n   - Pides clarificación\n   - Sugieres alternativas\n\nIMPORTANTE:\n- Si el usuario no pide información completa, responde solo con los datos más relevantes y en formato breve.\n- Si el usuario pide información completa, entonces sí muestra todos los detalles.\n- Añade una nota: Para más detalles, pídeme la información completa.\n\nNUNCA:\n- Digas que no puedes responder\n- Pidas reformular la consulta sin intentar entenderla\n- Muestres errores técnicos al usuario\n- Dejes de intentar ser útil\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`
-            },
-            ...historyForAI
-        ];
+        const systemPrompt = `Eres Deitana IA, un asistente experto conectado a una base de datos real de Semilleros Deitana.\n\nSIEMPRE que el usuario haga una consulta sobre datos, GENERA SOLO UNA CONSULTA SQL válida y ejecutable (en bloque <sql>...</sql> o \u0060\u0060\u0060sql ... \u0060\u0060\u0060), sin explicaciones ni texto adicional.\n- Si la consulta es ambigua, genera una consulta SQL tentativa que muestre un registro relevante.\n- NUNCA digas que no tienes acceso a la base de datos.\n- NUNCA respondas con texto genérico.\n- NUNCA inventes datos.\n- SIEMPRE usa los nombres de tablas y columnas exactos de mapaERP.\n- SI la consulta es conceptual o no requiere datos, responde normalmente.\n\n${promptBase}\n\n${contenidoMapaERP}${contextoDatos}`;
 
-        // Obtener la respuesta inicial de la IA
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 1000
-        });
-
-        const response = completion.choices[0].message.content;
-        console.log('Respuesta generada:', response);
-
-        // Guardar la respuesta de la IA en el historial
-        conversationHistory.push({ role: "assistant", content: response });
-
-        // Verificar si la respuesta contiene una consulta SQL
-        const sql = validarRespuestaSQL(response);
-
-        // Si no hay SQL, devolver la respuesta directamente
-        if (!sql) {
-            lastRealData = null; // No hay datos nuevos
-            return {
-                success: true,
-                data: {
-                    message: response
+        let response = null;
+        let sql = null;
+        let intentos = 0;
+        let feedback = '';
+        let errorSQL = null;
+        while (intentos < 2) {
+            const messages = [
+                { role: "system", content: systemPrompt + (feedback ? `\n\nFEEDBACK: ${feedback}` : '') },
+                ...historyForAI
+            ];
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4-turbo-preview",
+                messages: messages,
+                temperature: 0.7,
+                max_tokens: 1000
+            });
+            response = completion.choices[0].message.content;
+            conversationHistory.push({ role: "assistant", content: response });
+            sql = validarRespuestaSQL(response);
+            if (!sql) {
+                feedback = 'Por favor, responde SOLO con una consulta SQL válida y ejecutable, sin explicaciones ni texto adicional.';
+                intentos++;
+                continue;
+            }
+            // Intentar ejecutar la consulta SQL
+            try {
+                const results = await executeQuery(sql);
+                if (!results || results.length === 0) {
+                    lastRealData = null;
+                    return {
+                        success: true,
+                        data: {
+                            message: 'La consulta SQL se ejecutó correctamente, pero no se encontraron resultados en la base de datos.'
+                        }
+                    };
                 }
-            };
-        }
-
-        // Ejecutar la consulta SQL si existe
-        try {
-            console.log('Ejecutando consulta SQL:', sql);
-            const results = await executeQuery(sql);
-
-            if (!results || results.length === 0) {
-                lastRealData = null;
+                let tipo = 'dato';
+                if (results[0] && results[0].CL_DENO) tipo = 'cliente';
+                if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
+                lastRealData = { type: tipo, data: results };
+                const finalResponse = await formatFinalResponse(results, userQuery);
                 return {
                     success: true,
                     data: {
-                        message: response + "\n\nDespués de revisar nuestra base de datos, no encontré registros que coincidan con tu consulta. Esto puede deberse a que la información solicitada no existe en nuestros registros actuales."
+                        message: finalResponse
                     }
                 };
+            } catch (error) {
+                // Si la consulta SQL falla, feedback y reintento
+                feedback = 'La consulta SQL generada fue inválida o produjo un error. Por favor, genera SOLO una consulta SQL válida y ejecutable.';
+                errorSQL = error;
+                intentos++;
+                sql = null;
             }
-
-            // Guardar los datos reales para el contexto de la siguiente consulta
-            // Detectar tipo de dato (ej: cliente, articulo, etc) de forma simple
-            let tipo = 'dato';
-            if (results[0] && results[0].CL_DENO) tipo = 'cliente';
-            if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
-            lastRealData = { type: tipo, data: results };
-
-            const finalResponse = await formatFinalResponse(results, userQuery);
-            return {
-                success: true,
-                data: {
-                    message: finalResponse
-                }
-            };
-        } catch (error) {
-            console.error('Error al ejecutar consulta SQL:', error);
-            lastRealData = null;
-            return {
-                success: true,
-                data: {
-                    message: response
-                }
-            };
         }
-
+        // Si tras dos intentos no hay SQL válido, fallback amigable
+        lastRealData = null;
+        return {
+            success: true,
+            data: {
+                message: errorSQL ? 'Ocurrió un error al ejecutar la consulta SQL. Por favor, revisa tu petición.' : 'No pude generar una consulta SQL para tu petición. Por favor, intenta ser más específico o revisa tu consulta.'
+            }
+        };
     } catch (error) {
-        console.error('Error al procesar la consulta:', error);
         lastRealData = null;
         return {
             success: true,
