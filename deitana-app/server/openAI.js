@@ -73,14 +73,23 @@ async function formatFinalResponse(results, query) {
 
     // Detectar si el usuario pide información completa o detalles
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
-    // SIEMPRE mostrar todos los campos relevantes de cada registro, aunque el usuario no pida información completa
+    // Detectar la tabla para usar descripciones de columnas
+    let tablaDetectada = null;
+    if (results.length > 0) {
+        // Buscar la tabla que más coincide con las columnas del resultado
+        const columnasResultado = Object.keys(results[0]);
+        tablaDetectada = determinarTabla(columnasResultado);
+    }
     const resultadosLimitados = limitarResultados(results);
     let datosReales = '';
     resultadosLimitados.forEach((resultado, index) => {
         datosReales += `\nRegistro ${index + 1}:\n`;
         const campos = Object.entries(resultado);
-        // Mostrar todos los campos relevantes SIEMPRE
         campos.forEach(([campo, valor]) => {
+            let descripcion = campo;
+            if (tablaDetectada) {
+                descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
+            }
             if (campo.toLowerCase().includes('fec') && valor) {
                 const fecha = new Date(valor);
                 valor = fecha.toLocaleDateString('es-ES', {
@@ -89,7 +98,7 @@ async function formatFinalResponse(results, query) {
                     day: 'numeric'
                 });
             }
-            datosReales += `${campo}: ${valor}\n`;
+            datosReales += `${descripcion}: ${valor}\n`;
         });
     });
 
