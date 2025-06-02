@@ -73,15 +73,14 @@ async function formatFinalResponse(results, query) {
 
     // Detectar si el usuario pide información completa o detalles
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
+    // SIEMPRE mostrar todos los campos relevantes de cada registro, aunque el usuario no pida información completa
     const resultadosLimitados = limitarResultados(results);
-    const totalResultados = results.length;
     let datosReales = '';
     resultadosLimitados.forEach((resultado, index) => {
         datosReales += `\nRegistro ${index + 1}:\n`;
         const campos = Object.entries(resultado);
-        // Si no pide información completa, solo mostrar los 2-3 primeros campos relevantes
-        const mostrarCampos = pideCompleto ? campos : campos.slice(0, 3);
-        mostrarCampos.forEach(([campo, valor]) => {
+        // Mostrar todos los campos relevantes SIEMPRE
+        campos.forEach(([campo, valor]) => {
             if (campo.toLowerCase().includes('fec') && valor) {
                 const fecha = new Date(valor);
                 valor = fecha.toLocaleDateString('es-ES', {
@@ -92,9 +91,6 @@ async function formatFinalResponse(results, query) {
             }
             datosReales += `${campo}: ${valor}\n`;
         });
-        if (!pideCompleto && campos.length > 3) {
-            datosReales += '(Para más detalles, pídeme la información completa)\n';
-        }
     });
 
     // Generar una respuesta contextual usando la IA

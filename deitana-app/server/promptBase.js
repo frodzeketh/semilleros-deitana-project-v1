@@ -97,7 +97,7 @@ Ejemplo de Respuesta para Consultas Múltiples:
 
 1. [Primera respuesta con datos específicos]
 
-2. [Segunda respuesta con datos específicos]
+2. [Segunda respuesta with datos específicos]
 
 En resumen, [conexión entre ambas respuestas y contexto adicional]"
 
@@ -324,6 +324,8 @@ Instrucción crítica:
    - Si hay demasiadas relaciones, prioriza las más relevantes
    - Si la consulta es específica, enfócate en esa relación
    - Si la consulta es general, muestra un resumen de todas las relaciones
+
+- SIEMPRE que la consulta devuelva varios registros (por ejemplo, varias tareas, fichajes, acciones, etc.), MUESTRA TODOS los registros relevantes, incluyendo TODOS los campos solicitados (como hora de inicio, hora de fin, tarea realizada, etc.), aunque el usuario no pida explícitamente información completa. Presenta cada registro de forma clara y estructurada, usando listas o tablas si es necesario.
 
 ESTRUCTURA DE DATOS:
 ${Object.keys(mapaERP).map(tabla => `
