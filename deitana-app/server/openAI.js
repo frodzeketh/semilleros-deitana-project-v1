@@ -482,14 +482,40 @@ async function processQuery(userQuery) {
                 sql = null;
             }
         }
-        // Si tras dos intentos no hay SQL válido, fallback amigable
+        // Si tras dos intentos no hay SQL válido, fallback conversacional con IA
         lastRealData = null;
-        return {
-            success: true,
-            data: {
-                message: errorSQL ? 'Ocurrió un error al ejecutar la consulta SQL. Por favor, revisa tu petición.' : 'No pude generar una consulta SQL para tu petición. Por favor, intenta ser más específico o revisa tu consulta.'
+        // Llamar a la IA para que genere una respuesta conversacional y empática
+        const fallbackPrompt = [
+            {
+                role: "system",
+                content: `Eres Deitana IA, un asistente experto y conversacional para Semilleros Deitana. Si la consulta del usuario es ambigua, falta información clave (como número de factura, cliente, fecha, etc.), o no puedes generar una consulta SQL válida, responde SIEMPRE de manera conversacional, empática y profesional. Pide amablemente más detalles, sugiere ejemplos de cómo el usuario puede especificar la consulta, y adapta el tono según el contexto. Nunca uses respuestas genéricas ni técnicas, y nunca digas que no puedes ayudar. Sé proactivo y guía al usuario para que obtenga la información que necesita.`
+            },
+            {
+                role: "user",
+                content: `Consulta ambigua o falta información clave. Consulta original: "${userQuery}". Por favor, responde de manera conversacional y sugiere cómo el usuario puede especificar mejor su consulta.`
             }
-        };
+        ];
+        try {
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4-turbo-preview",
+                messages: fallbackPrompt,
+                temperature: 0.7,
+                max_tokens: 300
+            });
+            return {
+                success: true,
+                data: {
+                    message: completion.choices[0].message.content
+                }
+            };
+        } catch (error) {
+            return {
+                success: true,
+                data: {
+                    message: "No pude procesar tu consulta. ¿Podrías intentar ser más específico o darme algún dato adicional?"
+                }
+            };
+        }
     } catch (error) {
         lastRealData = null;
         return {
