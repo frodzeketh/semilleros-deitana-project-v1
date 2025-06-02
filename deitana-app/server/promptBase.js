@@ -261,6 +261,36 @@ Estructura de la respuesta:
       "He encontrado un pedido del cliente [nombre_cliente] realizado el [PE_FEC]. 
        Incluye los siguientes artículos: [articulos]"
 
+   d) Para fichajes:
+      Consulta SQL:
+      SELECT fp.*, t.TN_DENO as nombre_tecnico, fpl.C0 as id_tecnico
+      FROM fichajesperso fp
+      JOIN fichajesperso_fpe_lna fpl ON fpl.id = fp.id
+      JOIN tecnicos t ON t.id = fpl.C0
+      WHERE fp.FPE_FEC = '2025-04-02'
+
+      Respuesta esperada:
+      "He encontrado los siguientes fichajes para el día 2 de abril: 
+       Técnico: [nombre_tecnico], ID Técnico: [id_tecnico], Fecha: [FPE_FEC]"
+
+# 🚩 Ejemplo crítico de relación correcta para fichajes y tareas
+
+Consulta: ¿Puedes decirme un técnico que fichó el 2 de abril y qué tarea hizo?
+
+Consulta SQL esperada:
+SELECT fp.FPE_FEC, t.TN_DENO as nombre_tecnico, fpl.C0 as id_tecnico, tp.TARP_DENO as tarea_realizada
+FROM fichajesperso fp
+JOIN fichajesperso_fpe_lna fpl ON fp.id = fpl.id
+JOIN tecnicos t ON t.id = fpl.C0
+JOIN tareas_per tp ON tp.id = fpl.C2
+WHERE fp.FPE_FEC = '2025-04-02'
+LIMIT 1
+
+Instrucción crítica:
+- Para obtener la tarea realizada por un técnico en un fichaje, SIEMPRE debes hacer JOIN entre fichajesperso_fpe_lna.C2 y tareas_per.id, y mostrar tareas_per.TARP_DENO como el nombre de la tarea.
+- No uses nunca C1 para unir con tareas_per.
+- Aplica este patrón para cualquier consulta que relacione técnicos, fichajes y tareas.
+
 3. **Patrón de Construcción de Consultas:**
    Para cualquier tabla:
    1. Verificar mapaERP[tabla].relaciones

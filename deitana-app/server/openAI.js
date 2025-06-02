@@ -204,8 +204,13 @@ function validarRespuestaSQL(response) {
     // Verificar si es una consulta de conteo
     const esConsultaConteo = sql.toLowerCase().includes('count(*)');
     
-    // Solo requerir LIMIT si NO es una consulta de conteo
-    if (!esConsultaConteo && !sql.toLowerCase().includes('limit')) {
+    // Permitir consultas con DISTINCT o GROUP BY sin LIMIT
+    const tieneDistinct = /select\s+distinct/i.test(sql);
+    const tieneGroupBy = /group by/i.test(sql);
+    // Permitir consultas con filtro de fecha y JOIN sin LIMIT
+    const tieneJoin = /join/i.test(sql);
+    const tieneFiltroFecha = /where[\s\S]*fpe_fec|where[\s\S]*fecha|where[\s\S]*_fec/i.test(sql);
+    if (!esConsultaConteo && !tieneDistinct && !tieneGroupBy && !sql.toLowerCase().includes('limit') && !(tieneJoin && tieneFiltroFecha)) {
         throw new Error('La consulta debe incluir un LIMIT para evitar resultados excesivos');
     }
     
