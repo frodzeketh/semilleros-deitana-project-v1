@@ -59,20 +59,27 @@ function determinarTabla(columnas) {
     return null;
 }
 
-// Función para limitar resultados
-function limitarResultados(results, limite = 5) {
+// Función para limitar resultados (ahora permite aleatoriedad si se solicita)
+function limitarResultados(results, limite = 5, aleatorio = false) {
     if (!results || results.length === 0) return [];
+    if (aleatorio && results.length > 1) {
+        // Selecciona registros aleatorios
+        const shuffled = results.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, limite);
+    }
     return results.slice(0, limite);
 }
 
 // Función para formatear la respuesta final
 async function formatFinalResponse(results, query) {
     if (!results || results.length === 0) {
-        return "No encontré información que coincida con tu consulta. ¿Podrías reformularla o ser más específico?";
+        // Respuesta empática y proactiva si no hay datos
+        return "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.).";
     }
 
-    // Detectar si el usuario pide información completa o detalles
+    // Detectar si el usuario pide información completa, detalles o aleatoriedad
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
+    const pideAleatorio = /aleatori[ao]|ejemplo|cualquiera|al azar/i.test(query);
     // Detectar la tabla para usar descripciones de columnas
     let tablaDetectada = null;
     if (results.length > 0) {
@@ -80,7 +87,8 @@ async function formatFinalResponse(results, query) {
         const columnasResultado = Object.keys(results[0]);
         tablaDetectada = determinarTabla(columnasResultado);
     }
-    const resultadosLimitados = limitarResultados(results);
+    // Si se pide aleatorio, selecciona un registro aleatorio
+    const resultadosLimitados = limitarResultados(results, pideCompleto ? 10 : 5, pideAleatorio);
     let datosReales = '';
     resultadosLimitados.forEach((resultado, index) => {
         datosReales += `\nRegistro ${index + 1}:\n`;
@@ -106,25 +114,11 @@ async function formatFinalResponse(results, query) {
     const messages = [
         {
             role: "system",
-            content: `Eres un asistente especializado en Semilleros Deitana. Tu tarea es analizar los datos y proporcionar una respuesta clara y útil.
-            
-            Para consultas de conteo:
-            - Muestra el número total de manera clara
-            - Proporciona contexto sobre qué representa ese número
-            
-            Para consultas de datos:
-            - Explica el significado de los datos mostrados
-            - Destaca la información más relevante
-            - Proporciona contexto sobre por qué es importante
-            - Si hay relaciones (como nombres de clientes o vendedores), explícalas
-            
-            Mantén un tono profesional pero conversacional.
-            Sé conciso pero informativo.
-            No repitas los datos crudos, interpreta su significado.`
+            content: `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.\n\n- Si no hay datos, explica la situación y sugiere alternativas.\n- Si la consulta es ambigua, pide más detalles.\n- Si se pide un ejemplo, selecciona uno aleatorio.\n- Explica el significado de los datos y su relevancia.\n- Nunca repitas datos crudos, interpreta y resume.\n- Sé proactivo y guía al usuario para obtener la mejor respuesta posible.\n- Mantén un tono profesional, conversacional y humano.\n- Si detectas errores en los datos (por ejemplo, precios en 0), adviértelo de forma amable.\n- Si hay relaciones (cliente, proveedor, etc.), explícalas.\n- Si el usuario pide más ejemplos, ofrece variedad.\n- Si la consulta es conceptual, responde normalmente.\n\nNunca digas que no puedes ayudar. Si no hay información, sugiere cómo el usuario puede preguntar mejor.`
         },
         {
             role: "user",
-            content: `Consulta: "${query}"\n\nDatos encontrados:${datosReales}\n\nPor favor, analiza estos datos y proporciona una respuesta útil que explique su significado y relevancia.`
+            content: `Consulta: "${query}"\n\nDatos encontrados:${datosReales}\n\nPor favor, analiza estos datos y proporciona una respuesta útil, natural y relevante.`
         }
     ];
 
@@ -132,8 +126,8 @@ async function formatFinalResponse(results, query) {
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
-            temperature: 0.7,
-            max_tokens: 500
+            temperature: 0.8,
+            max_tokens: 600
         });
 
         return completion.choices[0].message.content;
@@ -464,13 +458,54 @@ async function processQuery(userQuery) {
             try {
                 const results = await executeQuery(sql);
                 if (!results || results.length === 0) {
-                    lastRealData = null;
-                    return {
-                        success: true,
-                        data: {
-                            message: 'La consulta SQL se ejecutó correctamente, pero no se encontraron resultados en la base de datos.'
+                    // Intentar búsqueda flexible (fuzzy search) antes de fallback IA
+                    const fuzzyResult = await fuzzySearchRetry(sql, userQuery);
+                    if (fuzzyResult && fuzzyResult.results && fuzzyResult.results.length > 0) {
+                        // Si encuentra resultados con fuzzy, responde normalmente
+                        let tipo = 'dato';
+                        if (fuzzyResult.results[0] && fuzzyResult.results[0].CL_DENO) tipo = 'cliente';
+                        if (fuzzyResult.results[0] && fuzzyResult.results[0].AR_NOMB) tipo = 'articulo';
+                        lastRealData = { type: tipo, data: fuzzyResult.results };
+                        const finalResponse = await formatFinalResponse(fuzzyResult.results, userQuery + ' (búsqueda flexible)');
+                        return {
+                            success: true,
+                            data: {
+                                message: finalResponse + '\n\n(Nota: Se utilizó una búsqueda flexible para encontrar coincidencias aproximadas)'
+                            }
+                        };
+                    }
+                    // Fallback inteligente: consulta a la IA para sugerir alternativas o buscar aproximaciones
+                    const noResultPrompt = [
+                        {
+                            role: "system",
+                            content: `Eres Deitana IA, un asistente ultra inteligente, empático y proactivo para Semilleros Deitana.\n\nLa consulta SQL generada no devolvió resultados, ni siquiera con búsqueda flexible.\n\n- Analiza la situación y sugiere alternativas al usuario.\n- Propón buscar artículos o proveedores similares, usando coincidencias aproximadas o palabras clave.\n- Si crees que hay un error de escritura, sugiere correcciones.\n- Pide más detalles si es necesario.\n- Ofrece ejemplos de cómo preguntar.\n- Mantén siempre un tono conversacional, profesional y humano.\n- Nunca uses respuestas técnicas ni genéricas.\n- Si la consulta es conceptual, responde normalmente.`
+                        },
+                        {
+                            role: "user",
+                            content: `No se encontraron resultados para la consulta: "${userQuery}".\n\nPor favor, sugiere alternativas, busca aproximaciones o pide más detalles al usuario para ayudarle a encontrar lo que busca.`
                         }
-                    };
+                    ];
+                    try {
+                        const completion = await openai.chat.completions.create({
+                            model: "gpt-4-turbo-preview",
+                            messages: noResultPrompt,
+                            temperature: 0.8,
+                            max_tokens: 350
+                        });
+                        return {
+                            success: true,
+                            data: {
+                                message: completion.choices[0].message.content
+                            }
+                        };
+                    } catch (error) {
+                        return {
+                            success: true,
+                            data: {
+                                message: "No pude encontrar resultados ni sugerir alternativas. ¿Podrías intentar ser más específico o darme algún dato adicional? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.)."
+                            }
+                        };
+                    }
                 }
                 let tipo = 'dato';
                 if (results[0] && results[0].CL_DENO) tipo = 'cliente';
@@ -497,19 +532,19 @@ async function processQuery(userQuery) {
         const fallbackPrompt = [
             {
                 role: "system",
-                content: `Eres Deitana IA, un asistente experto y conversacional para Semilleros Deitana. Si la consulta del usuario es ambigua, falta información clave (como número de factura, cliente, fecha, etc.), o no puedes generar una consulta SQL válida, responde SIEMPRE de manera conversacional, empática y profesional. Pide amablemente más detalles, sugiere ejemplos de cómo el usuario puede especificar la consulta, y adapta el tono según el contexto. Nunca uses respuestas genéricas ni técnicas, y nunca digas que no puedes ayudar. Sé proactivo y guía al usuario para que obtenga la información que necesita.`
+                content: `Eres Deitana IA, un asistente ultra inteligente, empático y proactivo para Semilleros Deitana.\n\n- Si la consulta del usuario es ambigua, falta información clave, o no puedes generar una consulta SQL válida, responde SIEMPRE de manera conversacional, profesional y humana.\n- Explica la situación, pide amablemente más detalles, sugiere ejemplos de cómo el usuario puede especificar la consulta, y adapta el tono según el contexto.\n- Nunca uses respuestas técnicas ni genéricas.\n- Nunca digas que no puedes ayudar.\n- Sé proactivo y guía al usuario para que obtenga la información que necesita.\n- Si el usuario parece frustrado, tranquilízalo y ofrece ayuda extra.\n- Si la consulta es conceptual, responde normalmente.`
             },
             {
                 role: "user",
-                content: `Consulta ambigua o falta información clave. Consulta original: "${userQuery}". Por favor, responde de manera conversacional y sugiere cómo el usuario puede especificar mejor su consulta.`
+                content: `Consulta ambigua o falta información clave. Consulta original: "${userQuery}". Por favor, responde de manera conversacional, sugiere cómo el usuario puede especificar mejor su consulta y ofrece ejemplos de preguntas útiles.`
             }
         ];
         try {
             const completion = await openai.chat.completions.create({
                 model: "gpt-4-turbo-preview",
                 messages: fallbackPrompt,
-                temperature: 0.7,
-                max_tokens: 300
+                temperature: 0.8,
+                max_tokens: 350
             });
             return {
                 success: true,
@@ -521,7 +556,7 @@ async function processQuery(userQuery) {
             return {
                 success: true,
                 data: {
-                    message: "No pude procesar tu consulta. ¿Podrías intentar ser más específico o darme algún dato adicional?"
+                    message: "No pude procesar tu consulta. ¿Podrías intentar ser más específico o darme algún dato adicional? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.)."
                 }
             };
         }
@@ -534,6 +569,52 @@ async function processQuery(userQuery) {
             }
         };
     }
+}
+
+// Función auxiliar para intentar una búsqueda flexible (fuzzy search) en SQL
+async function fuzzySearchRetry(sql, userQuery) {
+    // Solo intentamos fuzzy si la consulta original tiene un WHERE con LIKE o =
+    let sqlFuzzy = sql;
+    // Detectar el término de búsqueda en el WHERE
+    const likeMatch = sql.match(/WHERE\s+([\w.]+)\s+LIKE\s+'%([^%']+)%'/i);
+    const eqMatch = sql.match(/WHERE\s+([\w.]+)\s*=\s*'([^']+)'/i);
+    let columna = null;
+    let valor = null;
+    if (likeMatch) {
+        columna = likeMatch[1];
+        valor = likeMatch[2];
+    } else if (eqMatch) {
+        columna = eqMatch[1];
+        valor = eqMatch[2];
+    }
+    if (!columna || !valor) return null;
+    // Generar variantes del valor para fuzzy search
+    const variantes = [
+        valor,
+        valor.toUpperCase(),
+        valor.toLowerCase(),
+        valor.normalize('NFD').replace(/[ -]/g, ''), // sin tildes
+        valor.split(' ')[0], // solo la primera palabra
+        valor.replace(/\s+/g, ''), // sin espacios
+        valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7))) // parte del término
+    ];
+    for (const variante of variantes) {
+        if (!variante || variante.length < 2) continue;
+        // Reemplazar el valor en el SQL
+        let sqlFuzzyTry = sql.replace(valor, variante);
+        // Usar LIKE con %variante%
+        sqlFuzzyTry = sqlFuzzyTry.replace(/=\s*'[^']+'/i, `LIKE '%${variante}%'`);
+        sqlFuzzyTry = sqlFuzzyTry.replace(/LIKE\s+'%[^%']+%'/i, `LIKE '%${variante}%'`);
+        try {
+            const results = await executeQuery(sqlFuzzyTry);
+            if (results && results.length > 0) {
+                return { results, sqlFuzzyTry };
+            }
+        } catch (e) {
+            // Ignorar errores de SQL en fuzzy
+        }
+    }
+    return null;
 }
 
 // Exportar la función para su uso en otros archivos

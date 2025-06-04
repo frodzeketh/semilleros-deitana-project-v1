@@ -737,7 +737,7 @@ familias: {
       TTR_ENS: "Campo auxiliar (Información incierta, puede estar vacío)", // Nota sobre validación/significado
       TTR_ECO: "Indica si es ecológico ('S'/'N')",
       TTR_BIO: "Indica si es de origen biológico ('S'/'N')",
-      TTR_ESPE: "Especies vegetales autorizadas o recomendadas (Ej: CALABACÍN - MELÓN)",
+      TTR_ESP: "Especies vegetales autorizadas o recomendadas (Ej: CALABACÍN - MELÓN)",
       TTR_AGN: "Agentes nocivos que combate (Ej: FITOPHTHORA - PITIUM)",
       TTR_INT: "Enlace web (ficha técnica, registro, etc.)",
       TTR_REG: "Número de registro oficial",
@@ -1245,7 +1245,7 @@ p_aplica_trat2: {
     columnas: {
       id: "Código del parte de tratamiento (Clave Primaria)",
       PAT_FEC: "Fecha en que se gestionó este parte de tratamiento.",
-      PAT_HOR: "Hora en que se gestionó este parte de tratamiento.",
+      PAT_HORA: "Hora en que se gestionó este parte de tratamiento.",
       PAT_USU: "Vendedor encargado/responsable. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
       PAT_EST: "Estado ('P': Prevista, 'R': Realizada).",
       PAT_FPRE: "Fecha prevista.",
