@@ -95,6 +95,14 @@ const mapaERP = {
         descripcion:
           "Permite identificar qué proveedor principal suministra cada artículo. Si el campo 'AR_PRV' está vacío en un registro de artículo, significa que el proveedor principal no está registrado para ese artículo en este sistema.",
       },
+      familias: {
+        tabla_relacionada: "familias",
+        tipo: "Muchos a uno (varios artículos pueden pertenecer a la misma familia)",
+        campo_enlace_local: "AR_FAM",
+        campo_enlace_externo: "id",
+        descripcion:
+          "Vincula el artículo con su familia correspondiente, permitiendo agrupar y filtrar artículos por familia.",
+      },
     },
     ejemplos: {
       consulta_proveedor:
@@ -122,12 +130,62 @@ const mapaERP = {
       CL_TEL: "Teléfono",
       CL_CIF: "CIF",
       CL_PAIS: "País",
+      CL_ZONA: "Zona al que pertenece el cliente",
     },
+    relaciones: {
+      almacenes: {    
+        tabla_relacionada: "zonas",
+        tipo: "Muchos a uno (varios clientes pueden pertenecer a la misma zona de almacén)",
+        campo_enlace_local: "CL_ZONA",
+        campo_enlace_externo: "id",
+        descripcion:
+          "Vincula el cliente con la zonaa la que pertenece, permitiendo agrupar y filtrar clientes por su zona",
+      },
+    }
+
   },
 
-  /* ================================================*/
-  /* Archivos – Generales – Familias y Grupos	 */
-  /* ================================================*/
+
+
+/* ================================================*/
+/* Archivos – Generales – Familias y Grupos */
+/* ================================================*/
+familias: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia.",
+    tabla: `familias`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único de la familia (Clave Primaria)",
+      FM_DENO: "Nombre del Grupo/Familia.",
+      FM_LAT: "Nombre en Latín.",
+      FM_PGER: "Porcentaje de germinación.",
+    },
+    relaciones: {
+      familias_fm_obs: {
+        tabla_relacionada: "familias_fm_obs",
+        tipo: "Uno a muchos (una familia puede tener múltiples observaciones)",
+        campo_enlace_local: "id", // ID de la familia
+        campo_enlace_externo: "id", // ID de la familia en la tabla de observaciones
+        descripcion: "Tabla de observaciones para cada familia, registrando cambios o notas relevantes.",
+        estructura_relacionada: {
+          id: "ID de la familia.",
+          id2: "Identificador secuencial de la observación.",
+          C0: "Contenido de la observación.",
+        },
+      },
+    },
+    ejemplos: {
+      consulta_familia_por_id:
+        "Obtener la denominación, nombre en latín y porcentaje de germinación de una familia específica usando su 'id'.",
+      listar_todas_familias:
+        "Listar todas las familias y grupos registrados.",
+      consultar_observaciones_familia:
+        "Para una familia específica (usando su id), consultar la tabla 'familias_fm_obs' para ver todas las observaciones registradas sobre ella.",
+      buscar_familia_por_nombre:
+        "Buscar una familia por su denominación (FM_DENO) o nombre en latín (FM_LAT).",
+    },
+  },
 
   /* ================================================*/
   /* Archivos – Generales – Formas de pago/cobro */
@@ -244,10 +302,19 @@ const mapaERP = {
       PR_WEB: "Dirección de la página web del proveedor",
       PR_DOMEN: "Domicilio o detalles para el envío de facturas",
       PR_PAIS: "País de residencia del proveedor",
+      PR_FPG: "Forma de pago preferida del proveedor (referencia a la tabla 'fpago')",
+      PR_IBAN: "Número de cuenta bancaria en formato IBAN del proveedor",
       // Nota sobre campos vacíos: Si un campo no tiene información, se asume 'No hay información disponible'.
     },
     relaciones: {
-      // Aquí se pueden añadir las relaciones con otras tablas cuando sea necesario (ej: con pedidos de compra, facturas recibidas)
+      fpago: {
+        tabla_relacionada: "fpago",
+        tipo: "Muchos a uno (varios proveedores pueden tener la misma forma de pago preferida)",
+        campo_enlace_local: "PR_FPG",
+        campo_enlace_externo: "id",
+        descripcion:
+          "Vincula el proveedor con su forma de pago preferida, permitiendo identificar cómo se gestionan los pagos a cada proveedor.",
+      },
     },
     ejemplos: {
       consulta_provincia:
@@ -300,13 +367,20 @@ const mapaERP = {
       BN_COS: "Coste",
       BN_IVA1: "Información IVA 1",
       BN_IVA2: "Información IVA 2",
-      BN_ART: "Identificador",
-      BN_ALVC: "Número de alvéolos.",
-      BN_EM2: "Especifica los metros cuadrados que ocupa la bandeja",
-      BN_ALVG: "Número de alvéolos considerados",
+      BN_ART: "Identificador del artículo asociado (referencia a la tabla 'articulos')",
+      BN_ALVC: "Número de alvéolos a cobrar.",
+      BN_ALVG: "Número de alvéolos a germinar.",
+      
     },
     relaciones: {
-      // Se menciona una posible relación con 'articulos' a través del campo BN_ART, pero no se proporcionan detalles suficientes para estructurarla aquí.
+      articulos: {  
+        tabla_relacionada: "articulos",
+        tipo: "Muchos a uno (varias bandejas pueden estar asociadas al mismo artículo)",
+        campo_enlace_local: "BN_ART",
+        campo_enlace_externo: "id",
+        descripcion:
+          "Vincula la bandeja con el artículo correspondiente, permitiendo identificar qué artículo utiliza esa bandeja en particular.",
+      },
     },
     ejemplos: {
       // El texto proporcionado no incluye ejemplos de consultas o uso específicos de la tabla 'bandejas'.
@@ -336,8 +410,7 @@ const mapaERP = {
       CC_EMA: "Dirección de correo electrónico",
       CC_WEB: "Dirección del sitio web",
       CC_PAIS: "País de ubicación",
-      CC_DFEC: "Fecha de inicio de validez de tarifa",
-      CC_HFEC: "Fecha de fin de validez de tarifa",
+     
       // Nota sobre datos: La completitud de CC_DOM, CC_TEL, CC_FAX, CC_CIF, CC_EMA, CC_WEB, CC_DFEC, CC_HFEC puede variar (pueden ser NULL o vacíos).
     },
     relaciones: {
@@ -528,6 +601,7 @@ const mapaERP = {
       INV_NSECI: "Número de secciones inicial o de referencia",
       INV_NSEC: "Número total de secciones",
       INV_NFIL: "Número total de filas",
+      INV_EXLT: "Secciones excluidas de tratamientos"
     },
     relaciones: {
       almacenes: {
@@ -537,7 +611,8 @@ const mapaERP = {
         campo_enlace_externo: "id",
         descripcion:
           "Vincula el invernadero con el almacén asociado. La tabla 'almacenes' tiene campos como 'id' (código del almacén) y 'AM_DENO' (nombre del almacén).",
-      }
+      },
+      
       // Otras relaciones con secciones, filas, tratamientos, etc., existen pero no están detalladas.
     },
     ejemplos: {
@@ -681,6 +756,44 @@ const mapaERP = {
     },
   },
 
+/* ================================================*/
+/* Archivos – Auxiliares – Rutas */
+/* ================================================*/
+rutas: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Define las rutas, incluyendo su código, nombre y el artículo asociado, que generalmente representa un servicio de transporte.",
+    tabla: `rutas`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único de la ruta (Clave Primaria)",
+      RU_DENO: "Nombre de la ruta.",
+      RU_CDAR: "Artículo asociado a la ruta. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO), que suele ser un servicio de transporte.",
+    },
+    relaciones: {
+      articulos: {
+        tabla_relacionada: "articulos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "RU_CDAR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la ruta con el artículo que representa su servicio asociado (ej. servicio de transporte).",
+      },
+    },
+    ejemplos: {
+      consulta_ruta_por_id:
+        "Obtener el nombre y el artículo asociado a una ruta específica usando su 'id'.",
+      listar_todas_rutas:
+        "Listar todas las rutas definidas en el sistema.",
+      buscar_ruta_por_nombre:
+        "Buscar una ruta por su nombre (filtrando por RU_DENO).",
+      consultar_articulo_de_ruta:
+        "Para una ruta, obtener la denominación del artículo de servicio asociado (ej. 'N/SERVICIO DE TRANSPORTE').",
+    },
+  },
+
+
+
+
+
   /* ================================================*/
   /* Archivos – Auxiliares – Sección Tareas */
   /* ================================================*/
@@ -760,6 +873,31 @@ const mapaERP = {
         "Se ha observado que los datos de un mismo sustrato (ej. id 001) pueden diferir entre la base de datos y la visualización en el entorno de pruebas del ERP. Se recomienda validar los datos críticos directamente en la base de datos.",
     },
   },
+
+
+
+  /* ================================================*/
+  /* Archivos – Auxiliares – Tarifas de precios */
+  /* ================================================*/
+
+
+
+
+
+
+
+
+
+/* ================================================*/
+/* Archivos – Auxiliares – Tipos de siembra */
+/* ================================================*/
+
+
+
+
+
+
+
 
   /* ================================================*/
   /* Archivos – Auxiliares – Ubicaciones */
@@ -1026,25 +1164,718 @@ const mapaERP = {
     },
   },
 
-  /* ======================================================================================================================================================================*/
-  /* VENTAS                                                                                                                                                       */
-  /* ======================================================================================================================================================================*/
 
-  /* ================================================*/
-  /* Ventas – Gestión – Encargos de siembra */
-  /* ================================================*/
-  encargos: {
+
+/* ================================================*/
+/* Produccion-Partes-Partes Extendido */
+/* ================================================*/
+p_extension: {
+    // Clave principal (basada en el nombre de la tabla)
+    descripcion:
+      "Registra información extendida relacionada con partes de producción, incluyendo número de partida, fecha, hora, usuario, tipo y los invernaderos de origen y destino.",
+    tabla: `p-extension`, // Nombre de la tabla principal
+    columnas: {
+      id: "Número del extendido (Clave Primaria)",
+      PEX_NPA: "Número de partida.",
+      PEX_FEC: "Fecha.",
+      PEX_HORA: "Hora.",
+      PEX_USU: "Usuario. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      PEX_TIPO: "Tipo (en forma de letra, Ej: 'P', 'C').",
+      PEX_IOR: "Invernadero de origen. Clave foránea a la tabla 'invernaderos' para obtener la denominación (INV_DENO).",
+      PEX_IDE: "Invernadero de destino. Clave foránea a la tabla 'invernaderos' para obtener la denominación (INV_DENO).",
+    },
+    relaciones: {
+      vendedores: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PEX_USU",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro extendido con el usuario que lo generó.",
+      },
+      invernaderos_origen: {
+        tabla_relacionada: "invernaderos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PEX_IOR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro extendido con el invernadero de origen.",
+      },
+      invernaderos_destino: {
+        tabla_relacionada: "invernaderos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PEX_IDE",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro extendido con el invernadero de destino.",
+      },
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PEX_NPA",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro extendido con la partida asociada.",
+      },
+    },
+    ejemplos: {
+      consulta_extendido_por_id:
+        "Obtener los detalles de un registro extendido específico usando su 'id'.",
+      consultar_info_relacionada:
+        "Para un registro extendido, usar PEX_USU, PEX_IOR y PEX_IDE para consultar 'vendedores' e 'invernaderos' y obtener los nombres del usuario y los invernaderos de origen y destino.",
+      filtrar_por_partida:
+        "Listar registros extendidos asociados a un número de partida específico (filtrando por PEX_NPA).",
+      filtrar_por_fecha_hora:
+        "Buscar registros extendidos en una fecha o rango de fechas y/o hora específica (filtrando por PEX_FEC y PEX_HORA).",
+      filtrar_por_tipo:
+        "Encontrar registros extendidos de un tipo específico (filtrando por PEX_TIPO).",
+      filtrar_por_invernadero_origen:
+        "Buscar registros extendidos cuyo origen sea un invernadero específico (filtrando por PEX_IOR).",
+      filtrar_por_invernadero_destino:
+        "Buscar registros extendidos cuyo destino sea un invernadero específico (filtrando por PEX_IDE).",
+    },
+  },
+
+
+
+/* ================================================*/
+/* Produccion-Partes-Partes de tratamiento */
+/* ================================================*/
+p_aplica_trat2: {
     // Clave principal (nombre de tabla)
     descripcion:
-      "Registra y administra los 'encargos de siembra' de clientes, documentando sus órdenes para sembrar semillas/artículos. Esencial para planificación de producción según demanda, gestión de ventas, facturación y seguimiento comercial.",
-    tabla: "encargos", // Nombre de tabla original
+      "Registra los partes de tratamiento fitosanitario, incluyendo información general, personal involucrado, aplicador y equipo utilizado, problema fitosanitario y el tratamiento aplicado. Contiene relaciones con las zonas tratadas, productos utilizados y familias a tratar.",
+    tabla: `p-aplica-trat2`, // Nombre de la tabla principal
     columnas: {
-      id: "Número único que identifica cada encargo de siembra (Clave Primaria)",
-      ENG_CCL: "Código del cliente que realizó el encargo. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
-      ENG_ALM: "Código del almacén asociado al encargo. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
-      ENG_FEC: "Fecha en que se registró el encargo de siembra.",
-      ENG_VD: "Vendedor que gestionó el encargo de siembra. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
-      ENG_FP: "Forma de pago acordada para el encargo. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+      id: "Código del parte de tratamiento (Clave Primaria)",
+      PAT_FEC: "Fecha en que se gestionó este parte de tratamiento.",
+      PAT_HOR: "Hora en que se gestionó este parte de tratamiento.",
+      PAT_USU: "Vendedor encargado/responsable. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      PAT_EST: "Estado ('P': Prevista, 'R': Realizada).",
+      PAT_FPRE: "Fecha prevista.",
+      PAT_HPRE: "Hora prevista.",
+      PAT_FREA: "Fecha realizado.",
+      PAT_HREA: "Hora realizado.",
+      PAT_PER: "Personal autorizado. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      PAT_TEC: "Técnica de aplicación.",
+      PAT_APLI: "Aplicador fitosanitario. Clave foránea a la tabla 'aplicadores_fit' para obtener la denominación (AFI_DENO).",
+      PAT_EQUI: "Código del equipo fitosanitario. Clave foránea a la tabla 'equipo_fito' para obtener la denominación (EFI_DENO).",
+      PAT_PROB: "Problema fitosanitario.",
+      PAT_TRAT: "Código del tratamiento. Clave foránea a la tabla 'tratamientos' para obtener la denominación (TT_DENO).",
+    },
+    relaciones: {
+      vendedor_responsable: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAT_USU",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de tratamiento con el vendedor responsable.",
+      },
+      personal_autorizado: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAT_PER",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de tratamiento con el personal autorizado.",
+      },
+      aplicador_fitosanitario: {
+        tabla_relacionada: "aplicadores_fit",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAT_APLI",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de tratamiento con el aplicador fitosanitario utilizado.",
+      },
+      equipo_fitosanitario: {
+        tabla_relacionada: "equipo_fito",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAT_EQUI",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de tratamiento con el equipo fitosanitario utilizado.",
+      },
+      tratamiento: {
+        tabla_relacionada: "tratamientos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAT_TRAT",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de tratamiento con el tratamiento fitosanitario aplicado.",
+      },
+      p_aplica_trat2_pat_afec: {
+        tabla_relacionada: "p-aplica-trat2_pat_afec",
+        tipo: "Uno a muchos (un parte de tratamiento puede afectar varias zonas)",
+        campo_enlace_local: "id", // ID del parte de tratamiento
+        campo_enlace_externo: "id", // ID del parte de tratamiento en la tabla de enlace
+        descripcion: "Tabla de enlace que relaciona partes de tratamiento con las zonas tratadas (invernaderos).",
+        estructura_relacionada: {
+          id: "ID del parte de tratamiento.",
+          id2: "Identificador secuencial dentro del parte.",
+          C0: "Código del invernadero tratado. Clave foránea a la tabla 'invernaderos'.",
+          C1: "Nombre o identificador de la zona tratada (Ej: 'C1').",
+        },
+        relaciones_internas_de_detalle: {
+          invernaderos: {
+            tabla_relacionada: "invernaderos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de tratamiento con el invernadero donde se aplicó.",
+          },
+        },
+      },
+      p_aplica_trat2_pat_tra: {
+        tabla_relacionada: "p-aplica-trat2_pat_tra",
+        tipo: "Uno a muchos (un parte de tratamiento puede usar varios productos)",
+        campo_enlace_local: "id", // ID del parte de tratamiento
+        campo_enlace_externo: "id", // ID del parte de tratamiento en la tabla de enlace
+        descripcion: "Tabla de enlace que relaciona partes de tratamiento con los productos fitosanitarios utilizados.",
+        estructura_relacionada: {
+          id: "ID del parte de tratamiento.",
+          id2: "Identificador secuencial dentro del parte.",
+          C0: "ID del tipo de producto fitosanitario. Clave foránea a la tabla 'tipo_trat'.",
+          C1: "Dosis del producto.",
+          C2: "Información adicional del producto (Ej: 'BERENJENA...').",
+          C3: "Campo auxiliar (Ej: '').",
+          C4: "Campo auxiliar (Ej: '').",
+          C5: "Campo auxiliar (Ej: '').",
+          C6: "Valor numérico (Ej: '0.00').",
+        },
+        relaciones_internas_de_detalle: {
+          tipo_trat: {
+            tabla_relacionada: "tipo_trat",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de tratamiento con el tipo de producto fitosanitario utilizado.",
+          },
+        },
+      },
+      p_aplica_trat2_pat_famgr: {
+        tabla_relacionada: "p-aplica-trat2_pat_famgr",
+        tipo: "Uno a muchos (un parte de tratamiento puede aplicarse a varias familias)",
+        campo_enlace_local: "id", // ID del parte de tratamiento
+        campo_enlace_externo: "id", // ID del parte de tratamiento en la tabla de enlace
+        descripcion: "Tabla de enlace que relaciona partes de tratamiento con las familias a tratar.",
+        estructura_relacionada: {
+          id: "ID del parte de tratamiento.",
+          id2: "Identificador secuencial dentro del parte.",
+          C0: "Código de la familia a tratar. Clave foránea a la tabla 'familias'.",
+          C1: "Valor asociado a la familia (Ej: '1').",
+          C2: "Otro valor asociado a la familia (Ej: '24').",
+        },
+        relaciones_internas_de_detalle: {
+          familias: {
+            tabla_relacionada: "familias",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el parte de tratamiento con la familia a tratar.",
+          },
+        },
+      },
+    },
+    ejemplos: {
+      consulta_parte_tratamiento_por_id:
+        "Obtener los detalles generales de un parte de tratamiento usando su 'id'.",
+      consultar_info_relacionada:
+        "Para un parte de tratamiento, obtener información del vendedor responsable, personal autorizado, aplicador, equipo y tratamiento aplicado.",
+      consultar_zonas_tratadas:
+        "Para un parte de tratamiento, listar las zonas (invernaderos) donde se aplicó el tratamiento.",
+      consultar_productos_utilizados:
+        "Para un parte de tratamiento, listar los productos fitosanitarios utilizados (con sus dosis).",
+      consultar_familias_tratadas:
+        "Para un parte de tratamiento, listar las familias a las que se aplicó el tratamiento.",
+      filtrar_partes_por_fecha_estado_o_tratamiento:
+        "Listar partes de tratamiento por fecha, estado (previsto/realizado) o el tratamiento aplicado.",
+    },
+  },
+
+
+  
+/* ================================================*/
+/* Produccion-Partes-Partes de Injertos */
+/* ================================================*/
+
+
+
+
+
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion-Partes-Partes de Visita */
+/* ================================================*/
+reg_visitas: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra las visitas realizadas, documentando la fecha, hora, el usuario que la gestionó, y el cliente o proveedor asociado a la visita. Esta sección también detalla las partidas específicas que fueron objeto de la visita.",
+    tabla: `reg-visitas`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código ID único de la parte de visita (Clave Primaria)",
+      RV_FEC: "Fecha de la visita.",
+      RV_HORA: "Hora de la visita.",
+      RV_USU: "Usuario que gestionó la visita. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      RV_CCL: "ID del cliente asociado a la visita. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      RV_CDPR: "ID del proveedor asociado a la visita. Clave foránea a la tabla 'proveedores' para obtener la denominación (PR_DENO).",
+    },
+    relaciones: {
+      vendedores: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "RV_USU",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la visita con el usuario/vendedor que la gestionó.",
+      },
+      clientes: {
+        tabla_relacionada: "clientes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "RV_CCL",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la visita con el cliente asociado.",
+      },
+      proveedores: {
+        tabla_relacionada: "proveedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "RV_CDPR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la visita con el proveedor asociado.",
+      },
+      reg_visitas_rv_lna: { // Tabla de detalle para las partidas visitadas
+        tabla_relacionada: "reg-visitas_rv_lna",
+        tipo: "Uno a muchos (una visita puede incluir múltiples partidas)",
+        campo_enlace_local: "id", // ID del parte de visita
+        campo_enlace_externo: "id", // ID del parte de visita en la tabla de detalle
+        descripcion: "Detalla las partidas de siembra asociadas a esta visita.",
+        estructura_relacionada: {
+          id: "ID del parte de visita.",
+          id2: "Identificador secuencial de la línea de detalle.",
+          C0: "ID de la partida visitada. Clave foránea a la tabla 'partidas'.",
+          // Otros campos C1, C2, etc. no especificados
+        },
+        relaciones_internas_de_detalle: {
+          partidas: {
+            tabla_relacionada: "partidas",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el detalle de la visita con la partida de siembra.",
+            // Relaciones desde 'partidas' que son relevantes en este contexto de visita
+            relaciones_externas_de_partida: {
+              clientes: {
+                tabla_relacionada: "clientes",
+                tipo: "Muchos a uno",
+                campo_enlace_local: "PAR_CCL",
+                campo_enlace_externo: "id",
+                descripcion: "El cliente de la partida (se puede obtener a través de la partida).",
+              },
+              articulos: {
+                tabla_relacionada: "articulos",
+                tipo: "Muchos a uno",
+                campo_enlace_local: "PAR_SEM",
+                campo_enlace_externo: "id",
+                descripcion: "La semilla utilizada en la partida (se puede obtener a través de la partida).",
+              },
+            },
+          },
+        },
+      },
+    },
+    ejemplos: {
+      consulta_visita_por_id:
+        "Obtener la fecha, hora y el usuario de un parte de visita específico usando su 'id'.",
+      consultar_info_relacionada:
+        "Para un parte de visita, obtener la denominación del usuario, cliente o proveedor asociado.",
+      consultar_partidas_visitadas:
+        "Para un parte de visita específico, consultar la tabla 'reg-visitas_rv_lna' para ver todas las partidas que fueron objeto de esa visita.",
+      obtener_detalles_partida_visitada:
+        "Desde una línea de detalle en 'reg-visitas_rv_lna', usar el C0 para consultar la tabla 'partidas' y obtener la fecha, tipo de semilla, y la semilla utilizada en esa partida, incluyendo el cliente de la partida y la denominación de la semilla.",
+      filtrar_visitas_por_cliente_o_fecha:
+        "Listar partes de visita realizados a un cliente específico o en un rango de fechas.",
+    },
+  },
+
+
+
+
+
+/* ================================================*/
+/* Produccion-Partes-Partes Varios */
+/* ================================================*/
+
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion-Partes-Partes Estructurales          */
+/* ================================================*/
+
+
+
+/* ================================================*/
+/* Produccion- Otras - Partes Muestreo */
+/* ================================================*/
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion- Otras - Cortes Cebolla */
+/* ================================================*/
+
+
+
+
+/* ================================================*/
+/* Produccion- Otras - Planta Enferma */
+/* ================================================*/
+
+
+
+
+
+/* ================================================*/
+/* Produccion- Utilidades - Parte Manipulado */
+/* ================================================*/
+
+
+
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion- Controles - Costes */
+/* ================================================*/
+
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion- Controles - Resumen Costes */
+/* ================================================*/
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion- Controles - Historico Costes */
+/* ================================================*/
+
+
+
+
+
+
+
+
+
+/* ================================================*/
+/* Produccion- Controles - Historico Costes */
+/* ================================================*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* Injertos                                                                                                                                                      */
+/* ======================================================================================================================================================================*/
+
+
+/* ================================================*/
+/* Injertos - Utilidades – Medias bandejas */
+/* ================================================*/
+p_medias_band: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra información sobre medias bandejas, incluyendo el código de partida, alveolos, huecos, etiqueta, cantidad de plantas, fecha y hora de registro, y el operario asociado. El 'id' suele coincidir con el código de partida.",
+    tabla: `p-medias-band`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código de la media bandeja (Clave Primaria). Frecuentemente coincide con el código de partida.",
+      PMB_PAR: "Código de la partida asociada (Ej: '15011300').",
+      PMB_ALV: "Cantidad de alveolos (Ej: '104').",
+      PMB_HUE: "Cantidad de huecos (Ej: '15').",
+      PMB_ETIQ: "Etiqueta de la media bandeja (Ej: '3801130009256').",
+      PMB_PLAN: "Cantidad de plantas (Ej: '0').",
+      PMB_FEC: "Fecha de registro (Ej: '2021-06-02').",
+      PMB_HORA: "Hora de registro (Ej: '11:48').",
+      PMB_CDOP: "Código del operario (Ej: '0002'). No se especifica relación con otra tabla.",
+    },
+    relaciones: {
+      // Se podría inferir una relación con 'partidas' a través de PMB_PAR, 
+      // pero no se describe explícitamente en el texto proporcionado.
+      // Si PMB_PAR es una clave foránea a 'partidas.id', la relación sería:
+      /*
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PMB_PAR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la media bandeja con la partida de siembra a la que pertenece."
+      }
+      */
+    },
+    ejemplos: {
+      consulta_media_bandeja_por_id:
+        "Obtener todos los detalles de una media bandeja específica usando su 'id' o 'PMB_PAR'.",
+      filtrar_por_partida:
+        "Listar todas las medias bandejas asociadas a un código de partida específico (filtrando por PMB_PAR).",
+      filtrar_por_fecha_rango:
+        "Buscar medias bandejas registradas en una fecha o rango de fechas (filtrando por PMB_FEC).",
+      buscar_por_etiqueta:
+        "Encontrar una media bandeja específica usando su etiqueta (filtrando por PMB_ETIQ).",
+    },
+  },
+
+
+
+/* ================================================*/
+/* Injertos - Utilidades – Escandallo Injertos */
+/* ================================================*/
+p_escan_inj: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra los detalles del escandallo de injertos, incluyendo el código de partida, información de alveolos y huecos, etiqueta, cantidad de plantas y bandejas, fecha y hora de registro, y el operario asociado. El 'id' suele ser un código de identificación único para cada registro de escandallo.",
+    tabla: `p-escan-inj`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único del registro de escandallo (Clave Primaria).",
+      PEI_PAR: "Código de la partida asociada (Ej: '17001696').",
+      PEI_ALV: "Cantidad de alveolos (Ej: '104').",
+      PEI_HUE: "Cantidad de huecos (Ej: '53').",
+      PEI_ETIQ: "Etiqueta del injerto o bandeja (Ej: '0000169600288').",
+      PEI_PLAN: "Cantidad de plantas (Ej: '0').",
+      PEI_BAND: "Cantidad de bandejas (Ej: '2').",
+      PEI_FEC: "Fecha de registro (Ej: '2017-06-22').",
+      PEI_HORA: "Hora de registro (Ej: '17:19').",
+      PEI_CDOP: "Código del operario (Ej: '0205').",
+    },
+    relaciones: {
+      // Se podría inferir una relación con 'partidas' a través de PEI_PAR, 
+      // pero no se describe explícitamente en el texto proporcionado.
+      // Si PEI_PAR es una clave foránea a 'partidas.id', la relación sería:
+      /*
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PEI_PAR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el escandallo de injertos con la partida de siembra a la que pertenece."
+      }
+      */
+    },
+    ejemplos: {
+      consulta_escandallo_por_id:
+        "Obtener todos los detalles de un registro de escandallo específico usando su 'id'.",
+      filtrar_por_partida:
+        "Listar todos los registros de escandallo asociados a un código de partida específico (filtrando por PEI_PAR).",
+      filtrar_por_fecha_rango:
+        "Buscar registros de escandallo en una fecha o rango de fechas (filtrando por PEI_FEC).",
+      buscar_por_etiqueta:
+        "Encontrar un registro de escandallo específico usando su etiqueta (filtrando por PEI_ETIQ).",
+      analisis_produccion_por_operario:
+        "Agrupar y analizar los datos de escandallo por operario (PEI_CDOP) para evaluar la producción de injertos.",
+    },
+  },
+
+
+/* ================================================*/
+/* Injertos - Injertos por fases – Técnicos fases */
+/* ================================================*/
+tecnicos_fases: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra la asignación de técnicos a diferentes fases de los injertos por partida y fecha. Detalla qué técnicos trabajaron en una fase específica de una partida y la cantidad de bandejas asociadas a su trabajo.",
+    tabla: `tecnicos_fases`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único de registro para la asignación de técnicos a una fase (Clave Primaria).",
+      TF_FEC: "Fecha en que se realizó la asignación o el trabajo en la fase (Ej: '2017-02-08').",
+      TF_PAR: "Número de partida. Clave foránea a la tabla 'partidas' (Ej: '15024361').",
+      TF_FASE: "Número o identificador de la fase (Ej: '2').",
+      TF_LNA: "Valor opcional (actualmente NULL). Puede usarse para observaciones o control interno.",
+    },
+    relaciones: {
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "TF_PAR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro de técnicos por fase con la partida de siembra correspondiente.",
+      },
+      tecnicos_fases_tf_lna: {
+        tabla_relacionada: "tecnicos_fases_tf_lna",
+        tipo: "Uno a muchos (un registro de 'tecnicos_fases' puede tener múltiples técnicos/bandejas)",
+        campo_enlace_local: "id", // ID del registro principal de tecnicos_fases
+        campo_enlace_externo: "id", // ID que referencia al registro principal en la tabla de detalle
+        descripcion: "Detalla los técnicos que trabajaron en esta fase específica y la cantidad de bandejas que gestionaron.",
+        estructura_relacionada: {
+          id: "ID del registro principal de técnicos por fase.",
+          id2: "Identificador secuencial para cada técnico dentro del registro (Ej: '1', '2', etc.).",
+          C0: "Código del técnico que trabajó en esta fase. Clave foránea a la tabla 'tecnicos'.",
+          C1: "Número de bandejas gestionadas por el técnico en esta fase (Ej: '64.0').",
+        },
+        relaciones_internas_de_detalle: {
+          tecnicos: {
+            tabla_relacionada: "tecnicos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el detalle del trabajo por fase con la información completa del técnico (ej. nombre: TN_DENO).",
+          },
+        },
+      },
+    },
+    ejemplos: {
+      consulta_tecnicos_fases_por_id:
+        "Obtener la fecha, partida y fase de un registro específico de asignación de técnicos por fase usando su 'id'.",
+      consultar_tecnicos_y_bandejas_por_fase:
+        "Para un registro específico de 'tecnicos_fases', consultar la tabla 'tecnicos_fases_tf_lna' para ver qué técnicos trabajaron y cuántas bandejas manejaron en esa fase, incluyendo la denominación de cada técnico.",
+      filtrar_por_partida_y_fase:
+        "Listar los registros de asignación de técnicos para una partida y fase específicas (filtrando por TF_PAR y TF_FASE).",
+      analisis_productividad_tecnico:
+        "Calcular la cantidad total de bandejas que un técnico específico ha gestionado en una fase o periodo determinado, uniendo 'tecnicos_fases_tf_lna' con 'tecnicos' y filtrando por C0 y/o TF_FEC.",
+    },
+  },
+
+
+
+
+/* ================================================*/
+/* Injertos - Injertos por fases – Partes injertos sandía */
+/* ================================================*/
+p_inj_sandia: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra los partes de injerto de sandía, documentando la máquina 'enterradora' y el operario que realizaron el injerto, la partida de siembra asociada, el número de bandejas procesadas, la fecha y hora de la operación, y una etiqueta identificativa. También incluye un código de operario más corto.",
+    tabla: `p-inj-sandia`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código identificador interno del registro (Clave Primaria).",
+      PIS_ENT: "Identificador de la máquina 'enterradora' (Ej: '03701130047404').",
+      PIS_OPE: "Identificador del operario (Ej: '03802190028065').",
+      PIS_PAR: "Código de la partida asociada. Clave foránea a la tabla 'partidas' (Ej: '21000092').",
+      PIS_NBAN: "Número de bandejas (Ej: '1').",
+      PIS_FEC: "Fecha de la operación (Ej: '06/04/2021').",
+      PIS_HORA: "Hora de la operación (Ej: '17:14').",
+      PIS_ETIQ: "Etiqueta identificativa del registro (Ej: '000009200364').",
+      PIS_CDOP: "Código corto del operario (Ej: '0219').",
+    },
+    relaciones: {
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PIS_PAR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de injerto de sandía con la partida de siembra correspondiente.",
+      },
+      // Podría haber relaciones con tablas para 'enterradora' y 'operario'
+      // si los campos PIS_ENT y PIS_OPE son claves foráneas a tablas específicas,
+      // pero no se ha proporcionado esa información explícitamente.
+    },
+    ejemplos: {
+      consulta_parte_injerto_por_id:
+        "Obtener los detalles de un parte de injerto de sandía específico usando su 'id'.",
+      filtrar_por_partida:
+        "Listar todos los partes de injerto de sandía asociados a una partida específica (filtrando por PIS_PAR).",
+      filtrar_por_fecha_rango:
+        "Buscar partes de injerto de sandía registrados en una fecha o rango de fechas (filtrando por PIS_FEC).",
+      analisis_productividad_operario:
+        "Calcular el número de bandejas injertadas por un operario específico en un periodo determinado, usando PIS_CDOP y PIS_NBAN.",
+    },
+  },
+
+
+
+
+/* ================================================*/
+/* Injertos - Injertos por fases – Partes injertos tomate */
+/* ================================================*/
+p_inj_tomate: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra los partes de injerto de tomate, documentando al operario que realizó el injerto, la partida de siembra asociada, el número de bandejas procesadas, la fecha y hora de la operación, y una etiqueta identificativa. Incluye tanto un identificador largo como un código corto para el operario.",
+    tabla: `p-inj-tomate`, // Nombre de la tabla principal
+    columnas: {
+      id: "Campo oculto, identificador interno del registro (Clave Primaria).",
+      PIT_OPE: "Identificador de la etiqueta del operario (número largo, Ej: '03804500008606').",
+      PIT_PAR: "Código de la partida asociada. Clave foránea a la tabla 'partidas' (Ej: '15024324').",
+      PIT_NBAN: "Número de bandejas (Ej: '1').",
+      PIT_FEC: "Fecha de la operación (Ej: '26/05/2017').",
+      PIT_HORA: "Hora de la operación (Ej: '17:39').",
+      PIT_ETIQ: "Etiqueta identificativa del registro (Ej: '0002432400182').",
+      PIT_CDOP: "Código corto del operario (Ej: '8045').",
+    },
+    relaciones: {
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PIT_PAR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el parte de injerto de tomate con la partida de siembra correspondiente.",
+      },
+      // Podría haber una relación con una tabla de 'operarios' o 'personal'
+      // si los campos PIT_OPE o PIT_CDOP son claves foráneas a tablas específicas,
+      // pero esa información no se ha proporcionado explícitamente.
+    },
+    ejemplos: {
+      consulta_parte_injerto_por_id:
+        "Obtener los detalles de un parte de injerto de tomate específico usando su 'id'.",
+      filtrar_por_partida:
+        "Listar todos los partes de injerto de tomate asociados a una partida específica (filtrando por PIT_PAR).",
+      filtrar_por_fecha_rango:
+        "Buscar partes de injerto de tomate registrados en una fecha o rango de fechas (filtrando por PIT_FEC).",
+      analisis_productividad_operario:
+        "Calcular el número de bandejas injertadas por un operario específico en un periodo determinado, usando PIT_CDOP y PIT_NBAN.",
+    },
+  },
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* VENTAS                                                                                                                                                       */
+/* ======================================================================================================================================================================*/
+
+ /* ================================================*/
+/* Ventas – Gestion – Encargos de siembra */
+/* ================================================*/
+encargos: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra los encargos de siembra de los clientes, incluyendo información del cliente, almacén, fecha, vendedor, forma de pago y estado. Contiene relaciones con observaciones, costes adicionales, reservas de plantas y las partidas de siembra asociadas.",
+    tabla: `encargos`, // Nombre de la tabla principal
+    columnas: {
+      id: "Número de encargo (Clave Primaria)",
+      ENG_CCL: "Código del cliente. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      ENG_ALM: "Código del almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      ENG_FEC: "Fecha del encargo de siembra.",
+      ENG_VD: "Vendedor que gestionó el encargo. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      ENG_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+      ENG_EST: "Estado del encargo ('C': Cerrado).",
     },
     relaciones: {
       clientes: {
@@ -1052,56 +1883,284 @@ const mapaERP = {
         tipo: "Muchos a uno",
         campo_enlace_local: "ENG_CCL",
         campo_enlace_externo: "id",
-        descripcion: "Vincula el encargo con el cliente que lo realizó.",
+        descripcion: "Vincula el encargo con el cliente.",
       },
       almacenes: {
         tabla_relacionada: "almacenes",
         tipo: "Muchos a uno",
         campo_enlace_local: "ENG_ALM",
         campo_enlace_externo: "id",
-        descripcion: "Vincula el encargo con el almacén asociado.",
+        descripcion: "Vincula el encargo con el almacén.",
       },
       vendedores: {
         tabla_relacionada: "vendedores",
         tipo: "Muchos a uno",
         campo_enlace_local: "ENG_VD",
         campo_enlace_externo: "id",
-        descripcion: "Vincula el encargo con el vendedor que lo gestionó.",
+        descripcion: "Vincula el encargo con el vendedor.",
       },
       fpago: {
         tabla_relacionada: "fpago",
         tipo: "Muchos a uno",
         campo_enlace_local: "ENG_FP",
         campo_enlace_externo: "id",
-        descripcion: "Vincula el encargo con la forma de pago acordada.",
+        descripcion: "Vincula el encargo con la forma de pago.",
+      },
+      encargos_eng_obs: {
+        tabla_relacionada: "encargos_eng_obs",
+        tipo: "Uno a muchos (un encargo puede tener varias observaciones)",
+        campo_enlace_local: "id", // ID del encargo
+        campo_enlace_externo: "id", // ID del encargo en la tabla de observaciones
+        descripcion: "Tabla de observaciones generales del encargo.",
+        estructura_relacionada: {
+          id: "ID del encargo.",
+          id2: "Identificador secuencial de la observación.",
+          C0: "Observación general.",
+        },
+      },
+      encargos_eng_lna: {
+        tabla_relacionada: "encargos_eng_lna",
+        tipo: "Uno a muchos (un encargo puede tener varios costes adicionales)",
+        campo_enlace_local: "id", // ID del encargo
+        campo_enlace_externo: "id", // ID del encargo en la tabla de costes
+        descripcion: "Tabla de costes adicionales del encargo.",
+        estructura_relacionada: {
+          id: "ID del encargo.",
+          id2: "Identificador secuencial del coste adicional.",
+          C0: "Artículo del coste adicional. Clave foránea a la tabla 'articulos'.",
+          C1: "Tipo Sobre.",
+          C2: "Número viajes.",
+          C3: "Precio.",
+        },
+        relaciones_internas_de_detalle: {
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el coste adicional con el artículo.",
+          },
+        },
+      },
+      encargos_eng_rese: {
+        tabla_relacionada: "encargos_eng_rese",
+        tipo: "Uno a muchos (un encargo puede tener varias reservas de plantas)",
+        campo_enlace_local: "id", // ID del encargo
+        campo_enlace_externo: "id", // ID del encargo en la tabla de reservas
+        descripcion: "Tabla de reservas de plantas del encargo.",
+        estructura_relacionada: {
+          id: "ID del encargo.",
+          id2: "Identificador secuencial de la reserva.",
+          C0: "Artículo/semilla reservada. Clave foránea a la tabla 'articulos'.",
+          C1: "Fecha.",
+          C2: "Campo sin información.",
+          C3: "Cantidad de plantas.",
+          C4: "Cantidad de bandejas.",
+          C5: "Servidas.",
+          C6: "Número de partida asignado a esta reserva.",
+        },
+        relaciones_internas_de_detalle: {
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la reserva con el artículo/semilla.",
+          },
+        },
+      },
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Uno a muchos (un encargo puede generar varias partidas)",
+        campo_enlace_local: "id", // ID del encargo
+        campo_enlace_externo: "PAR_ENC", // Campo en partidas que referencia el ID del encargo
+        descripcion: "Vincula el encargo con las partidas de siembra asociadas.",
+        estructura_relacionada_partidas: { // Detalles de la tabla 'partidas' relevantes
+          id_partida: "ID de la partida.",
+          PAR_FEC: "Fecha de partida.",
+          PAR_TIPO: "Tipo de semilla (D/N).",
+          PAR_SEM: "Semilla utilizada. Clave foránea a 'articulos'.",
+          PAR_LOTE: "Lote.",
+          PAR_PGER: "% de germinación.",
+          PAR_TSI: "Tipo de siembra. Clave foránea a 't-siembras'.",
+          PAR_SUS: "Sustrato utilizado. Clave foránea a 'sustratos'.",
+          PAR_ALVS: "Semillas a sembrar.",
+          PAR_PLAS: "Plantas solicitadas.",
+          PAR_PLAP: "Plantas aproximadas.",
+          PAR_PLS: "Alveolos solicitados.",
+          PAR_BASI: "Bandejas Siembra.",
+          PAR_FECS: "Fecha Siembra.",
+          PAR_DIASS: "Días de siembra.",
+          PAR_FECE: "Fecha de entrega.",
+          PAR_DIASG: "Días de germinación.",
+          PAR_PPLA: "Planta.",
+          PAR_PALV: "Alveolos.",
+          PAR_TOT: "Total.",
+          PAR_DENO: "Denominación/Observación de la partida.",
+          PAR_FECES: "Fecha solicitada/entrega/siembra.",
+          PAR_PMER: "Nombre.",
+          PAR_NMCL: "Nombre de semilla.",
+        },
+        relaciones_internas_de_partidas: {
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PAR_SEM",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la partida con la semilla utilizada.",
+          },
+          t_siembras: {
+            tabla_relacionada: "t-siembras",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PAR_TSI",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la partida con el tipo de siembra.",
+          },
+          sustratos: {
+            tabla_relacionada: "sustratos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "PAR_SUS",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la partida con el sustrato utilizado.",
+          },
+        },
       },
     },
     ejemplos: {
-      consulta_encargo_por_id: "Obtener los detalles de un encargo de siembra específico usando su 'id'.",
+      consulta_encargo_por_id:
+        "Obtener los detalles generales de un encargo de siembra usando su 'id'.",
       consultar_info_relacionada:
-        "Para un encargo, usar ENG_CCL, ENG_ALM, ENG_VD y ENG_FP para consultar 'clientes', 'almacenes', 'vendedores' y 'fpago' y obtener los nombres del cliente, almacén, vendedor y forma de pago.",
-      filtrar_encargos_por_cliente_o_fecha:
-        "Listar encargos realizados por un cliente específico (filtrando por ENG_CCL) o registrados en una fecha o rango de fechas (filtrando por ENG_FEC).",
-      filtrar_encargos_por_vendedor_o_almacen:
-        "Buscar encargos gestionados por un vendedor (filtrando por ENG_VD) o asociados a un almacén particular (filtrando por ENG_ALM).",
+        "Para un encargo, obtener información del cliente, almacén, vendedor y forma de pago.",
+      consultar_observaciones:
+        "Para un encargo, listar las observaciones generales.",
+      consultar_costes_adicionales:
+        "Para un encargo, listar los costes adicionales y los artículos asociados.",
+      consultar_reservas_plantas:
+        "Para un encargo, listar las reservas de plantas y los artículos/semillas reservadas.",
+      consultar_partidas_asociadas:
+        "Para un encargo, listar las partidas de siembra asociadas y sus detalles.",
+      filtrar_encargos_por_cliente_fecha_o_vendedor:
+        "Listar encargos por cliente, fecha o vendedor.",
     },
   },
 
-  /* ================================================*/
-  /* Ventas – Gestión - Devoluciones Clientes */
-  /* ================================================*/
-  devol_clientes: {
-    // Clave principal (basada en el nombre de tabla)
+
+
+
+/* ================================================*/
+/* Ventas – Gestion – Orden de Recogida */
+/* ================================================*/
+
+
+
+
+
+
+
+/* ================================================*/
+/* Ventas – Gestion – Albaranes de Venta */
+/* ================================================*/
+
+
+albaran_venta_ornamental: {
+    // Clave principal (basada en el nombre de la sección)
     descripcion:
-      "Registra y administra las devoluciones de productos realizadas por los clientes. Documenta el retorno de mercancía para control de inventario, ajuste de ventas, seguimiento de incidencias y gestión post-venta.",
-    tabla: "devol-clientes", // Nombre de tabla original
-    columna: {
-      id: "Número único que identifica cada devolución (Clave Primaria)",
-      DV_FEC: "Fecha en que se registró la devolución.",
-      DV_USU: "Usuario o vendedor que gestionó la devolución. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
-      DV_DEL: "Delegación o almacén donde se realizó la devolución. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      "Registra y gestiona los albaranes de venta. Documenta la salida de productos hacia clientes, crucial para control de inventario, confirmación de entregas y base para facturación.",
+    tabla: "alb-venta", // Nombre de tabla inferido (campos con prefijo AV_)
+    columnas: {
+      id: "Identificador único de cada albarán de venta ornamental (Clave Primaria)",
+      AV_NPD: "Número del pedido de venta del cliente asociado, si lo hay.", // Sugiere relación con tabla de pedidos de venta
+      AV_CCL: "Número del cliente que recibió la mercancía. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      AV_VD: "Vendedor que gestionó la venta. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      AV_ALM: "Almacén de Semilleros Deitana desde donde se expidió la mercancía. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      AV_FEC: "Fecha en que se emitió el albarán.",
+      AV_TIP: "Tipo de albarán o venta.",
+      AV_FRA: "Número de la factura asociada a este albarán.", // Sugiere relación con tabla de facturas de venta
+      AV_FFR: "Fecha de la factura asociada.", // Sugiere relación con tabla de facturas de venta
+      AV_BRU: "Monto bruto total del albarán.",
+      AV_NETO: "Monto neto del albarán.",
+      AV_IMPU: "Importe total de los impuestos aplicados.",
+      AV_TTT: "Monto total final del albarán.",
+      AV_ORIVTA: "Origen o canal específico de esta venta ornamental.",
+      AV_FP: "Forma de pago acordada para esta venta. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+    },
+    relaciones: {
+      clientes: {
+        tabla_relacionada: "clientes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "AV_CCL",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el albarán con el cliente que recibió la mercancía.",
+      },
+      vendedores: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "AV_VD",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el albarán con el vendedor que gestionó la venta.",
+      },
+      almacenes: {
+        tabla_relacionada: "almacenes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "AV_ALM",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el albarán con el almacén desde donde se expidió la mercancía.",
+      },
+      fpago: {
+        tabla_relacionada: "fpago",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "AV_FP",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el albarán con la forma de pago acordada para la venta.",
+      },
+      // Relaciones potenciales inferidas:
+      pedidos_venta: {
+        tabla_relacionada: "[Tabla de Pedidos de Venta]", // Nombre de tabla no especificado
+        tipo: "Muchos a uno (un albarán puede provenir de un pedido)", // Tipo inferido
+        campo_enlace_local: "AV_NPD", // El campo que contiene el número/id del pedido
+        campo_enlace_externo: "[Campo id/número en tabla de pedidos de venta]", // Nombre de campo no especificado
+        descripcion_inferida:
+          "Sugiere vínculo con una tabla de pedidos de venta, permitiendo trazar el albarán al pedido original si existe.",
+      },
+      facturas_venta: {
+        tabla_relacionada: "[Tabla de Facturas de Venta]", // Nombre de tabla no especificado (ej: facturas-e)
+        tipo: "Uno a uno o Uno a cero-o-uno (un albarán se asocia a una factura o ninguna)", // Tipo inferido
+        campo_enlace_local: "AV_FRA", // El campo que contiene el número/id de la factura
+        campo_enlace_externo: "[Campo id/número en tabla de facturas de venta]", // Nombre de campo no especificado
+        descripcion_inferida:
+          "Sugiere vínculo con una tabla de facturas de venta, permitiendo asociar el albarán a la factura emitida.",
+      },
+    },
+    ejemplos: {
+      consulta_albaran_por_id:
+        "Obtener los detalles de un albarán de venta ornamental específico usando su 'id'.",
+      consultar_info_relacionada:
+        "Para un albarán, usar AV_CCL, AV_VD, AV_ALM y AV_FP para consultar 'clientes', 'vendedores', 'almacenes' y 'fpago' y obtener los nombres del cliente, vendedor, almacén y forma de pago.",
+      filtrar_albaranes_por_cliente_o_fecha:
+        "Listar albaranes de venta ornamental emitidos a un cliente específico (filtrando por AV_CCL) o en una fecha o rango de fechas (filtrando por AV_FEC).",
+      filtrar_albaranes_por_vendedor_o_almacen:
+        "Buscar albaranes gestionados por un vendedor (filtrando por AV_VD) o expedidos desde un almacén particular (filtrando por AV_ALM).",
+      filtrar_albaranes_por_origen_venta:
+        "Encontrar albaranes asociados a un origen o canal de venta específico (filtrando por AV_ORIVTA).",
+    },
+  },
+
+
+
+/* ================================================*/
+/* Ventas – Gestion – Devoluciones clientes */
+/* ================================================*/
+devol_clientes: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra las devoluciones de los clientes, incluyendo la fecha, el usuario que gestionó la devolución, la delegación donde se realizó, y el cliente que hizo la devolución. Contiene relaciones con los carros devueltos y las observaciones sobre la devolución.",
+    tabla: `devol-clientes`, // Nombre de la tabla principal
+    columnas: {
+      id: "Número de devolución (Clave Primaria).",
+      DV_FEC: "Fecha de la devolución.",
+      DV_USU: "Usuario/vendedor que gestionó la devolución. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      DV_DEL: "Delegación donde se realizó la devolución. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
       DV_CCL: "Cliente que realizó la devolución. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
-      // Observaciones se almacenan en una tabla separada (devol-clientes_dv_obs)
     },
     relaciones: {
       vendedores: {
@@ -1109,14 +2168,14 @@ const mapaERP = {
         tipo: "Muchos a uno",
         campo_enlace_local: "DV_USU",
         campo_enlace_externo: "id",
-        descripcion: "Vincula la devolución con el usuario/vendedor interno que la gestionó.",
+        descripcion: "Vincula la devolución con el vendedor que la gestionó.",
       },
       almacenes: {
         tabla_relacionada: "almacenes",
         tipo: "Muchos a uno",
         campo_enlace_local: "DV_DEL",
         campo_enlace_externo: "id",
-        descripcion: "Vincula la devolución con la delegación o almacén donde se gestionó.",
+        descripcion: "Vincula la devolución con la delegación donde se realizó.",
       },
       clientes: {
         tabla_relacionada: "clientes",
@@ -1125,33 +2184,415 @@ const mapaERP = {
         campo_enlace_externo: "id",
         descripcion: "Vincula la devolución con el cliente que la realizó.",
       },
+      devol_clientes_dv_ccar: {
+        tabla_relacionada: "devol-clientes_dv_ccar",
+        tipo: "Uno a muchos (una devolución puede involucrar múltiples carros)",
+        campo_enlace_local: "id", // ID de la devolución
+        campo_enlace_externo: "id", // ID de la devolución en la tabla de detalle
+        descripcion: "Tabla de enlace que relaciona devoluciones con los carros devueltos.",
+        estructura_relacionada: {
+          id: "ID de la devolución.",
+          id2: "Identificador secuencial del carro devuelto.",
+          C0: "Código del carro devuelto. Clave foránea a la tabla 'carros'.",
+        },
+        relaciones_internas_de_detalle: {
+          carros: {
+            tabla_relacionada: "carros",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el carro devuelto con su información detallada.",
+          },
+        },
+      },
       devol_clientes_dv_obs: {
         tabla_relacionada: "devol-clientes_dv_obs",
         tipo: "Uno a muchos (una devolución puede tener múltiples observaciones)",
-        campo_enlace_local: "id", // El id de la devolución
-        campo_enlace_externo: "id", // El campo id en devol-clientes_dv_obs que referencia a la devolución
-        descripcion:
-          "Almacena observaciones o comentarios complementarios sobre la devolución. La lógica de almacenamiento (ej: fragmentación en campo C0, orden por id2) no se detalla explícitamente en el texto, pero se infiere similar a otras tablas de observaciones.",
+        campo_enlace_local: "id", // ID de la devolución
+        campo_enlace_externo: "id", // ID de la devolución en la tabla de observaciones
+        descripcion: "Tabla de observaciones sobre la devolución.",
         estructura_relacionada: {
-          // Estructura inferida basada en patrones de otras tablas de observaciones
-          id: "ID de la devolución asociada",
-          id2: "Identificador secundario/orden de la línea",
-          C0: "Texto de la observación",
+          id: "ID de la devolución.",
+          id2: "Identificador secuencial de la observación.",
+          C0: "Contenido de la observación.",
         },
       },
     },
     ejemplos: {
-      consulta_devolucion_por_id: "Obtener los detalles de una devolución de cliente específica usando su 'id'.",
+      consulta_devolucion_por_id:
+        "Obtener los detalles generales de una devolución usando su 'id'.",
       consultar_info_relacionada:
-        "Para una devolución, usar DV_USU, DV_DEL y DV_CCL para consultar 'vendedores', 'almacenes' y 'clientes' y obtener los nombres del usuario, almacén y cliente.",
-      filtrar_devoluciones_por_cliente_o_fecha:
-        "Listar devoluciones realizadas por un cliente específico (filtrando por DV_CCL) o registradas en una fecha o rango de fechas (filtrando por DV_FEC).",
-      filtrar_devoluciones_por_usuario_o_almacen:
-        "Buscar devoluciones gestionadas por un usuario (filtrando por DV_USU) o en un almacén particular (filtrando por DV_DEL).",
-      consultar_observaciones:
-        "Buscar observaciones detalladas para una devolución específica en la tabla 'devol-clientes_dv_obs' (requiere implementar la lógica de recuperación y reconstrucción del texto).",
+        "Para una devolución, obtener información del vendedor, delegación y cliente asociados.",
+      consultar_carros_devueltos:
+        "Para una devolución, listar los carros que fueron devueltos y su información.",
+      consultar_observaciones_devolucion:
+        "Para una devolución, listar las observaciones registradas.",
+      filtrar_devoluciones_por_fecha_o_cliente:
+        "Listar devoluciones por fecha o por cliente.",
     },
   },
+
+
+/* ================================================*/
+/* Ventas – Gestion – Registro de Facturas Emitidas */
+/* ================================================*/
+facturas_e: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra y administra las facturas de venta emitidas por la empresa a sus clientes. Esta tabla es fundamental para la documentación de ventas, el control financiero y la gestión de cobros.",
+    tabla: `facturas-e`, // Nombre de la tabla principal
+    columnas: {
+      id: "Número único de la factura (Clave Primaria).",
+      FE_CCL: "Código del cliente al que se emitió la factura. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      FE_ALM: "Código del almacén relacionado con la venta. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      FE_VD: "Vendedor que gestionó la venta. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      FE_FEC: "Fecha de emisión de la factura.",
+      FE_BRU: "Monto bruto total de la factura antes de impuestos o descuentos.",
+      FE_NETO: "Monto neto de la factura.",
+      FE_IMPU: "Monto total de los impuestos aplicados en la factura.",
+      FE_TTT: "Monto total final de la factura.",
+      FE_FP: "Forma de pago acordada para esta factura. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+    },
+    relaciones: {
+      clientes: {
+        tabla_relacionada: "clientes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "FE_CCL",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la factura con el cliente al que se le emitió.",
+      },
+      almacenes: {
+        tabla_relacionada: "almacenes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "FE_ALM",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la factura con el almacén relevante de la venta.",
+      },
+      vendedores: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "FE_VD",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la factura con el vendedor que gestionó la venta.",
+      },
+      fpago: {
+        tabla_relacionada: "fpago",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "FE_FP",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la factura con la forma de pago asociada.",
+      },
+      // Se podría incluir una relación con Albaranes de Venta si se confirma su vinculación.
+      /*
+      albaranes_venta: {
+        tabla_relacionada: "albaranes_venta_ornamental", // O la tabla de albaranes general
+        tipo: "Uno a muchos", // O muchos a muchos, dependiendo de la relación real
+        campo_enlace_local: "id", // O el campo que vincule la factura al albarán
+        campo_enlace_externo: "FE_ALB", // O el campo en la tabla de albaranes que referencia la factura
+        descripcion: "Posible relación con los albaranes de venta que originaron la factura.",
+      },
+      */
+    },
+    ejemplos: {
+      consulta_factura_por_id:
+        "Obtener todos los detalles de una factura emitida específica usando su 'id'.",
+      consultar_info_relacionada:
+        "Para una factura, obtener la denominación del cliente, el nombre del almacén, la denominación del vendedor y la descripción de la forma de pago.",
+      filtrar_facturas_por_cliente:
+        "Listar todas las facturas emitidas a un cliente específico (filtrando por FE_CCL).",
+      filtrar_facturas_por_fecha_rango:
+        "Buscar facturas emitidas en un rango de fechas determinado (filtrando por FE_FEC).",
+      analisis_ventas_por_vendedor:
+        "Calcular el total de ventas (FE_BRU, FE_NETO) por cada vendedor en un período, agrupando por FE_VD y sumando los montos.",
+    },
+  },
+
+
+
+/* ================================================*/
+/* Ventas - Otros - Partidas */
+/* ================================================*/
+partidas: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra las partidas de siembra, vinculadas a los encargos de los clientes. Contiene información sobre la fecha, tipo de semilla (propia o no), la semilla utilizada, lote, germinación, tipo de siembra, sustrato, cantidades (semillas, plantas, alveolos, bandejas), fechas (siembra, entrega, solicitada) y denominación/observaciones.",
+    tabla: `partidas`, // Nombre de la tabla principal
+    columnas: {
+      id: "ID de la partida (Clave Primaria)",
+      PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
+      PAR_FEC: "Fecha de la partida.",
+      PAR_TIPO: "Tipo de semilla ('D': Depósito cliente, 'N': No depósito).",
+      PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+      PAR_LOTE: "Lote de la semilla.",
+      PAR_PGER: "Porcentaje de germinación.",
+      PAR_TSI: "Tipo de siembra. Clave foránea a la tabla 't-siembras' para obtener la denominación (TSI_DENO) y detalles.",
+      PAR_SUS: "Sustrato utilizado. Clave foránea a la tabla 'sustratos' para obtener la denominación (SUS_DENO).",
+      PAR_ALVS: "Cantidad de semillas a sembrar.",
+      PAR_PLAS: "Cantidad de plantas solicitadas.",
+      PAR_PLAP: "Cantidad de plantas aproximadas.",
+      PAR_PLS: "Cantidad de alveolos solicitados.",
+      PAR_BASI: "Cantidad de bandejas de siembra.",
+      PAR_FECS: "Fecha de siembra.",
+      PAR_DIASS: "Días de siembra.",
+      PAR_FECE: "Fecha de entrega.",
+      PAR_DIASG: "Días de germinación.",
+      PAR_PPLA: "Planta (¿denominación?).",
+      PAR_PALV: "Alveolos (¿cantidad?).",
+      PAR_TOT: "Total (¿importe?).",
+      PAR_DENO: "Denominación u observación de la partida (Ej: 'PARTIDA Nº ...').",
+      PAR_FECES: "Fechas (Solicitada 'E'/Entrega 'E'/Siembra 'S').",
+      PAR_PMER: "Nombre (¿?).",
+      PAR_NMCL: "Nombre de la semilla.",
+    },
+    relaciones: {
+      encargos: {
+        tabla_relacionada: "encargos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAR_ENC",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la partida con el encargo del cliente.",
+      },
+      articulos: {
+        tabla_relacionada: "articulos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAR_SEM",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la partida con la semilla utilizada.",
+      },
+      t_siembras: {
+        tabla_relacionada: "t-siembras",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAR_TSI",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la partida con el tipo de siembra.",
+      },
+      sustratos: {
+        tabla_relacionada: "sustratos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAR_SUS",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la partida con el sustrato utilizado.",
+      },
+      clientes: {
+        tabla_relacionada: "clientes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PAR_CCL", // Inferido del contexto de "encargos" -> "clientes"
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la partida con el cliente (a través del encargo).",
+      },
+    },
+    ejemplos: {
+      consulta_partida_por_id:
+        "Obtener los detalles de una partida específica usando su 'id'.",
+      consultar_info_relacionada:
+        "Para una partida, obtener información del encargo asociado, la semilla, el tipo de siembra y el sustrato.",
+      filtrar_partidas_por_encargo:
+        "Listar todas las partidas asociadas a un número de encargo específico (filtrando por PAR_ENC).",
+      filtrar_partidas_por_fecha:
+        "Listar partidas por fecha de partida o fecha de entrega.",
+      filtrar_partidas_por_semilla:
+        "Listar partidas donde se utilizó una semilla específica (filtrando por PAR_SEM).",
+    },
+  },
+
+
+
+
+
+/* ================================================*/
+/* Ventas – Otros – Reservas */
+/* ================================================*/
+partidas_reserv: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Gestiona las reservas de diversos tipos de pedidos, como siembras normales, injertos o componentes. Es clave para el seguimiento de las reservas para un cliente, detallando la semilla, la germinación esperada y las particularidades del proceso de siembra.",
+    tabla: `partidas_reserv`, // Nombre de la tabla principal
+    columnas: {
+      id: "Número de reserva (Clave Primaria).",
+      PARR_FEC: "Fecha de la reserva.",
+      PARR_ENC: "Número de encargo asociado a la reserva.",
+      PARR_TIPO: "Tipo de encargo (ej: 'Normal', 'Injerto', 'Componente').",
+      PARR_SEM: "Semilla a utilizar. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+      PARR_CCL: "Código del cliente de la partida. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      PARR_LOTE: "Número de lote de la semilla.",
+      PARR_PGER: "Porcentaje de germinación.",
+      PARR_TSI: "Tipo de siembra. Clave foránea a la tabla 't-siembras' para obtener la denominación (TSI_DENO) y más información (TSI_NALV, TSI_PALV).",
+      PARR_SUST: "Sustrato utilizado. Clave foránea a la tabla 'sustratos' para obtener la denominación (SUS_DENO).",
+      PARR_ALVS: "Cantidad de semillas a sembrar.",
+      PARR_PLAS: "Cantidad de plantas solicitadas.",
+      PARR_PLAP: "Cantidad de plantas aproximadas.",
+      PARR_PLS: "Cantidad de alveolos solicitados.",
+      PARR_BASI: "Cantidad de bandejas de siembra.",
+      PARR_FECS: "Fecha de siembra.",
+      PARR_DIASS: "Días de siembra.",
+      PARR_FECE: "Fecha de entrega.",
+      PARR_DIASG: "Días de germinación.",
+      PARR_PPLA: "Cantidad o identificador de planta.",
+      PARR_PALV: "Cantidad o identificador de alveolos.",
+      PARR_TOT: "Total (monto o cantidad).",
+      PARR_DENO: "Denominación u observación de esta reserva (ej: 'PARTIDA Nº 15028052 DE COLIFLOR AGRIPA (ROMANESCO)').",
+      PARR_FECES: "Fecha solicitada ('E' para Entrega, 'S' para Siembra).",
+      PARR_PMER: "Nombre asociado (propósito a confirmar).",
+      PARR_NMCL: "Nombre de la semilla.",
+    },
+    relaciones: {
+      articulos: {
+        tabla_relacionada: "articulos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PARR_SEM",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la reserva con la semilla o artículo a utilizar.",
+      },
+      clientes: {
+        tabla_relacionada: "clientes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PARR_CCL",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la reserva con el cliente asociado.",
+      },
+      t_siembras: {
+        tabla_relacionada: "t-siembras",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PARR_TSI",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la reserva con el tipo de siembra.",
+      },
+      sustratos: {
+        tabla_relacionada: "sustratos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PARR_SUST",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la reserva con el sustrato utilizado.",
+      },
+      // También podría haber una relación con la tabla 'encargos' a través de PARR_ENC,
+      // si 'PARR_ENC' es una clave foránea que referencia 'encargos.id'.
+      /*
+      encargos: {
+        tabla_relacionada: "encargos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "PARR_ENC",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la reserva con el encargo de siembra correspondiente.",
+      },
+      */
+    },
+    ejemplos: {
+      consulta_reserva_por_id:
+        "Obtener todos los detalles de una reserva específica usando su 'id'.",
+      consultar_info_relacionada:
+        "Para una reserva, obtener la denominación de la semilla, el nombre del cliente, el tipo de siembra y el sustrato utilizado.",
+      filtrar_reservas_por_cliente_o_fecha:
+        "Listar las reservas realizadas por un cliente específico o en un rango de fechas.",
+      analisis_reservas_por_tipo_encargo:
+        "Contar el número de reservas por cada 'PARR_TIPO' (Normal, Injerto, Componente).",
+      seguimiento_reservas_por_lote_o_semilla:
+        "Rastrear las reservas asociadas a un lote o una semilla en particular.",
+    },
+  },
+
+
+
+
+/* ================================================*/
+/* Ventas – Gestión Comercial – Futuros Clientes */
+/* ================================================*/
+fclientes: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Gestiona la información de clientes potenciales o 'futuros clientes' para el equipo de ventas. Incluye datos de contacto, fiscales, comerciales y detalles sobre su actividad, así como un historial de observaciones para el seguimiento de la prospección.",
+    tabla: `fclientes`, // Nombre de la tabla principal
+    columnas: {
+      id: "Identificador único del futuro cliente (Clave Primaria).",
+      FC_DENO: "Denominación fiscal o nombre completo de la empresa.",
+      FC_NOM: "Nombre comercial o identificador secundario.",
+      FC_DOM: "Domicilio o dirección física.",
+      FC_POB: "Población o localidad.",
+      FC_PROV: "Provincia.",
+      FC_CDP: "Código postal.",
+      FC_TEL: "Teléfono de contacto principal.",
+      FC_FAX: "Número de fax principal.",
+      FC_CIF: "Código de Identificación Fiscal o NIF.",
+      FC_EMA: "Correo electrónico de contacto principal.",
+      FC_WEB: "Página web del cliente.",
+      FC_PAIS: "País.",
+      FC_ACTI: "Actividad del cliente (ej. tipo de cultivo, industria).",
+      FC_CON: "Persona de contacto principal.",
+      FC_CAR: "Cargo o función de la persona de contacto (ej. 'Jefe Técnico').",
+      FC_TIP: "Tipo de cliente (posiblemente código interno como 'A', 'B', 'C').",
+      FC_VD: "Código de vendedor asignado al cliente.",
+      FC_TFH: "Teléfono fijo habitual (puede coincidir con FC_TEL).",
+      FC_THR: "Teléfono con horario restringido u horario preferente de contacto.",
+      FC_TRES: "Teléfono de reservas o urgencias.",
+      FC_VFH: "Fax habitual o principal.",
+      FC_VHR: "Fax horario restringido o secundario.",
+      FC_VRES: "Fax de reservas.",
+      FC_FFH: "Fecha de alta o de la ficha habitual.",
+      FC_FTF: "Fecha de modificación técnica de ficha.",
+      FC_FRES: "Fecha de última reserva o último contacto.",
+      FC_EFH: "Email habitual.",
+      FC_ETE: "Email técnico o específico.",
+      FC_ERES: "Email para reservas o urgencias.",
+      FC_OBS: "Observaciones adicionales (puede ser una descripción corta o un resumen).",
+      FC_SAC: "Código o nombre del técnico de Servicio de Atención al Cliente (SAC) asignado.",
+      FC_SSA: "Segundo SAC o asistente.",
+      FC_INT: "Intensidad de atención o nivel de cliente (posible código interno).",
+      FC_CTD: "Código de cuenta o tipo de documento fiscal.",
+      FC_FPAG: "Forma de pago (ej. 'contado', 'transferencia', 'pagaré').",
+      FC_CCL: "Código contable del cliente.",
+      FC_CAM: "Código de campaña o región comercial asignada.",
+    },
+    relaciones: {
+      fclientes_fc_obs: {
+        tabla_relacionada: "fclientes_fc_obs",
+        tipo: "Uno a muchos (un futuro cliente puede tener múltiples observaciones)",
+        campo_enlace_local: "id", // ID del futuro cliente en la tabla principal
+        campo_enlace_externo: "id", // ID del futuro cliente en la tabla de observaciones
+        descripcion: "Registra observaciones detalladas para el seguimiento y gestión de cada futuro cliente.",
+        estructura_relacionada: {
+          id: "ID del futuro cliente.",
+          id2: "Identificador secuencial de la observación (para ordenar múltiples observaciones).",
+          C0: "Contenido de la observación (ej. 'LECHUGA, BROCOLI, COLIFLOR...').",
+        },
+      },
+      // Potencialmente, FC_VD podría ser una clave foránea a una tabla 'vendedores'
+      // si se gestionan los vendedores en otra parte del sistema.
+      /*
+      vendedores: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "FC_VD",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el futuro cliente con el vendedor asignado."
+      }
+      */
+    },
+    ejemplos: {
+      consulta_futuro_cliente_por_id:
+        "Obtener todos los detalles de un futuro cliente específico usando su 'id'.",
+      consultar_observaciones_cliente:
+        "Para un futuro cliente, listar todas las observaciones registradas en 'fclientes_fc_obs'.",
+      buscar_clientes_por_poblacion_o_actividad:
+        "Filtrar futuros clientes por 'FC_POB' (población) o 'FC_ACTI' (actividad) para campañas de marketing dirigidas.",
+      seguimiento_contacto_y_fechas:
+        "Monitorear la 'FC_FRES' (fecha de última reserva) para identificar clientes con los que no se ha contactado recientemente.",
+      asignacion_y_seguimiento_vendedor:
+        "Listar los futuros clientes asignados a un vendedor específico ('FC_VD') o a un técnico SAC ('FC_SAC').",
+    },
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   /* ======================================================================================================================================================================*/
   /* COBROS                                                                                                                                                            */
@@ -1261,6 +2702,66 @@ const mapaERP = {
     },
   },
 
+
+  /* ================================================*/
+/* Cobros - General - Control de impagos */
+/* ================================================*/
+impagos: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Gestiona el control de facturas impagadas, permitiendo el seguimiento de los pagos parciales y la identificación de los agentes de cobro. Se enlaza con la tabla de facturas emitidas para obtener el monto total original de la factura.",
+    tabla: `impagos`, // Nombre de la tabla principal
+    columnas: {
+      id: "Número de factura impagada (Clave Primaria). Este ID se utiliza como clave foránea en la tabla 'impagos_imp_lna' y también para enlazar con 'facturas-e'.",
+    },
+    relaciones: {
+      impagos_imp_lna: {
+        tabla_relacionada: "impagos_imp_lna",
+        tipo: "Uno a muchos (una factura impagada puede tener múltiples registros de control de pago)",
+        campo_enlace_local: "id", // ID de la factura en 'impagos'
+        campo_enlace_externo: "id", // ID de la factura en 'impagos_imp_lna'
+        descripcion: "Detalle de los registros de control de impagos, incluyendo agentes y montos cobrados.",
+        estructura_relacionada: {
+          id: "Número de factura (igual que 'impagos.id').",
+          C0: "Código del Agente responsable del cobro.",
+          C1: "Fecha del registro de cobro.",
+          C3: "Monto cobrado en este registro.",
+        },
+        // Relaciones internas de detalle con la tabla 'agentes' si existe.
+        /*
+        agentes: {
+          tabla_relacionada: "agentes",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "C0",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula el registro de impago con el agente de cobro responsable."
+        }
+        */
+      },
+      facturas_e: {
+        tabla_relacionada: "facturas-e",
+        tipo: "Muchos a uno", // Una factura-e puede estar en 'impagos', y 'impagos' referencia a esa factura-e
+        campo_enlace_local: "id", // ID de la factura en 'impagos'
+        campo_enlace_externo: "id", // ID de la factura en 'facturas-e'
+        descripcion: "Vincula el registro de impago con la factura original para obtener detalles como el monto total (FE_TTT).",
+      },
+    },
+    ejemplos: {
+      consulta_impago_por_factura:
+        "Obtener el control de impagos para una factura específica usando su 'id' de factura.",
+      consultar_cobros_parciales:
+        "Para una factura impagada, listar todos los registros de 'impagos_imp_lna' para ver los montos y fechas de los cobros parciales.",
+      calcular_saldo_pendiente:
+        "Calcular el saldo pendiente de una factura impagada restando la suma de 'impagos_imp_lna.C3' del 'facturas-e.FE_TTT' de la factura correspondiente.",
+      filtrar_impagos_por_agente:
+        "Listar las facturas impagadas gestionadas por un agente específico (filtrando por 'impagos_imp_lna.C0').",
+      analisis_de_morosidad:
+        "Analizar el historial de cobros de facturas impagadas a lo largo del tiempo o por tipo de cliente (requiere unirse también a la tabla 'clientes' a través de 'facturas-e').",
+    },
+  },
+
+
+ 
   /* ================================================*/
   /* Cobros – Caja – Movimientos Caja Bancos */
   /* ================================================*/
@@ -1268,7 +2769,7 @@ const mapaERP = {
     // Clave principal (basada en el nombre de la sección)
     descripcion:
       "Registra y gestiona los traspasos de fondos entre las diferentes cajas (efectivo) y cuentas bancarias de la empresa. Documenta flujos monetarios internos para control de tesorería y conciliación.",
-    tabla: "[Tabla de Movimientos Caja Bancos]", // Nombre de tabla inferido o no especificado explícitamente (campos con prefijo MV_)
+    tabla: "mv_caja", // Nombre de tabla inferido o no especificado explícitamente (campos con prefijo MV_)
     columnas: {
       id: "Código o identificador único de cada movimiento (Clave Primaria)",
       MV_FEC: "Fecha en la que se registró el movimiento",
@@ -1309,6 +2810,9 @@ const mapaERP = {
         "Para un movimiento, usar MV_USU y MV_BAO para consultar 'vendedores' y 'bancos' y obtener los nombres del usuario y la entidad de origen.",
     },
   },
+
+
+
 
   /* ======================================================================================================================================================================*/
   /* COMPRAS                                                                                                                                                             */
@@ -1623,6 +3127,8 @@ const mapaERP = {
     },
   },
 
+
+
   /* ================================================*/
   /* Compras – General Pagos – Remesas de Pago */
   /* ================================================*/
@@ -1666,9 +3172,17 @@ const mapaERP = {
     },
   },
 
+
+
+
+
+
   /* ======================================================================================================================================================================*/
   /* ORNAMENTAL                                                                                                                                                            */
   /* ======================================================================================================================================================================*/
+
+
+
 
   /* ================================================*/
   /* Ornamental – Compras – Albarán Compra Ornamental */
@@ -1746,6 +3260,9 @@ const mapaERP = {
     },
   },
 
+
+  
+
   /* ================================================*/
   /* Ornamental – Ventas – Albarán venta Ornamental */
   /* ================================================*/
@@ -1753,7 +3270,7 @@ const mapaERP = {
     // Clave principal (basada en el nombre de la sección)
     descripcion:
       "Registra y gestiona los albaranes de venta específicos para productos ornamentales. Documenta la salida de productos hacia clientes, crucial para control de inventario, confirmación de entregas y base para facturación.",
-    tabla: "[Tabla Albaran Venta Ornamental]", // Nombre de tabla inferido (campos con prefijo AV_)
+    tabla: "alb-venta", // Nombre de tabla inferido (campos con prefijo AV_)
     columnas: {
       id: "Identificador único de cada albarán de venta ornamental (Clave Primaria)",
       AV_NPD: "Número del pedido de venta del cliente asociado, si lo hay.", // Sugiere relación con tabla de pedidos de venta
@@ -1985,9 +3502,112 @@ const mapaERP = {
     },
   },
 
+
+
   /* ======================================================================================================================================================================*/
   /* ALMACEN                                                                                                                                                            */
   /* ======================================================================================================================================================================*/
+
+
+
+
+
+  
+/* ================================================*/
+/* Almacen - General - Tratamientos fitosanitarios */
+/* ================================================*/
+tratamientos: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Catálogo de tratamientos fitosanitarios, incluyendo su denominación y método de aplicación. Contiene relaciones con las plagas que ataca, los productos fitosanitarios utilizados y las familias afectadas.",
+    tabla: `tratamientos`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código del tratamiento (Ej: '00000008') (Clave Primaria)",
+      TT_DENO: "Denominación del tratamiento (Ej: 'BRASSICACEAE Y ASTERACEAE 1')",
+      TT_MET: "Método de aplicación (Ej: 'Pulverización')",
+    },
+    relaciones: {
+      tratamientos_tt_plag: {
+        tabla_relacionada: "tratamientos_tt_plag",
+        tipo: "Uno a muchos (un tratamiento ataca varias plagas)",
+        campo_enlace_local: "id", // ID del tratamiento
+        campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
+        descripcion: "Tabla de enlace que relaciona tratamientos con las plagas que ataca.",
+        estructura_relacionada: {
+          id: "ID del tratamiento fitosanitario.",
+          id2: "Identificador secuencial dentro del tratamiento.",
+          C0: "ID de la plaga. Clave foránea a la tabla 'plagas'.",
+        },
+        relaciones_internas_de_detalle: {
+          plagas: {
+            tabla_relacionada: "plagas",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el tratamiento con la plaga que ataca.",
+          },
+        },
+      },
+      tratamientos_tt_pro: {
+        tabla_relacionada: "tratamientos_tt_pro",
+        tipo: "Uno a muchos (un tratamiento utiliza varios productos)",
+        campo_enlace_local: "id", // ID del tratamiento
+        campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
+        descripcion: "Tabla de enlace que relaciona tratamientos con los productos fitosanitarios utilizados.",
+        estructura_relacionada: {
+          id: "ID del tratamiento fitosanitario.",
+          id2: "Identificador secuencial dentro del tratamiento.",
+          C0: "ID del tipo de producto fitosanitario. Clave foránea a la tabla 'tipo_trat'.",
+          C1: "Dosis del producto (Ej: '30cc/hl').",
+          C2: "Valor asociado al producto (Ej: '1000000000.00').",
+        },
+        relaciones_internas_de_detalle: {
+          tipo_trat: {
+            tabla_relacionada: "tipo_trat",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el tratamiento con el tipo de producto fitosanitario utilizado.",
+          },
+        },
+      },
+      tratamientos_tt_fam: {
+        tabla_relacionada: "tratamientos_tt_fam",
+        tipo: "Uno a muchos (un tratamiento afecta a varias familias)",
+        campo_enlace_local: "id", // ID del tratamiento
+        campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
+        descripcion: "Tabla de enlace que relaciona tratamientos con las familias afectadas.",
+        estructura_relacionada: {
+          id: "ID del tratamiento fitosanitario.",
+          id2: "Identificador secuencial dentro del tratamiento.",
+          C0: "ID de la familia afectada. Clave foránea a la tabla 'familias'.",
+          C1: "Valor asociado a la familia (Ej: '25').",
+          C2: "Otro valor asociado a la familia (Ej: '0').",
+        },
+        relaciones_internas_de_detalle: {
+          familias: {
+            tabla_relacionada: "familias",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el tratamiento con la familia afectada.",
+          },
+        },
+      },
+    },
+    ejemplos: {
+      consulta_tratamiento_por_id:
+        "Obtener la denominación y método de aplicación de un tratamiento fitosanitario específico usando su 'id'.",
+      listar_todos_tratamientos:
+        "Listar todos los tratamientos fitosanitarios registrados.",
+      consultar_plagas_atacadas:
+        "Para un tratamiento, consultar la tabla 'tratamientos_tt_plag' para ver las plagas que ataca y luego obtener sus denominaciones desde la tabla 'plagas'.",
+      consultar_productos_utilizados:
+        "Para un tratamiento, consultar la tabla 'tratamientos_tt_pro' para ver los productos utilizados (y sus dosis) y obtener sus nombres desde 'tipo_trat'.",
+      consultar_familias_afectadas:
+        "Para un tratamiento, consultar la tabla 'tratamientos_tt_fam' para ver las familias afectadas y obtener sus denominaciones desde la tabla 'familias'.",
+    },
+  },
 
   /* ================================================*/
   /* Almacen - General - Telefonos */
@@ -2019,6 +3639,8 @@ const mapaERP = {
         "Buscar teléfonos provistos por una operadora específica (filtrando por TLF_OPER).",
     },
   },
+
+
 
   /* ================================================*/
   /* Almacen - Almacen - Recuento inventario */
@@ -2069,19 +3691,19 @@ const mapaERP = {
     },
   },
 
-  /* ================================================*/
-  /* Almacen - Almacen - Consumo */
-  /* ================================================*/
-  consumo: {
+ /* ================================================*/
+/* Almacen - Almacen - Consumo */
+/* ================================================*/
+consumo: {
     // Clave principal (basada en el nombre de la sección)
     descripcion:
-      "Registra eventos de 'consumo', es decir, salidas de inventario por motivos distintos a ventas (uso interno, mermas, etc.). Documenta la salida de inventario por almacén y fecha, con una descripción del responsable y el valor total.",
-    tabla: "[Tabla Consumos]", // Nombre de tabla inferido (campos con prefijo TC_)
+      "Registra eventos de 'consumo', es decir, salidas de inventario por motivos distintos a ventas (uso interno, mermas, etc.). Documenta la salida de inventario por almacén y fecha, con una descripción del responsable y el valor total, además de los detalles de los artículos consumidos.",
+    tabla: "consumo", // Nombre de tabla inferido (campos con prefijo TC_)
     columnas: {
-      id: "Código identificador único del registro de consumo (Clave Primaria)",
+      id: "Código identificador único del registro de consumo (Clave Primaria). Este ID se utiliza como clave foránea en la tabla 'consumo_tc_lna'.",
       TC_FEC: "Fecha en la que se registró el consumo.",
       TC_AMO: "Código del almacén donde se realizó el consumo. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
-      TC_PDP: "Descripción de quién realizó el consumo (campo de texto descriptivo, no clave foránea a tabla de personal/usuarios según descripción).", // Nota basada en el texto fuente
+      TC_PDP: "Descripción de quién realizó el consumo (campo de texto descriptivo, no clave foránea a tabla de personal/usuarios según descripción).",
       TC_TTT: "Monto total asociado al consumo.",
     },
     relaciones: {
@@ -2092,9 +3714,31 @@ const mapaERP = {
         campo_enlace_externo: "id",
         descripcion: "Vincula el registro de consumo con el almacén donde ocurrió la salida de inventario.",
       },
-      observaciones:
-        "La descripción proporcionada no detalla explícitamente otras relaciones formales (claves foráneas), como una relación para el campo TC_PDP con una tabla de personal o usuarios."
-      // Lógicamente, podría haber una tabla de detalle que registre los artículos específicos consumidos en cada registro de consumo (Ej: con campos como TC_ID, ARTICULO_ID, CANTIDAD), pero esto no se detalla en la descripción.
+      consumo_tc_lna: {
+        tabla_relacionada: "consumo_tc_lna",
+        tipo: "Uno a muchos (un registro de consumo puede detallar múltiples artículos consumidos)",
+        campo_enlace_local: "id", // ID del registro de consumo en la tabla principal
+        campo_enlace_externo: "id", // ID del registro de consumo en la tabla de detalle
+        descripcion: "Detalla los artículos específicos que fueron consumidos en cada registro de consumo, incluyendo remesa, envase, unidades y coste.",
+        estructura_relacionada: {
+          id: "ID del registro de consumo (igual que 'consumo.id').",
+          id2: "Identificador secuencial de la línea de detalle (para múltiples consumos dentro del mismo registro, ej: '1', '2', '3').",
+          C0: "Número de remesa asociado al artículo consumido.",
+          C1: "Código del artículo consumido. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+          C2: "Código del envase del artículo.",
+          C3: "Unidades consumidas del artículo.",
+          C4: "Costo unitario o coste de la partida del artículo (Pcoste).",
+        },
+        relaciones_internas_de_detalle: {
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C1",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula el artículo de la línea de consumo con su información detallada (ej. denominación AR_DENO).",
+          },
+        },
+      },
     },
     ejemplos: {
       consulta_consumo_por_id: "Obtener los detalles de un registro de consumo específico usando su 'id'.",
@@ -2105,6 +3749,10 @@ const mapaERP = {
       buscar_consumos_por_responsable:
         "Buscar registros de consumo que contengan cierta descripción en el campo TC_PDP ('quién realizó el consumo').",
       consultar_valor_total: "Obtener el valor total (TC_TTT) asociado a un registro de consumo.",
+      consultar_articulos_consumidos:
+        "Para un registro de consumo, listar todos los artículos detallados en 'consumo_tc_lna', incluyendo su número de remesa, código de envase, unidades y coste, y obtener la denominación del artículo a través de la tabla 'articulos'.",
+      analisis_de_consumo_por_articulo:
+        "Calcular la cantidad total de un artículo específico que ha sido consumido en un periodo, sumando las 'C3' de la tabla 'consumo_tc_lna' y uniéndolo a 'articulos' para la denominación.",
     },
   },
 
@@ -2166,6 +3814,92 @@ const mapaERP = {
         "Buscar y reconstruir las observaciones detalladas para una remesa específica en la tabla 'remesas_art_rea_obs'.",
     },
   },
+
+
+
+/* ================================================*/
+/* Almacén - Varios - Tarifas de precios */
+/* ================================================*/
+tarifas_plantas: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Gestiona las diferentes tarifas de precios para plantas, especificando el período de validez, el almacén asociado y el título de la tarifa. Un registro principal puede tener múltiples líneas de detalle que definen los precios por artículo y tipo de tarifa.",
+    tabla: `tarifas_plantas`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código identificador único de la tarifa (Clave Primaria).",
+      TAP_DENO: "Denominación o título de la tarifa (ej: 'TARIFA ACTUALIZA 2024 – ULTIMA').",
+      TAP_DFEC: "Fecha de inicio de validez de la tarifa de precio (ej: '2024-05-04').",
+      TAP_HFEC: "Fecha de fin de validez de la tarifa de precio (ej: '2025-12-31').",
+      TAP_ALM: "Código del almacén asociado a la tarifa. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+    },
+    relaciones: {
+      almacenes: {
+        tabla_relacionada: "almacenes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "TAP_ALM",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la tarifa de plantas con el almacén al que aplica.",
+      },
+      tarifas_plantas_tap_lna: {
+        tabla_relacionada: "tarifas_plantas_tap_lna",
+        tipo: "Uno a muchos (una tarifa puede contener múltiples líneas de precios para diferentes productos/tipos)",
+        campo_enlace_local: "id", // ID de la tarifa en la tabla principal
+        campo_enlace_externo: "id", // ID de la tarifa en la tabla de detalle
+        descripcion: "Detalla los precios de los productos específicos dentro de una tarifa, incluyendo el tipo de tarifa, costes y precios de venta.",
+        estructura_relacionada: {
+          id: "Código de la tarifa (igual que 'tarifas_plantas.id').",
+          id2: "Identificador secuencial de la línea de detalle (indica la cantidad de productos con precios actualizados).",
+          C0: "Código del artículo. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+          C1: "Tipo de tarifa (ej: 'A', 'B'), que afecta el precio. Puede haber múltiples tipos para un mismo producto.",
+          C2: "Tipo de siembra (ej: '5001').",
+          C3: "Campo de propósito desconocido ('No se sabe').",
+          C4: "Porcentaje (%).",
+          C5: "Coste de producción.",
+          C6: "Campo de propósito desconocido ('No se sabe').",
+          C7: "Coste de la semilla.",
+          C8: "Coste del patrón.",
+          C9: "Incremento.",
+          C10: "Precio de Venta al Público (PvP) Fijo por Bandeja.",
+          C11: "Precio de Venta al Público (PvP) por Planta.",
+          C12: "Precio de Venta al Público (PvP) por Bandeja.",
+        },
+        relaciones_internas_de_detalle: {
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la línea de precio con el artículo correspondiente para obtener su denominación.",
+          },
+          // Posible relación con 't-siembras' si C2 es una clave foránea.
+          /*
+          t_siembras: {
+            tabla_relacionada: "t-siembras",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C2",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la línea de precio con el tipo de siembra."
+          }
+          */
+        },
+      },
+    },
+    ejemplos: {
+      consulta_tarifa_por_id:
+        "Obtener la denominación y el período de validez de una tarifa de precios específica usando su 'id'.",
+      consultar_precios_de_tarifa:
+        "Para una tarifa específica (ej. ID '21001414'), listar todos los artículos incluidos en esa tarifa desde 'tarifas_plantas_tap_lna', mostrando su denominación, tipo de tarifa, y los diferentes precios (PvP Fijo Bandeja, PvP Planta, PvP Bandeja).",
+      buscar_precio_articulo_por_fecha:
+        "Encontrar el precio de un artículo específico ('C0') para una fecha determinada, buscando en 'tarifas_plantas' la tarifa activa y luego en 'tarifas_plantas_tap_lna' el precio correspondiente.",
+      analisis_de_costes_y_precios:
+        "Comparar los costes de producción (C5), semilla (C7) y patrón (C8) con los precios de venta (C10, C11, C12) para evaluar la rentabilidad por artículo.",
+    },
+  },
+
+
+
+
+
 
   /* ================================================*/
   /* Almacén - Varios - Carros */
@@ -2305,6 +4039,8 @@ const mapaERP = {
     },
   },
 
+
+  
   /* ================================================*/
   /* Almacén – Maquinaria - Tipo Maquinaria */
   /* ================================================*/
@@ -2566,9 +4302,24 @@ const mapaERP = {
     },
   },
 
-  /* ================================================*/
-  /* Partes y Tratamientos – Personal – Fichajes personal */
-  /* ================================================*/
+
+
+
+
+
+
+
+
+
+
+/* ======================================================================================================================================================================*/
+/* Partes y Tratamientos                                                                                                                                                        */
+/* ======================================================================================================================================================================*/
+
+/* ================================================*/
+/* Partes y Tratamientos – Personal – Fichajes personal */
+/* ================================================*/
+
   fichajesperso: {
     // Clave principal (basada en el nombre de tabla)
     descripcion:
@@ -2640,6 +4391,59 @@ const mapaERP = {
         "Obtener la hora de inicio (C3) y fin (C4) de una tarea específica en un fichaje.",
     },
   },
+
+/* ================================================*/
+/* Partes y Tratamientos – Aplicadores Fitosanitarios */
+/* ================================================*/
+aplicadores_fit: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Catálogo de aplicadores fitosanitarios registrados en el sistema, identificados por un código único y una denominación.",
+    tabla: `aplicadores_fit`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código ID único del aplicador fitosanitario (Clave Primaria)",
+      AFI_DENO: "Denominación del aplicador fitosanitario (Ej: 'LUIS TUBON')",
+    },
+    relaciones: {
+      // Esta tabla podría ser referenciada por otras tablas, pero no se detalla aquí.
+    },
+    ejemplos: {
+      consulta_aplicador_por_id:
+        "Obtener la denominación de un aplicador fitosanitario específico usando su 'id'.",
+      listar_todos_aplicadores:
+        "Listar todos los aplicadores fitosanitarios registrados (consultando todos los registros de la tabla).",
+      buscar_aplicador_por_denominacion:
+        "Buscar un aplicador fitosanitario por su nombre o denominación (filtrando por AFI_DENO).",
+    },
+  },
+
+/* ================================================*/
+/* Partes y Tratamientos – Equipos Fitosanitarios */
+/* ================================================*/
+equipo_fito: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Catálogo de equipos fitosanitarios registrados en el sistema, identificados por un código único y una denominación.",
+    tabla: `equipo_fito`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único del equipo fitosanitario (Clave Primaria)",
+      EFI_DENO: "Denominación del equipo fitosanitario.",
+    },
+    relaciones: {
+      // Esta tabla podría ser referenciada por otras tablas, pero no se detalla aquí.
+    },
+    ejemplos: {
+      consulta_equipo_por_id:
+        "Obtener la denominación de un equipo fitosanitario específico usando su 'id'.",
+      listar_todos_equipos:
+        "Listar todos los equipos fitosanitarios registrados (consultando todos los registros de la tabla).",
+      buscar_equipo_por_denominacion:
+        "Buscar un equipo fitosanitario por su nombre o denominación (filtrando por EFI_DENO).",
+    },
+  },
+
+
+
 };
 
 module.exports = mapaERP;
