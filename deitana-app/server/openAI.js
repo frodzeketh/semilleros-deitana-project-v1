@@ -114,11 +114,32 @@ async function formatFinalResponse(results, query) {
     const messages = [
         {
             role: "system",
-            content: `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.\n\n- Si no hay datos, explica la situación y sugiere alternativas.\n- Si la consulta es ambigua, pide más detalles.\n- Si se pide un ejemplo, selecciona uno aleatorio.\n- Explica el significado de los datos y su relevancia.\n- Nunca repitas datos crudos, interpreta y resume.\n- Sé proactivo y guía al usuario para obtener la mejor respuesta posible.\n- Mantén un tono profesional, conversacional y humano.\n- Si detectas errores en los datos (por ejemplo, precios en 0), adviértelo de forma amable.\n- Si hay relaciones (cliente, proveedor, etc.), explícalas.\n- Si el usuario pide más ejemplos, ofrece variedad.\n- Si la consulta es conceptual, responde normalmente.\n\nNunca digas que no puedes ayudar. Si no hay información, sugiere cómo el usuario puede preguntar mejor.`
+            content: `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.
+\n- Si no hay datos, explica la situación y sugiere alternativas.
+- Si la consulta es ambigua, pide más detalles.
+- Si se pide un ejemplo, selecciona uno aleatorio.
+- Explica el significado de los datos y su relevancia.
+- Nunca repitas datos crudos, interpreta y resume.
+- Sé proactivo y guía al usuario para obtener la mejor respuesta posible.
+- Mantén un tono profesional, conversacional y humano.
+- Si detectas errores en los datos (por ejemplo, precios en 0), adviértelo de forma amable.
+- Si hay relaciones (cliente, proveedor, etc.), explícalas.
+- Si el usuario pide más ejemplos, ofrece variedad.
+- Si la consulta es conceptual, responde normalmente.
+\n- SIEMPRE que los datos lo permitan, realiza análisis avanzados: suma totales, calcula promedios, agrupa por categorías relevantes, detecta tendencias, identifica valores atípicos y sugiere posibles causas o acciones.
+- Si hay fechas, analiza evolución temporal o compara periodos.
+- Si hay cantidades o importes, calcula totales, promedios y destaca los valores más altos y bajos.
+- Si hay varios registros, resume los principales hallazgos y sugiere insights útiles para la toma de decisiones.
+- Ejemplo de análisis esperado:\n  - "El total de ventas es X, siendo el producto más vendido Y. La tendencia mensual muestra un aumento/disminución. El cliente con más compras es Z."
+  - "Hay N registros, el promedio es X, el valor máximo es Y y el mínimo es Z."
+- NUNCA te limites a listar datos: interpreta, resume y aporta valor como un analista experto.
+\nNunca digas que no puedes ayudar. Si no hay información, sugiere cómo el usuario puede preguntar mejor.`
         },
         {
             role: "user",
-            content: `Consulta: "${query}"\n\nDatos encontrados:${datosReales}\n\nPor favor, analiza estos datos y proporciona una respuesta útil, natural y relevante.`
+            content: `Consulta: "${query}"
+\nDatos encontrados:${datosReales}
+\nPor favor, analiza estos datos y proporciona una respuesta útil, natural, relevante y con análisis avanzado si es posible.`
         }
     ];
 
@@ -162,35 +183,28 @@ async function executeQuery(sql) {
 function validarRespuestaSQL(response) {
     // Primero intentar con etiquetas <sql>
     let sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
-    
     // Si no encuentra, intentar con bloques de código SQL
     if (!sqlMatch) {
         sqlMatch = response.match(/```sql\s*([\s\S]*?)```/);
         if (sqlMatch) {
             console.log('Advertencia: SQL encontrado en formato markdown, convirtiendo a formato <sql>');
-            // Reemplazar el formato markdown por el formato <sql>
             response = response.replace(/```sql\s*([\s\S]*?)```/, '<sql>$1</sql>');
             sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
         }
     }
-
     if (!sqlMatch) {
         return null; // Permitir respuestas sin SQL
     }
-
     let sql = sqlMatch[1].trim();
     if (!sql) {
         throw new Error('La consulta SQL está vacía');
     }
-
     // Validar que es una consulta SQL válida
     if (!sql.toLowerCase().startsWith('select')) {
         throw new Error('La consulta debe comenzar con SELECT');
     }
-
     // Validar y corregir sintaxis común
     if (sql.includes('OFFSET')) {
-        // Convertir OFFSET a sintaxis MySQL
         const offsetMatch = sql.match(/LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i);
         if (offsetMatch) {
             sql = sql.replace(
@@ -199,20 +213,18 @@ function validarRespuestaSQL(response) {
             );
         }
     }
-
     // Verificar si es una consulta de conteo
     const esConsultaConteo = sql.toLowerCase().includes('count(*)');
-    
-    // Permitir consultas con DISTINCT o GROUP BY sin LIMIT
     const tieneDistinct = /select\s+distinct/i.test(sql);
     const tieneGroupBy = /group by/i.test(sql);
-    // Permitir consultas con filtro de fecha y JOIN sin LIMIT
     const tieneJoin = /join/i.test(sql);
     const tieneFiltroFecha = /where[\s\S]*fpe_fec|where[\s\S]*fecha|where[\s\S]*_fec/i.test(sql);
+    // Si no tiene LIMIT y no es excepción, AGREGAR LIMIT automáticamente
     if (!esConsultaConteo && !tieneDistinct && !tieneGroupBy && !sql.toLowerCase().includes('limit') && !(tieneJoin && tieneFiltroFecha)) {
-        throw new Error('La consulta debe incluir un LIMIT para evitar resultados excesivos');
+        // Buscar el final de la consulta (antes de ; si existe)
+        sql = sql.replace(/;*\s*$/, '');
+        sql += ' LIMIT 10';
     }
-    
     return sql;
 }
 
@@ -573,8 +585,6 @@ async function processQuery(userQuery) {
 
 // Función auxiliar para intentar una búsqueda flexible (fuzzy search) en SQL
 async function fuzzySearchRetry(sql, userQuery) {
-    // Solo intentamos fuzzy si la consulta original tiene un WHERE con LIKE o =
-    let sqlFuzzy = sql;
     // Detectar el término de búsqueda en el WHERE
     const likeMatch = sql.match(/WHERE\s+([\w.]+)\s+LIKE\s+'%([^%']+)%'/i);
     const eqMatch = sql.match(/WHERE\s+([\w.]+)\s*=\s*'([^']+)'/i);
@@ -588,30 +598,50 @@ async function fuzzySearchRetry(sql, userQuery) {
         valor = eqMatch[2];
     }
     if (!columna || !valor) return null;
+
+    // Detectar la tabla principal del FROM
+    const fromMatch = sql.match(/FROM\s+([`\w]+)/i);
+    let tabla = fromMatch ? fromMatch[1].replace(/`/g, '') : null;
+    // Buscar la clave de mapaERP que corresponde a la tabla real
+    let claveMapa = tabla && Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
+    // Si no se detecta, fallback a la columna original
+    let columnasTexto = [columna];
+    if (claveMapa && mapaERP[claveMapa].columnas) {
+        // Filtrar solo columnas tipo texto (por nombre o heurística)
+        columnasTexto = Object.keys(mapaERP[claveMapa].columnas).filter(c => {
+            // Heurística: columnas que no sean numéricas ni fechas
+            const nombre = c.toLowerCase();
+            return !nombre.match(/(id|num|cant|fecha|fec|total|importe|precio|monto|valor|kg|ha|area|superficie|lat|lon|long|ancho|alto|diam|mm|cm|m2|m3|porc|\d)/);
+        });
+        // Si no hay, usar todas
+        if (columnasTexto.length === 0) columnasTexto = Object.keys(mapaERP[claveMapa].columnas);
+    }
+
     // Generar variantes del valor para fuzzy search
     const variantes = [
         valor,
         valor.toUpperCase(),
         valor.toLowerCase(),
-        valor.normalize('NFD').replace(/[ -]/g, ''), // sin tildes
+        valor.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // sin tildes
         valor.split(' ')[0], // solo la primera palabra
         valor.replace(/\s+/g, ''), // sin espacios
         valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7))) // parte del término
     ];
-    for (const variante of variantes) {
-        if (!variante || variante.length < 2) continue;
-        // Reemplazar el valor en el SQL
-        let sqlFuzzyTry = sql.replace(valor, variante);
-        // Usar LIKE con %variante%
-        sqlFuzzyTry = sqlFuzzyTry.replace(/=\s*'[^']+'/i, `LIKE '%${variante}%'`);
-        sqlFuzzyTry = sqlFuzzyTry.replace(/LIKE\s+'%[^%']+%'/i, `LIKE '%${variante}%'`);
-        try {
-            const results = await executeQuery(sqlFuzzyTry);
-            if (results && results.length > 0) {
-                return { results, sqlFuzzyTry };
+
+    // Probar todas las combinaciones de columna y variante
+    for (const col of columnasTexto) {
+        for (const variante of variantes) {
+            if (!variante || variante.length < 2) continue;
+            // Construir el nuevo WHERE usando LIKE
+            let sqlFuzzyTry = sql.replace(/WHERE[\s\S]*/i, `WHERE ${col} LIKE '%${variante}%' LIMIT 5`);
+            try {
+                const results = await executeQuery(sqlFuzzyTry);
+                if (results && results.length > 0) {
+                    return { results, sqlFuzzyTry };
+                }
+            } catch (e) {
+                // Ignorar errores de SQL en fuzzy
             }
-        } catch (e) {
-            // Ignorar errores de SQL en fuzzy
         }
     }
     return null;
