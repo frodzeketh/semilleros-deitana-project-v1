@@ -468,12 +468,39 @@ async function processQuery(userQuery) {
             }
             // Intentar ejecutar la consulta SQL
             try {
-                const results = await executeQuery(sql);
+                // Reintentos automáticos inteligentes si no hay resultados
+                let results = await executeQuery(sql);
+                if (!results || results.length === 0) {
+                    // 1. Reintentar quitando filtros de fecha si existen
+                    if (/WHERE[\s\S]*(fec|fecha)/i.test(sql)) {
+                        let sqlSinFecha = sql.replace(/AND[\s\S]*(fec|fecha)[^A-Z]*[=><][^A-Z]*((AND)|($))/i, '').replace(/WHERE[\s\S]*(fec|fecha)[^A-Z]*[=><][^A-Z]*((AND)|($))/i, '');
+                        if (/WHERE\s*$/i.test(sqlSinFecha)) sqlSinFecha = sqlSinFecha.replace(/WHERE\s*$/i, '');
+                        results = await executeQuery(sqlSinFecha);
+                    }
+                }
+                if (!results || results.length === 0) {
+                    // 2. Reintentar quitando GROUP BY y ORDER BY
+                    let sqlSinGroup = sql.replace(/GROUP BY[\s\S]*/i, '').replace(/ORDER BY[\sS]*/i, '');
+                    results = await executeQuery(sqlSinGroup);
+                }
+                if (!results || results.length === 0) {
+                    // 3. Buscar el último registro relevante (ORDER BY fecha DESC LIMIT 1)
+                    const tablaMatch = sql.match(/FROM\s+([`\w]+)/i);
+                    if (tablaMatch) {
+                        const tabla = tablaMatch[1];
+                        const claveMapa = Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
+                        let colFecha = 'fecha';
+                        if (claveMapa && mapaERP[claveMapa].columnas) {
+                            colFecha = Object.keys(mapaERP[claveMapa].columnas).find(c => c.toLowerCase().includes('fec')) || 'fecha';
+                        }
+                        const sqlUltimo = `SELECT * FROM ${tabla} ORDER BY ${colFecha} DESC LIMIT 1`;
+                        results = await executeQuery(sqlUltimo);
+                    }
+                }
                 if (!results || results.length === 0) {
                     // Intentar búsqueda flexible (fuzzy search) antes de fallback IA
                     const fuzzyResult = await fuzzySearchRetry(sql, userQuery);
                     if (fuzzyResult && fuzzyResult.results && fuzzyResult.results.length > 0) {
-                        // Si encuentra resultados con fuzzy, responde normalmente
                         let tipo = 'dato';
                         if (fuzzyResult.results[0] && fuzzyResult.results[0].CL_DENO) tipo = 'cliente';
                         if (fuzzyResult.results[0] && fuzzyResult.results[0].AR_NOMB) tipo = 'articulo';
