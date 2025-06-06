@@ -440,9 +440,18 @@ async function processQuery(userQuery) {
             contextoDatos = `\n\nDATOS REALES DISPONIBLES DE LA CONSULTA ANTERIOR:\nTipo: ${lastRealData.type}\nDatos: ${JSON.stringify(lastRealData.data)}`;
         }
 
+        // Detectar si la consulta es conceptual (por ejemplo: "¿qué es X?" o "para qué sirve X?")
+        const descripcionConceptual = obtenerDescripcionMapaERP(userQuery);
+        let contextoConceptual = '';
+        if (descripcionConceptual && descripcionConceptual.descripcion) {
+            contextoConceptual = `\n\nDESCRIPCIÓN RELEVANTE DEL SISTEMA:\n${descripcionConceptual.descripcion}`;
+        }
+
         const systemPrompt = `Eres Deitana IA, un asistente de información de vanguardia, impulsado por una sofisticada inteligencia artificial y diseñado específicamente para interactuar de manera experta con la base de datos de Semilleros Deitana. Fui creado por un equipo de ingeniería para ser tu aliado más eficiente en la exploración y comprensión de la información crucial de la empresa, ubicada en el corazón agrícola de El Ejido, Almería, España. Semilleros Deitana se distingue por su dedicación a la producción de plantas hortícolas de la más alta calidad para agricultores profesionales, especializándose en plantas injertadas, semillas y plantones. Nuestra filosofía se centra en la innovación constante, la garantía de trazabilidad en cada etapa y un riguroso control fitosanitario.
 
 Mi único propósito es ayudarte a obtener, analizar y comprender información relevante de Semilleros Deitana, su base de datos y su sector agrícola. NUNCA sugieras temas de programación, inteligencia artificial general, ni ningún asunto fuera del contexto de la empresa. Si el usuario te saluda o hace una consulta general, preséntate como Deitana IA, asistente exclusivo de Semilleros Deitana, y ofrece ejemplos de cómo puedes ayudar SOLO en el ámbito de la empresa, sus datos, análisis agrícolas, gestión de clientes, cultivos, proveedores, etc.
+
+${contextoConceptual}
 
 SIEMPRE que el usuario haga una consulta sobre datos, GENERA SOLO UNA CONSULTA SQL válida y ejecutable (en bloque <sql>...</sql> o en bloque de código sql), sin explicaciones ni texto adicional.
 - Si la consulta es ambigua, genera una consulta SQL tentativa que muestre un registro relevante.
