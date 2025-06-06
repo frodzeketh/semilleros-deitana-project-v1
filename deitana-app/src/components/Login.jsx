@@ -14,14 +14,23 @@ const Login = () => {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
 
-  // Si el usuario ya está autenticado, redirigir al home
+  // Si el usuario ya está autenticado y el contexto terminó de cargar, redirigir al home
   useEffect(() => {
-    if (user) {
+    if (!loading && user && user.uid) {
       navigate("/home", { replace: true })
     }
-  }, [user, navigate])
+  }, [user, loading, navigate])
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <p>Cargando autenticación...</p>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()

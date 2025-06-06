@@ -22,8 +22,12 @@ const ProtectedRoute = ({ children }) => {
     )
   }
 
-  // Si no hay usuario autenticado, redirigir al login
-  return user ? children : <Navigate to="/" replace />
+  // Verificación estricta de autenticación
+  if (!user || !user.uid) {
+    return <Navigate to="/login" replace />
+  }
+
+  return children
 }
 
 export default ProtectedRoute

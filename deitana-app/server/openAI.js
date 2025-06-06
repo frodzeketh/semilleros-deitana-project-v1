@@ -529,12 +529,19 @@ ${contenidoMapaERP}${contextoDatos}`;
                     if (tablaMatch) {
                         const tabla = tablaMatch[1];
                         const claveMapa = Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
-                        let colFecha = 'fecha';
+                        // Solo intentar fallback por fecha si la tabla tiene un campo de fecha
+                        let colFecha = null;
                         if (claveMapa && mapaERP[claveMapa].columnas) {
-                            colFecha = Object.keys(mapaERP[claveMapa].columnas).find(c => c.toLowerCase().includes('fec')) || 'fecha';
+                            colFecha = Object.keys(mapaERP[claveMapa].columnas).find(c => c.toLowerCase().includes('fec'));
                         }
-                        const sqlUltimo = `SELECT * FROM ${tabla} ORDER BY ${colFecha} DESC LIMIT 1`;
-                        results = await executeQuery(sqlUltimo);
+                        if (colFecha) {
+                            const sqlUltimo = `SELECT * FROM ${tabla} ORDER BY ${colFecha} DESC LIMIT 1`;
+                            results = await executeQuery(sqlUltimo);
+                        } else {
+                            // Si no hay campo de fecha, NO intentar fallback por fecha
+                            // Mostrar mensaje profesional
+                            results = [];
+                        }
                     }
                 }
                 if (!results || results.length === 0) {
@@ -676,11 +683,9 @@ async function fuzzySearchRetry(sql, userQuery) {
     if (claveMapa && mapaERP[claveMapa].columnas) {
         // Filtrar solo columnas tipo texto (por nombre o heurística)
         columnasTexto = Object.keys(mapaERP[claveMapa].columnas).filter(c => {
-            // Heurística: columnas que no sean numéricas ni fechas
             const nombre = c.toLowerCase();
             return !nombre.match(/(id|num|cant|fecha|fec|total|importe|precio|monto|valor|kg|ha|area|superficie|lat|lon|long|ancho|alto|diam|mm|cm|m2|m3|porc|\d)/);
         });
-        // Si no hay, usar todas
         if (columnasTexto.length === 0) columnasTexto = Object.keys(mapaERP[claveMapa].columnas);
     }
 
@@ -692,15 +697,18 @@ async function fuzzySearchRetry(sql, userQuery) {
         valor.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // sin tildes
         valor.split(' ')[0], // solo la primera palabra
         valor.replace(/\s+/g, ''), // sin espacios
-        valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7))) // parte del término
+        valor.replace(/cc/gi, ' CC'),
+        valor.replace(/lt/gi, ' LT'),
+        valor.replace(/\./g, ''),
+        valor.replace(/\d+/g, ''),
+        valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7)))
     ];
 
     // Probar todas las combinaciones de columna y variante
     for (const col of columnasTexto) {
         for (const variante of variantes) {
             if (!variante || variante.length < 2) continue;
-            // Construir el nuevo WHERE usando LIKE
-            let sqlFuzzyTry = sql.replace(/WHERE[\sS]*/i, `WHERE ${col} LIKE '%${variante}%' LIMIT 5`);
+            let sqlFuzzyTry = sql.replace(/WHERE[\s\S]*/i, `WHERE ${col} LIKE '%${variante}%' LIMIT 5`);
             try {
                 const results = await executeQuery(sqlFuzzyTry);
                 if (results && results.length > 0) {
@@ -709,6 +717,18 @@ async function fuzzySearchRetry(sql, userQuery) {
             } catch (e) {
                 // Ignorar errores de SQL en fuzzy
             }
+        }
+    }
+    // Si la tabla es articulos, probar también AR_DENO y AR_REF explícitamente
+    if (tabla === 'articulos') {
+        for (const variante of variantes) {
+            let sqlTry = `SELECT * FROM articulos WHERE AR_DENO LIKE '%${variante}%' OR AR_REF LIKE '%${variante}%' LIMIT 5`;
+            try {
+                const results = await executeQuery(sqlTry);
+                if (results && results.length > 0) {
+                    return { results, sqlFuzzyTry: sqlTry };
+                }
+            } catch (e) {}
         }
     }
     return null;

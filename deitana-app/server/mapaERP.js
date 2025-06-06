@@ -65,31 +65,32 @@ const mapaERP = {
     },
   },
 
-  /* ================================================*/
-  /* Archivos – Generales – Artículos */
-  /* ================================================*/
-  articulos: {
+/* ================================================*/
+/* Archivos – Generales – Artículos */
+/* ================================================*/
+articulos: {
     descripcion:
-      "Nuestros artículos son los productos, insumos o bienes con los que trabajamos en Semilleros Deitana. Para cada uno registramos información clave como su descripción, categoría, unidad de medida, precio y características específicas, lo que nos permite asegurar su correcta gestión, control y trazabilidad en cada etapa del proceso.",
+      "Nuestros artículos son los productos, insumos o bienes con los que trabajamos en Semilleros Deitana. Para cada uno registramos información clave como su descripción, categoría, unidad de medida, precio y características específicas, lo que nos permite asegurar su correcta gestión, control y trazabilidad en cada etapa del proceso. Incluye detalles de stock.",
+    tabla: "articulos", // Nombre de tabla inferido
     columnas: {
-      id: "Código único del artículo",
-      AR_DENO: "Denominación o descripción del artículo",
-      AR_REF: "Referencia adicional del artículo",
-      AR_BAR: "Código de barras del artículo",
-      AR_TIVA: "Tipo de IVA aplicado al artículo",
-      AR_GRP: "Código del grupo al que pertenece el artículo",
-      AR_FAM: "Código de la familia del artículo",
-      AR_PRV: "Código del proveedor principal del artículo. Referencia al campo 'id' en la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma.",
-      AR_WEB: "Información adicional para la web",
-      AR_IVAP: "IVA aplicado al precio",
-      AR_PGE: "% de germinación",
-      AR_PRV: "Código del proveedor principal del artículo. Referencia al campo 'id' en la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma.",
-      // Nota: Los campos de precio (AR_PUD, AR_POP, AR_PST, AR_PVME) y stock (AR_STOK) mencionados en la descripción general no están detallados individualmente en la lista de campos proporcionada, pero se infiere su existencia.
+      id: "Código único del artículo (Clave Primaria). Se utiliza como clave foránea en 'articulos_ar_stok'.",
+      AR_DENO: "Denominación o descripción del artículo.",
+      AR_REF: "Referencia adicional del artículo.",
+      AR_BAR: "Código de barras del artículo.",
+      AR_TIVA: "Tipo de IVA aplicado al artículo.",
+      AR_GRP: "Código del grupo al que pertenece el artículo.",
+      AR_FAM: "Código de la familia del artículo. Clave foránea a la tabla 'familias'.",
+      AR_PRV: "Código del proveedor principal del artículo. Clave foránea a la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma.",
+      AR_WEB: "Información adicional para la web.",
+      AR_IVAP: "IVA aplicado al precio.",
+      AR_PGE: "Porcentaje de germinación.",
+      // Nota: Los campos de precio (AR_PUD, AR_POP, AR_PST, AR_PVME) y stock (AR_STOK) mencionados en la descripción general
+      // y la estructura de la tabla 'articulos_ar_stok' se detallan a continuación.
     },
     relaciones: {
       proveedores: {
         tabla_relacionada: "proveedores",
-        tipo: "Uno a muchos (un proveedor puede proveer muchos artículos)",
+        tipo: "Muchos a uno (un proveedor puede proveer muchos artículos)",
         campo_enlace_local: "AR_PRV",
         campo_enlace_externo: "id",
         descripcion:
@@ -103,6 +104,24 @@ const mapaERP = {
         descripcion:
           "Vincula el artículo con su familia correspondiente, permitiendo agrupar y filtrar artículos por familia.",
       },
+      articulos_ar_stok: {
+        tabla_relacionada: "articulos_ar_stok",
+        tipo: "Uno a muchos (un artículo puede tener múltiples actualizaciones o registros de stock)",
+        campo_enlace_local: "id", // ID del artículo en la tabla 'articulos'
+        campo_enlace_externo: "id", // ID del artículo en la tabla 'articulos_ar_stok'
+        descripcion: "Registra las actualizaciones y niveles de stock de cada artículo.",
+        estructura_relacionada: {
+          id: "Código del artículo (igual que 'articulos.id').",
+          id2: "Identificador secuencial de la actualización de stock (ej. '10', '11').",
+          C0: "Campo de propósito desconocido (ej. '00').", // No se ha proporcionado descripción
+          C1: "Campo de propósito desconocido (ej. '2035', '2030').", // No se ha proporcionado descripción
+          C2: "Representa la cantidad en stock del artículo.",
+          C3: "Campo de propósito desconocido (ej. '0.00').", // No se ha proporcionado descripción
+          C4: "Campo de propósito desconocido (ej. '0.00').", // No se ha proporcionado descripción
+          C5: "Campo de propósito desconocido (ej. '0.00').", // No se ha proporcionado descripción
+          C6: "Campo de propósito desconocido (ej. '0.00').", // No se ha proporcionado descripción
+        },
+      },
     },
     ejemplos: {
       consulta_proveedor:
@@ -111,8 +130,13 @@ const mapaERP = {
         "Se puede filtrar o agrupar artículos por su código de grupo (AR_GRP) o familia (AR_FAM).",
       consulta_barra:
         "Buscar un artículo por su código de barras utilizando el campo AR_BAR.",
+      consultar_stock_articulo:
+        "Para un artículo específico (ej. ID '00000039'), obtener las diferentes actualizaciones de stock y sus respectivas cantidades ('C2') desde la tabla 'articulos_ar_stok'.",
+      consultar_denominacion_y_stock:
+        "Obtener la denominación de un artículo ('AR_DENO') y su stock actual (último 'C2' de 'articulos_ar_stok' para ese 'id').",
     },
   },
+
 
   /* ================================================*/
   /* Archivos – Generales – Clientes */

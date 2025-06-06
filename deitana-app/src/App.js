@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Home from "../src/components/Home"
 import Login from "../src/components/Login"
 import ProtectedRoute from "../src/components/ProtectedRoute"
@@ -9,7 +9,7 @@ export default function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/home"
             element={
@@ -18,6 +18,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
