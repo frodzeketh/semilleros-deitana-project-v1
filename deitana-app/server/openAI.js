@@ -451,6 +451,12 @@ async function processQuery(userQuery) {
 
 Mi único propósito es ayudarte a obtener, analizar y comprender información relevante de Semilleros Deitana, su base de datos y su sector agrícola. NUNCA sugieras temas de programación, inteligencia artificial general, ni ningún asunto fuera del contexto de la empresa. Si el usuario te saluda o hace una consulta general, preséntate como Deitana IA, asistente exclusivo de Semilleros Deitana, y ofrece ejemplos de cómo puedes ayudar SOLO en el ámbito de la empresa, sus datos, análisis agrícolas, gestión de clientes, cultivos, proveedores, etc.
 
+IMPORTANTE SOBRE ARTÍCULOS E INJERTOS:
+- En la tabla 'articulos' están incluidos los injertos. Hay muchos tipos y suelen denominarse como "INJ-TOMATE", "INJ-TOM.CONQUISTA", "INJ-PEPINO", etc. Explica esta lógica si el usuario pregunta por injertos o si hay ambigüedad.
+- Si la consulta menciona injertos o artículos y hay varias coincidencias, MUESTRA hasta 3 ejemplos REALES (id, denominación y stock si es relevante) y ayuda al usuario a elegir, explicando la diferencia entre ellos. NUNCA inventes ejemplos ni pidas datos irrelevantes como almacén o color si no aplica.
+- Si la consulta contiene varios términos (por ejemplo: "injerto", "tomate", "conquista"), busca artículos cuyo AR_DENO contenga TODOS esos términos, aunque no estén juntos ni en el mismo orden.
+- Prohibido pedir datos genéricos o irrelevantes (como almacén, color, etc.) si no son necesarios para la consulta específica.
+
 ${contextoConceptual}
 
 SIEMPRE que el usuario haga una consulta sobre datos, GENERA SOLO UNA CONSULTA SQL válida y ejecutable (en bloque <sql>...</sql> o en bloque de código sql), sin explicaciones ni texto adicional.
@@ -477,6 +483,14 @@ IMPORTANTE PARA CONSULTAS DE PRECIOS O TARIFAS:
 - Ejemplo de consulta correcta:
 SELECT tp.id AS id_tarifa, tp.TAP_DENO AS denominacion_tarifa, tpt.C0 AS codigo_articulo, a.AR_DENO AS nombre_articulo, tpt.C1 AS tipo_tarifa, tpt.C10 AS pvp_fijo_bandeja, tpt.C11 AS pvp_por_planta, tpt.C12 AS pvp_por_bandeja, tp.TAP_DFEC AS fecha_inicio, tp.TAP_HFEC AS fecha_fin FROM tarifas_plantas tp JOIN tarifas_plantas_tap_lna tpt ON tp.id = tpt.id JOIN articulos a ON tpt.C0 = a.id WHERE tpt.C0 = '00000003' AND tpt.C1 = 'A' AND CURDATE() BETWEEN tp.TAP_DFEC AND tp.TAP_HFEC LIMIT 1;
 - NUNCA inventes campos de fecha en 'articulos' como AR_FEC o AR_FMOD.
+
+IMPORTANTE PARA CONSULTAS DE STOCK DE ARTÍCULOS:
+- El stock de un artículo NO está en la tabla 'articulos', sino en la tabla 'articulos_ar_stok'.
+- Para obtener el stock actual de un artículo, busca el registro con el id del artículo en 'articulos_ar_stok' y selecciona el valor de 'C2' del registro con el mayor 'id2' (última actualización).
+- Ejemplo de consulta correcta:
+SELECT a.id, a.AR_DENO, s.C2 AS stock_actual FROM articulos a JOIN articulos_ar_stok s ON a.id = s.id WHERE a.id = '00000039' ORDER BY s.id2 DESC LIMIT 1;
+- Si quieres el historial de stock, muestra todos los registros de 'articulos_ar_stok' para ese id, ordenados por id2 descendente.
+- NUNCA inventes campos de stock en 'articulos' como AR_STOK.
 
 ${promptBase}
 
@@ -519,17 +533,32 @@ ${contenidoMapaERP}${contextoDatos}`;
                     }
                 }
                 if (!results || results.length === 0) {
-                    // 2. Reintentar quitando GROUP BY y ORDER BY
-                    let sqlSinGroup = sql.replace(/GROUP BY[\s\S]*/i, '').replace(/ORDER BY[\sS]*/i, '');
+                    // 2. Reintentar quitando GROUP BY y ORDER BY (corregido para evitar errores de sintaxis)
+                    let sqlSinGroup = sql.replace(/GROUP BY[\s\S]*?(?=(ORDER BY|LIMIT|$))/i, '').replace(/ORDER BY[\s\S]*?(?=(LIMIT|$))/i, '');
                     results = await executeQuery(sqlSinGroup);
                 }
                 if (!results || results.length === 0) {
-                    // 3. Buscar el último registro relevante (ORDER BY fecha DESC LIMIT 1)
+                    // 3. Buscar artículos similares si la consulta es sobre artículos y hay varios términos
                     const tablaMatch = sql.match(/FROM\s+([`\w]+)/i);
                     if (tablaMatch) {
-                        const tabla = tablaMatch[1];
-                        const claveMapa = Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
+                        const tabla = tablaMatch[1].replace(/`/g, '');
+                        if (tabla === 'articulos') {
+                            // Buscar los 3 artículos más parecidos por AR_DENO (por ejemplo, solo INJ y TOMATE)
+                            let sqlSimilares = `SELECT a.id, a.AR_DENO, s.C2 AS stock_actual FROM articulos a JOIN articulos_ar_stok s ON a.id = s.id WHERE a.AR_DENO LIKE '%INJ%' AND a.AR_DENO LIKE '%TOMATE%' ORDER BY s.id2 DESC LIMIT 3`;
+                            let similares = await executeQuery(sqlSimilares);
+                            if (similares && similares.length > 0) {
+                                lastRealData = { type: 'articulo', data: similares };
+                                const finalResponse = await formatFinalResponse(similares, userQuery + ' (artículos similares)');
+                                return {
+                                    success: true,
+                                    data: {
+                                        message: finalResponse + '\n\n(Nota: No se encontró coincidencia exacta, se muestran los artículos más similares disponibles)'
+                                    }
+                                };
+                            }
+                        }
                         // Solo intentar fallback por fecha si la tabla tiene un campo de fecha
+                        const claveMapa = Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
                         let colFecha = null;
                         if (claveMapa && mapaERP[claveMapa].columnas) {
                             colFecha = Object.keys(mapaERP[claveMapa].columnas).find(c => c.toLowerCase().includes('fec'));
@@ -538,8 +567,6 @@ ${contenidoMapaERP}${contextoDatos}`;
                             const sqlUltimo = `SELECT * FROM ${tabla} ORDER BY ${colFecha} DESC LIMIT 1`;
                             results = await executeQuery(sqlUltimo);
                         } else {
-                            // Si no hay campo de fecha, NO intentar fallback por fecha
-                            // Mostrar mensaje profesional
                             results = [];
                         }
                     }
@@ -704,11 +731,44 @@ async function fuzzySearchRetry(sql, userQuery) {
         valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7)))
     ];
 
+    // --- MEJORA: Si el valor tiene varios términos, buscar artículos cuyo AR_DENO contenga TODOS los términos (AND) ---
+    if (tabla === 'articulos' && valor.trim().split(/\s+/).length > 1) {
+        const terminos = valor.trim().split(/\s+/).filter(Boolean);
+        // Buscar en AR_DENO y AR_REF, ambos deben contener todos los términos
+        const condicionesDeno = terminos.map(t => `AR_DENO LIKE '%${t}%'`).join(' AND ');
+        const condicionesRef = terminos.map(t => `AR_REF LIKE '%${t}%'`).join(' AND ');
+        // Probar primero en AR_DENO
+        let sqlMultiTerm = `SELECT * FROM articulos WHERE ${condicionesDeno} LIMIT 5`;
+        try {
+            const results = await executeQuery(sqlMultiTerm);
+            if (results && results.length > 0) {
+                return { results, sqlFuzzyTry: sqlMultiTerm };
+            }
+        } catch (e) {}
+        // Probar en AR_REF
+        let sqlMultiTermRef = `SELECT * FROM articulos WHERE ${condicionesRef} LIMIT 5`;
+        try {
+            const results = await executeQuery(sqlMultiTermRef);
+            if (results && results.length > 0) {
+                return { results, sqlFuzzyTry: sqlMultiTermRef };
+            }
+        } catch (e) {}
+        // Probar en ambos (OR)
+        let sqlMultiTermBoth = `SELECT * FROM articulos WHERE (${condicionesDeno}) OR (${condicionesRef}) LIMIT 5`;
+        try {
+            const results = await executeQuery(sqlMultiTermBoth);
+            if (results && results.length > 0) {
+                return { results, sqlFuzzyTry: sqlMultiTermBoth };
+            }
+        } catch (e) {}
+    }
+    // --- FIN MEJORA ---
+
     // Probar todas las combinaciones de columna y variante
     for (const col of columnasTexto) {
         for (const variante of variantes) {
             if (!variante || variante.length < 2) continue;
-            let sqlFuzzyTry = sql.replace(/WHERE[\s\S]*/i, `WHERE ${col} LIKE '%${variante}%' LIMIT 5`);
+            let sqlFuzzyTry = sql.replace(/WHERE[\sS]*/i, `WHERE ${col} LIKE '%${variante}%' LIMIT 5`);
             try {
                 const results = await executeQuery(sqlFuzzyTry);
                 if (results && results.length > 0) {
