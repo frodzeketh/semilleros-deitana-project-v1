@@ -3666,10 +3666,12 @@ tratamientos: {
 
 
 
+
+
   /* ================================================*/
   /* Almacen - Almacen - Recuento inventario */
   /* ================================================*/
-  recuento_inventario: {
+ /* recuento_inventario: {
     // Clave principal (basada en el nombre de la sección)
     descripcion:
       "Registra los eventos de recuento físico de inventario. Documenta cuándo y dónde se realizó un recuento, quién fue el vendedor/usuario responsable, y las unidades contadas o la diferencia encontrada.", // Descripción sintetizada actualizada
@@ -3712,6 +3714,96 @@ tratamientos: {
         "Obtener el valor de unidades contadas o la diferencia (IN_UDS) para un recuento.",
       filtrar_por_unidades_diferencia:
         "Buscar recuentos con un valor específico o rango de valores en IN_UDS.",
+    },
+  },
+*/
+
+
+
+
+
+
+  /* ================================================*/
+/* Almacén - Almacén - Recuentos plantas */
+/* ================================================*/
+inventario_pl: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Gestiona los recuentos e inventarios de plantas. Registra la fecha del recuento, el vendedor y el almacén responsables, y una descripción del inventario. Los detalles de las plantas contadas se almacenan en una tabla relacionada.",
+    tabla: `inventario_pl`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código identificador único del registro de inventario/recuento de plantas (Clave Primaria).",
+      INP_FEC: "Fecha en la que se realizó el recuento de inventario.",
+      INP_VEN: "Vendedor responsable del recuento. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      INP_ALM: "Almacén donde se realizó el recuento. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      INP_DES: "Descripción importante del recuento (ej: 'Inventario Marzo 2025').",
+    },
+    relaciones: {
+      vendedores: {
+        tabla_relacionada: "vendedores",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "INP_VEN",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el recuento de plantas con el vendedor que lo gestionó.",
+      },
+      almacenes: {
+        tabla_relacionada: "almacenes",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "INP_ALM",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el recuento de plantas con el almacén donde se realizó.",
+      },
+      inventario_pl_inp_lna: {
+        tabla_relacionada: "inventario_pl_inp_lna",
+        tipo: "Uno a muchos (un registro de inventario puede tener múltiples líneas de plantas contadas)",
+        campo_enlace_local: "id", // ID del registro de inventario en la tabla principal
+        campo_enlace_externo: "id", // ID del registro de inventario en la tabla de detalle
+        descripcion: "Detalla las plantas contadas en cada recuento de inventario, incluyendo la partida, el artículo, las bandejas y los costes asociados.",
+        estructura_relacionada: {
+          id: "Código del registro de inventario (igual que 'inventario_pl.id').",
+          id2: "Identificador secuencial de la línea de detalle (indica la cantidad expansiva de registros de plantas o inventario).",
+          C0: "Número de partida. Clave foránea a la tabla 'partidas'.",
+          C1: "Denominación del artículo o nombre de la semilla.", // Aunque es una denominación, podría inferirse una relación con 'articulos' si 'C0' es la partida que contiene el artículo.
+          C2: "Indicador de si el cliente entrega semilla ('D' para depósito, 'N' para no entrega).",
+          C3: "Número de bandejas.",
+          C4: "Coste de la semilla.",
+          C5: "Coste por planta (Pcoste Pl).",
+          C6: "Coste general (Pcoste).",
+          C7: "Importe total.",
+        },
+        relaciones_internas_de_detalle: {
+          partidas: {
+            tabla_relacionada: "partidas",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id", // Suponiendo 'id' es la clave primaria de 'partidas'
+            descripcion: "Vincula la línea del recuento con la partida de siembra asociada.",
+          },
+          // Si C1 (denominación del artículo) siempre se refiere a un ID en la tabla 'articulos',
+          // se podría agregar una relación aquí, aunque la descripción lo presenta como una denominación.
+          /*
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C1", // Esto requeriría que C1 sea un ID de artículo, no una denominación
+            campo_enlace_externo: "AR_DENO", // O un campo ID de artículo si C1 es un ID
+            descripcion: "Posible vínculo con el artículo si C1 es un identificador y no solo una denominación.",
+          }
+          */
+        },
+      },
+    },
+    ejemplos: {
+      consulta_inventario_por_id:
+        "Obtener la fecha, vendedor, almacén y descripción de un recuento de inventario específico usando su 'id'.",
+      consultar_plantas_contadas:
+        "Para un recuento de inventario (ej. ID '000083'), listar todas las líneas de 'inventario_pl_inp_lna', mostrando el número de partida, denominación del artículo, número de bandejas y costes asociados.",
+      filtrar_inventarios_por_almacen_o_fecha:
+        "Buscar recuentos de plantas realizados en un almacén específico o dentro de un rango de fechas.",
+      analisis_de_costes_por_partida:
+        "Calcular el coste total de las plantas por partida sumando los 'C7' (importe) de las líneas de 'inventario_pl_inp_lna' agrupadas por 'C0' (número de partida).",
+      seguimiento_semilla_deposito:
+        "Identificar partidas donde el cliente entregó semilla (C2 = 'D').",
     },
   },
 
