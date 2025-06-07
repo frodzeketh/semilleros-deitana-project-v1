@@ -2917,15 +2917,15 @@ impagos: {
   },
 
   /* ================================================*/
-  /* Compras – Gestión Compras – Pedidos a Proveedor */
-  /* ================================================*/
-  pedidos_pr: {
+/* Compras – Gestión Compras – Pedidos a Proveedor */
+/* ================================================*/
+pedidos_pr: {
     // Clave principal (nombre de tabla)
     descripcion:
-      "Registra y sigue los pedidos de compra realizados a proveedores. Punto de partida formal para solicitar adquisición de bienes/servicios. Crucial para planificación de compras, control de inventario, gestión de proveedores y base para recepciones/facturas.",
+      "Registra y sigue los pedidos de compra realizados a proveedores. Es el punto de partida formal para solicitar la adquisición de bienes o servicios. Es crucial para la planificación de compras, el control de inventario, la gestión de proveedores y sirve como base para las recepciones de mercancía y las facturas de compra.",
     tabla: "pedidos_pr", // Nombre de tabla original
     columnas: {
-      id: "Número único que identifica cada pedido a proveedor (Clave Primaria)",
+      id: "Número único que identifica cada pedido a proveedor (Clave Primaria). Este ID se utiliza como clave foránea en la tabla 'pedidos_pr_pp_lna'.",
       PP_CPR: "Código del proveedor. Clave foránea a la tabla 'proveedores' para obtener la denominación (PR_DENO).",
       PP_ALM: "Almacén de recepción designado. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
       PP_FEC: "Fecha en que se emitió el pedido.",
@@ -2935,7 +2935,7 @@ impagos: {
       PP_NETO: "Monto neto del pedido.",
       PP_IMPU: "Costo total de los impuestos aplicados.",
       PP_TTT: "Monto total final del pedido.",
-      PP_DPP: "Persona dentro de la empresa que realizó o solicitó el pedido ('Pedido por').", // Sugiere relación con tabla de usuarios/empleados
+      PP_PDP: "Persona dentro de la empresa que realizó o solicitó el pedido ('Pedido por') usuarios/empleados.",
     },
     relaciones: {
       proveedores: {
@@ -2959,15 +2959,40 @@ impagos: {
         campo_enlace_externo: "id",
         descripcion: "Vincula el pedido con la forma de pago acordada.",
       },
-      // Relación potencial inferida:
-      solicitante: {
-        tabla_relacionada: "[Tabla de Usuarios/Empleados]", // Nombre de tabla no especificado
-        tipo: "Muchos a uno (varios pedidos pueden ser solicitados por la misma persona)", // Tipo inferido
-        campo_enlace_local: "PP_DPP", // El campo que contiene el identificador de la persona
-        campo_enlace_externo: "[Campo id/código en tabla de usuarios/empleados]", // Nombre de campo no especificado
-        descripcion_inferida:
-          "Sugiere vínculo con una tabla que identifique a los empleados o usuarios que pueden generar pedidos.",
+      pedidos_pr_pp_lna: {
+        tabla_relacionada: "pedidos_pr_pp_lna",
+        tipo: "Uno a muchos (un pedido a proveedor puede incluir múltiples artículos/líneas de pedido)",
+        campo_enlace_local: "id", // ID del pedido en la tabla principal
+        campo_enlace_externo: "id", // ID del pedido en la tabla de detalle
+        descripcion: "Detalla los artículos específicos pedidos a cada proveedor en una línea de pedido.",
+        estructura_relacionada: {
+          id: "Código del pedido (igual que 'pedidos_pr.id').",
+          id2: "Identificador secuencial de la línea de pedido (para diferentes artículos dentro del mismo pedido, ej: '1', '2', '3').",
+          C0: "Código del artículo que se pidió al proveedor. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+          C1: "Código del envase de venta. Clave foránea a la tabla 'envases_vta' para obtener la denominación (EV_DENO).",
+          C2: "Número de sobres.",
+          C3: "Unidades por sobre.",
+          C4: "Precio de compra (P/Compra).",
+          C5: "Porcentaje de descuento (Descuento %).",
+        },
+        relaciones_internas_de_detalle: {
+          articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C0",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la línea del pedido con el artículo correspondiente para obtener su denominación.",
+          },
+          envases_vta: {
+            tabla_relacionada: "envases_vta",
+            tipo: "Muchos a uno",
+            campo_enlace_local: "C1",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula la línea del pedido con el tipo de envase de venta para obtener su denominación.",
+          },
+        },
       },
+      
     },
     ejemplos: {
       consulta_pedido_por_id: "Obtener los detalles de un pedido a proveedor específico usando su 'id'.",
@@ -2978,7 +3003,11 @@ impagos: {
       filtrar_pedidos_por_fecha_entrega_esperada:
         "Buscar pedidos con una fecha de entrega esperada (PP_FSV) en un rango específico.",
       filtrar_pedidos_por_solicitante:
-        "Encontrar pedidos realizados por una persona específica dentro de la empresa (filtrando por PP_DPP).",
+        "Encontrar pedidos realizados por una persona específica dentro de la empresa (filtrando por PP_PDP).",
+      consultar_articulos_en_pedido:
+        "Para un pedido (ej. ID '005001'), listar todos los artículos pedidos desde 'pedidos_pr_pp_lna', incluyendo su denominación (uniéndose a 'articulos'), tipo de envase, unidades, precio de compra y descuento.",
+      calcular_costo_total_por_articulo_en_pedido:
+        "Para un pedido específico, calcular el costo total de cada artículo multiplicando 'C3' (Unidades/Sob) * 'C4' (P/Compra) y aplicando 'C5' (Descuento %).",
     },
   },
 
