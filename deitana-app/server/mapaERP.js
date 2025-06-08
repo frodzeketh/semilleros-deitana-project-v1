@@ -155,6 +155,7 @@ articulos: {
       CL_CIF: "CIF",
       CL_PAIS: "País",
       CL_ZONA: "Zona al que pertenece el cliente",
+      CL_TARI: "Tarifa de precios asociada al cliente",
     },
     relaciones: {
       almacenes: {    
@@ -4428,25 +4429,47 @@ tarifas_plantas: {
     },
   },
 
-  /* ================================================*/
-  /* Tecnicos */
-  /* ================================================*/
-  tecnicos: {
+/* ================================================*/
+/* Tecnicos */
+/* ================================================*/
+tecnicos: {
     alias: "tecnicos",
     descripcion:
-      "Información de los técnicos de la empresa, incluyendo su nombre, teléfono, email y otros datos relevantes.",
+      "Información de los técnicos de la empresa, incluyendo su nombre, teléfono, email y otros datos relevantes, así como su historial laboral y contractual.",
     tabla: "tecnicos",
     columnas: {
-      id: "Código identificador único del técnico (Clave Primaria)",
+      id: "Código identificador único del técnico (Clave Primaria).",
       TN_DENO: "Nombre completo del técnico.",
       TN_TEL: "Número de teléfono del técnico.",
       TN_DOM: "Domicilio del técnico.",
       TN_POB: "Población del técnico.",
-      TN_CDP: "Codigo postal del técnico.",
+      TN_CDP: "Código postal del técnico.",
       TN_CIF: "Número de identificación fiscal del técnico.",
+      TN_ACT: "Estado de actividad del técnico (Ej: 'A' - Activo, 'I' - Inactivo, 'B' - Baja).",
+    },
+    relaciones: {
+      tecnicos_tn_hist: {
+        tabla_relacionada: "tecnicos_tn_hist",
+        tipo: "Uno a muchos (un técnico puede tener múltiples registros en su historial)",
+        campo_enlace_local: "id", // El ID del técnico en esta tabla
+        campo_enlace_externo: "id", // El ID del técnico en la tabla de historial
+        descripcion: "Vincula al técnico con su historial laboral y contractual detallado, incluyendo fechas de inicio/fin, área, lugar de trabajo y tipo de contrato.",
+      },
+      // Otras posibles relaciones no mencionadas en la descripción original pero lógicamente existentes:
+      // - Si los técnicos pueden ser vendedores, una relación con la tabla 'vendedores'.
+      // - Si los técnicos están asignados a clientes, una relación con la tabla 'clientes'.
+    },
+    ejemplos: {
+      consulta_tecnico_por_id:
+        "Obtener la información básica de un técnico específico usando su 'id'.",
+      consultar_historial_completo_tecnico:
+        "Para un técnico (ej. ID '850'), obtener todos los registros de su historial laboral desde 'tecnicos_tn_hist', incluyendo fechas, áreas y tipos de contrato.",
+      filtrar_tecnicos_activos:
+        "Listar todos los técnicos que están actualmente activos (filtrando por TN_ACT = 'A').",
+      buscar_tecnico_por_nombre:
+        "Encontrar técnicos por su nombre completo (filtrando por TN_DENO).",
     },
   },
-
 
 
 
@@ -4586,6 +4609,38 @@ equipo_fito: {
         "Buscar un equipo fitosanitario por su nombre o denominación (filtrando por EFI_DENO).",
     },
   },
+
+
+
+
+
+
+
+
+
+
+tarifas: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra las diferentes tarifas disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe.",
+    tabla: `tarifas`, // Nombre de la tabla principal
+    columnas: {
+      ID: "Identificador único de la tarifa (Clave Primaria).",
+      TP_DENO: "Denominación o descripción de la tarifa (ej: 'Tarifa A', 'Tarifa por Volumen').",
+    },
+    relaciones: {
+      // 
+      
+    },
+    ejemplos: {
+      consulta_tarifa_por_id:
+        "Obtener la denominación de una tarifa específica utilizando su 'ID'.",
+      listar_todas_las_tarifas:
+        "Recuperar todos los identificadores y denominaciones de las tarifas disponibles en el sistema.",
+    },
+  },
+
+
 
 
 
