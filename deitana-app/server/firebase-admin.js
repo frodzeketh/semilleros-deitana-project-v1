@@ -1,9 +1,13 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./login-deitana-firebase-adminsdk-fbsvc-a596a8627e.json');
+require('dotenv').config();
 
-// Inicializar Firebase Admin
+// Inicializar Firebase Admin con las credenciales desde variables de entorno
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    })
 });
 
 module.exports = admin; 
