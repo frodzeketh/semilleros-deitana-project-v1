@@ -2008,7 +2008,7 @@ encargos: {
           PAR_LOTE: "Lote.",
           PAR_PGER: "% de germinación.",
           PAR_TSI: "Tipo de siembra. Clave foránea a 't-siembras'.",
-          PAR_SUS: "Sustrato utilizado. Clave foránea a 'sustratos'.",
+          
           PAR_ALVS: "Semillas a sembrar.",
           PAR_PLAS: "Plantas solicitadas.",
           PAR_PLAP: "Plantas aproximadas.",
@@ -2044,7 +2044,7 @@ encargos: {
           sustratos: {
             tabla_relacionada: "sustratos",
             tipo: "Muchos a uno",
-            campo_enlace_local: "PAR_SUS",
+            
             campo_enlace_externo: "id",
             descripcion: "Vincula la partida con el sustrato utilizado.",
           },
@@ -2351,7 +2351,7 @@ partidas: {
       PAR_LOTE: "Lote de la semilla.",
       PAR_PGER: "Porcentaje de germinación.",
       PAR_TSI: "Tipo de siembra. Clave foránea a la tabla 't-siembras' para obtener la denominación (TSI_DENO) y detalles.",
-      PAR_SUS: "Sustrato utilizado. Clave foránea a la tabla 'sustratos' para obtener la denominación (SUS_DENO).",
+      
       PAR_ALVS: "Cantidad de semillas a sembrar.",
       PAR_PLAS: "Cantidad de plantas solicitadas.",
       PAR_PLAP: "Cantidad de plantas aproximadas.",
@@ -2394,7 +2394,7 @@ partidas: {
       sustratos: {
         tabla_relacionada: "sustratos",
         tipo: "Muchos a uno",
-        campo_enlace_local: "PAR_SUS",
+        
         campo_enlace_externo: "id",
         descripcion: "Vincula la partida con el sustrato utilizado.",
       },
