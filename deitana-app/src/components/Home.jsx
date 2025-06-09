@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { MessageSquare, PanelLeftClose, Send, ChevronDown, Search, Settings, LogOut, Edit3, Clock } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
+import { auth } from "../components/Authenticator/firebase"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -82,117 +83,124 @@ const Home = () => {
 
   // Modificar la función handleSubmit para soportar streaming de texto
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!message.trim()) return
+    e.preventDefault();
+    if (!message.trim()) return;
 
     // Generar un ID de sesión si no existe
     if (!localStorage.getItem("sessionId")) {
-      localStorage.setItem("sessionId", `session-${Date.now()}`)
+        localStorage.setItem("sessionId", `session-${Date.now()}`);
     }
-    const sessionId = localStorage.getItem("sessionId")
+    const sessionId = localStorage.getItem("sessionId");
 
     const userMessage = {
-      id: Date.now(),
-      text: message,
-      sender: "user",
-    }
+        id: Date.now(),
+        text: message,
+        sender: "user",
+    };
 
-    setChatMessages((prev) => [...prev, userMessage])
-    setMessage("")
-    setIsTyping(true)
+    setChatMessages((prev) => [...prev, userMessage]);
+    setMessage("");
+    setIsTyping(true);
 
     // Crear un ID único para el mensaje del bot
-    const botMessageId = Date.now() + 1
+    const botMessageId = Date.now() + 1;
 
     // Añadir un mensaje vacío del bot que se irá llenando
     setChatMessages((prev) => {
-      const newMessage = {
-        id: botMessageId,
-        text: "",
-        sender: "bot",
-        isStreaming: true,
-      }
-      console.log('Creando nuevo mensaje del bot:', newMessage)
-      return [...prev, newMessage]
-    })
+        const newMessage = {
+            id: botMessageId,
+            text: "",
+            sender: "bot",
+            isStreaming: true,
+        };
+        console.log('Creando nuevo mensaje del bot:', newMessage);
+        return [...prev, newMessage];
+    });
 
     try {
-      const response = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Session-Id": sessionId,
-        },
-        body: JSON.stringify({ message }),
-      })
+        // Obtener el token de Firebase
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) {
+            throw new Error('No hay usuario autenticado');
+        }
 
-      const data = await response.json()
+        const response = await fetch(`${API_URL}/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+                "Session-Id": sessionId,
+            },
+            body: JSON.stringify({ message }),
+        });
 
-      // Asegurarnos de que el texto sea una cadena
-      let fullText = ""
-      if (data.success && data.data && data.data.message) {
-        // Si el mensaje es un objeto JSON, intentamos extraer el mensaje real
+        const data = await response.json();
+
+        // Asegurarnos de que el texto sea una cadena
+        let fullText = "";
+        if (data.success && data.data && data.data.message) {
+            // Si el mensaje es un objeto JSON, intentamos extraer el mensaje real
+            try {
+                const messageObj = typeof data.data.message === 'string' 
+                    ? JSON.parse(data.data.message) 
+                    : data.data.message;
+                
+                if (messageObj && messageObj.data && messageObj.data.message) {
+                    fullText = messageObj.data.message;
+                } else {
+                    fullText = data.data.message;
+                }
+            } catch (e) {
+                // Si no es un objeto JSON, usamos el mensaje directamente
+                fullText = data.data.message;
+            }
+        } else {
+            fullText = "Hubo un problema al obtener respuesta.";
+        }
+
+        let displayedText = "";
+        const baseChunkSize = 5;
+        const chunkSize = Math.max(baseChunkSize, Math.floor(fullText.length / 200));
+        const delay = fullText.length > 1000 ? 5 : 10;
+
+        const updateMessageText = (text, isStreaming) => {
+            console.log('Actualizando mensaje con texto:', text);
+            setChatMessages((prev) => {
+                const newMessages = prev.map((msg) => 
+                    msg.id === botMessageId 
+                        ? { ...msg, text: text, isStreaming: isStreaming } 
+                        : msg
+                );
+                console.log('Nuevo estado de mensajes:', newMessages);
+                return newMessages;
+            });
+        };
+
         try {
-          const messageObj = typeof data.data.message === 'string' 
-            ? JSON.parse(data.data.message) 
-            : data.data.message
-          
-          if (messageObj && messageObj.data && messageObj.data.message) {
-            fullText = messageObj.data.message
-          } else {
-            fullText = data.data.message
-          }
-        } catch (e) {
-          // Si no es un objeto JSON, usamos el mensaje directamente
-          fullText = data.data.message
+            for (let i = 0; i < fullText.length; i += chunkSize) {
+                const nextChunk = fullText.slice(i, i + chunkSize);
+                displayedText += nextChunk;
+                updateMessageText(displayedText, i + chunkSize < fullText.length);
+                await new Promise((resolve) => setTimeout(resolve, delay));
+            }
+            updateMessageText(fullText, false);
+        } catch (error) {
+            console.error("Error en el streaming de texto:", error);
+            updateMessageText(fullText, false);
         }
-      } else {
-        fullText = "Hubo un problema al obtener respuesta."
-      }
-
-      let displayedText = ""
-      const baseChunkSize = 5
-      const chunkSize = Math.max(baseChunkSize, Math.floor(fullText.length / 200))
-      const delay = fullText.length > 1000 ? 5 : 10
-
-      const updateMessageText = (text, isStreaming) => {
-        console.log('Actualizando mensaje con texto:', text)
-        setChatMessages((prev) => {
-          const newMessages = prev.map((msg) => 
-            msg.id === botMessageId 
-              ? { ...msg, text: text, isStreaming: isStreaming } 
-              : msg
-          )
-          console.log('Nuevo estado de mensajes:', newMessages)
-          return newMessages
-        })
-      }
-
-      try {
-        for (let i = 0; i < fullText.length; i += chunkSize) {
-          const nextChunk = fullText.slice(i, i + chunkSize)
-          displayedText += nextChunk
-          updateMessageText(displayedText, i + chunkSize < fullText.length)
-          await new Promise((resolve) => setTimeout(resolve, delay))
-        }
-        updateMessageText(fullText, false)
-      } catch (error) {
-        console.error("Error en el streaming de texto:", error)
-        updateMessageText(fullText, false)
-      }
     } catch (error) {
-      console.error("Error al conectar con el backend:", error)
-      setChatMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === botMessageId
-            ? { ...msg, text: "Hubo un error al conectarse con el servidor.", isStreaming: false }
-            : msg,
-        ),
-      )
+        console.error("Error al conectar con el backend:", error);
+        setChatMessages((prev) =>
+            prev.map((msg) =>
+                msg.id === botMessageId
+                    ? { ...msg, text: "Hubo un error al conectarse con el servidor.", isStreaming: false }
+                    : msg,
+            ),
+        );
     } finally {
-      setIsTyping(false)
+        setIsTyping(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (messagesEndRef.current) {

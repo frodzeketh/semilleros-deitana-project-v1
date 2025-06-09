@@ -3,7 +3,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-const { processQuery, resetContext } = require('./openAI');
+const { processQuery: processQueryAdmin } = require('./openAI');
+const { processQuery: processQueryEmployee } = require('./openAIEmployee');
+const authMiddleware = require('./middleware/authMiddleware');
 
 dotenv.config();
 
@@ -36,28 +38,31 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, '../build')));
 
 // Ruta para procesar mensajes
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', authMiddleware, async (req, res) => {
     try {
         const { message } = req.body;
         
-        // Verificar si es una nueva conexión
+        // Verificar si es un mensaje de nueva conexión
         if (message === 'NUEVA_CONEXION') {
-            resetContext();
             return res.json({
                 success: true,
                 data: {
-                    message: "¡Hola! Soy Deitana IA, tu asistente virtual. ¿En qué puedo ayudarte hoy?"
+                    message: '¡Hola! Soy el asistente virtual de Semilleros Deitana. ¿En qué puedo ayudarte hoy?'
                 }
             });
         }
 
-        const response = await processQuery(message);
+        // Procesar la consulta según el rol del usuario
+        const response = req.user.isAdmin ? 
+            await processQueryAdmin(message) : 
+            await processQueryEmployee(message);
+
         res.json(response);
     } catch (error) {
-        console.error('Error al procesar el mensaje:', error);
+        console.error('Error en el endpoint de chat:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al procesar el mensaje'
+            error: 'Error al procesar la consulta'
         });
     }
 });
