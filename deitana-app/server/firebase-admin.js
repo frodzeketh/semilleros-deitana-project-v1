@@ -10,14 +10,14 @@ console.log('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'Configu
 // Verificar si ya existe una instancia de la app
 if (!admin.apps.length) {
   try {
-    // Inicializar Firebase Admin con las credenciales desde variables de entorno
-    admin.initializeApp({
-      credential: admin.credential.cert({
+// Inicializar Firebase Admin con las credenciales desde variables de entorno
+admin.initializeApp({
+    credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-      })
-    });
+    })
+});
 
     console.log('Firebase Admin inicializado correctamente');
   } catch (error) {

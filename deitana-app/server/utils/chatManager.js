@@ -41,7 +41,7 @@ class ChatManager {
             const timestamp = new Date().toISOString();
 
             const conversationData = {
-                userId,
+                title: initialMessage.substring(0, 50) + (initialMessage.length > 50 ? '...' : ''),
                 createdAt: timestamp,
                 updatedAt: timestamp,
                 messages: [{
@@ -85,7 +85,6 @@ class ChatManager {
             const snapshot = await this.chatsCollection
                 .doc(userId)
                 .collection('conversations')
-                .where('updatedAt', '>=', admin.firestore.FieldValue.serverTimestamp())
                 .orderBy('updatedAt', 'desc')
                 .get();
 
@@ -155,14 +154,10 @@ class ChatManager {
                 throw new Error('Conversación no encontrada');
             }
 
-            const data = conversation.data();
-            if (data.userId !== userId) {
-                throw new Error('No autorizado para acceder a esta conversación');
-            }
-
             const timestamp = new Date().toISOString();
             const newMessage = {
-                ...message,
+                role: message.role,
+                content: message.content,
                 timestamp: timestamp
             };
 

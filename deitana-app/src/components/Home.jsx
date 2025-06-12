@@ -154,9 +154,9 @@ const Home = () => {
     console.log('Conversation ID actual:', currentConversationId);
 
     const userMessage = {
-      id: Date.now(),
-      text: message,
-      sender: "user",
+        id: Date.now(),
+        text: message,
+        sender: "user",
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
@@ -166,20 +166,20 @@ const Home = () => {
     // Crear mensaje del bot con estado de carga
     const botMessage = {
       id: Date.now() + 1,
-      text: "",
-      sender: "bot",
-      isStreaming: true,
-    };
+            text: "",
+            sender: "bot",
+            isStreaming: true,
+        };
     setChatMessages((prev) => {
       console.log('Creando nuevo mensaje del bot:', botMessage);
       return [...prev, botMessage];
     });
 
     try {
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) {
-        throw new Error('No hay usuario autenticado');
-      }
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) {
+            throw new Error('No hay usuario autenticado');
+        }
 
       console.log('Token obtenido, realizando petición al servidor...');
 
@@ -221,12 +221,12 @@ const Home = () => {
       });
 
       const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
           "Conversation-Id": currentConversationId || 'new'
-        },
+            },
         body: JSON.stringify(body)
       });
 
@@ -238,7 +238,7 @@ const Home = () => {
         throw new Error(errorData.error || 'Error en el procesamiento del mensaje');
       }
 
-      const data = await response.json();
+        const data = await response.json();
       console.log('Datos recibidos:', data);
       
       if (!data.success) {
@@ -260,8 +260,8 @@ const Home = () => {
     } catch (error) {
       console.error("Error al enviar mensaje:", error);
       // Actualizar el mensaje del bot con el error
-      setChatMessages((prev) =>
-        prev.map((msg) =>
+        setChatMessages((prev) =>
+            prev.map((msg) =>
           msg.id === botMessage.id
             ? {
                 ...msg,
@@ -271,9 +271,9 @@ const Home = () => {
               }
             : msg
         )
-      );
+        );
     } finally {
-      setIsTyping(false);
+        setIsTyping(false);
       console.log('=== FIN ENVÍO DE MENSAJE ===');
     }
   };

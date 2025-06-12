@@ -375,7 +375,7 @@ async function processQuery({ message, userId }) {
 
         // Procesar la consulta con OpenAI
         console.log('Enviando consulta a OpenAI...');
-        const completion = await openai.chat.completions.create({
+            const completion = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [
                 { role: "system", content: "Eres un asistente virtual especializado en atención al cliente. Tu objetivo es ayudar a los empleados a encontrar información sobre clientes y resolver sus consultas de manera eficiente y profesional." },

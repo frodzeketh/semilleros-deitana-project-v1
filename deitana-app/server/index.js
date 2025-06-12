@@ -123,7 +123,7 @@ app.post('/chat/new', verifyToken, async (req, res) => {
 
 // Ruta para procesar mensajes
 app.post('/chat', verifyToken, async (req, res) => {
-  try {
+    try {
     console.log('=== INICIO PROCESAMIENTO DE MENSAJE ===');
     console.log('Body recibido:', req.body);
     console.log('Usuario autenticado:', req.user);
@@ -158,21 +158,21 @@ app.post('/chat', verifyToken, async (req, res) => {
 
     console.log('=== FIN PROCESAMIENTO DE MENSAJE ===');
     res.json({ 
-      success: true, 
-      data: { 
+                success: true,
+                data: {
         message: response.data.message,
         conversationId 
       }
     });
-  } catch (error) {
+    } catch (error) {
     console.error('Error en el chat:', error);
     console.error('Stack trace:', error.stack);
-    res.status(500).json({ 
-      success: false, 
+        res.status(500).json({
+            success: false,
       error: 'Error en el procesamiento del mensaje',
       details: error.message 
-    });
-  }
+        });
+    }
 });
 
 // Para cualquier otra ruta, servir el index.html del frontend
