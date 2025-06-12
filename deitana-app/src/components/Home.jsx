@@ -31,6 +31,9 @@ const Home = () => {
   // Datos de ejemplo para el historial de chats
   const [chatHistory, setChatHistory] = useState([])
 
+  // Agregar estado para forzar la actualización de las fechas
+  const [timeUpdate, setTimeUpdate] = useState(0);
+
   // Cargar el historial de chats al montar el componente
   useEffect(() => {
     const loadChatHistory = async () => {
@@ -143,6 +146,51 @@ const Home = () => {
       }]);
     }
   };
+
+  const loadConversationMessages = async (conversationId) => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/conversations/${conversationId}/messages`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al cargar los mensajes: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Convertir los mensajes al formato que espera el componente
+        const formattedMessages = data.data.map(msg => ({
+          id: Date.now() + Math.random(),
+          text: msg.content,
+          sender: msg.role === 'user' ? 'user' : 'bot'
+        }));
+        setChatMessages(formattedMessages);
+      } else {
+        throw new Error(data.error || 'Error al cargar los mensajes');
+      }
+    } catch (error) {
+      console.error('Error al cargar los mensajes:', error);
+      setChatMessages(prev => [...prev, {
+        id: Date.now(),
+        text: "Hubo un error al cargar los mensajes. Por favor, intenta de nuevo.",
+        sender: "bot",
+        isError: true
+      }]);
+    }
+  };
+
+  // Modificar el useEffect para cargar los mensajes cuando cambia la conversación
+  useEffect(() => {
+    if (currentConversationId && !currentConversationId.startsWith('temp_')) {
+      loadConversationMessages(currentConversationId);
+    }
+  }, [currentConversationId]);
 
   // Modificar la función handleSubmit para usar la conversación actual
   const handleSubmit = async (e) => {
@@ -425,6 +473,48 @@ const Home = () => {
     }
   }, [styleAdded])
 
+  const handleConversationClick = (conversationId) => {
+    console.log('Conversación seleccionada:', conversationId);
+    setCurrentConversationId(conversationId);
+    if (isMobile) {
+      setMobileSidebarOpen(false);
+    }
+  };
+
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    const diffInMonths = Math.floor(diffInDays / 30);
+
+    if (diffInMonths > 0) {
+      return `Hace ${diffInMonths} ${diffInMonths === 1 ? 'mes' : 'meses'}`;
+    } else if (diffInWeeks > 0) {
+      return `Hace ${diffInWeeks} ${diffInWeeks === 1 ? 'semana' : 'semanas'}`;
+    } else if (diffInDays > 0) {
+      return `Hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
+    } else if (diffInHours > 0) {
+      return `Hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
+    } else if (diffInMinutes > 0) {
+      return `Hace ${diffInMinutes} ${diffInMinutes === 1 ? 'minuto' : 'minutos'}`;
+    } else {
+      return 'Hace un momento';
+    }
+  };
+
+  // Actualizar las fechas cada minuto
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeUpdate(prev => prev + 1);
+    }, 60000); // 60000 ms = 1 minuto
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="ds-home-container">
       {/* Sidebar */}
@@ -481,19 +571,29 @@ const Home = () => {
               {/* Sección Recientes */}
               <div className="ds-chat-section">
                 <h3 className="ds-section-title">Recientes</h3>
-                {chatHistory.map((chat) => (
-                  <button key={chat.id} className="ds-chat-item">
-                    <Clock size={16} className="ds-chat-icon" />
-                    <div className="ds-chat-info">
-                      <span className="ds-chat-title">{chat.title}</span>
-                      <span className="ds-chat-timestamp">{chat.timestamp}</span>
-                    </div>
+                <div className="space-y-2">
+                  {chatHistory.map((chat) => (
+                    <button
+                      key={`${chat.id}-${timeUpdate}`}
+                      onClick={() => handleConversationClick(chat.id)}
+                      className={`ds-chat-item ${currentConversationId === chat.id ? 'active' : ''}`}
+                    >
+                      <Clock size={16} className="ds-chat-icon" />
+                      <div className="ds-chat-info">
+                        <span className="ds-chat-title">
+                          {chat.title === 'NUEVA_CONEXION' ? 'Nueva conversación' : chat.title}
+                        </span>
+                        <span className="ds-chat-timestamp">
+                          {formatTimeAgo(chat.updatedAt)}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                  <button className="ds-show-more-button">
+                    <span>Mostrar más</span>
+                    <ChevronDown size={16} />
                   </button>
-                ))}
-                <button className="ds-show-more-button">
-                  <span>Mostrar más</span>
-                  <ChevronDown size={16} />
-                </button>
+                </div>
               </div>
             </div>
 

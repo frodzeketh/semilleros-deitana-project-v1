@@ -87,10 +87,36 @@ app.get('/conversations', verifyToken, async (req, res) => {
   }
 });
 
-// Ruta para crear nueva conversación
+// Ruta para obtener los mensajes de una conversación
+app.get('/conversations/:conversationId/messages', verifyToken, async (req, res) => {
+  try {
+    console.log('=== INICIO OBTENCIÓN DE MENSAJES ===');
+    console.log('Conversación:', req.params.conversationId);
+    console.log('Usuario:', req.user.uid);
+
+    const messages = await chatManager.getConversationMessages(req.user.uid, req.params.conversationId);
+    console.log('Mensajes obtenidos:', messages);
+
+    console.log('=== FIN OBTENCIÓN DE MENSAJES ===');
+    res.json({ 
+      success: true, 
+      data: messages 
+    });
+  } catch (error) {
+    console.error('Error al obtener mensajes:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error al obtener los mensajes',
+      details: error.message 
+    });
+  }
+});
+
+// Ruta para crear una nueva conversación
 app.post('/chat/new', verifyToken, async (req, res) => {
   try {
-    console.log('=== INICIO CREACIÓN DE CONVERSACIÓN ===');
+    console.log('=== INICIO CREACIÓN DE NUEVA CONVERSACIÓN ===');
     console.log('Body recibido:', req.body);
     console.log('Usuario autenticado:', req.user);
 
@@ -99,23 +125,54 @@ app.post('/chat/new', verifyToken, async (req, res) => {
       throw new Error('El mensaje es requerido');
     }
 
-    const conversationId = await chatManager.createConversation(req.user.uid, message);
-    console.log('Nueva conversación creada con ID:', conversationId);
-    console.log('=== FIN CREACIÓN DE CONVERSACIÓN ===');
+    // Si el mensaje es NUEVA_CONEXION, solo devolvemos un ID temporal
+    if (message === 'NUEVA_CONEXION') {
+      console.log('Mensaje inicial es NUEVA_CONEXION, devolviendo ID temporal');
+      return res.json({ 
+        success: true, 
+        data: { 
+          conversationId: 'temp_' + Date.now(),
+          message: 'Hola, soy Deitana IA. ¿En qué puedo ayudarte hoy?'
+        }
+      });
+    }
 
+    // Crear nueva conversación solo si hay un mensaje real
+    const conversationId = await chatManager.createConversation(req.user.uid, message);
+    if (!conversationId) {
+      throw new Error('No se pudo crear la conversación');
+    }
+
+    // Procesar respuesta según el rol
+    console.log('Procesando respuesta según rol:', req.user.isAdmin);
+    let response;
+    if (req.user.isAdmin) {
+      response = await processQuery({ message, userId: req.user.uid });
+    } else {
+      response = await processQueryEmployee({ message, userId: req.user.uid });
+    }
+
+    // Guardar respuesta del asistente
+    console.log('Guardando respuesta del asistente...');
+    await chatManager.addMessageToConversation(req.user.uid, conversationId, {
+      role: 'assistant',
+      content: response.data.message
+    });
+
+    console.log('=== FIN CREACIÓN DE NUEVA CONVERSACIÓN ===');
     res.json({ 
       success: true, 
       data: { 
         conversationId,
-        message: 'Conversación creada exitosamente'
+        message: response.data.message
       }
     });
   } catch (error) {
-    console.error('Error al crear conversación:', error);
+    console.error('Error al crear nueva conversación:', error);
     console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false, 
-      error: 'Error al crear conversación',
+      error: 'Error al crear la conversación',
       details: error.message 
     });
   }

@@ -20,10 +20,10 @@ class ChatManager {
 
         if (!userChatDoc.exists) {
             console.log('Creando nuevo documento para usuario:', userId);
+            const timestamp = new Date().toISOString();
             await userChatRef.set({
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-                userId: userId
+                createdAt: timestamp,
+                lastUpdated: timestamp
             });
         }
 
@@ -37,11 +37,25 @@ class ChatManager {
         console.log('Mensaje inicial:', initialMessage);
 
         try {
+            // Si el mensaje es NUEVA_CONEXION o está vacío, no creamos la conversación
+            if (!initialMessage || initialMessage === 'NUEVA_CONEXION') {
+                console.log('No se creará la conversación - mensaje inicial inválido');
+                return null;
+            }
+
             const conversationRef = this.chatsCollection.doc(userId).collection('conversations').doc();
             const timestamp = new Date().toISOString();
 
+            // Generar un título más descriptivo
+            let title = 'Nueva conversación';
+            if (initialMessage && initialMessage !== 'NUEVA_CONEXION') {
+                // Limpiar el mensaje para el título
+                const cleanMessage = initialMessage.trim();
+                title = cleanMessage.substring(0, 50) + (cleanMessage.length > 50 ? '...' : '');
+            }
+
             const conversationData = {
-                title: initialMessage.substring(0, 50) + (initialMessage.length > 50 ? '...' : ''),
+                title: title,
                 createdAt: timestamp,
                 updatedAt: timestamp,
                 messages: [{
@@ -123,10 +137,6 @@ class ChatManager {
             }
 
             const data = conversation.data();
-            if (data.userId !== userId) {
-                throw new Error('No autorizado para acceder a esta conversación');
-            }
-
             console.log(`Se encontraron ${data.messages.length} mensajes`);
             console.log('=== FIN OBTENCIÓN DE MENSAJES ===');
             return data.messages;
