@@ -185,6 +185,32 @@ class ChatManager {
             throw error;
         }
     }
+
+    async verifyChatOwnership(userId, conversationId) {
+        console.log('=== INICIO VERIFICACIÓN DE PROPIEDAD ===');
+        console.log('Usuario:', userId);
+        console.log('Conversación:', conversationId);
+
+        try {
+            const conversationRef = this.chatsCollection
+                .doc(userId)
+                .collection('conversations')
+                .doc(conversationId);
+            const conversation = await conversationRef.get();
+
+            if (!conversation.exists) {
+                throw new Error('Conversación no encontrada');
+            }
+
+            console.log('Propiedad verificada correctamente');
+            console.log('=== FIN VERIFICACIÓN DE PROPIEDAD ===');
+            return true;
+        } catch (error) {
+            console.error('Error al verificar propiedad:', error);
+            console.error('Stack trace:', error.stack);
+            throw error;
+        }
+    }
 }
 
 module.exports = new ChatManager(); 

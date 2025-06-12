@@ -94,6 +94,9 @@ app.get('/conversations/:conversationId/messages', verifyToken, async (req, res)
     console.log('Conversación:', req.params.conversationId);
     console.log('Usuario:', req.user.uid);
 
+    // Verificar que el usuario es propietario del chat
+    await chatManager.verifyChatOwnership(req.user.uid, req.params.conversationId);
+
     const messages = await chatManager.getConversationMessages(req.user.uid, req.params.conversationId);
     console.log('Mensajes obtenidos:', messages);
 

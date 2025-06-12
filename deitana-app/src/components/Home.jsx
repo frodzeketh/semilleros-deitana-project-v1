@@ -5,6 +5,7 @@ import { MessageSquare, PanelLeftClose, Send, ChevronDown, Search, Settings, Log
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -12,6 +13,8 @@ const API_URL =
     : "https://semilleros-deitana-project-v1-production.up.railway.app"
 
 const Home = () => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [message, setMessage] = useState("")
   const [chatMessages, setChatMessages] = useState([])
@@ -96,6 +99,24 @@ const Home = () => {
     }
   }
 
+  // Cargar la conversación desde la URL al montar el componente
+  useEffect(() => {
+    const conversationId = searchParams.get('chat');
+    if (conversationId && !conversationId.startsWith('temp_')) {
+      setCurrentConversationId(conversationId);
+    }
+  }, [searchParams]);
+
+  const handleConversationClick = (conversationId) => {
+    console.log('Conversación seleccionada:', conversationId);
+    setCurrentConversationId(conversationId);
+    // Actualizar la URL sin recargar la página
+    setSearchParams({ chat: conversationId });
+    if (isMobile) {
+      setMobileSidebarOpen(false);
+    }
+  };
+
   const handleNewChat = async () => {
     try {
       const token = await auth.currentUser?.getIdToken();
@@ -117,8 +138,10 @@ const Home = () => {
 
       const data = await response.json();
       if (data.success) {
-        setCurrentConversationId(data.conversationId);
+        setCurrentConversationId(data.data.conversationId);
         setChatMessages([]);
+        // Limpiar la URL
+        setSearchParams({});
         // Recargar el historial de chats
         const historyResponse = await fetch(`${API_URL}/conversations`, {
           headers: {
@@ -137,7 +160,6 @@ const Home = () => {
       }
     } catch (error) {
       console.error('Error al crear nuevo chat:', error);
-      // Mostrar mensaje de error al usuario
       setChatMessages(prev => [...prev, {
         id: Date.now(),
         text: "Hubo un error al crear el chat. Por favor, intenta de nuevo.",
@@ -472,14 +494,6 @@ const Home = () => {
       }
     }
   }, [styleAdded])
-
-  const handleConversationClick = (conversationId) => {
-    console.log('Conversación seleccionada:', conversationId);
-    setCurrentConversationId(conversationId);
-    if (isMobile) {
-      setMobileSidebarOpen(false);
-    }
-  };
 
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
