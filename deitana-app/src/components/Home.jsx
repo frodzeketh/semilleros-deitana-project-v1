@@ -8,8 +8,8 @@ import { auth } from "../components/Authenticator/firebase"
 
 const API_URL =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:3001/api"
-    : "https://semilleros-deitana-project-v1-production.up.railway.app/api"
+    ? "http://localhost:3001"
+    : "https://semilleros-deitana-project-v1-production.up.railway.app"
 
 const Home = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -17,6 +17,7 @@ const Home = () => {
   const [chatMessages, setChatMessages] = useState([])
   const [isTyping, setIsTyping] = useState(false)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [currentConversationId, setCurrentConversationId] = useState(null)
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
   const mainContentRef = useRef(null)
@@ -28,20 +29,38 @@ const Home = () => {
   const { logout } = useAuth()
 
   // Datos de ejemplo para el historial de chats
-  const chatHistory = {
-    recent: [
-      {
-        id: 1,
-        title: "Saludo Inicial y Asistencia",
-        timestamp: "Hace 2 horas",
-      },
-      {
-        id: 2,
-        title: "Ejemplo de clientes",
-        timestamp: "Ayer",
-      },
-    ],
-  }
+  const [chatHistory, setChatHistory] = useState([])
+
+  // Cargar el historial de chats al montar el componente
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) return;
+
+        const response = await fetch(`${API_URL}/conversations`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error al cargar el historial: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          setChatHistory(data.data);
+        } else {
+          throw new Error(data.error || 'Error al cargar el historial de chats');
+        }
+      } catch (error) {
+        console.error('Error al cargar el historial de chats:', error);
+      }
+    };
+
+    loadChatHistory();
+  }, []);
 
   // Detectar si estamos en móvil
   useEffect(() => {
@@ -74,117 +93,188 @@ const Home = () => {
     }
   }
 
-  const handleNewChat = () => {
-    // Lógica para crear un nuevo chat
-    console.log("Nuevo chat...")
-    setChatMessages([])
-    // Aquí puedes agregar más lógica como limpiar el estado, generar nuevo ID de sesión, etc.
-  }
+  const handleNewChat = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
 
-  // Modificar la función handleSubmit para soportar streaming de texto
+      // Crear nueva conversación
+      const response = await fetch(`${API_URL}/chat/new`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: 'NUEVA_CONEXION' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al crear nueva conversación');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setCurrentConversationId(data.conversationId);
+        setChatMessages([]);
+        // Recargar el historial de chats
+        const historyResponse = await fetch(`${API_URL}/conversations`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!historyResponse.ok) {
+          throw new Error('Error al cargar el historial');
+        }
+
+        const historyData = await historyResponse.json();
+        if (historyData.success) {
+          setChatHistory(historyData.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error al crear nuevo chat:', error);
+      // Mostrar mensaje de error al usuario
+      setChatMessages(prev => [...prev, {
+        id: Date.now(),
+        text: "Hubo un error al crear el chat. Por favor, intenta de nuevo.",
+        sender: "bot",
+        isError: true
+      }]);
+    }
+  };
+
+  // Modificar la función handleSubmit para usar la conversación actual
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    // Generar un ID de sesión si no existe
-    if (!localStorage.getItem("sessionId")) {
-        localStorage.setItem("sessionId", `session-${Date.now()}`);
-    }
-    const sessionId = localStorage.getItem("sessionId");
+    console.log('=== INICIO ENVÍO DE MENSAJE ===');
+    console.log('Mensaje a enviar:', message);
+    console.log('Conversation ID actual:', currentConversationId);
 
     const userMessage = {
-        id: Date.now(),
-        text: message,
-        sender: "user",
+      id: Date.now(),
+      text: message,
+      sender: "user",
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
     setMessage("");
     setIsTyping(true);
 
-    // Crear un ID único para el mensaje del bot
-    const botMessageId = Date.now() + 1;
-
-    // Añadir un mensaje vacío del bot que se irá llenando
+    // Crear mensaje del bot con estado de carga
+    const botMessage = {
+      id: Date.now() + 1,
+      text: "",
+      sender: "bot",
+      isStreaming: true,
+    };
     setChatMessages((prev) => {
-        const newMessage = {
-            id: botMessageId,
-            text: "",
-            sender: "bot",
-            isStreaming: true,
-        };
-        console.log('Creando nuevo mensaje del bot:', newMessage);
-        return [...prev, newMessage];
+      console.log('Creando nuevo mensaje del bot:', botMessage);
+      return [...prev, botMessage];
     });
 
     try {
-        // Obtener el token de Firebase
-        const token = await auth.currentUser?.getIdToken();
-        if (!token) {
-            throw new Error('No hay usuario autenticado');
-        }
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error('No hay usuario autenticado');
+      }
 
-        const response = await fetch(`${API_URL}/chat`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-                "Session-Id": sessionId,
-            },
-            body: JSON.stringify({ message }),
+      console.log('Token obtenido, realizando petición al servidor...');
+
+      let url = `${API_URL}/chat`;
+      let body = { message };
+
+      // Si no hay conversación actual, crear una nueva
+      if (!currentConversationId) {
+        console.log('Creando nueva conversación...');
+        const newConversationResponse = await fetch(`${API_URL}/chat/new`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ message })
         });
 
-        const data = await response.json();
-
-        // Asegurarnos de que el texto sea una cadena
-        let fullText = "";
-        if (data.success && data.data && data.data.message) {
-            fullText = data.data.message;
-        } else {
-            fullText = "Hubo un problema al obtener respuesta.";
+        if (!newConversationResponse.ok) {
+          throw new Error('Error al crear nueva conversación');
         }
 
-        let displayedText = "";
-        const baseChunkSize = 5;
-        const chunkSize = Math.max(baseChunkSize, Math.floor(fullText.length / 200));
-        const delay = fullText.length > 1000 ? 5 : 10;
-
-        const updateMessageText = (text, isStreaming) => {
-            console.log('Actualizando mensaje con texto:', text);
-            setChatMessages((prev) => {
-                const newMessages = prev.map((msg) => 
-                    msg.id === botMessageId 
-                        ? { ...msg, text: text, isStreaming: isStreaming } 
-                        : msg
-                );
-                console.log('Nuevo estado de mensajes:', newMessages);
-                return newMessages;
-            });
-        };
-
-        try {
-            for (let i = 0; i < fullText.length; i += chunkSize) {
-                const nextChunk = fullText.slice(i, i + chunkSize);
-                displayedText += nextChunk;
-                updateMessageText(displayedText, i + chunkSize < fullText.length);
-                await new Promise((resolve) => setTimeout(resolve, delay));
-            }
-            updateMessageText(fullText, false);
-        } catch (error) {
-            console.error("Error en el streaming de texto:", error);
-            updateMessageText(fullText, false);
+        const newConversationData = await newConversationResponse.json();
+        if (!newConversationData.success) {
+          throw new Error(newConversationData.error || 'Error al crear nueva conversación');
         }
+
+        setCurrentConversationId(newConversationData.data.conversationId);
+        body.conversationId = newConversationData.data.conversationId;
+      } else {
+        body.conversationId = currentConversationId;
+      }
+
+      console.log('URL:', url);
+      console.log('Headers:', {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "Conversation-Id": currentConversationId || 'new'
+      });
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "Conversation-Id": currentConversationId || 'new'
+        },
+        body: JSON.stringify(body)
+      });
+
+      console.log('Respuesta recibida:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error en la respuesta:', errorData);
+        throw new Error(errorData.error || 'Error en el procesamiento del mensaje');
+      }
+
+      const data = await response.json();
+      console.log('Datos recibidos:', data);
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Error en el procesamiento del mensaje');
+      }
+
+      // Actualizar el mensaje del bot con la respuesta
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessage.id
+            ? {
+                ...msg,
+                text: data.data.message,
+                isStreaming: false,
+              }
+            : msg
+        )
+      );
     } catch (error) {
-        console.error("Error al conectar con el backend:", error);
-        setChatMessages((prev) =>
-            prev.map((msg) =>
-                msg.id === botMessageId
-                    ? { ...msg, text: "Hubo un error al conectarse con el servidor.", isStreaming: false }
-                    : msg,
-            ),
-        );
+      console.error("Error al enviar mensaje:", error);
+      // Actualizar el mensaje del bot con el error
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessage.id
+            ? {
+                ...msg,
+                text: "Hubo un error al conectarse con el servidor.",
+                isStreaming: false,
+                isError: true,
+              }
+            : msg
+        )
+      );
     } finally {
-        setIsTyping(false);
+      setIsTyping(false);
+      console.log('=== FIN ENVÍO DE MENSAJE ===');
     }
   };
 
@@ -391,7 +481,7 @@ const Home = () => {
               {/* Sección Recientes */}
               <div className="ds-chat-section">
                 <h3 className="ds-section-title">Recientes</h3>
-                {chatHistory.recent.map((chat) => (
+                {chatHistory.map((chat) => (
                   <button key={chat.id} className="ds-chat-item">
                     <Clock size={16} className="ds-chat-icon" />
                     <div className="ds-chat-info">

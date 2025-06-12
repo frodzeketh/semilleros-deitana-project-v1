@@ -1,3 +1,6 @@
+// Importar Firebase Admin primero
+require('./firebase-admin');
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -6,6 +9,7 @@ const path = require('path');
 const { processQuery } = require('./openAI');
 const { processQuery: processQueryEmployee } = require('./employee/openAIEmployee');
 const { verifyToken } = require('./middleware/authMiddleware');
+const chatManager = require('./utils/chatManager');
 
 dotenv.config();
 
@@ -55,41 +59,120 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// Ruta principal de chat que redirige según el rol
-app.post('/api/chat', verifyToken, async (req, res) => {
-    try {
-        const { message } = req.body;
-        const userId = req.user.uid;
-
-        console.log('=== INICIO RUTA CHAT ===');
-        console.log('Mensaje recibido:', message);
-        console.log('Usuario autenticado:', req.user);
-
-        // Procesar según el rol del usuario
-        const response = req.user.isAdmin ? 
-            await processQuery({ message, userId }) : 
-            await processQueryEmployee({ message, userId });
-
-        console.log('Respuesta generada:', response);
-        console.log('Enviando respuesta al cliente...');
-        res.json(response);
-        console.log('=== FIN RUTA CHAT ===');
-    } catch (error) {
-        console.error('Error en el endpoint de chat:', error);
-        res.status(500).json({ error: error.message });
-    }
+// Ruta de prueba
+app.get('/test', (req, res) => {
+  res.json({ message: 'API funcionando correctamente' });
 });
 
-// Ruta para obtener el historial de conversaciones
-app.get('/api/conversations', verifyToken, async (req, res) => {
-    try {
-        const userId = req.user.uid;
-        const conversations = await chatManager.getUserConversations(userId);
-        res.json({ success: true, conversations });
-    } catch (error) {
-        console.error('Error al obtener conversaciones:', error);
-        res.status(500).json({ error: 'Error al obtener el historial de conversaciones' });
+// Ruta para obtener conversaciones
+app.get('/conversations', verifyToken, async (req, res) => {
+  try {
+    console.log('=== INICIO OBTENCIÓN DE CONVERSACIONES ===');
+    console.log('Usuario autenticado:', req.user);
+    
+    const conversations = await chatManager.getConversations(req.user.uid);
+    
+    console.log('Conversaciones obtenidas:', conversations);
+    console.log('=== FIN OBTENCIÓN DE CONVERSACIONES ===');
+    
+    res.json({ success: true, data: conversations });
+  } catch (error) {
+    console.error('Error al obtener conversaciones:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error al obtener conversaciones',
+      details: error.message 
+    });
+  }
+});
+
+// Ruta para crear nueva conversación
+app.post('/chat/new', verifyToken, async (req, res) => {
+  try {
+    console.log('=== INICIO CREACIÓN DE CONVERSACIÓN ===');
+    console.log('Body recibido:', req.body);
+    console.log('Usuario autenticado:', req.user);
+
+    const { message } = req.body;
+    if (!message) {
+      throw new Error('El mensaje es requerido');
     }
+
+    const conversationId = await chatManager.createConversation(req.user.uid, message);
+    console.log('Nueva conversación creada con ID:', conversationId);
+    console.log('=== FIN CREACIÓN DE CONVERSACIÓN ===');
+
+    res.json({ 
+      success: true, 
+      data: { 
+        conversationId,
+        message: 'Conversación creada exitosamente'
+      }
+    });
+  } catch (error) {
+    console.error('Error al crear conversación:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error al crear conversación',
+      details: error.message 
+    });
+  }
+});
+
+// Ruta para procesar mensajes
+app.post('/chat', verifyToken, async (req, res) => {
+  try {
+    console.log('=== INICIO PROCESAMIENTO DE MENSAJE ===');
+    console.log('Body recibido:', req.body);
+    console.log('Usuario autenticado:', req.user);
+
+    const { message, conversationId } = req.body;
+    if (!message) {
+      throw new Error('El mensaje es requerido');
+    }
+
+    // Guardar mensaje del usuario
+    console.log('Guardando mensaje del usuario...');
+    await chatManager.addMessageToConversation(req.user.uid, conversationId, {
+      role: 'user',
+      content: message
+    });
+
+    // Procesar respuesta según el rol
+    console.log('Procesando respuesta según rol:', req.user.isAdmin);
+    let response;
+    if (req.user.isAdmin) {
+      response = await processQuery({ message, userId: req.user.uid });
+    } else {
+      response = await processQueryEmployee({ message, userId: req.user.uid });
+    }
+
+    // Guardar respuesta del asistente
+    console.log('Guardando respuesta del asistente...');
+    await chatManager.addMessageToConversation(req.user.uid, conversationId, {
+      role: 'assistant',
+      content: response.data.message
+    });
+
+    console.log('=== FIN PROCESAMIENTO DE MENSAJE ===');
+    res.json({ 
+      success: true, 
+      data: { 
+        message: response.data.message,
+        conversationId 
+      }
+    });
+  } catch (error) {
+    console.error('Error en el chat:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error en el procesamiento del mensaje',
+      details: error.message 
+    });
+  }
 });
 
 // Para cualquier otra ruta, servir el index.html del frontend
