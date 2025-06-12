@@ -1,7 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 
 .login-page {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -105,7 +105,7 @@ input:focus {
 }
 
 .ds-home-container {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   display: flex;
   height: 100vh;
   width: 100%;
@@ -115,7 +115,7 @@ input:focus {
 
 /* Sidebar Styles */
 .ds-sidebar {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   background-color: #f8f9fa;
   border-right: 1px solid #e9ecef;
   display: flex;
@@ -126,7 +126,7 @@ input:focus {
 }
 
 .ds-sidebar-expanded {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   width: 260px;
 }
 
@@ -135,7 +135,7 @@ input:focus {
 }
 
 .ds-sidebar-header {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -348,7 +348,7 @@ input:focus {
 }
 
 .options-sidebar {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 15px;
 }
 
