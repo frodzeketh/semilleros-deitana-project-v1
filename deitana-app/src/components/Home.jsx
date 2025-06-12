@@ -139,21 +139,7 @@ const Home = () => {
         // Asegurarnos de que el texto sea una cadena
         let fullText = "";
         if (data.success && data.data && data.data.message) {
-            // Si el mensaje es un objeto JSON, intentamos extraer el mensaje real
-            try {
-                const messageObj = typeof data.data.message === 'string' 
-                    ? JSON.parse(data.data.message) 
-                    : data.data.message;
-                
-                if (messageObj && messageObj.data && messageObj.data.message) {
-                    fullText = messageObj.data.message;
-                } else {
-                    fullText = data.data.message;
-                }
-            } catch (e) {
-                // Si no es un objeto JSON, usamos el mensaje directamente
-                fullText = data.data.message;
-            }
+            fullText = data.data.message;
         } else {
             fullText = "Hubo un problema al obtener respuesta.";
         }

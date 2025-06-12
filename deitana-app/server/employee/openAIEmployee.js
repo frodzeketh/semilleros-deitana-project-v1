@@ -1,8 +1,10 @@
 const { OpenAI } = require('openai');
-const pool = require('./db');
+const pool = require('../db');
+const chatManager = require('../utils/chatManager');
+const admin = require('../firebase-admin');
 require('dotenv').config();
-const promptBase = require('./promptBaseEmployee').promptBase;
-const mapaERP = require('./mapaERPEmployee');
+const promptBase = require('../promptBase').promptBase;
+const mapaERP = require('../mapaERP');
 
 console.log('=== VERIFICACIÓN DE IMPORTACIÓN EMPLEADO ===');
 console.log('mapaERP importado:', !!mapaERP);
@@ -314,213 +316,134 @@ function obtenerContenidoMapaERP(consulta) {
     }
 }
 
-// Función para procesar la consulta del usuario
-async function processQuery(userQuery) {
+// Función para guardar mensaje en Firestore
+async function saveMessageToFirestore(userId, message) {
     try {
-        const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
-        conversationHistory.push({ role: "user", content: userQuery });
+        console.log('Iniciando saveMessageToFirestore...');
+        const now = new Date();
+        const messageData = {
+            content: message,
+            role: 'user',
+            timestamp: now
+        };
 
-        const historyForAI = conversationHistory.slice(-10);
-        let contextoDatos = '';
-        if (lastRealData && lastRealData.type && lastRealData.data) {
-            contextoDatos = `\n\nDATOS REALES DISPONIBLES DE LA CONSULTA ANTERIOR:\nTipo: ${lastRealData.type}\nDatos: ${JSON.stringify(lastRealData.data)}`;
+        const userChatRef = chatManager.chatsCollection.doc(userId);
+        const conversationRef = userChatRef.collection('conversations').doc('employee_conversation');
+        
+        console.log('Obteniendo documento actual...');
+        const conversationDoc = await conversationRef.get();
+        let messages = [];
+        
+        if (conversationDoc.exists) {
+            console.log('Documento existente encontrado');
+            messages = conversationDoc.data().messages || [];
+        } else {
+            console.log('Creando nuevo documento de conversación');
         }
+        
+        console.log('Agregando nuevo mensaje...');
+        messages.push(messageData);
+        
+        console.log('Actualizando documento...');
+        await conversationRef.set({
+            lastUpdated: now,
+            messages: messages
+        }, { merge: true });
 
-        const systemPrompt = `Eres Deitana IA, un asistente de información de vanguardia, impulsado por una sofisticada inteligencia artificial y diseñado específicamente para interactuar de manera experta con la base de datos de Semilleros Deitana.
-
-Mi único propósito es ayudarte a obtener, analizar y comprender información relevante de Semilleros Deitana, su base de datos y su sector agrícola.
-
-IMPORTANTE:
-- En la tabla 'clientes' están todos los clientes de la empresa. Las columnas principales son:
-  * CL_DENO: Denominación del cliente
-  * CL_DOM: Dirección del cliente
-  * CL_POB: Población del cliente
-  * CL_TEL: Teléfono del cliente
-  * CL_MAIL: Email del cliente
-
-- En la tabla 'articulos' están todos los artículos e injertos.
-- En la tabla 'proveedores' están todos los proveedores.
-
-${contenidoMapaERP}${contextoDatos}
-
-INSTRUCCIONES PARA GENERAR CONSULTAS SQL:
-1. SIEMPRE usa los nombres exactos de las tablas y columnas definidos en mapaERP.
-2. Para clientes, usa la tabla 'clientes' (no 'cliente').
-3. Para buscar por población, usa la columna CL_POB.
-4. Para buscar por dirección, usa la columna CL_DOM.
-5. Para buscar por nombre, usa la columna CL_DENO.
-
-Ejemplos de consultas correctas:
-- Para clientes de El Ejido: SELECT CL_DENO, CL_DOM, CL_POB, CL_TEL FROM clientes WHERE CL_POB LIKE '%El Ejido%' LIMIT 3;
-- Para clientes por nombre: SELECT CL_DENO, CL_DOM, CL_POB FROM clientes WHERE CL_DENO LIKE '%nombre%' LIMIT 3;
-
-SIEMPRE que el usuario haga una consulta sobre datos, GENERA SOLO UNA CONSULTA SQL válida y ejecutable (en bloque <sql>...</sql> o en bloque de código sql), sin explicaciones ni texto adicional.
-- Si la consulta es ambigua, genera una consulta SQL tentativa que muestre un registro relevante.
-- NUNCA digas que no tienes acceso a la base de datos.
-- NUNCA respondas con texto genérico.
-- NUNCA inventes datos.
-- SIEMPRE usa los nombres de tablas y columnas exactos de mapaERP.
-- SI la consulta es conceptual o no requiere datos, responde normalmente.`;
-
-        let response = null;
-        let sql = null;
-        let intentos = 0;
-        let feedback = '';
-        let errorSQL = null;
-        while (intentos < 2) {
-            const messages = [
-                { role: "system", content: systemPrompt + (feedback ? `\n\nFEEDBACK: ${feedback}` : '') },
-                ...historyForAI
-            ];
-            const completion = await openai.chat.completions.create({
-                model: "gpt-4-turbo-preview",
-                messages: messages,
-                temperature: 0.7,
-                max_tokens: 1000
-            });
-            response = completion.choices[0].message.content;
-            conversationHistory.push({ role: "assistant", content: response });
-            sql = validarRespuestaSQL(response);
-            if (!sql) {
-                feedback = 'Por favor, responde SOLO con una consulta SQL válida y ejecutable, sin explicaciones ni texto adicional.';
-                intentos++;
-                continue;
-            }
-            try {
-                let results = await executeQuery(sql);
-                if (!results || results.length === 0) {
-                    if (/WHERE[\s\S]*(fec|fecha)/i.test(sql)) {
-                        let sqlSinFecha = sql.replace(/AND[\s\S]*(fec|fecha)[^A-Z]*[=><][^A-Z]*((AND)|($))/i, '').replace(/WHERE[\s\S]*(fec|fecha)[^A-Z]*[=><][^A-Z]*((AND)|($))/i, '');
-                        if (/WHERE\s*$/i.test(sqlSinFecha)) sqlSinFecha = sqlSinFecha.replace(/WHERE\s*$/i, '');
-                        results = await executeQuery(sqlSinFecha);
-                    }
-                }
-                if (!results || results.length === 0) {
-                    let sqlSinGroup = sql.replace(/GROUP BY[\s\S]*?(?=(ORDER BY|LIMIT|$))/i, '').replace(/ORDER BY[\s\S]*?(?=(LIMIT|$))/i, '');
-                    results = await executeQuery(sqlSinGroup);
-                }
-                if (!results || results.length === 0) {
-                    const tablaMatch = sql.match(/FROM\s+([`\w]+)/i);
-                    if (tablaMatch) {
-                        const tabla = tablaMatch[1].replace(/`/g, '');
-                        if (tabla === 'articulos') {
-                            let sqlSimilares = `SELECT a.id, a.AR_DENO, s.C2 AS stock_actual FROM articulos a JOIN articulos_ar_stok s ON a.id = s.id WHERE a.AR_DENO LIKE '%INJ%' AND a.AR_DENO LIKE '%TOMATE%' ORDER BY s.id2 DESC LIMIT 3`;
-                            let similares = await executeQuery(sqlSimilares);
-                            if (similares && similares.length > 0) {
-                                lastRealData = { type: 'articulo', data: similares };
-                                const finalResponse = await formatFinalResponse(similares, userQuery + ' (artículos similares)');
-                                return {
-                                    success: true,
-                                    data: {
-                                        message: finalResponse + '\n\n(Nota: No se encontró coincidencia exacta, se muestran los artículos más similares disponibles)'
-                                    }
-                                };
-                            }
-                        }
-                        const claveMapa = Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
-                        let colFecha = null;
-                        if (claveMapa && mapaERP[claveMapa].columnas) {
-                            colFecha = Object.keys(mapaERP[claveMapa].columnas).find(c => c.toLowerCase().includes('fec'));
-                        }
-                        if (colFecha) {
-                            const sqlUltimo = `SELECT * FROM ${tabla} ORDER BY ${colFecha} DESC LIMIT 1`;
-                            results = await executeQuery(sqlUltimo);
-                        } else {
-                            results = [];
-                        }
-                    }
-                }
-                if (!results || results.length === 0) {
-                    const noResultPrompt = [
-                        {
-                            role: "system",
-                            content: `Eres Deitana IA, un asistente ultra inteligente, empático y proactivo para Semilleros Deitana.\n\nLa consulta SQL generada no devolvió resultados.\n\n- Analiza la situación y sugiere alternativas al usuario.\n- Propón buscar artículos o proveedores similares, usando coincidencias aproximadas o palabras clave.\n- Si crees que hay un error de escritura, sugiere correcciones.\n- Pide más detalles si es necesario.\n- Ofrece ejemplos de cómo preguntar.\n- Mantén siempre un tono conversacional, profesional y humano.\n- Nunca uses respuestas técnicas ni genéricas.\n- Si la consulta es conceptual, responde normalmente.`
-                        },
-                        {
-                            role: "user",
-                            content: `No se encontraron resultados para la consulta: "${userQuery}".\n\nPor favor, sugiere alternativas, busca aproximaciones o pide más detalles al usuario para ayudarle a encontrar lo que busca.`
-                        }
-                    ];
-                    try {
-                        const completion = await openai.chat.completions.create({
-                            model: "gpt-4-turbo-preview",
-                            messages: noResultPrompt,
-                            temperature: 0.8,
-                            max_tokens: 350
-                        });
-                        return {
-                            success: true,
-                            data: {
-                                message: completion.choices[0].message.content
-                            }
-                        };
-                    } catch (error) {
-                        return {
-                            success: true,
-                            data: {
-                                message: "No pude encontrar resultados ni sugerir alternativas. ¿Podrías intentar ser más específico o darme algún dato adicional? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.)."
-                            }
-                        };
-                    }
-                }
-                let tipo = 'dato';
-                if (results[0] && results[0].CL_DENO) tipo = 'cliente';
-                if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
-                lastRealData = { type: tipo, data: results };
-                const finalResponse = await formatFinalResponse(results, userQuery);
-                return {
-                    success: true,
-                    data: {
-                        message: finalResponse
-                    }
-                };
-            } catch (error) {
-                feedback = 'La consulta SQL generada fue inválida o produjo un error. Por favor, genera SOLO una consulta SQL válida y ejecutable.';
-                errorSQL = error;
-                intentos++;
-                sql = null;
-            }
-        }
-        lastRealData = null;
-        const fallbackPrompt = [
-            {
-                role: "system",
-                content: `Eres Deitana IA, un asistente ultra inteligente, empático y proactivo para Semilleros Deitana.\n\n- Si la consulta del usuario es ambigua, falta información clave, o no puedes generar una consulta SQL válida, responde SIEMPRE de manera conversacional, profesional y humana.\n- Explica la situación, pide amablemente más detalles, sugiere ejemplos de cómo el usuario puede especificar la consulta, y adapta el tono según el contexto.\n- Nunca uses respuestas técnicas ni genéricas.\n- Nunca digas que no puedes ayudar.\n- Sé proactivo y guía al usuario para que obtenga la información que necesita.\n- Si el usuario parece frustrado, tranquilízalo y ofrece ayuda extra.\n- Si la consulta es conceptual, responde normalmente.`
-            },
-            {
-                role: "user",
-                content: `Consulta ambigua o falta información clave. Consulta original: "${userQuery}". Por favor, responde de manera conversacional, sugiere cómo el usuario puede especificar mejor su consulta y ofrece ejemplos de preguntas útiles.`
-            }
-        ];
-        try {
-            const completion = await openai.chat.completions.create({
-                model: "gpt-4-turbo-preview",
-                messages: fallbackPrompt,
-                temperature: 0.8,
-                max_tokens: 350
-            });
-            return {
-                success: true,
-                data: {
-                    message: completion.choices[0].message.content
-                }
-            };
-        } catch (error) {
-            return {
-                success: true,
-                data: {
-                    message: "No pude procesar tu consulta. ¿Podrías intentar ser más específico o darme algún dato adicional? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.)."
-                }
-            };
-        }
+        console.log('Mensaje guardado exitosamente');
+        return true;
     } catch (error) {
-        lastRealData = null;
+        console.error('Error al guardar mensaje en Firestore:', error);
+        throw error;
+    }
+}
+
+async function processQuery({ message, userId }) {
+    try {
+        if (!userId) {
+            throw new Error('userId es requerido para procesar la consulta');
+        }
+
+        console.log('=== INICIO PROCESO QUERY EMPLEADO ===');
+        console.log('Mensaje recibido:', message);
+        console.log('UserId:', userId);
+
+        // Guardar el mensaje del usuario
+        console.log('Guardando mensaje del usuario en Firestore...');
+        await saveMessageToFirestore(userId, message);
+        console.log('Mensaje guardado exitosamente');
+
+        // Procesar la consulta con OpenAI
+        console.log('Enviando consulta a OpenAI...');
+        const completion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                { role: "system", content: "Eres un asistente virtual especializado en atención al cliente. Tu objetivo es ayudar a los empleados a encontrar información sobre clientes y resolver sus consultas de manera eficiente y profesional." },
+                { role: "user", content: message }
+            ],
+            temperature: 0.7,
+            max_tokens: 150
+        });
+
+        const response = completion.choices[0].message.content;
+        console.log('Respuesta recibida de OpenAI:', response);
+
+        // Guardar la respuesta del asistente
+        console.log('Guardando respuesta del asistente en Firestore...');
+        await saveAssistantMessageToFirestore(userId, response);
+        console.log('Respuesta guardada exitosamente');
+
+        console.log('=== FIN PROCESO QUERY EMPLEADO ===');
         return {
             success: true,
             data: {
-                message: "Entiendo tu consulta. Déjame ayudarte con eso. " + error.message
+                message: response
             }
         };
+    } catch (error) {
+        console.error('Error en processQuery:', error);
+        throw error;
+    }
+}
+
+async function saveAssistantMessageToFirestore(userId, message) {
+    try {
+        console.log('Iniciando saveAssistantMessageToFirestore...');
+        const now = new Date();
+        const messageData = {
+            content: message,
+            role: 'assistant',
+            timestamp: now
+        };
+
+        const userChatRef = chatManager.chatsCollection.doc(userId);
+        const conversationRef = userChatRef.collection('conversations').doc('employee_conversation');
+        
+        console.log('Obteniendo documento actual...');
+        const conversationDoc = await conversationRef.get();
+        let messages = [];
+        
+        if (conversationDoc.exists) {
+            console.log('Documento existente encontrado');
+            messages = conversationDoc.data().messages || [];
+        } else {
+            console.log('Creando nuevo documento de conversación');
+        }
+        
+        console.log('Agregando nuevo mensaje...');
+        messages.push(messageData);
+        
+        console.log('Actualizando documento...');
+        await conversationRef.set({
+            lastUpdated: now,
+            messages: messages
+        }, { merge: true });
+
+        console.log('Mensaje del asistente guardado exitosamente');
+        return true;
+    } catch (error) {
+        console.error('Error al guardar mensaje del asistente en Firestore:', error);
+        throw error;
     }
 }
 

@@ -21,7 +21,8 @@
     "express": "^4.21.2",
     "firebase-admin": "^13.4.0",
     "mysql2": "^3.14.0",
-    "openai": "^4.98.0"
+    "openai": "^4.98.0",
+    "firebase": "^10.8.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"

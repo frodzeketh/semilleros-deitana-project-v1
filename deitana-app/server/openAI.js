@@ -1,5 +1,7 @@
 const { OpenAI } = require('openai');
 const pool = require('./db');
+const chatManager = require('./utils/chatManager');
+const admin = require('./firebase-admin');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
@@ -402,13 +404,90 @@ function esPreguntaTelefonoCliente(userQuery, lastRealData) {
     );
 }
 
-// Función para procesar la consulta del usuario
-async function processQuery(userQuery) {
+// Función para guardar mensaje en Firestore
+async function saveMessageToFirestore(userId, message, isAdmin = true) {
     try {
-        const contenidoMapaERP = obtenerContenidoMapaERP(userQuery);
-        conversationHistory.push({ role: "user", content: userQuery });
+        const now = new Date();
+        const messageData = {
+            content: message,
+            role: 'user',
+            timestamp: now
+        };
 
-        if (esPreguntaTelefonoCliente(userQuery, lastRealData)) {
+        const userChatRef = chatManager.chatsCollection.doc(userId);
+        const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+        
+        // Primero obtenemos el documento actual
+        const conversationDoc = await conversationRef.get();
+        let messages = [];
+        
+        if (conversationDoc.exists) {
+            messages = conversationDoc.data().messages || [];
+        }
+        
+        // Agregamos el nuevo mensaje
+        messages.push(messageData);
+        
+        // Actualizamos el documento con el nuevo array de mensajes
+        await conversationRef.set({
+            lastUpdated: now,
+            messages: messages
+        }, { merge: true });
+
+        return true;
+    } catch (error) {
+        console.error('Error al guardar mensaje en Firestore:', error);
+        return false;
+    }
+}
+
+// Función para guardar mensaje del asistente en Firestore
+async function saveAssistantMessageToFirestore(userId, message) {
+    try {
+        const now = new Date();
+        const messageData = {
+            content: message,
+            role: 'assistant',
+            timestamp: now
+        };
+
+        const userChatRef = chatManager.chatsCollection.doc(userId);
+        const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+        
+        // Primero obtenemos el documento actual
+        const conversationDoc = await conversationRef.get();
+        let messages = [];
+        
+        if (conversationDoc.exists) {
+            messages = conversationDoc.data().messages || [];
+        }
+        
+        // Agregamos el nuevo mensaje
+        messages.push(messageData);
+        
+        // Actualizamos el documento con el nuevo array de mensajes
+        await conversationRef.set({
+            lastUpdated: now,
+            messages: messages
+        }, { merge: true });
+
+        return true;
+    } catch (error) {
+        console.error('Error al guardar mensaje del asistente en Firestore:', error);
+        return false;
+    }
+}
+
+// Función para procesar la consulta
+async function processQuery({ message, userId }) {
+    try {
+        // Guardar el mensaje del usuario
+        await saveMessageToFirestore(userId, message, true);
+
+        const contenidoMapaERP = obtenerContenidoMapaERP(message);
+        conversationHistory.push({ role: "user", content: message });
+
+        if (esPreguntaTelefonoCliente(message, lastRealData)) {
             const cliente = lastRealData.data[0];
             const nombreCliente = cliente.CL_DENO;
             if (nombreCliente) {
@@ -416,20 +495,24 @@ async function processQuery(userQuery) {
                 const results = await executeQuery(sql);
                 if (results && results[0] && results[0].CL_TEL) {
                     lastRealData = { type: 'telefono_cliente', data: results };
-                    return {
+                    const response = {
                         success: true,
                         data: {
                             message: `El teléfono de "${nombreCliente}" es: ${results[0].CL_TEL}`
                         }
                     };
+                    await saveAssistantMessageToFirestore(userId, response.data.message);
+                    return response;
                 } else {
                     lastRealData = { type: 'telefono_cliente', data: [] };
-                    return {
+                    const response = {
                         success: true,
                         data: {
                             message: `No se encontró un número de teléfono registrado para "${nombreCliente}".`
                         }
                     };
+                    await saveAssistantMessageToFirestore(userId, response.data.message);
+                    return response;
                 }
             }
         }
@@ -441,7 +524,7 @@ async function processQuery(userQuery) {
         }
 
         // Detectar si la consulta es conceptual (por ejemplo: "¿qué es X?" o "para qué sirve X?")
-        const descripcionConceptual = obtenerDescripcionMapaERP(userQuery);
+        const descripcionConceptual = obtenerDescripcionMapaERP(message);
         let contextoConceptual = '';
         if (descripcionConceptual && descripcionConceptual.descripcion) {
             contextoConceptual = `\n\nDESCRIPCIÓN RELEVANTE DEL SISTEMA:\n${descripcionConceptual.descripcion}`;
@@ -590,13 +673,15 @@ ${contenidoMapaERP}${contextoDatos}`;
                             let similares = await executeQuery(sqlSimilares);
                             if (similares && similares.length > 0) {
                                 lastRealData = { type: 'articulo', data: similares };
-                                const finalResponse = await formatFinalResponse(similares, userQuery + ' (artículos similares)');
-                                return {
+                                const finalResponse = await formatFinalResponse(similares, message + ' (artículos similares)');
+                                const response = {
                                     success: true,
                                     data: {
                                         message: finalResponse + '\n\n(Nota: No se encontró coincidencia exacta, se muestran los artículos más similares disponibles)'
                                     }
                                 };
+                                await saveAssistantMessageToFirestore(userId, response.data.message);
+                                return response;
                             }
                         }
                         // Solo intentar fallback por fecha si la tabla tiene un campo de fecha
@@ -615,19 +700,21 @@ ${contenidoMapaERP}${contextoDatos}`;
                 }
                 if (!results || results.length === 0) {
                     // Intentar búsqueda flexible (fuzzy search) antes de fallback IA
-                    const fuzzyResult = await fuzzySearchRetry(sql, userQuery);
+                    const fuzzyResult = await fuzzySearchRetry(sql, message);
                     if (fuzzyResult && fuzzyResult.results && fuzzyResult.results.length > 0) {
                         let tipo = 'dato';
                         if (fuzzyResult.results[0] && fuzzyResult.results[0].CL_DENO) tipo = 'cliente';
                         if (fuzzyResult.results[0] && fuzzyResult.results[0].AR_NOMB) tipo = 'articulo';
                         lastRealData = { type: tipo, data: fuzzyResult.results };
-                        const finalResponse = await formatFinalResponse(fuzzyResult.results, userQuery + ' (búsqueda flexible)');
-                        return {
+                        const finalResponse = await formatFinalResponse(fuzzyResult.results, message + ' (búsqueda flexible)');
+                        const response = {
                             success: true,
                             data: {
                                 message: finalResponse + '\n\n(Nota: Se utilizó una búsqueda flexible para encontrar coincidencias aproximadas)'
                             }
                         };
+                        await saveAssistantMessageToFirestore(userId, response.data.message);
+                        return response;
                     }
                     // Fallback inteligente: consulta a la IA para sugerir alternativas o buscar aproximaciones
                     const noResultPrompt = [
@@ -637,7 +724,7 @@ ${contenidoMapaERP}${contextoDatos}`;
                         },
                         {
                             role: "user",
-                            content: `No se encontraron resultados para la consulta: "${userQuery}".\n\nPor favor, sugiere alternativas, busca aproximaciones o pide más detalles al usuario para ayudarle a encontrar lo que busca.`
+                            content: `No se encontraron resultados para la consulta: "${message}".\n\nPor favor, sugiere alternativas, busca aproximaciones o pide más detalles al usuario para ayudarle a encontrar lo que busca.`
                         }
                     ];
                     try {
@@ -647,32 +734,38 @@ ${contenidoMapaERP}${contextoDatos}`;
                             temperature: 0.8,
                             max_tokens: 350
                         });
-                        return {
+                        const response = {
                             success: true,
                             data: {
                                 message: completion.choices[0].message.content
                             }
                         };
+                        await saveAssistantMessageToFirestore(userId, response.data.message);
+                        return response;
                     } catch (error) {
-                        return {
+                        const response = {
                             success: true,
                             data: {
                                 message: "No pude encontrar resultados ni sugerir alternativas. ¿Podrías intentar ser más específico o darme algún dato adicional? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.)."
                             }
                         };
+                        await saveAssistantMessageToFirestore(userId, response.data.message);
+                        return response;
                     }
                 }
                 let tipo = 'dato';
                 if (results[0] && results[0].CL_DENO) tipo = 'cliente';
                 if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
                 lastRealData = { type: tipo, data: results };
-                const finalResponse = await formatFinalResponse(results, userQuery);
-                return {
+                const finalResponse = await formatFinalResponse(results, message);
+                const response = {
                     success: true,
                     data: {
                         message: finalResponse
                     }
                 };
+                await saveAssistantMessageToFirestore(userId, finalResponse);
+                return response;
             } catch (error) {
                 // Si la consulta SQL falla, feedback y reintento
                 feedback = 'La consulta SQL generada fue inválida o produjo un error. Por favor, genera SOLO una consulta SQL válida y ejecutable.';
@@ -691,7 +784,7 @@ ${contenidoMapaERP}${contextoDatos}`;
             },
             {
                 role: "user",
-                content: `Consulta ambigua o falta información clave. Consulta original: "${userQuery}". Por favor, responde de manera conversacional, sugiere cómo el usuario puede especificar mejor su consulta y ofrece ejemplos de preguntas útiles.`
+                content: `Consulta ambigua o falta información clave. Consulta original: "${message}". Por favor, responde de manera conversacional, sugiere cómo el usuario puede especificar mejor su consulta y ofrece ejemplos de preguntas útiles.`
             }
         ];
         try {
@@ -701,28 +794,27 @@ ${contenidoMapaERP}${contextoDatos}`;
                 temperature: 0.8,
                 max_tokens: 350
             });
-            return {
+            const response = {
                 success: true,
                 data: {
                     message: completion.choices[0].message.content
                 }
             };
+            await saveAssistantMessageToFirestore(userId, response.data.message);
+            return response;
         } catch (error) {
-            return {
+            const response = {
                 success: true,
                 data: {
                     message: "No pude procesar tu consulta. ¿Podrías intentar ser más específico o darme algún dato adicional? Si tienes dudas sobre cómo preguntar, dime el tipo de dato que buscas (por ejemplo: nombre, fecha, proveedor, etc.)."
                 }
             };
+            await saveAssistantMessageToFirestore(userId, response.data.message);
+            return response;
         }
     } catch (error) {
-        lastRealData = null;
-        return {
-            success: true,
-            data: {
-                message: "Entiendo tu consulta. Déjame ayudarte con eso. " + error.message
-            }
-        };
+        console.error('Error en processQuery:', error);
+        throw error;
     }
 }
 
