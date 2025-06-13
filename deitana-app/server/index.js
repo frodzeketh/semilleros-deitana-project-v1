@@ -200,28 +200,31 @@ app.post('/chat', verifyToken, async (req, res) => {
             console.log('Creando nueva conversación...');
             currentConversationId = await chatManager.createConversation(userId, message);
             console.log('Nueva conversación creada:', currentConversationId);
-        }
+        } else {
+            // Verificar que la conversación existe
+            try {
+                await chatManager.verifyChatOwnership(userId, currentConversationId);
+            } catch (error) {
+                console.error('Error al verificar la conversación:', error);
+                return res.status(404).json({
+                    success: false,
+                    error: 'Conversación no encontrada'
+                });
+            }
 
-        // Verificar que la conversación existe
-        try {
-            await chatManager.verifyChatOwnership(userId, currentConversationId);
-        } catch (error) {
-            console.log('Conversación no encontrada, creando nueva...');
-            currentConversationId = await chatManager.createConversation(userId, message);
+            // Agregar mensaje del usuario solo si no es una nueva conversación
+            await chatManager.addMessageToConversation(userId, currentConversationId, {
+                role: 'user',
+                content: message
+            });
         }
-
-        // Agregar mensaje del usuario
-        await chatManager.addMessageToConversation(userId, currentConversationId, {
-            role: 'user',
-            content: message
-        });
 
         // Procesar la consulta según el rol
         let response;
         if (isAdmin) {
-            response = await processQuery({ message, userId });
+            response = await processQuery({ message, userId, conversationId: currentConversationId });
         } else {
-            response = await processQueryEmployee({ message, userId });
+            response = await processQueryEmployee({ message, userId, conversationId: currentConversationId });
         }
 
         // Agregar respuesta del asistente
@@ -238,13 +241,11 @@ app.post('/chat', verifyToken, async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Error en el chat:', error);
-        console.error('Stack trace:', error.stack);
+        console.error('Error al procesar mensaje:', error);
         res.status(500).json({
             success: false,
-            data: {
-                message: 'Lo siento, ha ocurrido un error al procesar tu consulta. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.'
-            }
+            error: 'Error al procesar el mensaje',
+            details: error.message
         });
     }
 });

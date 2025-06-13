@@ -223,9 +223,9 @@ const Home = () => {
     console.log('Conversation ID actual:', currentConversationId);
 
     const userMessage = {
-        id: Date.now(),
-        text: message,
-        sender: "user",
+      id: Date.now(),
+      text: message,
+      sender: "user",
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
@@ -250,90 +250,114 @@ const Home = () => {
             throw new Error('No hay usuario autenticado');
         }
 
-      console.log('Token obtenido, realizando petición al servidor...');
+        console.log('Token obtenido, realizando petición al servidor...');
 
-      // Si no hay conversación actual o es temporal, crear una nueva
-      if (!currentConversationId || currentConversationId.startsWith('temp_')) {
-        console.log('Creando nueva conversación...');
-        const newConversationResponse = await fetch(`${API_URL}/chat/new`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ message })
-        });
+        // Si no hay conversación actual o es temporal, crear una nueva
+        if (!currentConversationId || currentConversationId.startsWith('temp_')) {
+            console.log('Creando nueva conversación...');
+            const response = await fetch(`${API_URL}/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ message })
+            });
 
-        if (!newConversationResponse.ok) {
-          throw new Error('Error al crear nueva conversación');
+            if (!response.ok) {
+                throw new Error('Error al procesar el mensaje');
+            }
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Error al procesar el mensaje');
+            }
+
+            setCurrentConversationId(data.data.conversationId);
+
+            // Actualizar el mensaje del bot con la respuesta
+            setChatMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === botMessage.id
+                        ? {
+                            ...msg,
+                            text: data.data.message,
+                            isStreaming: false,
+                        }
+                        : msg
+                )
+            );
+
+            // Recargar el historial de chats
+            const historyResponse = await fetch(`${API_URL}/conversations`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!historyResponse.ok) {
+                throw new Error('Error al cargar el historial');
+            }
+
+            const historyData = await historyResponse.json();
+            if (historyData.success) {
+                setChatHistory(historyData.data);
+            }
+        } else {
+            // Si ya existe una conversación, enviar el mensaje
+            const response = await fetch(`${API_URL}/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                    "Conversation-Id": currentConversationId
+                },
+                body: JSON.stringify({ 
+                    message,
+                    conversationId: currentConversationId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al procesar el mensaje');
+            }
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Error al procesar el mensaje');
+            }
+
+            // Actualizar el mensaje del bot con la respuesta
+            setChatMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === botMessage.id
+                        ? {
+                            ...msg,
+                            text: data.data.message,
+                            isStreaming: false,
+                        }
+                        : msg
+                )
+            );
         }
-
-        const newConversationData = await newConversationResponse.json();
-        if (!newConversationData.success) {
-          throw new Error(newConversationData.error || 'Error al crear nueva conversación');
-        }
-
-        setCurrentConversationId(newConversationData.data.conversationId);
-      }
-
-      const response = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "Conversation-Id": currentConversationId
-        },
-        body: JSON.stringify({ 
-          message,
-          conversationId: currentConversationId
-        })
-      });
-
-      console.log('Respuesta recibida:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error en la respuesta:', errorData);
-        throw new Error(errorData.error || 'Error en el procesamiento del mensaje');
-      }
-
-      const data = await response.json();
-      console.log('Datos recibidos:', data);
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Error en el procesamiento del mensaje');
-      }
-
-      // Actualizar el mensaje del bot con la respuesta
-      setChatMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === botMessage.id
-            ? {
-                ...msg,
-                text: data.data.message,
-                isStreaming: false,
-              }
-            : msg
-        )
-      );
     } catch (error) {
-      console.error("Error al enviar mensaje:", error);
-      // Actualizar el mensaje del bot con el error
-      setChatMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === botMessage.id
-            ? {
-                ...msg,
-                text: "Hubo un error al conectarse con el servidor.",
-                isStreaming: false,
-                isError: true,
-              }
-            : msg
-        )
-      );
+        console.error("Error al enviar mensaje:", error);
+        // Actualizar el mensaje del bot con el error
+        setChatMessages((prev) =>
+            prev.map((msg) =>
+                msg.id === botMessage.id
+                    ? {
+                        ...msg,
+                        text: "Hubo un error al conectarse con el servidor.",
+                        isStreaming: false,
+                        isError: true,
+                    }
+                    : msg
+            )
+        );
     } finally {
-      setIsTyping(false);
-      console.log('=== FIN ENVÍO DE MENSAJE ===');
+        setIsTyping(false);
+        console.log('=== FIN ENVÍO DE MENSAJE ===');
     }
   };
 
