@@ -3,8 +3,8 @@ const pool = require('../db');
 const chatManager = require('../utils/chatManager');
 const admin = require('../firebase-admin');
 require('dotenv').config();
-const promptBase = require('../promptBase').promptBase;
-const mapaERP = require('../mapaERP');
+const promptBase = require('./promptBaseEmployee').promptBase;
+const mapaERP = require('./mapaERPEmployee');
 
 console.log('=== VERIFICACIÓN DE IMPORTACIÓN EMPLEADO ===');
 console.log('mapaERP importado:', !!mapaERP);
@@ -79,6 +79,7 @@ async function formatFinalResponse(results, query) {
 
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
     const pideAleatorio = /aleatori[ao]|ejemplo|cualquiera|al azar/i.test(query);
+    const esConsultaClientes = /clientes?|cliente|madrid|provincia|zona/i.test(query.toLowerCase());
     
     let tablaDetectada = null;
     if (results.length > 0) {
@@ -88,47 +89,66 @@ async function formatFinalResponse(results, query) {
 
     const resultadosLimitados = limitarResultados(results, pideCompleto ? 10 : 5, pideAleatorio);
     let datosReales = '';
-    resultadosLimitados.forEach((resultado, index) => {
-        datosReales += `\nRegistro ${index + 1}:\n`;
-        const campos = Object.entries(resultado);
-        campos.forEach(([campo, valor]) => {
-            let descripcion = campo;
-            if (tablaDetectada) {
-                descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
-            }
-            if (campo.toLowerCase().includes('fec') && valor) {
-                const fecha = new Date(valor);
-                valor = fecha.toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            }
-            datosReales += `${descripcion}: ${valor}\n`;
+    
+    if (esConsultaClientes) {
+        datosReales = '\nInformación de Clientes:\n';
+        resultadosLimitados.forEach((cliente, index) => {
+            datosReales += `\nCliente ${index + 1}:\n`;
+            if (cliente.CL_DENO) datosReales += `Nombre: ${cliente.CL_DENO}\n`;
+            if (cliente.CL_DOM) datosReales += `Dirección: ${cliente.CL_DOM}\n`;
+            if (cliente.CL_POB) datosReales += `Población: ${cliente.CL_POB}\n`;
+            if (cliente.CL_PROV) datosReales += `Provincia: ${cliente.CL_PROV}\n`;
+            if (cliente.CL_CDP) datosReales += `Código Postal: ${cliente.CL_CDP}\n`;
+            if (cliente.CL_TEL) datosReales += `Teléfono: ${cliente.CL_TEL}\n`;
+            if (cliente.CL_ZONA) datosReales += `Zona: ${cliente.CL_ZONA}\n`;
+            datosReales += '-------------------\n';
         });
-    });
+    } else {
+        resultadosLimitados.forEach((resultado, index) => {
+            datosReales += `\nRegistro ${index + 1}:\n`;
+            const campos = Object.entries(resultado);
+            campos.forEach(([campo, valor]) => {
+                let descripcion = campo;
+                if (tablaDetectada) {
+                    descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
+                }
+                if (campo.toLowerCase().includes('fec') && valor) {
+                    const fecha = new Date(valor);
+                    valor = fecha.toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                datosReales += `${descripcion}: ${valor}\n`;
+            });
+        });
+    }
 
     const messages = [
         {
             role: "system",
-            content: `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.
-\n- Si no hay datos, explica la situación y sugiere alternativas.
-- Si la consulta es ambigua, pide más detalles.
-- Si se pide un ejemplo, selecciona uno aleatorio.
-- Explica el significado de los datos y su relevancia.
-- Nunca repitas datos crudos, interpreta y resume.
-- Sé proactivo y guía al usuario para obtener la mejor respuesta posible.
-- Mantén un tono profesional, conversacional y humano.
-- Si detectas errores en los datos, adviértelo de forma amable.
-- Si hay relaciones (cliente, proveedor, etc.), explícalas.
-- Si el usuario pide más ejemplos, ofrece variedad.
-- Si la consulta es conceptual, responde normalmente.`
+            content: esConsultaClientes ? 
+                `Eres un asistente especializado en consultas de clientes de Semilleros Deitana. 
+                - Proporciona información clara y concisa sobre los clientes
+                - Si se pide información específica (ej: clientes de Madrid), busca en la tabla 'clientes' usando CL_PROV
+                - Incluye información relevante como nombre, dirección, teléfono y zona
+                - Si no hay resultados, sugiere alternativas o pide más detalles
+                - Mantén un tono profesional y servicial` :
+                `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.
+                - Si no hay datos, explica la situación y sugiere alternativas.
+                - Si la consulta es ambigua, pide más detalles.
+                - Si se pide un ejemplo, selecciona uno aleatorio.
+                - Explica el significado de los datos y su relevancia.
+                - Nunca repitas datos crudos, interpreta y resume.
+                - Sé proactivo y guía al usuario para obtener la mejor respuesta posible.
+                - Mantén un tono profesional, conversacional y humano.`
         },
         {
             role: "user",
             content: `Consulta: "${query}"
-\nDatos encontrados:${datosReales}
-\nPor favor, analiza estos datos y proporciona una respuesta útil, natural y relevante.`
+            \nDatos encontrados:${datosReales}
+            \nPor favor, analiza estos datos y proporciona una respuesta útil, natural y relevante.`
         }
     ];
 
@@ -360,40 +380,94 @@ async function saveMessageToFirestore(userId, message) {
 
 async function processQuery({ message, userId }) {
     try {
-        if (!userId) {
-            throw new Error('userId es requerido para procesar la consulta');
-        }
+        console.log('Procesando consulta de empleado:', message);
+        
+        // Mensajes del sistema para diferentes tipos de consultas
+        const systemMessages = {
+            clientes: `Eres un asistente especializado en consultas de clientes de Semilleros Deitana. 
+            - Proporciona información clara y concisa sobre los clientes
+            - Si se pide información específica (ej: clientes de Madrid), genera una consulta SQL usando la tabla 'clientes' y el campo CL_PROV
+            - La consulta SQL debe estar entre etiquetas <sql> y </sql>
+            - Incluye información relevante como nombre, dirección, teléfono y zona
+            - Si no hay resultados, sugiere alternativas o pide más detalles
+            - Mantén un tono profesional y servicial
+            - IMPORTANTE: SIEMPRE genera una consulta SQL para consultas de clientes`,
+            
+            default: `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.
+            - Si no hay datos, explica la situación y sugiere alternativas.
+            - Si la consulta es ambigua, pide más detalles.
+            - Si se pide un ejemplo, selecciona uno aleatorio.
+            - Explica el significado de los datos y su relevancia.
+            - Nunca repitas datos crudos, interpreta y resume.
+            - Sé proactivo y guía al usuario para obtener la mejor respuesta posible.
+            - Mantén un tono profesional, conversacional y humano.
+            - IMPORTANTE: Para consultas de clientes, SIEMPRE genera una consulta SQL entre etiquetas <sql> y </sql>`
+        };
 
-        console.log('=== INICIO PROCESO QUERY EMPLEADO ===');
-        console.log('Mensaje recibido:', message);
-        console.log('UserId:', userId);
+        // Determinar el tipo de consulta
+        const esConsultaClientes = /clientes?|cliente|madrid|provincia|zona/i.test(message.toLowerCase());
+        const systemMessage = esConsultaClientes ? systemMessages.clientes : systemMessages.default;
 
-        // Guardar el mensaje del usuario
-        console.log('Guardando mensaje del usuario en Firestore...');
-        await saveMessageToFirestore(userId, message);
-        console.log('Mensaje guardado exitosamente');
+        const messages = [
+            {
+                role: "system",
+                content: systemMessage
+            },
+            {
+                role: "user",
+                content: message
+            }
+        ];
 
-        // Procesar la consulta con OpenAI
-        console.log('Enviando consulta a OpenAI...');
-            const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [
-                { role: "system", content: "Eres un asistente virtual especializado en atención al cliente. Tu objetivo es ayudar a los empleados a encontrar información sobre clientes y resolver sus consultas de manera eficiente y profesional." },
-                { role: "user", content: message }
-            ],
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4-turbo-preview",
+            messages: messages,
             temperature: 0.7,
-            max_tokens: 150
+            max_tokens: 800
         });
 
         const response = completion.choices[0].message.content;
-        console.log('Respuesta recibida de OpenAI:', response);
+        console.log('Respuesta del asistente:', response);
 
-        // Guardar la respuesta del asistente
-        console.log('Guardando respuesta del asistente en Firestore...');
-        await saveAssistantMessageToFirestore(userId, response);
-        console.log('Respuesta guardada exitosamente');
+        // Validar y ejecutar consulta SQL si existe
+        const sql = validarRespuestaSQL(response);
+        if (sql) {
+            console.log('Ejecutando consulta SQL:', sql);
+            const results = await executeQuery(sql);
+            console.log('Resultados de la consulta:', results);
+            
+            // Formatear la respuesta final con los resultados
+            const finalResponse = await formatFinalResponse(results, message);
+            return {
+                success: true,
+                data: {
+                    message: finalResponse
+                }
+            };
+        }
 
-        console.log('=== FIN PROCESO QUERY EMPLEADO ===');
+        // Si es una consulta de clientes pero no se generó SQL, forzar una consulta por defecto
+        if (esConsultaClientes) {
+            const defaultSql = `<sql>SELECT CL_DENO, CL_DOM, CL_POB, CL_PROV, CL_CDP, CL_TEL, CL_ZONA 
+                               FROM \`clientes\` 
+                               WHERE CL_PROV LIKE '%MADRID%' 
+                               LIMIT 2</sql>`;
+            const sql = validarRespuestaSQL(defaultSql);
+            if (sql) {
+                console.log('Ejecutando consulta SQL por defecto:', sql);
+                const results = await executeQuery(sql);
+                console.log('Resultados de la consulta por defecto:', results);
+                
+                const finalResponse = await formatFinalResponse(results, message);
+                return {
+                    success: true,
+                    data: {
+                        message: finalResponse
+                    }
+                };
+            }
+        }
+
         return {
             success: true,
             data: {
@@ -402,7 +476,12 @@ async function processQuery({ message, userId }) {
         };
     } catch (error) {
         console.error('Error en processQuery:', error);
-        throw error;
+        return {
+            success: false,
+            data: {
+                message: `Lo siento, ha ocurrido un error al procesar tu consulta. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.`
+            }
+        };
     }
 }
 

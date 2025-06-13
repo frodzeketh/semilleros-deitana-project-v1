@@ -75,6 +75,13 @@ IMPORTANTE SOBRE ARTÍCULOS E INJERTOS:
 - Si la consulta contiene varios términos (por ejemplo: "injerto", "tomate", "conquista"), busca artículos cuyo AR_DENO contenga TODOS esos términos, aunque no estén juntos ni en el mismo orden.
 - Prohibido pedir datos genéricos o irrelevantes (como almacén, color, etc.) si no son necesarios para la consulta específica. Siempre que sea posible, proporciona los datos exactos y relevantes.
 
+
+
+1. **Consulta de Cliente:**
+   "dime un cliente"
+   → Generar: SELECT CL_DENO, CL_DOM, CL_POB, CL_PROV FROM clientes LIMIT 1
+   → Responder: "He encontrado un cliente en nuestra base de datos: [datos reales]"
+
 `;
 
 module.exports = { promptBase }; 

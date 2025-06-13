@@ -1,7 +1,7 @@
 const { OpenAI } = require('openai');
-const pool = require('./db');
-const chatManager = require('./utils/chatManager');
-const admin = require('./firebase-admin');
+const pool = require('../db');
+const chatManager = require('../utils/chatManager');
+const admin = require('../firebase-admin');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');

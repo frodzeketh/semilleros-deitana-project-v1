@@ -6,7 +6,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-const { processQuery } = require('./openAI');
+const { processQuery } = require('./admin/openAI');
 const { processQuery: processQueryEmployee } = require('./employee/openAIEmployee');
 const { verifyToken } = require('./middleware/authMiddleware');
 const chatManager = require('./utils/chatManager');
@@ -182,55 +182,69 @@ app.post('/chat/new', verifyToken, async (req, res) => {
 });
 
 // Ruta para procesar mensajes
-app.post('/chat', verifyToken, async (req, res) => {
+app.post('/chat', async (req, res) => {
     try {
-    console.log('=== INICIO PROCESAMIENTO DE MENSAJE ===');
-    console.log('Body recibido:', req.body);
-    console.log('Usuario autenticado:', req.user);
+        const { message, conversationId } = req.body;
+        const userId = req.user.uid;
+        const isAdmin = req.user.isAdmin;
 
-    const { message, conversationId } = req.body;
-    if (!message) {
-      throw new Error('El mensaje es requerido');
-    }
+        console.log('Mensaje:', message);
+        console.log('Usuario:', userId);
+        console.log('Es admin:', isAdmin);
+        console.log('Conversación:', conversationId);
 
-    // Guardar mensaje del usuario
-    console.log('Guardando mensaje del usuario...');
-    await chatManager.addMessageToConversation(req.user.uid, conversationId, {
-      role: 'user',
-      content: message
-    });
+        let currentConversationId = conversationId;
 
-    // Procesar respuesta según el rol
-    console.log('Procesando respuesta según rol:', req.user.isAdmin);
-    let response;
-    if (req.user.isAdmin) {
-      response = await processQuery({ message, userId: req.user.uid });
-    } else {
-      response = await processQueryEmployee({ message, userId: req.user.uid });
-    }
+        // Si no hay conversación o es temporal, crear una nueva
+        if (!currentConversationId || currentConversationId.startsWith('temp_')) {
+            console.log('Creando nueva conversación...');
+            currentConversationId = await chatManager.createConversation(userId, message);
+            console.log('Nueva conversación creada:', currentConversationId);
+        }
 
-    // Guardar respuesta del asistente
-    console.log('Guardando respuesta del asistente...');
-    await chatManager.addMessageToConversation(req.user.uid, conversationId, {
-      role: 'assistant',
-      content: response.data.message
-    });
+        // Verificar que la conversación existe
+        try {
+            await chatManager.verifyChatOwnership(userId, currentConversationId);
+        } catch (error) {
+            console.log('Conversación no encontrada, creando nueva...');
+            currentConversationId = await chatManager.createConversation(userId, message);
+        }
 
-    console.log('=== FIN PROCESAMIENTO DE MENSAJE ===');
-    res.json({ 
-                success: true,
-                data: {
-        message: response.data.message,
-        conversationId 
-      }
-    });
+        // Agregar mensaje del usuario
+        await chatManager.addMessageToConversation(userId, currentConversationId, {
+            role: 'user',
+            content: message
+        });
+
+        // Procesar la consulta según el rol
+        let response;
+        if (isAdmin) {
+            response = await processQuery({ message, userId });
+        } else {
+            response = await processQueryEmployee({ message, userId });
+        }
+
+        // Agregar respuesta del asistente
+        await chatManager.addMessageToConversation(userId, currentConversationId, {
+            role: 'assistant',
+            content: response.data.message
+        });
+
+        res.json({
+            success: true,
+            data: {
+                message: response.data.message,
+                conversationId: currentConversationId
+            }
+        });
     } catch (error) {
-    console.error('Error en el chat:', error);
-    console.error('Stack trace:', error.stack);
+        console.error('Error en el chat:', error);
+        console.error('Stack trace:', error.stack);
         res.status(500).json({
             success: false,
-      error: 'Error en el procesamiento del mensaje',
-      details: error.message 
+            data: {
+                message: 'Lo siento, ha ocurrido un error al procesar tu consulta. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.'
+            }
         });
     }
 });
