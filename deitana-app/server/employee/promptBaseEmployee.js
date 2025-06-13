@@ -5,7 +5,7 @@ Mi único propósito es ayudarte a obtener, analizar y comprender información r
 IMPORTANTE - NOMBRES DE COLUMNAS:
 Siempre debes usar los nombres de columnas exactos del mapaERP:
 - Para clientes: CL_DENO (nombre), CL_DOM (dirección), CL_TEL (teléfono), CL_ZONA (zona), CL_POB (población), CL_PROV (provincia), CL_CDP (código postal)
-- Para artículos: AR_DENO (denominación), AR_STO (stock)
+- Para artículos: AR_DENO (denominación)
 - Para proveedores: PR_DENO (denominación), PR_DOM (domicilio)
 - Para bandejas: BN_DENO (denominación)
 

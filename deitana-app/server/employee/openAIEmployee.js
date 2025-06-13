@@ -79,7 +79,6 @@ async function formatFinalResponse(results, query) {
 
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
     const pideAleatorio = /aleatori[ao]|ejemplo|cualquiera|al azar/i.test(query);
-    const esConsultaClientes = /clientes?|cliente|madrid|provincia|zona/i.test(query.toLowerCase());
     
     let tablaDetectada = null;
     if (results.length > 0) {
@@ -90,59 +89,31 @@ async function formatFinalResponse(results, query) {
     const resultadosLimitados = limitarResultados(results, pideCompleto ? 10 : 5, pideAleatorio);
     let datosReales = '';
     
-    if (esConsultaClientes) {
-        datosReales = '\nInformación de Clientes:\n';
-        resultadosLimitados.forEach((cliente, index) => {
-            datosReales += `\nCliente ${index + 1}:\n`;
-            if (cliente.CL_DENO) datosReales += `Nombre: ${cliente.CL_DENO}\n`;
-            if (cliente.CL_DOM) datosReales += `Dirección: ${cliente.CL_DOM}\n`;
-            if (cliente.CL_POB) datosReales += `Población: ${cliente.CL_POB}\n`;
-            if (cliente.CL_PROV) datosReales += `Provincia: ${cliente.CL_PROV}\n`;
-            if (cliente.CL_CDP) datosReales += `Código Postal: ${cliente.CL_CDP}\n`;
-            if (cliente.CL_TEL) datosReales += `Teléfono: ${cliente.CL_TEL}\n`;
-            if (cliente.CL_ZONA) datosReales += `Zona: ${cliente.CL_ZONA}\n`;
-            datosReales += '-------------------\n';
+    resultadosLimitados.forEach((resultado, index) => {
+        datosReales += `\nRegistro ${index + 1}:\n`;
+        const campos = Object.entries(resultado);
+        campos.forEach(([campo, valor]) => {
+            let descripcion = campo;
+            if (tablaDetectada) {
+                descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
+            }
+            if (campo.toLowerCase().includes('fec') && valor) {
+                const fecha = new Date(valor);
+                valor = fecha.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            datosReales += `${descripcion}: ${valor}\n`;
         });
-    } else {
-        resultadosLimitados.forEach((resultado, index) => {
-            datosReales += `\nRegistro ${index + 1}:\n`;
-            const campos = Object.entries(resultado);
-            campos.forEach(([campo, valor]) => {
-                let descripcion = campo;
-                if (tablaDetectada) {
-                    descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
-                }
-                if (campo.toLowerCase().includes('fec') && valor) {
-                    const fecha = new Date(valor);
-                    valor = fecha.toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                }
-                datosReales += `${descripcion}: ${valor}\n`;
-            });
-        });
-    }
+        datosReales += '-------------------\n';
+    });
 
     const messages = [
         {
             role: "system",
-            content: esConsultaClientes ? 
-                `Eres un asistente especializado en consultas de clientes de Semilleros Deitana. 
-                - Proporciona información clara y concisa sobre los clientes
-                - Si se pide información específica (ej: clientes de Madrid), busca en la tabla 'clientes' usando CL_PROV
-                - Incluye información relevante como nombre, dirección, teléfono y zona
-                - Si no hay resultados, sugiere alternativas o pide más detalles
-                - Mantén un tono profesional y servicial` :
-                `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.
-                - Si no hay datos, explica la situación y sugiere alternativas.
-                - Si la consulta es ambigua, pide más detalles.
-                - Si se pide un ejemplo, selecciona uno aleatorio.
-                - Explica el significado de los datos y su relevancia.
-                - Nunca repitas datos crudos, interpreta y resume.
-                - Sé proactivo y guía al usuario para obtener la mejor respuesta posible.
-                - Mantén un tono profesional, conversacional y humano.`
+            content: promptBase
         },
         {
             role: "user",
@@ -154,9 +125,9 @@ async function formatFinalResponse(results, query) {
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4-turbo-preview",
             messages: messages,
-            temperature: 0.8,
+            temperature: 0.7,
             max_tokens: 600
         });
 
@@ -372,7 +343,7 @@ async function processQuery({ message, userId }) {
         ];
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4-turbo-preview",
             messages: messages,
             temperature: 0.7,
             max_tokens: 800
@@ -388,6 +359,15 @@ async function processQuery({ message, userId }) {
             const results = await executeQuery(sql);
             console.log('Resultados de la consulta:', results);
             
+            if (!results || results.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        message: "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?"
+                    }
+                };
+            }
+
             // Formatear la respuesta final con los resultados
             const finalResponse = await formatFinalResponse(results, message);
             return {
