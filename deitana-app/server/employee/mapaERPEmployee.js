@@ -38,6 +38,16 @@ const mapaERP = {
         }
     },
 
+    bandejas: {
+        descripcion: "Catálogo de bandejas",
+        tabla: "bandejas",
+        columnas: {
+            id: "Código único que identifica cada artículo",
+            BA_DENO: "Denominación o nombre de bandeja",
+            
+        }
+    },
+
     proveedores: {
         descripcion: "Gestiona la información de los proveedores de Semilleros Deitana, incluyendo datos de contacto y detalles comerciales.",
         tabla: "proveedores",

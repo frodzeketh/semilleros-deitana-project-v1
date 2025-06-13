@@ -182,7 +182,7 @@ app.post('/chat/new', verifyToken, async (req, res) => {
 });
 
 // Ruta para procesar mensajes
-app.post('/chat', async (req, res) => {
+app.post('/chat', verifyToken, async (req, res) => {
     try {
         const { message, conversationId } = req.body;
         const userId = req.user.uid;

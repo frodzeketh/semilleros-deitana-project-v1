@@ -154,7 +154,7 @@ async function formatFinalResponse(results, query) {
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
+            model: "gpt-4o",
             messages: messages,
             temperature: 0.8,
             max_tokens: 600
@@ -170,8 +170,15 @@ async function formatFinalResponse(results, query) {
 // Función para ejecutar consultas SQL
 async function executeQuery(sql) {
     try {
+        // Validar que la tabla existe en mapaERP
+        if (!validarTablaEnMapaERP(sql)) {
+            throw new Error('Tabla no encontrada en mapaERP');
+        }
+
+        // Reemplazar los nombres de las tablas con sus nombres reales
         const sqlModificado = reemplazarNombresTablas(sql);
         console.log('Ejecutando consulta SQL:', sqlModificado);
+        
         const [rows] = await pool.query(sqlModificado);
         console.log('Resultados de la consulta:', rows);
         
@@ -251,54 +258,25 @@ function reemplazarNombresTablas(sql) {
 
 // Función para validar que la tabla existe en mapaERP
 function validarTablaEnMapaERP(sql) {
-    const tablas = Object.keys(mapaERP);
-    const tablasEnConsulta = sql.match(/FROM\s+(\w+)|JOIN\s+(\w+)/gi)?.map(t => 
-        t.replace(/FROM\s+|JOIN\s+/gi, '').toLowerCase()
-    ) || [];
+    const tablasEnMapa = Object.keys(mapaERP);
+    const tablasEnSQL = sql.match(/FROM\s+`?(\w+)`?/i) || [];
+    const tabla = tablasEnSQL[1];
     
-    for (const tabla of tablasEnConsulta) {
-        if (!tablas.includes(tabla)) {
-            throw new Error(`La tabla ${tabla} no existe en el mapaERP. Tablas disponibles: ${tablas.join(', ')}`);
-        }
-    }
+    if (!tabla) return true; // Si no se detecta tabla, permitir la consulta
+    return tablasEnMapa.includes(tabla);
 }
 
 // Función para validar que las columnas existen en mapaERP
 function validarColumnasEnMapaERP(sql, tabla) {
-    if (!mapaERP[tabla] || !mapaERP[tabla].columnas) {
-        throw new Error(`La tabla ${tabla} no está definida correctamente en mapaERP`);
-    }
-
-    const columnas = Object.keys(mapaERP[tabla].columnas);
+    if (!mapaERP[tabla]) return true;
     
-    const selectMatch = sql.match(/SELECT\s+([^\s]*?)\s+FROM/i);
-    if (!selectMatch) return;
-
-    if (selectMatch[1].trim() === '*') {
-        throw new Error(`No se permite usar SELECT *. Por favor, especifica las columnas definidas en mapaERP: ${columnas.join(', ')}`);
-    }
+    const columnasEnMapa = Object.keys(mapaERP[tabla].columnas || {});
+    const columnasEnSQL = sql.match(/SELECT\s+(.*?)\s+FROM/i);
     
-    const columnasEnSQL = selectMatch[1]
-        .split(',')
-        .map(col => {
-            col = col.trim();
-            if (col.match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
-            if (col.toLowerCase().includes(' as ')) {
-                const [columna, alias] = col.split(/\s+as\s+/i);
-                return columna.trim();
-            }
-            return col.replace(/^[a-z]+\./, '');
-        })
-        .filter(col => col !== null);
+    if (!columnasEnSQL) return true;
     
-    const columnasNoValidas = columnasEnSQL.filter(columna => !columnas.includes(columna));
-    
-    if (columnasNoValidas.length > 0) {
-        throw new Error(
-            `Las siguientes columnas no existen en la tabla ${tabla}: ${columnasNoValidas.join(', ')}. ` +
-            `Columnas disponibles: ${columnas.join(', ')}`
-        );
-    }
+    const columnas = columnasEnSQL[1].split(',').map(col => col.trim());
+    return columnas.every(col => columnasEnMapa.includes(col));
 }
 
 // Función para obtener contenido relevante de mapaERP
@@ -382,36 +360,10 @@ async function processQuery({ message, userId }) {
     try {
         console.log('Procesando consulta de empleado:', message);
         
-        // Mensajes del sistema para diferentes tipos de consultas
-        const systemMessages = {
-            clientes: `Eres un asistente especializado en consultas de clientes de Semilleros Deitana. 
-            - Proporciona información clara y concisa sobre los clientes
-            - Si se pide información específica (ej: clientes de Madrid), genera una consulta SQL usando la tabla 'clientes' y el campo CL_PROV
-            - La consulta SQL debe estar entre etiquetas <sql> y </sql>
-            - Incluye información relevante como nombre, dirección, teléfono y zona
-            - Si no hay resultados, sugiere alternativas o pide más detalles
-            - Mantén un tono profesional y servicial
-            - IMPORTANTE: SIEMPRE genera una consulta SQL para consultas de clientes`,
-            
-            default: `Eres un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos y responde SIEMPRE de forma clara, útil y natural.
-            - Si no hay datos, explica la situación y sugiere alternativas.
-            - Si la consulta es ambigua, pide más detalles.
-            - Si se pide un ejemplo, selecciona uno aleatorio.
-            - Explica el significado de los datos y su relevancia.
-            - Nunca repitas datos crudos, interpreta y resume.
-            - Sé proactivo y guía al usuario para obtener la mejor respuesta posible.
-            - Mantén un tono profesional, conversacional y humano.
-            - IMPORTANTE: Para consultas de clientes, SIEMPRE genera una consulta SQL entre etiquetas <sql> y </sql>`
-        };
-
-        // Determinar el tipo de consulta
-        const esConsultaClientes = /clientes?|cliente|madrid|provincia|zona/i.test(message.toLowerCase());
-        const systemMessage = esConsultaClientes ? systemMessages.clientes : systemMessages.default;
-
         const messages = [
             {
                 role: "system",
-                content: systemMessage
+                content: promptBase + "\n\nIMPORTANTE: Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js. Por ejemplo, para clientes usa CL_DENO, CL_DOM, CL_TEL, etc."
             },
             {
                 role: "user",
@@ -420,7 +372,7 @@ async function processQuery({ message, userId }) {
         ];
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
+            model: "gpt-4o",
             messages: messages,
             temperature: 0.7,
             max_tokens: 800
@@ -444,28 +396,6 @@ async function processQuery({ message, userId }) {
                     message: finalResponse
                 }
             };
-        }
-
-        // Si es una consulta de clientes pero no se generó SQL, forzar una consulta por defecto
-        if (esConsultaClientes) {
-            const defaultSql = `<sql>SELECT CL_DENO, CL_DOM, CL_POB, CL_PROV, CL_CDP, CL_TEL, CL_ZONA 
-                               FROM \`clientes\` 
-                               WHERE CL_PROV LIKE '%MADRID%' 
-                               LIMIT 2</sql>`;
-            const sql = validarRespuestaSQL(defaultSql);
-            if (sql) {
-                console.log('Ejecutando consulta SQL por defecto:', sql);
-                const results = await executeQuery(sql);
-                console.log('Resultados de la consulta por defecto:', results);
-                
-                const finalResponse = await formatFinalResponse(results, message);
-                return {
-                    success: true,
-                    data: {
-                        message: finalResponse
-                    }
-                };
-            }
         }
 
         return {
