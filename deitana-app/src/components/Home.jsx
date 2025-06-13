@@ -5,7 +5,7 @@ import { MessageSquare, PanelLeftClose, Send, ChevronDown, Search, Settings, Log
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -13,7 +13,6 @@ const API_URL =
     : "https://semilleros-deitana-project-v1-production.up.railway.app"
 
 const Home = () => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [message, setMessage] = useState("")
@@ -236,10 +235,10 @@ const Home = () => {
     // Crear mensaje del bot con estado de carga
     const botMessage = {
       id: Date.now() + 1,
-            text: "",
-            sender: "bot",
-            isStreaming: true,
-        };
+      text: "",
+      sender: "bot",
+      isStreaming: true,
+    };
     setChatMessages((prev) => {
       console.log('Creando nuevo mensaje del bot:', botMessage);
       return [...prev, botMessage];
@@ -253,11 +252,8 @@ const Home = () => {
 
       console.log('Token obtenido, realizando petición al servidor...');
 
-      let url = `${API_URL}/chat`;
-      let body = { message };
-
-      // Si no hay conversación actual, crear una nueva
-      if (!currentConversationId) {
+      // Si no hay conversación actual o es temporal, crear una nueva
+      if (!currentConversationId || currentConversationId.startsWith('temp_')) {
         console.log('Creando nueva conversación...');
         const newConversationResponse = await fetch(`${API_URL}/chat/new`, {
           method: 'POST',
@@ -278,26 +274,19 @@ const Home = () => {
         }
 
         setCurrentConversationId(newConversationData.data.conversationId);
-        body.conversationId = newConversationData.data.conversationId;
-      } else {
-        body.conversationId = currentConversationId;
       }
 
-      console.log('URL:', url);
-      console.log('Headers:', {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "Conversation-Id": currentConversationId || 'new'
-      });
-
-      const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-          "Conversation-Id": currentConversationId || 'new'
-            },
-        body: JSON.stringify(body)
+      const response = await fetch(`${API_URL}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "Conversation-Id": currentConversationId
+        },
+        body: JSON.stringify({ 
+          message,
+          conversationId: currentConversationId
+        })
       });
 
       console.log('Respuesta recibida:', response.status, response.statusText);
@@ -308,7 +297,7 @@ const Home = () => {
         throw new Error(errorData.error || 'Error en el procesamiento del mensaje');
       }
 
-        const data = await response.json();
+      const data = await response.json();
       console.log('Datos recibidos:', data);
       
       if (!data.success) {
@@ -330,8 +319,8 @@ const Home = () => {
     } catch (error) {
       console.error("Error al enviar mensaje:", error);
       // Actualizar el mensaje del bot con el error
-        setChatMessages((prev) =>
-            prev.map((msg) =>
+      setChatMessages((prev) =>
+        prev.map((msg) =>
           msg.id === botMessage.id
             ? {
                 ...msg,
@@ -341,9 +330,9 @@ const Home = () => {
               }
             : msg
         )
-        );
+      );
     } finally {
-        setIsTyping(false);
+      setIsTyping(false);
       console.log('=== FIN ENVÍO DE MENSAJE ===');
     }
   };
@@ -550,7 +539,7 @@ const Home = () => {
           <>
             <div className="ds-sidebar-header">
               <div className="ds-logo-sidebar-container">
-                <img src="/logo-crop.png" alt="Logo" className="logo-sidebar-open" />
+                <img src="/logo-crop5.png" alt="Logo" className="logo-sidebar-open" />
               </div>
               {isMobile && (
                 <button className="ds-mobile-close-button" onClick={() => setMobileSidebarOpen(false)}>
@@ -626,7 +615,7 @@ const Home = () => {
         ) : (
           <div className="ds-sidebar-collapsed-content">
             <div className="ds-collapsed-item ds-collapsed-logo" onClick={toggleSidebar}>
-              <img src="/logo-crop.png" alt="Logo" className="ds-collapsed-logo-img" />
+              <img src="/logo-crop2.png" alt="Logo" className="ds-collapsed-logo-img" />
             </div>
             <div className="ds-collapsed-item" onClick={toggleSidebar}>
               <Edit3 size={25} />
@@ -672,7 +661,7 @@ const Home = () => {
             <div className="ds-initial-view">
               <div className="ds-welcome-message">
                 <div className="ds-welcome-logo">
-                  <img src="/logo-crop.png" alt="Logo" />
+                  <img src="/logo-crop2.png" alt="Logo" />
                 </div>
                 <h2>Hola, soy Deitana IA.</h2>
                 <p>¿En qué puedo ayudarte hoy?</p>
@@ -683,7 +672,7 @@ const Home = () => {
               <div className="ds-chat-messages">
                 <div className="ds-message ds-bot-message">
                   <div className="ds-message-avatar">
-                    <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
+                    <img src="/logo-crop2.png" alt="Logo" className="ds-avatar-image" />
                   </div>
                   <div className="ds-message-content">
                     <h2>Hola, soy Deitana IA.</h2>
@@ -698,7 +687,7 @@ const Home = () => {
                   >
                     {msg.sender === "bot" && (
                       <div className="ds-message-avatar">
-                        <img src="/logo-crop.png" alt="Logo" className="ds-avatar-image" />
+                        <img src="/logo-crop2.png" alt="Logo" className="ds-avatar-image" />
                       </div>
                     )}
                     <div className="ds-message-content">

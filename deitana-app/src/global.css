@@ -235,6 +235,7 @@ input:focus {
 }
 
 .ds-chat-item {
+  font-family: "Plus Jakarta Sans", sans-serif;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -757,6 +758,7 @@ input:focus {
 }
 
 .ds-chat-input {
+  font-family: "Plus Jakarta Sans", sans-serif;
   width: 100%;
   padding: 12px 16px;
   padding-right: 48px;
@@ -993,7 +995,7 @@ input:focus {
   }
 
   .logo-sidebar-open {
-    height: 35px;
+    height: 39px;
   }
 
   .ds-search-container {
@@ -1001,6 +1003,7 @@ input:focus {
   }
 
   .ds-search-input {
+    font-family: "Plus Jakarta Sans", sans-serif;
     padding: 6px 10px 6px 28px;
     font-size: 13px;
   }
