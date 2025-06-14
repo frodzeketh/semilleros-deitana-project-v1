@@ -36,7 +36,7 @@ const mapaERP = {
     },
 
     bandejas: {
-        descripcion: "Catálogo de bandejas",
+        descripcion: "Catálogo de bandejas, estas bandejas no las vendemos, se las compramos a un proveedor",
         tabla: "bandejas",
         columnas: {
             id: "Código único que identifica cada artículo",
