@@ -234,7 +234,13 @@ function validarTablaEnMapaERP(sql) {
     const tabla = tablasEnSQL[1];
     
     if (!tabla) return true; // Si no se detecta tabla, permitir la consulta
-    return tablasEnMapa.includes(tabla);
+    
+    // Verificar si la tabla existe en mapaERP
+    if (!tablasEnMapa.includes(tabla)) {
+        throw new Error(`La tabla '${tabla}' no está definida en mapaERPEmployee. Tablas disponibles: ${tablasEnMapa.join(', ')}`);
+    }
+    
+    return true;
 }
 
 // Función para validar que las columnas existen en mapaERP
@@ -247,7 +253,13 @@ function validarColumnasEnMapaERP(sql, tabla) {
     if (!columnasEnSQL) return true;
     
     const columnas = columnasEnSQL[1].split(',').map(col => col.trim());
-    return columnas.every(col => columnasEnMapa.includes(col));
+    const columnasInvalidas = columnas.filter(col => !columnasEnMapa.includes(col));
+    
+    if (columnasInvalidas.length > 0) {
+        throw new Error(`Las siguientes columnas no están definidas en mapaERPEmployee para la tabla '${tabla}': ${columnasInvalidas.join(', ')}`);
+    }
+    
+    return true;
 }
 
 // Función para obtener contenido relevante de mapaERP
@@ -256,29 +268,27 @@ function obtenerContenidoMapaERP(consulta) {
         const palabrasClave = consulta.toLowerCase().split(' ');
         console.log('Palabras clave de la consulta:', palabrasClave);
 
-        const mapeoTablas = {
-            'cliente': 'clientes',
-            'proveedor': 'proveedores',
-            'articulo': 'articulos'
-        };
+        // Buscar coincidencias en las descripciones y nombres de tablas
+        const tablasRelevantes = Object.entries(mapaERP).filter(([key, value]) => {
+            const descripcion = value.descripcion.toLowerCase();
+            return palabrasClave.some(palabra => 
+                descripcion.includes(palabra) || 
+                key.toLowerCase().includes(palabra)
+            );
+        });
 
-        let tablaPrincipal = null;
-        for (const palabra of palabrasClave) {
-            if (mapeoTablas[palabra]) {
-                tablaPrincipal = mapeoTablas[palabra];
-                break;
-            }
+        if (tablasRelevantes.length === 0) {
+            return `Tablas disponibles: ${Object.keys(mapaERP).join(', ')}`;
         }
 
-        if (!tablaPrincipal || !mapaERP[tablaPrincipal]) {
-            return 'Tablas disponibles: ' + Object.keys(mapeoTablas).join(', ');
-        }
+        let respuesta = '';
+        tablasRelevantes.forEach(([tabla, info]) => {
+            respuesta += `\nTABLA ${tabla}:\n`;
+            respuesta += `Descripción: ${info.descripcion}\n`;
+            respuesta += `Columnas principales: ${Object.keys(info.columnas).join(', ')}\n`;
+        });
 
-        const tabla = mapaERP[tablaPrincipal];
-        return `TABLA ${tablaPrincipal}:\n` +
-               `Descripción: ${tabla.descripcion || 'No disponible'}\n` +
-               `Columnas principales: ${Object.keys(tabla.columnas || {}).slice(0, 5).join(', ')}`;
-
+        return respuesta;
     } catch (error) {
         console.error('Error al obtener contenido de mapaERP:', error);
         return '';
@@ -331,10 +341,13 @@ async function processQuery({ message, userId }) {
     try {
         console.log('Procesando consulta de empleado:', message);
         
+        // Obtener información relevante del mapaERP para la consulta
+        const mapaERPInfo = obtenerContenidoMapaERP(message);
+        
         const messages = [
             {
                 role: "system",
-                content: promptBase + "\n\nIMPORTANTE: Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js. Por ejemplo, para clientes usa CL_DENO, CL_DOM, CL_TEL, etc."
+                content: promptBase + "\n\n" + mapaERPInfo + "\n\nIMPORTANTE: Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js. Las tablas y columnas disponibles son las que se muestran arriba."
             },
             {
                 role: "user",
@@ -356,6 +369,14 @@ async function processQuery({ message, userId }) {
         const sql = validarRespuestaSQL(response);
         if (sql) {
             console.log('Ejecutando consulta SQL:', sql);
+            
+            // Validar que la tabla y columnas existen en mapaERP
+            validarTablaEnMapaERP(sql);
+            const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
+            if (tabla) {
+                validarColumnasEnMapaERP(sql, tabla);
+            }
+            
             const results = await executeQuery(sql);
             console.log('Resultados de la consulta:', results);
             
@@ -389,7 +410,7 @@ async function processQuery({ message, userId }) {
         return {
             success: false,
             data: {
-                message: `Lo siento, ha ocurrido un error al procesar tu consulta. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.`
+                message: `Lo siento, ha ocurrido un error al procesar tu consulta: ${error.message}. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.`
             }
         };
     }

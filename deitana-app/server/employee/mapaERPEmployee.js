@@ -15,7 +15,6 @@ const mapaERP = {
             CL_EMA: "Correo electrónico",
             CL_WEB: "Página web",
             CL_PAIS: "País",
-            CL_FPG: "Forma de pago preferida",
             CL_IBAN: "Número de cuenta bancaria en formato IBAN"
         }
     },
@@ -29,12 +28,10 @@ const mapaERP = {
             AR_REF: "Referencia o código interno del artículo",
             AR_STOK: "Stock actual del artículo",
             AR_PVP: "Precio de venta al público",
-            AR_PCP: "Precio de coste",
-            AR_IVA: "Porcentaje de IVA aplicable",
-            AR_CDPR: "Código del proveedor principal",
+            AR_IVAP: "Porcentaje de IVA aplicable",
+            AR_PRV: "Código del proveedor principal",
             AR_FAM: "Familia o categoría del artículo",
             AR_TIPO: "Tipo de artículo (planta, semilla, injerto, etc.)",
-            AR_DES: "Descripción detallada del artículo"
         }
     },
 
