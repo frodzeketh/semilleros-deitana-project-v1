@@ -40,7 +40,7 @@ const mapaERP = {
         tabla: "bandejas",
         columnas: {
             id: "Código único que identifica cada artículo",
-            BA_DENO: "Denominación o nombre de bandeja",
+            BN_DENO: "Denominación o nombre de bandeja",
             
         }
     },

@@ -295,8 +295,26 @@ function obtenerContenidoMapaERP(consulta) {
     }
 }
 
+// Función para obtener el historial de mensajes de una conversación
+async function getConversationHistory(userId, conversationId) {
+    try {
+        const userChatRef = chatManager.chatsCollection.doc(userId);
+        const conversationRef = userChatRef.collection('conversations').doc(conversationId);
+        const conversationDoc = await conversationRef.get();
+        
+        if (!conversationDoc.exists) {
+            return [];
+        }
+        
+        return conversationDoc.data().messages || [];
+    } catch (error) {
+        console.error('Error al obtener historial de conversación:', error);
+        throw error;
+    }
+}
+
 // Función para guardar mensaje en Firestore
-async function saveMessageToFirestore(userId, message) {
+async function saveMessageToFirestore(userId, message, conversationId) {
     try {
         console.log('Iniciando saveMessageToFirestore...');
         const now = new Date();
@@ -307,7 +325,55 @@ async function saveMessageToFirestore(userId, message) {
         };
 
         const userChatRef = chatManager.chatsCollection.doc(userId);
-        const conversationRef = userChatRef.collection('conversations').doc('employee_conversation');
+        const conversationRef = userChatRef.collection('conversations').doc(conversationId);
+        
+        console.log('Obteniendo documento actual...');
+        const conversationDoc = await conversationRef.get();
+        let messages = [];
+        
+        if (conversationDoc.exists) {
+            console.log('Documento existente encontrado');
+            messages = conversationDoc.data().messages || [];
+        } else {
+            console.log('Creando nuevo documento de conversación');
+            // Si es una nueva conversación, crear el documento con título inicial
+            await conversationRef.set({
+                title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+                createdAt: now,
+                lastUpdated: now,
+                messages: []
+            });
+        }
+        
+        console.log('Agregando nuevo mensaje...');
+        messages.push(messageData);
+        
+        console.log('Actualizando documento...');
+        await conversationRef.set({
+            lastUpdated: now,
+            messages: messages
+        }, { merge: true });
+
+        console.log('Mensaje guardado exitosamente');
+        return true;
+    } catch (error) {
+        console.error('Error al guardar mensaje en Firestore:', error);
+        throw error;
+    }
+}
+
+async function saveAssistantMessageToFirestore(userId, message, conversationId) {
+    try {
+        console.log('Iniciando saveAssistantMessageToFirestore...');
+        const now = new Date();
+        const messageData = {
+            content: message,
+            role: 'assistant',
+            timestamp: now
+        };
+
+        const userChatRef = chatManager.chatsCollection.doc(userId);
+        const conversationRef = userChatRef.collection('conversations').doc(conversationId);
         
         console.log('Obteniendo documento actual...');
         const conversationDoc = await conversationRef.get();
@@ -329,17 +395,26 @@ async function saveMessageToFirestore(userId, message) {
             messages: messages
         }, { merge: true });
 
-        console.log('Mensaje guardado exitosamente');
+        console.log('Mensaje del asistente guardado exitosamente');
         return true;
     } catch (error) {
-        console.error('Error al guardar mensaje en Firestore:', error);
+        console.error('Error al guardar mensaje del asistente en Firestore:', error);
         throw error;
     }
 }
 
-async function processQuery({ message, userId }) {
+async function processQuery({ message, userId, conversationId }) {
     try {
         console.log('Procesando consulta de empleado:', message);
+        
+        // Obtener el historial de la conversación
+        const conversationHistory = await getConversationHistory(userId, conversationId);
+        
+        // Construir el contexto con el historial
+        const contextMessages = conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
         
         // Obtener información relevante del mapaERP para la consulta
         const mapaERPInfo = obtenerContenidoMapaERP(message);
@@ -349,6 +424,7 @@ async function processQuery({ message, userId }) {
                 role: "system",
                 content: promptBase + "\n\n" + mapaERPInfo + "\n\nIMPORTANTE: Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js. Las tablas y columnas disponibles son las que se muestran arriba."
             },
+            ...contextMessages,
             {
                 role: "user",
                 content: message
@@ -364,6 +440,10 @@ async function processQuery({ message, userId }) {
 
         const response = completion.choices[0].message.content;
         console.log('Respuesta del asistente:', response);
+
+        // Guardar el mensaje del usuario y la respuesta en Firestore
+        await saveMessageToFirestore(userId, message, conversationId);
+        await saveAssistantMessageToFirestore(userId, response, conversationId);
 
         // Validar y ejecutar consulta SQL si existe
         const sql = validarRespuestaSQL(response);
@@ -413,47 +493,6 @@ async function processQuery({ message, userId }) {
                 message: `Lo siento, ha ocurrido un error al procesar tu consulta: ${error.message}. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.`
             }
         };
-    }
-}
-
-async function saveAssistantMessageToFirestore(userId, message) {
-    try {
-        console.log('Iniciando saveAssistantMessageToFirestore...');
-        const now = new Date();
-        const messageData = {
-            content: message,
-            role: 'assistant',
-            timestamp: now
-        };
-
-        const userChatRef = chatManager.chatsCollection.doc(userId);
-        const conversationRef = userChatRef.collection('conversations').doc('employee_conversation');
-        
-        console.log('Obteniendo documento actual...');
-        const conversationDoc = await conversationRef.get();
-        let messages = [];
-        
-        if (conversationDoc.exists) {
-            console.log('Documento existente encontrado');
-            messages = conversationDoc.data().messages || [];
-        } else {
-            console.log('Creando nuevo documento de conversación');
-        }
-        
-        console.log('Agregando nuevo mensaje...');
-        messages.push(messageData);
-        
-        console.log('Actualizando documento...');
-        await conversationRef.set({
-            lastUpdated: now,
-            messages: messages
-        }, { merge: true });
-
-        console.log('Mensaje del asistente guardado exitosamente');
-        return true;
-    } catch (error) {
-        console.error('Error al guardar mensaje del asistente en Firestore:', error);
-        throw error;
     }
 }
 
