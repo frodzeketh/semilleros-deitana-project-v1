@@ -200,24 +200,24 @@ app.post('/chat', verifyToken, async (req, res) => {
             console.log('Creando nueva conversación...');
             currentConversationId = await chatManager.createConversation(userId, message);
             console.log('Nueva conversación creada:', currentConversationId);
-        } else {
-            // Verificar que la conversación existe
-            try {
-                await chatManager.verifyChatOwnership(userId, currentConversationId);
-            } catch (error) {
-                console.error('Error al verificar la conversación:', error);
-                return res.status(404).json({
-                    success: false,
-                    error: 'Conversación no encontrada'
-                });
-            }
+        }
 
-            // Agregar mensaje del usuario solo si no es una nueva conversación
-            await chatManager.addMessageToConversation(userId, currentConversationId, {
-                role: 'user',
-                content: message
+        // Verificar que la conversación existe
+        try {
+            await chatManager.verifyChatOwnership(userId, currentConversationId);
+        } catch (error) {
+            console.error('Error al verificar la conversación:', error);
+            return res.status(404).json({
+                success: false,
+                error: 'Conversación no encontrada'
             });
         }
+
+        // Agregar mensaje del usuario
+        await chatManager.addMessageToConversation(userId, currentConversationId, {
+            role: 'user',
+            content: message
+        });
 
         // Procesar la consulta según el rol
         let response;

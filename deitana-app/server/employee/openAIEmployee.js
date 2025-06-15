@@ -441,10 +441,6 @@ async function processQuery({ message, userId, conversationId }) {
         const response = completion.choices[0].message.content;
         console.log('Respuesta del asistente:', response);
 
-        // Guardar el mensaje del usuario y la respuesta en Firestore
-        await saveMessageToFirestore(userId, message, conversationId);
-        await saveAssistantMessageToFirestore(userId, response, conversationId);
-
         // Validar y ejecutar consulta SQL si existe
         const sql = validarRespuestaSQL(response);
         if (sql) {

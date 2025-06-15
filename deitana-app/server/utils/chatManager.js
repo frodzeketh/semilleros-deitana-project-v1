@@ -58,11 +58,7 @@ class ChatManager {
                 title: title,
                 createdAt: timestamp,
                 updatedAt: timestamp,
-                messages: [{
-                    role: 'user',
-                    content: initialMessage,
-                    timestamp: timestamp
-                }]
+                messages: [] // Inicializamos con un array vacío
             };
 
             await conversationRef.set(conversationData);
