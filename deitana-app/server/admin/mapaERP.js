@@ -327,7 +327,7 @@ familias: {
       PR_WEB: "Dirección de la página web del proveedor",
       PR_DOMEN: "Domicilio o detalles para el envío de facturas",
       PR_PAIS: "País de residencia del proveedor",
-      PR_FPG: "Forma de pago preferida del proveedor (referencia a la tabla 'fpago')",
+      PR_FPG: "Forma de pago preferida del proveedor tiene relacion con la tabla referencia a la tabla fpago",
       PR_IBAN: "Número de cuenta bancaria en formato IBAN del proveedor",
       // Nota sobre campos vacíos: Si un campo no tiene información, se asume 'No hay información disponible'.
     },

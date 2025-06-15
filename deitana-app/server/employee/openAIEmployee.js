@@ -252,7 +252,21 @@ function validarColumnasEnMapaERP(sql, tabla) {
     
     if (!columnasEnSQL) return true;
     
-    const columnas = columnasEnSQL[1].split(',').map(col => col.trim());
+    const columnas = columnasEnSQL[1].split(',').map(col => {
+        col = col.trim();
+        // Si es una función SQL (COUNT, AVG, etc.), la ignoramos completamente
+        if (col.match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
+        // Si es un alias (AS), tomamos la parte antes del AS
+        if (col.toLowerCase().includes(' as ')) {
+            const [columna, alias] = col.split(/\s+as\s+/i);
+            // Si la columna es una función SQL, la ignoramos
+            if (columna.trim().match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
+            return columna.trim();
+        }
+        // Removemos el prefijo de tabla si existe
+        return col.replace(/^[a-z]+\./, '');
+    }).filter(col => col !== null);
+    
     const columnasInvalidas = columnas.filter(col => !columnasEnMapa.includes(col));
     
     if (columnasInvalidas.length > 0) {
