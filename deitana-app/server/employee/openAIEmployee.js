@@ -436,7 +436,7 @@ async function processQuery({ message, userId, conversationId }) {
         const messages = [
             {
                 role: "system",
-                content: promptBase + "\n\n" + mapaERPInfo + "\n\nIMPORTANTE: Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js. Las tablas y columnas disponibles son las que se muestran arriba."
+                content: promptBase + "\n\n" + mapaERPInfo + "\n\nIMPORTANTE: \n1. NUNCA uses SELECT * en tus consultas SQL.\n2. SIEMPRE especifica las columnas exactas que necesitas de la tabla.\n3. Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js.\n4. Las tablas y columnas disponibles son las que se muestran arriba.\n5. Si no estás seguro de qué columnas usar, usa las columnas principales de la tabla."
             },
             ...contextMessages,
             {

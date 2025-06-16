@@ -247,7 +247,7 @@ const mapaERP = {
     },
 
 
-    secciones_trabajadores: {
+    secciones: {
         // Usamos el nombre que aparece en la descripción de campos
         descripcion:
           "Cataloga áreas funcionales, grupos o secciones internas a las que pertenecen los trabajadores. Fundamental para la gestión de RRHH, asignación de tareas y reportes de personal segmentados.",
