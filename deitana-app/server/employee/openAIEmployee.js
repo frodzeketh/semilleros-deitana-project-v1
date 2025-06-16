@@ -146,6 +146,11 @@ async function executeQuery(sql) {
             throw new Error('Tabla no encontrada en mapaERP');
         }
 
+        // Validar consultas con diversidad
+        if (sql.toLowerCase().includes('distinct') && sql.toLowerCase().includes('order by rand()')) {
+            validarConsultaDiversidad(sql);
+        }
+
         // Reemplazar los nombres de las tablas con sus nombres reales
         const sqlModificado = reemplazarNombresTablas(sql);
         console.log('Ejecutando consulta SQL:', sqlModificado);
@@ -249,29 +254,64 @@ function validarColumnasEnMapaERP(sql, tabla) {
     if (!mapaERP[tabla]) return true;
     
     const columnasEnMapa = Object.keys(mapaERP[tabla].columnas || {});
-    const columnasEnSQL = sql.match(/SELECT\s+(.*?)\s+FROM/i);
     
-    if (!columnasEnSQL) return true;
+    // Extraer las columnas de la consulta SQL, ignorando subconsultas
+    const selectMatch = sql.match(/SELECT\s+([^()]+?)\s+FROM/i);
+    if (!selectMatch) return true;
     
-    const columnas = columnasEnSQL[1].split(',').map(col => {
+    // Lista de palabras clave SQL que deben ser ignoradas
+    const palabrasClaveSQL = ['DISTINCT', 'ALL', 'TOP', 'UNIQUE'];
+    
+    const columnas = selectMatch[1].split(',').map(col => {
         col = col.trim();
-        // Si es una función SQL (COUNT, AVG, etc.), la ignoramos completamente
+        // Remover backticks si existen
+        col = col.replace(/`/g, '');
+        
+        // Ignorar palabras clave SQL
+        palabrasClaveSQL.forEach(keyword => {
+            col = col.replace(new RegExp('^' + keyword + '\\s+', 'i'), '').trim();
+        });
+        
+        // Si es una función SQL (COUNT, AVG, etc.), la ignoramos
         if (col.match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
+        
         // Si es un alias (AS), tomamos la parte antes del AS
         if (col.toLowerCase().includes(' as ')) {
-            const [columna, alias] = col.split(/\s+as\s+/i);
-            // Si la columna es una función SQL, la ignoramos
-            if (columna.trim().match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
+            const [columna] = col.split(/\s+as\s+/i);
             return columna.trim();
         }
+        
         // Removemos el prefijo de tabla si existe
         return col.replace(/^[a-z]+\./, '');
-    }).filter(col => col !== null);
+    }).filter(col => col !== null && col !== '');
     
     const columnasInvalidas = columnas.filter(col => !columnasEnMapa.includes(col));
     
     if (columnasInvalidas.length > 0) {
         throw new Error(`Las siguientes columnas no están definidas en mapaERPEmployee para la tabla '${tabla}': ${columnasInvalidas.join(', ')}`);
+    }
+    
+    return true;
+}
+
+// Función para validar consultas con diversidad
+function validarConsultaDiversidad(sql) {
+    // Verificar si la consulta tiene una subconsulta con DISTINCT
+    const tieneSubconsultaDistinct = /SELECT\s+DISTINCT/i.test(sql);
+    if (!tieneSubconsultaDistinct) {
+        throw new Error('La consulta debe usar DISTINCT en la subconsulta para garantizar diversidad');
+    }
+    
+    // Verificar si la consulta tiene ORDER BY RAND()
+    const tieneOrderByRand = /ORDER\s+BY\s+RAND\(\)/i.test(sql);
+    if (!tieneOrderByRand) {
+        throw new Error('La consulta debe usar ORDER BY RAND() para garantizar aleatoriedad');
+    }
+    
+    // Verificar si la consulta tiene LIMIT
+    const tieneLimit = /LIMIT\s+\d+/i.test(sql);
+    if (!tieneLimit) {
+        throw new Error('La consulta debe usar LIMIT para limitar los resultados');
     }
     
     return true;
