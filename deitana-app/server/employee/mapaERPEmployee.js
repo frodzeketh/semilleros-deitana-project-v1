@@ -378,6 +378,587 @@ const mapaERP = {
 
 
 
+
+
+
+
+
+
+    partidas: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Registra las partidas de siembra, vinculadas a los encargos de los clientes. Contiene información sobre la fecha, tipo de semilla (propia o no), la semilla utilizada, lote, germinación, tipo de siembra, sustrato, cantidades (semillas, plantas, alveolos, bandejas), fechas (siembra, entrega, solicitada) y denominación/observaciones.",
+      tabla: `partidas`, // Nombre de la tabla principal
+      columnas: {
+        id: "ID de la partida (Clave Primaria)",
+        PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
+        PAR_FEC: "Fecha de la partida.",
+        PAR_TIPO: "Tipo de semilla ('D': Depósito cliente, 'N': No depósito).",
+        PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+        PAR_LOTE: "Lote de la semilla.",
+        PAR_PGER: "Porcentaje de germinación.",
+        PAR_TSI: "Tipo de siembra. Clave foránea a la tabla 't-siembras' para obtener la denominación (TSI_DENO) y detalles.",
+        
+        PAR_ALVS: "Cantidad de semillas a sembrar.",
+        PAR_PLAS: "Cantidad de plantas solicitadas.",
+        PAR_PLAP: "Cantidad de plantas aproximadas.",
+        PAR_PLS: "Cantidad de alveolos solicitados.",
+        PAR_BASI: "Cantidad de bandejas de siembra.",
+        PAR_FECS: "Fecha de siembra.",
+        PAR_DIASS: "Días de siembra.",
+        PAR_FECE: "Fecha de entrega.",
+        PAR_DIASG: "Días de germinación.",
+        PAR_PPLA: "Planta (¿denominación?).",
+        PAR_PALV: "Alveolos (¿cantidad?).",
+        PAR_TOT: "Total (¿importe?).",
+        PAR_DENO: "Denominación u observación de la partida (Ej: 'PARTIDA Nº ...').",
+        PAR_FECES: "Fechas (Solicitada 'E'/Entrega 'E'/Siembra 'S').",
+        PAR_PMER: "Nombre (¿?).",
+        PAR_NMCL: "Nombre de la semilla.",
+      },
+      relaciones: {
+        encargos: {
+          tabla_relacionada: "encargos",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PAR_ENC",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con el encargo del cliente.",
+        },
+        articulos: {
+          tabla_relacionada: "articulos",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PAR_SEM",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con la semilla utilizada.",
+        },
+        t_siembras: {
+          tabla_relacionada: "t-siembras",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PAR_TSI",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con el tipo de siembra.",
+        },
+        sustratos: {
+          tabla_relacionada: "sustratos",
+          tipo: "Muchos a uno",
+          
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con el sustrato utilizado.",
+        },
+        clientes: {
+          tabla_relacionada: "clientes",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PAR_CCL", // Inferido del contexto de "encargos" -> "clientes"
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con el cliente (a través del encargo).",
+        },
+      },
+      ejemplos: {
+        consulta_partida_por_id:
+          "Obtener los detalles de una partida específica usando su 'id'.",
+        consultar_info_relacionada:
+          "Para una partida, obtener información del encargo asociado, la semilla, el tipo de siembra y el sustrato.",
+        filtrar_partidas_por_encargo:
+          "Listar todas las partidas asociadas a un número de encargo específico (filtrando por PAR_ENC).",
+        filtrar_partidas_por_fecha:
+          "Listar partidas por fecha de partida o fecha de entrega.",
+        filtrar_partidas_por_semilla:
+          "Listar partidas donde se utilizó una semilla específica (filtrando por PAR_SEM).",
+      },
+    },
+
+
+
+
+
+
+
+
+    pedidos_pr: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Registra y sigue los pedidos de compra realizados a proveedores. Es el punto de partida formal para solicitar la adquisición de bienes o servicios. Es crucial para la planificación de compras, el control de inventario, la gestión de proveedores y sirve como base para las recepciones de mercancía y las facturas de compra.",
+      tabla: "pedidos_pr", // Nombre de tabla original
+      columnas: {
+        id: "Número único que identifica cada pedido a proveedor (Clave Primaria). Este ID se utiliza como clave foránea en la tabla 'pedidos_pr_pp_lna'.",
+        PP_CPR: "Código del proveedor. Clave foránea a la tabla 'proveedores' para obtener la denominación (PR_DENO).",
+        PP_ALM: "Almacén de recepción designado. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+        PP_FEC: "Fecha en que se emitió el pedido.",
+        PP_FSV: "Fecha esperada de entrega por el proveedor ('fecha servir').",
+        PP_FP: "Forma de pago acordada. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+        PP_BRU: "Monto bruto total del pedido.",
+        PP_NETO: "Monto neto del pedido.",
+        PP_IMPU: "Costo total de los impuestos aplicados.",
+        PP_TTT: "Monto total final del pedido.",
+        PP_PDP: "Persona dentro de la empresa que realizó o solicitó el pedido ('Pedido por') usuarios/empleados.",
+      },
+      relaciones: {
+        proveedores: {
+          tabla_relacionada: "proveedores",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PP_CPR",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula el pedido con el proveedor al que se le realizó la solicitud.",
+        },
+        almacenes: {
+          tabla_relacionada: "almacenes",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PP_ALM",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula el pedido con el almacén donde se espera recibir la mercancía.",
+        },
+        fpago: {
+          tabla_relacionada: "fpago",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "PP_FP",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula el pedido con la forma de pago acordada.",
+        },
+        pedidos_pr_pp_lna: {
+          tabla_relacionada: "pedidos_pr_pp_lna",
+          tipo: "Uno a muchos (un pedido a proveedor puede incluir múltiples artículos/líneas de pedido)",
+          campo_enlace_local: "id", // ID del pedido en la tabla principal
+          campo_enlace_externo: "id", // ID del pedido en la tabla de detalle
+          descripcion: "Detalla los artículos específicos pedidos a cada proveedor en una línea de pedido.",
+          estructura_relacionada: {
+            id: "Código del pedido (igual que 'pedidos_pr.id').",
+            id2: "Identificador secuencial de la línea de pedido (para diferentes artículos dentro del mismo pedido, ej: '1', '2', '3').",
+            C0: "Código del artículo que se pidió al proveedor. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+            C1: "Código del envase de venta. Clave foránea a la tabla 'envases_vta' para obtener la denominación (EV_DENO).",
+            C2: "Número de sobres.",
+            C3: "Unidades por sobre.",
+            C4: "Precio de compra (P/Compra).",
+            C5: "Porcentaje de descuento (Descuento %).",
+          },
+          relaciones_internas_de_detalle: {
+            articulos: {
+              tabla_relacionada: "articulos",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C0",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula la línea del pedido con el artículo correspondiente para obtener su denominación.",
+            },
+            envases_vta: {
+              tabla_relacionada: "envases_vta",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C1",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula la línea del pedido con el tipo de envase de venta para obtener su denominación.",
+            },
+          },
+        },
+        
+      },
+      ejemplos: {
+        consulta_pedido_por_id: "Obtener los detalles de un pedido a proveedor específico usando su 'id'.",
+        consultar_info_relacionada:
+          "Para un pedido, usar PP_CPR, PP_ALM y PP_FP para consultar 'proveedores', 'almacenes' y 'fpago' y obtener los nombres del proveedor, almacén y forma de pago.",
+        filtrar_pedidos_por_proveedor_o_fecha:
+          "Listar pedidos realizados a un proveedor específico (filtrando por PP_CPR) o en un rango de fechas (filtrando por PP_FEC).",
+        filtrar_pedidos_por_fecha_entrega_esperada:
+          "Buscar pedidos con una fecha de entrega esperada (PP_FSV) en un rango específico.",
+        filtrar_pedidos_por_solicitante:
+          "Encontrar pedidos realizados por una persona específica dentro de la empresa (filtrando por PP_PDP).",
+        consultar_articulos_en_pedido:
+          "Para un pedido (ej. ID '005001'), listar todos los artículos pedidos desde 'pedidos_pr_pp_lna', incluyendo su denominación (uniéndose a 'articulos'), tipo de envase, unidades, precio de compra y descuento.",
+        calcular_costo_total_por_articulo_en_pedido:
+          "Para un pedido específico, calcular el costo total de cada artículo multiplicando 'C3' (Unidades/Sob) * 'C4' (P/Compra) y aplicando 'C5' (Descuento %).",
+      },
+    },
+
+
+
+
+    tratamientos: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Catálogo de tratamientos fitosanitarios, incluyendo su denominación y método de aplicación. Contiene relaciones con las plagas que ataca, los productos fitosanitarios utilizados y las familias afectadas.",
+      tabla: `tratamientos`, // Nombre de la tabla principal
+      columnas: {
+        id: "Código del tratamiento (Ej: '00000008') (Clave Primaria)",
+        TT_DENO: "Denominación del tratamiento (Ej: 'BRASSICACEAE Y ASTERACEAE 1')",
+        TT_MET: "Método de aplicación (Ej: 'Pulverización')",
+      },
+      relaciones: {
+        tratamientos_tt_plag: {
+          tabla_relacionada: "tratamientos_tt_plag",
+          tipo: "Uno a muchos (un tratamiento ataca varias plagas)",
+          campo_enlace_local: "id", // ID del tratamiento
+          campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
+          descripcion: "Tabla de enlace que relaciona tratamientos con las plagas que ataca.",
+          estructura_relacionada: {
+            id: "ID del tratamiento fitosanitario.",
+            id2: "Identificador secuencial dentro del tratamiento.",
+            C0: "ID de la plaga. Clave foránea a la tabla 'plagas'.",
+          },
+          relaciones_internas_de_detalle: {
+            plagas: {
+              tabla_relacionada: "plagas",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C0",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula el tratamiento con la plaga que ataca.",
+            },
+          },
+        },
+        tratamientos_tt_pro: {
+          tabla_relacionada: "tratamientos_tt_pro",
+          tipo: "Uno a muchos (un tratamiento utiliza varios productos)",
+          campo_enlace_local: "id", // ID del tratamiento
+          campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
+          descripcion: "Tabla de enlace que relaciona tratamientos con los productos fitosanitarios utilizados.",
+          estructura_relacionada: {
+            id: "ID del tratamiento fitosanitario.",
+            id2: "Identificador secuencial dentro del tratamiento.",
+            C0: "ID del tipo de producto fitosanitario. Clave foránea a la tabla 'tipo_trat'.",
+            C1: "Dosis del producto (Ej: '30cc/hl').",
+            C2: "Valor asociado al producto (Ej: '1000000000.00').",
+          },
+          relaciones_internas_de_detalle: {
+            tipo_trat: {
+              tabla_relacionada: "tipo_trat",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C0",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula el tratamiento con el tipo de producto fitosanitario utilizado.",
+            },
+          },
+        },
+        tratamientos_tt_fam: {
+          tabla_relacionada: "tratamientos_tt_fam",
+          tipo: "Uno a muchos (un tratamiento afecta a varias familias)",
+          campo_enlace_local: "id", // ID del tratamiento
+          campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
+          descripcion: "Tabla de enlace que relaciona tratamientos con las familias afectadas.",
+          estructura_relacionada: {
+            id: "ID del tratamiento fitosanitario.",
+            id2: "Identificador secuencial dentro del tratamiento.",
+            C0: "ID de la familia afectada. Clave foránea a la tabla 'familias'.",
+            C1: "Valor asociado a la familia (Ej: '25').",
+            C2: "Otro valor asociado a la familia (Ej: '0').",
+          },
+          relaciones_internas_de_detalle: {
+            familias: {
+              tabla_relacionada: "familias",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C0",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula el tratamiento con la familia afectada.",
+            },
+          },
+        },
+      },
+      ejemplos: {
+        consulta_tratamiento_por_id:
+          "Obtener la denominación y método de aplicación de un tratamiento fitosanitario específico usando su 'id'.",
+        listar_todos_tratamientos:
+          "Listar todos los tratamientos fitosanitarios registrados.",
+        consultar_plagas_atacadas:
+          "Para un tratamiento, consultar la tabla 'tratamientos_tt_plag' para ver las plagas que ataca y luego obtener sus denominaciones desde la tabla 'plagas'.",
+        consultar_productos_utilizados:
+          "Para un tratamiento, consultar la tabla 'tratamientos_tt_pro' para ver los productos utilizados (y sus dosis) y obtener sus nombres desde 'tipo_trat'.",
+        consultar_familias_afectadas:
+          "Para un tratamiento, consultar la tabla 'tratamientos_tt_fam' para ver las familias afectadas y obtener sus denominaciones desde la tabla 'familias'.",
+      },
+    },
+
+
+
+    tarifas_plantas: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Gestiona las diferentes tarifas de precios para plantas, especificando el período de validez, el almacén asociado y el título de la tarifa. Un registro principal puede tener múltiples líneas de detalle que definen los precios por artículo y tipo de tarifa.",
+      tabla: `tarifas_plantas`, // Nombre de la tabla principal
+      columnas: {
+        id: "Código identificador único de la tarifa (Clave Primaria).",
+        TAP_DENO: "Denominación o título de la tarifa (ej: 'TARIFA ACTUALIZA 2024 – ULTIMA').",
+        TAP_DFEC: "Fecha de inicio de validez de la tarifa de precio (ej: '2024-05-04').",
+        TAP_HFEC: "Fecha de fin de validez de la tarifa de precio (ej: '2025-12-31').",
+        TAP_ALM: "Código del almacén asociado a la tarifa. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      },
+      relaciones: {
+        almacenes: {
+          tabla_relacionada: "almacenes",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "TAP_ALM",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la tarifa de plantas con el almacén al que aplica.",
+        },
+        tarifas_plantas_tap_lna: {
+          tabla_relacionada: "tarifas_plantas_tap_lna",
+          tipo: "Uno a muchos (una tarifa puede contener múltiples líneas de precios para diferentes productos/tipos)",
+          campo_enlace_local: "id", // ID de la tarifa en la tabla principal
+          campo_enlace_externo: "id", // ID de la tarifa en la tabla de detalle
+          descripcion: "Detalla los precios de los productos específicos dentro de una tarifa, incluyendo el tipo de tarifa, costes y precios de venta.",
+          estructura_relacionada: {
+            id: "Código de la tarifa (igual que 'tarifas_plantas.id').",
+            id2: "Identificador secuencial de la línea de detalle (indica la cantidad de productos con precios actualizados).",
+            C0: "Código del artículo. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+            C1: "Tipo de tarifa (ej: 'A', 'B'), que afecta el precio. Puede haber múltiples tipos para un mismo producto.",
+            C2: "Tipo de siembra (ej: '5001').",
+            C3: "Campo de propósito desconocido ('No se sabe').",
+            C4: "Porcentaje (%).",
+            C5: "Coste de producción.",
+            C6: "Campo de propósito desconocido ('No se sabe').",
+            C7: "Coste de la semilla.",
+            C8: "Coste del patrón.",
+            C9: "Incremento.",
+            C10: "Precio de Venta al Público (PvP) Fijo por Bandeja.",
+            C11: "Precio de Venta al Público (PvP) por Planta.",
+            C12: "Precio de Venta al Público (PvP) por Bandeja.",
+          },
+          relaciones_internas_de_detalle: {
+            articulos: {
+              tabla_relacionada: "articulos",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C0",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula la línea de precio con el artículo correspondiente para obtener su denominación.",
+            },
+            // Posible relación con 't-siembras' si C2 es una clave foránea.
+            /*
+            t_siembras: {
+              tabla_relacionada: "t-siembras",
+              tipo: "Muchos a uno",
+              campo_enlace_local: "C2",
+              campo_enlace_externo: "id",
+              descripcion: "Vincula la línea de precio con el tipo de siembra."
+            }
+            */
+          },
+        },
+      },
+      ejemplos: {
+        consulta_tarifa_por_id:
+          "Obtener la denominación y el período de validez de una tarifa de precios específica usando su 'id'.",
+        consultar_precios_de_tarifa:
+          "Para una tarifa específica (ej. ID '21001414'), listar todos los artículos incluidos en esa tarifa desde 'tarifas_plantas_tap_lna', mostrando su denominación, tipo de tarifa, y los diferentes precios (PvP Fijo Bandeja, PvP Planta, PvP Bandeja).",
+        buscar_precio_articulo_por_fecha:
+          "Encontrar el precio de un artículo específico ('C0') para una fecha determinada, buscando en 'tarifas_plantas' la tarifa activa y luego en 'tarifas_plantas_tap_lna' el precio correspondiente.",
+        analisis_de_costes_y_precios:
+          "Comparar los costes de producción (C5), semilla (C7) y patrón (C8) con los precios de venta (C10, C11, C12) para evaluar la rentabilidad por artículo.",
+      },
+    },
+  
+
+    
+
+    maquinaria: {
+      // Clave principal (basada en el nombre de la sección)
+      descripcion:
+        "Registra y administra las máquinas y equipos utilizados por la empresa como un inventario detallado. Permite mantener un registro completo de características, adquisición, seguro, operador actual y tipo de maquinaria. Crucial para gestión de activos, mantenimiento, control y asignación.",
+      tabla: "maquinaria", // Nombre de tabla inferido (campos con prefijo MA_)
+      columnas: {
+        id: "Código identificador único de cada máquina o equipo (Clave Primaria)",
+        MA_MOD: "Modelo de la maquinaria (Ej: 'Balanza-2 CABEZAL INV.B COBOS').",
+        MA_TIPO: "Tipo de maquinaria (campo genérico, distinto de MA_TP).",
+        MA_NU: "Información relacionada con el uso de la maquinaria.",
+        MA_AFAB: "Año de Fabricación.",
+        MA_FCOM: "Año de compra.",
+        MA_BAS: "Número de Bastidor.",
+        MA_VSE: "Fecha de vencimiento del seguro.",
+        MA_COM: "Nombre de la compañía de seguro (campo de texto).",
+        MA_TRAB: "Código del trabajador técnico conductor actual. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+        MA_TP: "Código del tipo general de maquinaria. Clave foránea a la tabla 'tipo-maq' para obtener la denominación (TM_DENO).",
+      },
+      relaciones: {
+        tecnicos: {
+          tabla_relacionada: "tecnicos",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "MA_TRAB",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la maquinaria con el trabajador técnico que la opera/conduce actualmente.",
+        },
+        tipo_maquinaria: {
+          // Usamos un nombre más descriptivo para la relación con tipo-maq
+          tabla_relacionada: "tipo-maq",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "MA_TP",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la maquinaria con su tipo general, definido en la tabla 'tipo-maq'.",
+        },
+        // La descripción no detalla explícitamente otras relaciones formales.
+      },
+      ejemplos: {
+        consulta_maquinaria_por_id: "Obtener todos los detalles de una máquina específica usando su 'id'.",
+        consultar_info_relacionada:
+          "Para una máquina, usar MA_TRAB y MA_TP para consultar 'tecnicos' y 'tipo-maq' y obtener el nombre del conductor actual (TN_DENO) y la denominación del tipo de maquinaria (TM_DENO).",
+        filtrar_por_tipo_general:
+          "Listar maquinaria de un tipo general específico usando el campo MA_TP (vinculando con 'tipo-maq' si es necesario filtrar por nombre de tipo).",
+        filtrar_por_conductor_actual:
+          "Buscar maquinaria asignada a un trabajador específico (filtrando por MA_TRAB).",
+        consultar_fechas_clave:
+          "Obtener el año de fabricación (MA_AFAB), año de compra (MA_FCOM) o fecha de vencimiento del seguro (MA_VSE) de una máquina.",
+        buscar_por_modelo_o_bastidor:
+          "Encontrar maquinaria usando su modelo (MA_MOD) o número de bastidor (MA_BAS).",
+      },
+    },
+
+
+
+
+
+
+
+
+    tipo_maq: {
+      // Clave principal (basada en el nombre de tabla)
+      descripcion:
+        "Define y gestiona las categorías o tipos de maquinaria utilizados por la empresa. Funciona como un catálogo maestro para estandarizar la clasificación de equipos y sirve como referencia para otros módulos.",
+      tabla: "tipo-maq", // Nombre de tabla original
+      columnas: {
+        id: "Código identificador único asignado a cada tipo de maquinaria (Clave Primaria)",
+        TM_DENO: "Denominación o nombre descriptivo del tipo de máquina (Ej: 'CAMION').",
+      },
+      relaciones: {
+        maquinaria: {
+          tabla_relacionada: "maquinaria", // Nombre inferido de la tabla que contiene los registros individuales de máquinas
+          tipo: "Uno a muchos (un tipo puede aplicarse a muchas máquinas)",
+          campo_enlace_local: "id", // El id en tipo-maq
+          campo_enlace_externo: "MA_TP", // El campo en la tabla 'maquinaria' que referencia a tipo-maq.id
+          descripcion:
+            "Es referenciada por la tabla 'maquinaria' (mediante el campo MA_TP) para clasificar cada máquina individual por su tipo.",
+        },
+      },
+      ejemplos: {
+        consulta_tipo_por_id: "Obtener los detalles de un tipo de maquinaria específico usando su 'id'.",
+        consulta_tipo_por_denominacion:
+          "Buscar un tipo de maquinaria por su denominación (TM_DENO).",
+        consultar_maquinas_por_tipo:
+          "Listar todas las máquinas individuales que pertenecen a un tipo específico (requiere consultar la tabla 'maquinaria' filtrando por MA_TP).",
+      },
+    },
+
+
+
+
+    tecnicos: {
+      alias: "tecnicos",
+      descripcion:
+        "Información de los técnicos de la empresa, incluyendo su nombre, teléfono, email y otros datos relevantes, así como su historial laboral y contractual.",
+      tabla: "tecnicos",
+      columnas: {
+        id: "Código identificador único del técnico (Clave Primaria).",
+        TN_DENO: "Nombre completo del técnico.",
+        TN_TEL: "Número de teléfono del técnico.",
+        TN_DOM: "Domicilio del técnico.",
+        TN_POB: "Población del técnico.",
+        TN_CDP: "Código postal del técnico.",
+        TN_CIF: "Número de identificación fiscal del técnico.",
+        TN_ACT: "Estado de actividad del técnico (Ej: 'A' - Activo, 'I' - Inactivo, 'B' - Baja).",
+      },
+      relaciones: {
+        tecnicos_tn_hist: {
+          tabla_relacionada: "tecnicos_tn_hist",
+          tipo: "Uno a muchos (un técnico puede tener múltiples registros en su historial)",
+          campo_enlace_local: "id", // El ID del técnico en esta tabla
+          campo_enlace_externo: "id", // El ID del técnico en la tabla de historial
+          descripcion: "Vincula al técnico con su historial laboral y contractual detallado, incluyendo fechas de inicio/fin, área, lugar de trabajo y tipo de contrato.",
+        },
+        // Otras posibles relaciones no mencionadas en la descripción original pero lógicamente existentes:
+        // - Si los técnicos pueden ser vendedores, una relación con la tabla 'vendedores'.
+        // - Si los técnicos están asignados a clientes, una relación con la tabla 'clientes'.
+      },
+      ejemplos: {
+        consulta_tecnico_por_id:
+          "Obtener la información básica de un técnico específico usando su 'id'.",
+        consultar_historial_completo_tecnico:
+          "Para un técnico (ej. ID '850'), obtener todos los registros de su historial laboral desde 'tecnicos_tn_hist', incluyendo fechas, áreas y tipos de contrato.",
+        filtrar_tecnicos_activos:
+          "Listar todos los técnicos que están actualmente activos (filtrando por TN_ACT = 'A').",
+        buscar_tecnico_por_nombre:
+          "Encontrar técnicos por su nombre completo (filtrando por TN_DENO).",
+      },
+    },
+
+    
+
+
+
+
+
+    aplicadores_fit: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Catálogo de aplicadores fitosanitarios registrados en el sistema, identificados por un código único y una denominación.",
+      tabla: `aplicadores_fit`, // Nombre de la tabla principal
+      columnas: {
+        id: "Código ID único del aplicador fitosanitario (Clave Primaria)",
+        AFI_DENO: "Denominación del aplicador fitosanitario (Ej: 'LUIS TUBON')",
+      },
+      relaciones: {
+        // Esta tabla podría ser referenciada por otras tablas, pero no se detalla aquí.
+      },
+      ejemplos: {
+        consulta_aplicador_por_id:
+          "Obtener la denominación de un aplicador fitosanitario específico usando su 'id'.",
+        listar_todos_aplicadores:
+          "Listar todos los aplicadores fitosanitarios registrados (consultando todos los registros de la tabla).",
+        buscar_aplicador_por_denominacion:
+          "Buscar un aplicador fitosanitario por su nombre o denominación (filtrando por AFI_DENO).",
+      },
+    },
+
+
+
+
+
+
+
+
+
+    equipo_fito: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Catálogo de equipos fitosanitarios registrados en el sistema, identificados por un código único y una denominación.",
+      tabla: `equipo_fito`, // Nombre de la tabla principal
+      columnas: {
+        id: "Código único del equipo fitosanitario (Clave Primaria)",
+        EFI_DENO: "Denominación del equipo fitosanitario.",
+      },
+      relaciones: {
+        // Esta tabla podría ser referenciada por otras tablas, pero no se detalla aquí.
+      },
+      ejemplos: {
+        consulta_equipo_por_id:
+          "Obtener la denominación de un equipo fitosanitario específico usando su 'id'.",
+        listar_todos_equipos:
+          "Listar todos los equipos fitosanitarios registrados (consultando todos los registros de la tabla).",
+        buscar_equipo_por_denominacion:
+          "Buscar un equipo fitosanitario por su nombre o denominación (filtrando por EFI_DENO).",
+      },
+    },
+
+
+
+
+
+
+
+    tarifas: {
+      // Clave principal (nombre de tabla)
+      descripcion:
+        "Registra las diferentes tarifas disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe.",
+      tabla: `tarifas`, // Nombre de la tabla principal
+      columnas: {
+        ID: "Identificador único de la tarifa (Clave Primaria).",
+        TP_DENO: "Denominación o descripción de la tarifa (ej: 'Tarifa A', 'Tarifa por Volumen').",
+      },
+      relaciones: {
+        // 
+        
+      },
+      ejemplos: {
+        consulta_tarifa_por_id:
+          "Obtener la denominación de una tarifa específica utilizando su 'ID'.",
+        listar_todas_las_tarifas:
+          "Recuperar todos los identificadores y denominaciones de las tarifas disponibles en el sistema.",
+      },
+    },
+  
+
+
+
 };
 
 module.exports = mapaERP; 

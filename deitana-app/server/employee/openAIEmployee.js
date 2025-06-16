@@ -220,8 +220,8 @@ function reemplazarNombresTablas(sql) {
     let sqlModificado = sql;
     Object.keys(mapaERP).forEach(key => {
         if (mapaERP[key].tabla && mapaERP[key].tabla.includes('-')) {
-            const regex = new RegExp(`\\b${key}\\b`, 'g');
-            sqlModificado = sqlModificado.replace(regex, `\`${mapaERP[key].tabla}\``);
+            const regex = new RegExp(`FROM\\s+\`?${key}\`?`, 'gi');
+            sqlModificado = sqlModificado.replace(regex, `FROM \`${mapaERP[key].tabla}\``);
         }
     });
     return sqlModificado;
@@ -235,8 +235,9 @@ function validarTablaEnMapaERP(sql) {
     
     if (!tabla) return true; // Si no se detecta tabla, permitir la consulta
     
-    // Verificar si la tabla existe en mapaERP
-    if (!tablasEnMapa.includes(tabla)) {
+    // Verificar si la tabla existe en mapaERP (ignorando backticks)
+    const tablaSinBackticks = tabla.replace(/`/g, '');
+    if (!tablasEnMapa.includes(tablaSinBackticks)) {
         throw new Error(`La tabla '${tabla}' no está definida en mapaERPEmployee. Tablas disponibles: ${tablasEnMapa.join(', ')}`);
     }
     
