@@ -283,7 +283,7 @@ const mapaERP = {
     },
 
 
-    "p-siembras": {
+    'p-siembras': {
         descripcion:
           "Parte de siembra. Registra operaciones de siembra documentando cuándo,partes de siembra, quién, qué semilla, dónde se sembró (almacén), lote y resultados globales (bandejas/palet, total bandejas). Fundamental para documentar el proceso, vincular insumos/personal/ubicación y controlar la producción desde el inicio.",
         tabla: `p-siembras`, // Nombre de tabla principal

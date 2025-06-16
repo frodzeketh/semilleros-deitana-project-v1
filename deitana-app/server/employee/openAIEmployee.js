@@ -230,7 +230,7 @@ function reemplazarNombresTablas(sql) {
 // Función para validar que la tabla existe en mapaERP
 function validarTablaEnMapaERP(sql) {
     const tablasEnMapa = Object.keys(mapaERP);
-    const tablasEnSQL = sql.match(/FROM\s+`?(\w+)`?/i) || [];
+    const tablasEnSQL = sql.match(/FROM\s+`?([^`\s,;]+)`?/i) || [];
     const tabla = tablasEnSQL[1];
     
     if (!tabla) return true; // Si no se detecta tabla, permitir la consulta
