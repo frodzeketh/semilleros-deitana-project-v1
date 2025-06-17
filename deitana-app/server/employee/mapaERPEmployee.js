@@ -25,13 +25,10 @@ const mapaERP = {
         columnas: {
             id: "Código único que identifica cada artículo",
             AR_DENO: "Denominación o nombre del artículo",
-            AR_REF: "Referencia o código interno del artículo",
-            AR_STOK: "Stock actual del artículo",
-            AR_PVP: "Precio de venta al público",
+            AR_BAR: "Código de barras del artículo.",
             AR_IVAP: "Porcentaje de IVA aplicable",
             AR_PRV: "Código del proveedor principal",
             AR_FAM: "Familia o categoría del artículo",
-            AR_TIPO: "Tipo de artículo (planta, semilla, injerto, etc.)",
         }
     },
 
