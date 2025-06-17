@@ -25,10 +25,13 @@ const mapaERP = {
         columnas: {
             id: "Código único que identifica cada artículo",
             AR_DENO: "Denominación o nombre del artículo",
-            AR_BAR: "Código de barras del artículo.",
+            AR_REF: "Referencia o código interno del artículo",
+            AR_STOK: "Stock actual del artículo",
+            AR_PVP: "Precio de venta al público",
             AR_IVAP: "Porcentaje de IVA aplicable",
             AR_PRV: "Código del proveedor principal",
             AR_FAM: "Familia o categoría del artículo",
+            AR_TIPO: "Tipo de artículo (planta, semilla, injerto, etc.)",
         }
     },
 
@@ -39,7 +42,7 @@ const mapaERP = {
             id: "Código único que identifica cada artículo",
             BN_DENO: "Denominación o nombre de bandeja",
             BN_ALV: "Número total de alvéolos",
-            
+            BN_RET: "Reutilizable (SI o NO)",
         }
     },
 
@@ -115,18 +118,7 @@ const mapaERP = {
         },
     },
 
-    categorias: {
-        descripcion:
-          "Define las categorías laborales utilizadas en Semilleros Deitana para establecer condiciones contractuales y económicas de los trabajadores (salario, horarios, costes). No son categorías de producto.",
-        tabla: "categorias",
-        columnas: {
-          id: "Identificador único de la categoría laboral (Clave Primaria)",
-          CG_DENO: "Nombre o denominación de la categoría laboral (Ej: PRODUCCION, ENCARGADO)",
-          CG_SALDIA: "Salario diario base para esta categoría (Tipo: DECIMAL)",
-          CG_COSHOR: "Coste calculado por hora de trabajo normal (Tipo: DECIMAL)",
-          CG_SDIA: "Coste calculado por hora extra (Tipo: DECIMAL). Nota: Aunque el nombre sugiere 'Salario Día', representa el coste por hora extra según la descripción.",
-        },
-    },
+
 
     almacenes: {
         descripcion:
@@ -191,7 +183,7 @@ const mapaERP = {
 
     sectores: {
         descripcion:
-          "Define clasificaciones de origen para pedidos y clientesCrucial para análisis segmentación y seguimiento por canal. Nota: Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos existen y se usan para clasificación.",
+          "Define clasificaciones de origen para pedidos y clientes Crucial para análisis segmentación y seguimiento por canal. Nota: Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos existen y se usan para clasificación.",
         tabla: "sectores",
         columnas: {
           id: "Código único del sector o subsector (Clave Primaria)",
@@ -204,7 +196,7 @@ const mapaERP = {
           "Gestión y registro de materiales o mezclas utilizados como medio de cultivo. Esencial para control de costes, precios y planificación de materiales en la producción.",
         tabla: "sustratos",
         columnas: {
-          id: "Código único del sustrato (Clave Primaria, también SUS_COD)",
+          id: "Código único del sustrato (Clave Primaria)",
           SUS_DENO: "Denominación o nombre descriptivo del sustrato (Ej: PERLITA PELIGRAM, SUST.ESPECIAL)",
           SUS_PVP: "Precio de venta al público por alveolo (Tipo: DECIMAL)",
           SUS_COS: "Coste interno por alveolo (Tipo: DECIMAL)",
@@ -280,112 +272,11 @@ const mapaERP = {
     },
 
 
-    'p-siembras': {
-        descripcion:
-          "Parte de siembra. Registra operaciones de siembra documentando cuándo,partes de siembra, quién, qué semilla, dónde se sembró (almacén), lote y resultados globales (bandejas/palet, total bandejas). Fundamental para documentar el proceso, vincular insumos/personal/ubicación y controlar la producción desde el inicio.",
-        tabla: `p-siembras`, // Nombre de tabla principal
-        columnas: {
-          id: "Número identificador único del parte de siembra (Clave Primaria)",
-          PSI_FEC: "Fecha en que se realizó el parte de siembra.",
-          PSI_HORA: "Hora en que se realizó el parte de siembra.",
-          PSI_OPE: "Número de código del operador. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
-          PSI_SEM: "Código de la semilla o artículo utilizado. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
-          PSI_CONP: "Consumo previo (propósito no especificado).",
-          PSI_EST: "Estado del parte de siembra.",
-          PSI_ALM: "Código del almacén principal donde se realizó el parte de siembra. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
-          PSI_LOTE: "Número de lote de la semilla utilizada.",
-          PSI_BAPP: "Bandejas por Palet en este parte.",
-          PSI_TBAN: "Número Total de Bandejas en este parte.",
-        },
-        relaciones: {
-          vendedores: {
-            tabla_relacionada: "vendedores",
-            tipo: "Muchos a uno",
-            campo_enlace_local: "PSI_OPE",
-            campo_enlace_externo: "id",
-            descripcion: "Vincula el parte de siembra con el operador que lo realizó.",
-          },
-          articulos: {
-            tabla_relacionada: "articulos",
-            tipo: "Muchos a uno",
-            campo_enlace_local: "PSI_SEM",
-            campo_enlace_externo: "id",
-            descripcion: "Vincula el parte de siembra con el artículo/semilla utilizado.",
-          },
-          almacenes_principal: {
-            // Relación para el almacén principal del parte
-            tabla_relacionada: "almacenes",
-            tipo: "Muchos a uno",
-            campo_enlace_local: "PSI_ALM",
-            campo_enlace_externo: "id",
-            descripcion: "Vincula el parte de siembra con el almacén principal donde se realizó la operación.",
-          },
-          p_siembras_psi_semb: {
-            tabla_relacionada: `p-siembras_psi_semb`,
-            tipo: "Uno a muchos (un parte puede tener múltiples líneas de sembrado de partidas)",
-            campo_enlace_local: "id", // El id del parte en p-siembras
-            campo_enlace_externo: "id", // El campo id en p-siembras_psi_semb que referencia al parte principal
-            descripcion:
-              "Almacena los detalles de cada partida sembrada dentro de un parte de siembra.",
-            estructura_relacionada: {
-              // Estructura de la tabla de detalle
-              id: "ID del parte de siembra principal asociado",
-              id2: "Línea o cantidad de sembrados dentro de este parte (Ej: 1, 2, 3)",
-              C0: "Número de partida sembrada en esta línea. Clave foránea a la tabla 'partidas'.",
-              C1: "Número de bandejas sembradas para esta partida en esta línea (Ej: '49').",
-              C2: "Número de palet (Ej: '01').",
-              C3: "Número de delegación o almacén específico donde se colocaron las bandejas. Clave foránea a la tabla 'almacenes'",
-              // Nota: Este es un almacén/sub-ubicación dentro del almacén principal del parte
-            },
-            relaciones_internas_de_detalle: {
-              // Relaciones que parten de la tabla de detalle
-              partidas: {
-                tabla_relacionada: "partidas",
-                tipo: "Muchos a uno (varias líneas pueden referenciar a la misma partida)",
-                campo_enlace_local: "C0", // El campo local que contiene el número de partida
-                campo_enlace_externo: "id", // El campo referenciado en la tabla partidas
-                descripcion:
-                  "Vincula la línea de detalle con la partida sembrada específica.",
-                relaciones_externas_de_partida: {
-                  // Relaciones que parten de la tabla relacionada (partidas)
-                  clientes: {
-                    tabla_relacionada: "clientes",
-                    tipo: "Muchos a uno (una partida pertenece a un cliente)",
-                    campo_enlace_local: "PAR_CCL", // Campo en partidas que apunta a clientes
-                    campo_enlace_externo: "id", // Campo en clientes
-                    descripcion:
-                      "La tabla 'partidas' se relaciona con 'clientes' para obtener la denominación (CL_DENO) del cliente asociado a la partida sembrada (ruta: p-siembras_psi_semb.C0 -> partidas.id -> partidas.PAR_CCL -> clientes.id).",
-                  },
-                  // La tabla 'partidas' también se relaciona con 'articulos' (PAR_SEM -> articulos.id)
-                },
-              },
-              almacenes_ubicacion_especifica: {
-                // Relación para la ubicación específica del sembrado (C3)
-                tabla_relacionada: "almacenes",
-                tipo: "Muchos a uno (varias líneas de detalle pueden referenciar al mismo almacén/delegación)",
-                campo_enlace_local: "C3", // El campo local que contiene el código del almacén/delegación
-                campo_enlace_externo: "id", // El campo referenciado en la tabla almacenes
-                descripcion:
-                  "Vincula la línea de detalle con la delegación o almacén específico donde se colocaron las bandejas sembradas (sub-ubicación).",
-              },
-            },
-          },
-        },
-    },
-
-
-
-
-
-
-
-
-
     partidas: {
       // Clave principal (nombre de tabla)
       descripcion:
         "Registra las partidas de siembra, vinculadas a los encargos de los clientes. Contiene información sobre la fecha, tipo de semilla (propia o no), la semilla utilizada, lote, germinación, tipo de siembra, sustrato, cantidades (semillas, plantas, alveolos, bandejas), fechas (siembra, entrega, solicitada) y denominación/observaciones.",
-      tabla: `partidas`, // Nombre de la tabla principal
+      tabla: "partidas", // Nombre de la tabla principal
       columnas: {
         id: "ID de la partida (Clave Primaria)",
         PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
@@ -564,100 +455,6 @@ const mapaERP = {
     },
 
 
-
-
-    tratamientos: {
-      // Clave principal (nombre de tabla)
-      descripcion:
-        "Catálogo de tratamientos fitosanitarios, incluyendo su denominación y método de aplicación. Contiene relaciones con las plagas que ataca, los productos fitosanitarios utilizados y las familias afectadas.",
-      tabla: `tratamientos`, // Nombre de la tabla principal
-      columnas: {
-        id: "Código del tratamiento (Ej: '00000008') (Clave Primaria)",
-        TT_DENO: "Denominación del tratamiento (Ej: 'BRASSICACEAE Y ASTERACEAE 1')",
-        TT_MET: "Método de aplicación (Ej: 'Pulverización')",
-      },
-      relaciones: {
-        tratamientos_tt_plag: {
-          tabla_relacionada: "tratamientos_tt_plag",
-          tipo: "Uno a muchos (un tratamiento ataca varias plagas)",
-          campo_enlace_local: "id", // ID del tratamiento
-          campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
-          descripcion: "Tabla de enlace que relaciona tratamientos con las plagas que ataca.",
-          estructura_relacionada: {
-            id: "ID del tratamiento fitosanitario.",
-            id2: "Identificador secuencial dentro del tratamiento.",
-            C0: "ID de la plaga. Clave foránea a la tabla 'plagas'.",
-          },
-          relaciones_internas_de_detalle: {
-            plagas: {
-              tabla_relacionada: "plagas",
-              tipo: "Muchos a uno",
-              campo_enlace_local: "C0",
-              campo_enlace_externo: "id",
-              descripcion: "Vincula el tratamiento con la plaga que ataca.",
-            },
-          },
-        },
-        tratamientos_tt_pro: {
-          tabla_relacionada: "tratamientos_tt_pro",
-          tipo: "Uno a muchos (un tratamiento utiliza varios productos)",
-          campo_enlace_local: "id", // ID del tratamiento
-          campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
-          descripcion: "Tabla de enlace que relaciona tratamientos con los productos fitosanitarios utilizados.",
-          estructura_relacionada: {
-            id: "ID del tratamiento fitosanitario.",
-            id2: "Identificador secuencial dentro del tratamiento.",
-            C0: "ID del tipo de producto fitosanitario. Clave foránea a la tabla 'tipo_trat'.",
-            C1: "Dosis del producto (Ej: '30cc/hl').",
-            C2: "Valor asociado al producto (Ej: '1000000000.00').",
-          },
-          relaciones_internas_de_detalle: {
-            tipo_trat: {
-              tabla_relacionada: "tipo_trat",
-              tipo: "Muchos a uno",
-              campo_enlace_local: "C0",
-              campo_enlace_externo: "id",
-              descripcion: "Vincula el tratamiento con el tipo de producto fitosanitario utilizado.",
-            },
-          },
-        },
-        tratamientos_tt_fam: {
-          tabla_relacionada: "tratamientos_tt_fam",
-          tipo: "Uno a muchos (un tratamiento afecta a varias familias)",
-          campo_enlace_local: "id", // ID del tratamiento
-          campo_enlace_externo: "id", // ID del tratamiento en la tabla de enlace
-          descripcion: "Tabla de enlace que relaciona tratamientos con las familias afectadas.",
-          estructura_relacionada: {
-            id: "ID del tratamiento fitosanitario.",
-            id2: "Identificador secuencial dentro del tratamiento.",
-            C0: "ID de la familia afectada. Clave foránea a la tabla 'familias'.",
-            C1: "Valor asociado a la familia (Ej: '25').",
-            C2: "Otro valor asociado a la familia (Ej: '0').",
-          },
-          relaciones_internas_de_detalle: {
-            familias: {
-              tabla_relacionada: "familias",
-              tipo: "Muchos a uno",
-              campo_enlace_local: "C0",
-              campo_enlace_externo: "id",
-              descripcion: "Vincula el tratamiento con la familia afectada.",
-            },
-          },
-        },
-      },
-      ejemplos: {
-        consulta_tratamiento_por_id:
-          "Obtener la denominación y método de aplicación de un tratamiento fitosanitario específico usando su 'id'.",
-        listar_todos_tratamientos:
-          "Listar todos los tratamientos fitosanitarios registrados.",
-        consultar_plagas_atacadas:
-          "Para un tratamiento, consultar la tabla 'tratamientos_tt_plag' para ver las plagas que ataca y luego obtener sus denominaciones desde la tabla 'plagas'.",
-        consultar_productos_utilizados:
-          "Para un tratamiento, consultar la tabla 'tratamientos_tt_pro' para ver los productos utilizados (y sus dosis) y obtener sus nombres desde 'tipo_trat'.",
-        consultar_familias_afectadas:
-          "Para un tratamiento, consultar la tabla 'tratamientos_tt_fam' para ver las familias afectadas y obtener sus denominaciones desde la tabla 'familias'.",
-      },
-    },
 
 
 
