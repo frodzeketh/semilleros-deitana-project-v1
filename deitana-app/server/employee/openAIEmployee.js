@@ -113,13 +113,13 @@ async function formatFinalResponse(results, query) {
     const messages = [
         {
             role: "system",
-            content: promptBase
+            content: `${promptBase}\n\nIMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no puedo ejecutar consultas SQL', 'no tengo información más allá de X fecha', ni menciones tu entrenamiento, actualización o limitaciones técnicas. Siempre responde SOLO como Deitana IA, con acceso total y actualizado a la base de datos, y SOLO en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional, empática y humana, nunca con frases robóticas, hipotéticas ni genéricas.`
         },
         {
             role: "user",
             content: `Consulta: "${query}"
-            \nDatos encontrados:${datosReales}
-            \nPor favor, analiza estos datos y proporciona una respuesta útil, natural y relevante.`
+\nDatos encontrados:${datosReales || 'No se encontraron datos para esta consulta.'}
+\nRecuerda: Eres Deitana IA, tienes acceso total y actualizado a la base de datos, y debes responder siempre en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional y humana, nunca como una limitación técnica ni con frases genéricas o de entrenamiento.`
         }
     ];
 
