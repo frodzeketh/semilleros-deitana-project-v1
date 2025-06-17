@@ -496,21 +496,58 @@ async function processQuery({ message, userId, conversationId }) {
         const response = completion.choices[0].message.content;
         console.log('Respuesta del asistente:', response);
 
-        // Validar y ejecutar consulta SQL si existe
-        const sql = validarRespuestaSQL(response);
-        if (sql) {
+        // --- MEJORA: Permitir múltiples consultas SQL, sin eliminar nada de la lógica original ---
+        // Buscar todos los bloques SQL en la respuesta del modelo
+        const sqlBlocks = [...response.matchAll(/```sql[\s\S]*?(SELECT[\s\S]*?;)[\s\S]*?```/gim)].map(m => m[1]);
+        let queries = sqlBlocks.length > 0 ? sqlBlocks : [];
+        if (queries.length === 0) {
+            const singleSql = validarRespuestaSQL(response);
+            if (singleSql) queries.push(singleSql);
+        }
+        if (queries.length > 1) {
+            let allResults = [];
+            for (const sql of queries) {
+                try {
+                    validarTablaEnMapaERP(sql);
+                    const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
+                    if (tabla) {
+                        validarColumnasEnMapaERP(sql, tabla);
+                    }
+                    const results = await executeQuery(sql);
+                    if (results && results.length > 0) {
+                        allResults = allResults.concat(results);
+                    }
+                } catch (err) {
+                    console.warn('Error ejecutando consulta:', sql, err);
+                }
+            }
+            if (allResults.length === 0) {
+                return {
+                    success: true,
+                    data: {
+                        message: "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?"
+                    }
+                };
+            }
+            // Formatear la respuesta final con los resultados combinados
+            const finalResponse = await formatFinalResponse(allResults, message);
+            return {
+                success: true,
+                data: {
+                    message: finalResponse
+                }
+            };
+        } else if (queries.length === 1) {
+            // Mantener el flujo original para una sola consulta
+            const sql = queries[0];
             console.log('Ejecutando consulta SQL:', sql);
-            
-            // Validar que la tabla y columnas existen en mapaERP
             validarTablaEnMapaERP(sql);
             const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
             if (tabla) {
                 validarColumnasEnMapaERP(sql, tabla);
             }
-            
             const results = await executeQuery(sql);
             console.log('Resultados de la consulta:', results);
-            
             if (!results || results.length === 0) {
                 return {
                     success: true,
@@ -519,8 +556,6 @@ async function processQuery({ message, userId, conversationId }) {
                     }
                 };
             }
-
-            // Formatear la respuesta final con los resultados
             const finalResponse = await formatFinalResponse(results, message);
             return {
                 success: true,
