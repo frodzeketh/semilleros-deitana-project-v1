@@ -15,7 +15,8 @@ const mapaERP = {
             CL_EMA: "Correo electrónico",
             CL_WEB: "Página web",
             CL_PAIS: "País",
-            CL_IBAN: "Número de cuenta bancaria en formato IBAN"
+            CL_IBAN: "Número de cuenta bancaria en formato IBAN",
+            CL_TARI: "Tipo de TARIFA del cliente",
         }
     },
 
