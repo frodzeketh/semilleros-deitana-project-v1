@@ -192,7 +192,9 @@ function validarRespuestaSQL(response) {
         throw new Error('La consulta SQL está vacía');
     }
     const sqlTrimmed = sql.toLowerCase().trim();
-    if (!sqlTrimmed.startsWith('select') && !sqlTrimmed.startsWith('(select')) {
+    // Remover espacios y saltos de línea para validación
+    const sqlClean = sqlTrimmed.replace(/\s+/g, ' ');
+    if (!sqlClean.startsWith('select') && !sqlClean.startsWith('( select')) {
         throw new Error('La consulta debe comenzar con SELECT o (SELECT para consultas UNION');
     }
     if (sql.includes('OFFSET')) {
@@ -263,10 +265,17 @@ function validarColumnasEnMapaERP(sql, tabla) {
     const selectMatch = sql.match(/SELECT\s+([^()]+?)\s+FROM/i);
     if (!selectMatch) return true;
     
+    const seleccion = selectMatch[1].trim();
+    
+    // Si es SELECT *, prohibirlo explícitamente
+    if (seleccion === '*') {
+        throw new Error(`SELECT * está prohibido. Para la tabla '${tabla}' usa columnas específicas como: ${columnasEnMapa.slice(0, 5).join(', ')}${columnasEnMapa.length > 5 ? ', ...' : ''}`);
+    }
+    
     // Lista de palabras clave SQL que deben ser ignoradas
     const palabrasClaveSQL = ['DISTINCT', 'ALL', 'TOP', 'UNIQUE'];
     
-    const columnas = selectMatch[1].split(',').map(col => {
+    const columnas = seleccion.split(',').map(col => {
         col = col.trim();
         // Remover backticks si existen
         col = col.replace(/`/g, '');
