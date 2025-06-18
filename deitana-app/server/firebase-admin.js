@@ -1,11 +1,12 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-console.log('=== INICIO CONFIGURACIÓN FIREBASE ADMIN ===');
-console.log('Verificando variables de entorno...');
-console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'Configurado' : 'No configurado');
-console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? 'Configurado' : 'No configurado');
-console.log('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'Configurado' : 'No configurado');
+// Comentar logs excesivos
+// console.log('=== INICIO CONFIGURACIÓN FIREBASE ADMIN ===');
+// console.log('Verificando variables de entorno...');
+// console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'Configurado' : 'No configurado');
+// console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? 'Configurado' : 'No configurado');
+// console.log('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'Configurado' : 'No configurado');
 
 // Verificar si ya existe una instancia de la app
 if (!admin.apps.length) {
@@ -19,16 +20,16 @@ admin.initializeApp({
     })
 });
 
-    console.log('Firebase Admin inicializado correctamente');
+    // console.log('Firebase Admin inicializado correctamente');
   } catch (error) {
-    console.error('Error al inicializar Firebase Admin:', error);
-    console.error('Stack trace:', error.stack);
+    // console.error('Error al inicializar Firebase Admin:', error);
+    // console.error('Stack trace:', error.stack);
     throw error;
   }
 } else {
-  console.log('Firebase Admin ya está inicializado');
+  // console.log('Firebase Admin ya está inicializado');
 }
 
-console.log('=== FIN CONFIGURACIÓN FIREBASE ADMIN ===');
+// console.log('=== FIN CONFIGURACIÓN FIREBASE ADMIN ===');
 
 module.exports = admin; 

@@ -23,7 +23,7 @@ const verifyToken = async (req, res, next) => {
             isAdmin: adminEmails.includes(decodedToken.email)
         };
 
-        console.log('Usuario autenticado:', req.user); // Para debugging
+        // console.log('Usuario autenticado:', req.user); // Para debugging
         next();
     } catch (error) {
         console.error('Error verifying token:', error);

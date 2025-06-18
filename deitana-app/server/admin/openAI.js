@@ -6,12 +6,6 @@ require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
 
-console.log('=== VERIFICACIÓN DE IMPORTACIÓN ===');
-console.log('mapaERP importado:', !!mapaERP);
-console.log('Tipo de mapaERP importado:', typeof mapaERP);
-console.log('Claves en mapaERP importado:', Object.keys(mapaERP));
-console.log('=== FIN DE VERIFICACIÓN DE IMPORTACIÓN ===');
-
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY

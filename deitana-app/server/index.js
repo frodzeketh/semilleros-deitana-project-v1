@@ -13,11 +13,11 @@ const chatManager = require('./utils/chatManager');
 
 dotenv.config();
 
-// Verificación de variables de entorno
-console.log('=== VERIFICACIÓN DE VARIABLES DE ENTORNO ===');
-console.log('OPENAI_API_KEY configurada:', process.env.OPENAI_API_KEY ? 'Sí' : 'No');
-console.log('PORT configurado:', process.env.PORT || 'No (usando 3001 por defecto)');
-console.log('=== FIN DE VERIFICACIÓN ===');
+// Comentar logs excesivos de variables de entorno
+// console.log('=== VERIFICACIÓN DE VARIABLES DE ENTORNO ===');
+// console.log('OPENAI_API_KEY configurada:', process.env.OPENAI_API_KEY ? 'Sí' : 'No');
+// console.log('PORT configurado:', process.env.PORT || 'No (usando 3001 por defecto)');
+// console.log('=== FIN DE VERIFICACIÓN ===');
 
 const app = express();
 
@@ -30,13 +30,13 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// Middleware para logging
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  next();
-});
+// Comentar middleware de logging excesivo
+// app.use((req, res, next) => {
+//     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+//     console.log('Headers:', req.headers);
+//     console.log('Body:', req.body);
+//     next();
+// });
 
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../build')));
@@ -67,18 +67,11 @@ app.get('/test', (req, res) => {
 // Ruta para obtener conversaciones
 app.get('/conversations', verifyToken, async (req, res) => {
   try {
-    console.log('=== INICIO OBTENCIÓN DE CONVERSACIONES ===');
-    console.log('Usuario autenticado:', req.user);
-    
     const conversations = await chatManager.getConversations(req.user.uid);
-    
-    console.log('Conversaciones obtenidas:', conversations);
-    console.log('=== FIN OBTENCIÓN DE CONVERSACIONES ===');
     
     res.json({ success: true, data: conversations });
   } catch (error) {
     console.error('Error al obtener conversaciones:', error);
-    console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false, 
       error: 'Error al obtener conversaciones',
@@ -90,24 +83,17 @@ app.get('/conversations', verifyToken, async (req, res) => {
 // Ruta para obtener los mensajes de una conversación
 app.get('/conversations/:conversationId/messages', verifyToken, async (req, res) => {
   try {
-    console.log('=== INICIO OBTENCIÓN DE MENSAJES ===');
-    console.log('Conversación:', req.params.conversationId);
-    console.log('Usuario:', req.user.uid);
-
     // Verificar que el usuario es propietario del chat
     await chatManager.verifyChatOwnership(req.user.uid, req.params.conversationId);
 
     const messages = await chatManager.getConversationMessages(req.user.uid, req.params.conversationId);
-    console.log('Mensajes obtenidos:', messages);
 
-    console.log('=== FIN OBTENCIÓN DE MENSAJES ===');
     res.json({ 
       success: true, 
       data: messages 
     });
   } catch (error) {
     console.error('Error al obtener mensajes:', error);
-    console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false, 
       error: 'Error al obtener los mensajes',
@@ -119,10 +105,6 @@ app.get('/conversations/:conversationId/messages', verifyToken, async (req, res)
 // Ruta para crear una nueva conversación
 app.post('/chat/new', verifyToken, async (req, res) => {
   try {
-    console.log('=== INICIO CREACIÓN DE NUEVA CONVERSACIÓN ===');
-    console.log('Body recibido:', req.body);
-    console.log('Usuario autenticado:', req.user);
-
     const { message } = req.body;
     if (!message) {
       throw new Error('El mensaje es requerido');
@@ -130,7 +112,6 @@ app.post('/chat/new', verifyToken, async (req, res) => {
 
     // Si el mensaje es NUEVA_CONEXION, solo devolvemos un ID temporal
     if (message === 'NUEVA_CONEXION') {
-      console.log('Mensaje inicial es NUEVA_CONEXION, devolviendo ID temporal');
       return res.json({ 
         success: true, 
         data: { 
@@ -147,7 +128,6 @@ app.post('/chat/new', verifyToken, async (req, res) => {
     }
 
     // Procesar respuesta según el rol
-    console.log('Procesando respuesta según rol:', req.user.isAdmin);
     let response;
     if (req.user.isAdmin) {
       response = await processQuery({ message, userId: req.user.uid });
@@ -156,13 +136,11 @@ app.post('/chat/new', verifyToken, async (req, res) => {
     }
 
     // Guardar respuesta del asistente
-    console.log('Guardando respuesta del asistente...');
     await chatManager.addMessageToConversation(req.user.uid, conversationId, {
       role: 'assistant',
       content: response.data.message
     });
 
-    console.log('=== FIN CREACIÓN DE NUEVA CONVERSACIÓN ===');
     res.json({ 
       success: true, 
       data: { 
@@ -172,7 +150,6 @@ app.post('/chat/new', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error al crear nueva conversación:', error);
-    console.error('Stack trace:', error.stack);
     res.status(500).json({ 
       success: false, 
       error: 'Error al crear la conversación',
@@ -188,18 +165,13 @@ app.post('/chat', verifyToken, async (req, res) => {
         const userId = req.user.uid;
         const isAdmin = req.user.isAdmin;
 
-        console.log('Mensaje:', message);
-        console.log('Usuario:', userId);
-        console.log('Es admin:', isAdmin);
-        console.log('Conversación:', conversationId);
+        console.log('Mensaje:', { role: 'user', content: message });
 
         let currentConversationId = conversationId;
 
         // Si no hay conversación o es temporal, crear una nueva
         if (!currentConversationId || currentConversationId.startsWith('temp_')) {
-            console.log('Creando nueva conversación...');
             currentConversationId = await chatManager.createConversation(userId, message);
-            console.log('Nueva conversación creada:', currentConversationId);
         }
 
         // Verificar que la conversación existe

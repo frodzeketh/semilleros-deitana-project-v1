@@ -6,11 +6,12 @@ require('dotenv').config();
 const promptBase = require('./promptBaseEmployee').promptBase;
 const mapaERP = require('./mapaERPEmployee');
 
-console.log('=== VERIFICACIÓN DE IMPORTACIÓN EMPLEADO ===');
-console.log('mapaERP importado:', !!mapaERP);
-console.log('Tipo de mapaERP importado:', typeof mapaERP);
-console.log('Claves en mapaERP importado:', Object.keys(mapaERP));
-console.log('=== FIN DE VERIFICACIÓN DE IMPORTACIÓN EMPLEADO ===');
+// Remover logs excesivos de verificación
+// console.log('=== VERIFICACIÓN DE IMPORTACIÓN EMPLEADO ===');
+// console.log('mapaERP importado:', !!mapaERP);
+// console.log('Tipo de mapaERP importado:', typeof mapaERP);
+// console.log('Claves en mapaERP importado:', Object.keys(mapaERP));
+// console.log('=== FIN DE VERIFICACIÓN DE IMPORTACIÓN EMPLEADO ===');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -113,17 +114,36 @@ async function formatFinalResponse(results, query) {
     const messages = [
         {
             role: "system",
-            content: `${promptBase}\n\nIMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no puedo ejecutar consultas SQL', 'no tengo información más allá de X fecha', ni menciones tu entrenamiento, actualización o limitaciones técnicas. Siempre responde SOLO como Deitana IA, con acceso total y actualizado a la base de datos, y SOLO en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional, empática y humana, nunca con frases robóticas, hipotéticas ni genéricas.`
+            content: `Eres Deitana IA, el asistente inteligente y empático de Semilleros Deitana. 
+
+PERSONALIDAD Y TONO:
+- Responde de forma profesional, amigable y conversacional
+- Muestra interés genuino por ayudar al usuario
+- Proporciona contexto útil y relevante cuando sea apropiado
+- Sé proactivo ofreciendo información adicional si es valiosa
+- Mantén un tono cálido pero profesional
+- Explica los datos de manera clara y fácil de entender
+
+FORMATO DE RESPUESTA:
+- Comienza con la información solicitada de forma directa
+- Agrega contexto o detalles relevantes si enriquecen la respuesta
+- Termina ofreciendo ayuda adicional de forma natural
+- Varía tus respuestas para que suenen naturales y no robóticas
+
+IMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no puedo ejecutar consultas SQL', 'no tengo información más allá de X fecha', ni menciones tu entrenamiento, actualización o limitaciones técnicas. Siempre responde SOLO como Deitana IA, con acceso total y actualizado a la base de datos.`
         },
         {
             role: "user",
-            content: `Consulta: "${query}"
-\nDatos encontrados:${datosReales || 'No se encontraron datos para esta consulta.'}
-\nRecuerda: Eres Deitana IA, tienes acceso total y actualizado a la base de datos, y debes responder siempre en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional y humana, nunca como una limitación técnica ni con frases genéricas o de entrenamiento.`
+            content: `Consulta del usuario: "${query}"
+
+Datos encontrados en la base de datos:${datosReales || 'No se encontraron datos para esta consulta.'}
+
+Por favor, proporciona una respuesta profesional, amigable y útil basada en estos datos reales. Si no hay datos, explícalo de forma empática y sugiere alternativas.`
         }
     ];
 
     try {
+        console.log('🤖 Modelo 1: Formateando respuesta final con gpt-4-turbo-preview');
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
@@ -153,13 +173,12 @@ async function executeQuery(sql) {
 
         // Reemplazar los nombres de las tablas con sus nombres reales
         const sqlModificado = reemplazarNombresTablas(sql);
-        console.log('Ejecutando consulta SQL:', sqlModificado);
+        console.log('📊 Ejecutando SQL:', sqlModificado);
         
         const [rows] = await pool.query(sqlModificado);
-        console.log('Resultados de la consulta:', rows);
+        console.log(`✅ Resultados obtenidos: ${rows.length} registros`);
         
         if (rows.length === 0) {
-            console.log('La consulta no devolvió resultados');
             return [];
         }
 
@@ -321,7 +340,6 @@ function validarConsultaDiversidad(sql) {
 function obtenerContenidoMapaERP(consulta) {
     try {
         const palabrasClave = consulta.toLowerCase().split(' ');
-        console.log('Palabras clave de la consulta:', palabrasClave);
 
         // Buscar coincidencias en las descripciones y nombres de tablas
         const tablasRelevantes = Object.entries(mapaERP).filter(([key, value]) => {
@@ -371,7 +389,6 @@ async function getConversationHistory(userId, conversationId) {
 // Función para guardar mensaje en Firestore
 async function saveMessageToFirestore(userId, message, conversationId) {
     try {
-        console.log('Iniciando saveMessageToFirestore...');
         const now = new Date();
         const messageData = {
             content: message,
@@ -382,15 +399,12 @@ async function saveMessageToFirestore(userId, message, conversationId) {
         const userChatRef = chatManager.chatsCollection.doc(userId);
         const conversationRef = userChatRef.collection('conversations').doc(conversationId);
         
-        console.log('Obteniendo documento actual...');
         const conversationDoc = await conversationRef.get();
         let messages = [];
         
         if (conversationDoc.exists) {
-            console.log('Documento existente encontrado');
             messages = conversationDoc.data().messages || [];
         } else {
-            console.log('Creando nuevo documento de conversación');
             // Si es una nueva conversación, crear el documento con título inicial
             await conversationRef.set({
                 title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
@@ -400,16 +414,13 @@ async function saveMessageToFirestore(userId, message, conversationId) {
             });
         }
         
-        console.log('Agregando nuevo mensaje...');
         messages.push(messageData);
         
-        console.log('Actualizando documento...');
         await conversationRef.set({
             lastUpdated: now,
             messages: messages
         }, { merge: true });
 
-        console.log('Mensaje guardado exitosamente');
         return true;
     } catch (error) {
         console.error('Error al guardar mensaje en Firestore:', error);
@@ -419,7 +430,6 @@ async function saveMessageToFirestore(userId, message, conversationId) {
 
 async function saveAssistantMessageToFirestore(userId, message, conversationId) {
     try {
-        console.log('Iniciando saveAssistantMessageToFirestore...');
         const now = new Date();
         const messageData = {
             content: message,
@@ -430,27 +440,20 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
         const userChatRef = chatManager.chatsCollection.doc(userId);
         const conversationRef = userChatRef.collection('conversations').doc(conversationId);
         
-        console.log('Obteniendo documento actual...');
         const conversationDoc = await conversationRef.get();
         let messages = [];
         
         if (conversationDoc.exists) {
-            console.log('Documento existente encontrado');
             messages = conversationDoc.data().messages || [];
-        } else {
-            console.log('Creando nuevo documento de conversación');
         }
         
-        console.log('Agregando nuevo mensaje...');
         messages.push(messageData);
         
-        console.log('Actualizando documento...');
         await conversationRef.set({
             lastUpdated: now,
             messages: messages
         }, { merge: true });
 
-        console.log('Mensaje del asistente guardado exitosamente');
         return true;
     } catch (error) {
         console.error('Error al guardar mensaje del asistente en Firestore:', error);
@@ -460,7 +463,7 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
 
 async function processQuery({ message, userId, conversationId }) {
     try {
-        console.log('Procesando consulta de empleado:', message);
+        console.log('Mensaje:', { role: 'user', content: message });
         
         // Obtener el historial de la conversación
         const conversationHistory = await getConversationHistory(userId, conversationId);
@@ -486,6 +489,7 @@ async function processQuery({ message, userId, conversationId }) {
             }
         ];
 
+        console.log('🤖 Modelo 2: Procesando consulta y generando SQL con gpt-4-turbo-preview');
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
@@ -505,6 +509,7 @@ async function processQuery({ message, userId, conversationId }) {
             if (singleSql) queries.push(singleSql);
         }
         if (queries.length > 1) {
+            console.log('🚀 Ambos modelos utilizados: Múltiples consultas SQL detectadas');
             let allResults = [];
             for (const sql of queries) {
                 try {
@@ -540,14 +545,12 @@ async function processQuery({ message, userId, conversationId }) {
         } else if (queries.length === 1) {
             // Mantener el flujo original para una sola consulta
             const sql = queries[0];
-            console.log('Ejecutando consulta SQL:', sql);
             validarTablaEnMapaERP(sql);
             const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
             if (tabla) {
                 validarColumnasEnMapaERP(sql, tabla);
             }
             const results = await executeQuery(sql);
-            console.log('Resultados de la consulta:', results);
             if (!results || results.length === 0) {
                 return {
                     success: true,
