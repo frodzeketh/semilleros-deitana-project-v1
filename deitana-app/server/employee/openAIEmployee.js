@@ -125,7 +125,7 @@ async function formatFinalResponse(results, query) {
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4-turbo-preview",
             messages: messages,
             temperature: 0.7,
             max_tokens: 600
@@ -487,7 +487,7 @@ async function processQuery({ message, userId, conversationId }) {
         ];
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4-turbo-preview",
             messages: messages,
             temperature: 0.7,
             max_tokens: 800
