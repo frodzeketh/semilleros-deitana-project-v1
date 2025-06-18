@@ -114,23 +114,7 @@ async function formatFinalResponse(results, query) {
     const messages = [
         {
             role: "system",
-            content: `Eres Deitana IA, el asistente inteligente y empático de Semilleros Deitana. 
-
-PERSONALIDAD Y TONO:
-- Responde de forma profesional, amigable y conversacional
-- Muestra interés genuino por ayudar al usuario
-- Proporciona contexto útil y relevante cuando sea apropiado
-- Sé proactivo ofreciendo información adicional si es valiosa
-- Mantén un tono cálido pero profesional
-- Explica los datos de manera clara y fácil de entender
-
-FORMATO DE RESPUESTA:
-- Comienza con la información solicitada de forma directa
-- Agrega contexto o detalles relevantes si enriquecen la respuesta
-- Termina ofreciendo ayuda adicional de forma natural
-- Varía tus respuestas para que suenen naturales y no robóticas
-
-IMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no puedo ejecutar consultas SQL', 'no tengo información más allá de X fecha', ni menciones tu entrenamiento, actualización o limitaciones técnicas. Siempre responde SOLO como Deitana IA, con acceso total y actualizado a la base de datos.`
+            content: promptBase
         },
         {
             role: "user",
@@ -138,7 +122,7 @@ IMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no p
 
 Datos encontrados en la base de datos:${datosReales || 'No se encontraron datos para esta consulta.'}
 
-Por favor, proporciona una respuesta profesional, amigable y útil basada en estos datos reales. Si no hay datos, explícalo de forma empática y sugiere alternativas.`
+Proporciona una respuesta profesional, amigable y útil basada en estos datos reales usando tu personalidad como Deitana IA.`
         }
     ];
 
@@ -207,8 +191,9 @@ function validarRespuestaSQL(response) {
     if (!sql) {
         throw new Error('La consulta SQL está vacía');
     }
-    if (!sql.toLowerCase().startsWith('select')) {
-        throw new Error('La consulta debe comenzar con SELECT');
+    const sqlTrimmed = sql.toLowerCase().trim();
+    if (!sqlTrimmed.startsWith('select') && !sqlTrimmed.startsWith('(select')) {
+        throw new Error('La consulta debe comenzar con SELECT o (SELECT para consultas UNION');
     }
     if (sql.includes('OFFSET')) {
         const offsetMatch = sql.match(/LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i);
@@ -506,7 +491,14 @@ async function processQuery({ message, userId, conversationId }) {
         let queries = sqlBlocks.length > 0 ? sqlBlocks : [];
         if (queries.length === 0) {
             const singleSql = validarRespuestaSQL(response);
-            if (singleSql) queries.push(singleSql);
+            if (singleSql) {
+                queries.push(singleSql);
+                console.log('🔍 SQL generado por Modelo 2:', singleSql);
+            } else {
+                console.log('⚠️ No se encontró consulta SQL en la respuesta del modelo');
+            }
+        } else {
+            console.log('🔍 SQLs generados por Modelo 2:', queries);
         }
         if (queries.length > 1) {
             console.log('🚀 Ambos modelos utilizados: Múltiples consultas SQL detectadas');
