@@ -260,15 +260,19 @@ function validarColumnasEnMapaERP(sql, tabla) {
     if (!mapaERP[tabla]) return true;
     
     const columnasEnMapa = Object.keys(mapaERP[tabla].columnas || {});
+    console.log(`🔍 VALIDACIÓN COLUMNAS - Tabla: ${tabla}`);
+    console.log(`📋 Columnas disponibles en mapaERP:`, columnasEnMapa);
     
     // Extraer las columnas de la consulta SQL, ignorando subconsultas
     const selectMatch = sql.match(/SELECT\s+([^()]+?)\s+FROM/i);
     if (!selectMatch) return true;
     
     const seleccion = selectMatch[1].trim();
+    console.log(`🎯 Selección del modelo:`, seleccion);
     
     // Si es SELECT *, prohibirlo explícitamente
     if (seleccion === '*') {
+        console.log(`❌ ERROR: Modelo usa SELECT * en lugar de columnas específicas`);
         throw new Error(`SELECT * está prohibido. Para la tabla '${tabla}' usa columnas específicas como: ${columnasEnMapa.slice(0, 5).join(', ')}${columnasEnMapa.length > 5 ? ', ...' : ''}`);
     }
     
@@ -298,11 +302,18 @@ function validarColumnasEnMapaERP(sql, tabla) {
         return col.replace(/^[a-z]+\./, '');
     }).filter(col => col !== null && col !== '');
     
-    const columnasInvalidas = columnas.filter(col => !columnasEnMapa.includes(col));
+    console.log(`📝 Columnas extraídas del modelo:`, columnas);
     
+    const columnasInvalidas = columnas.filter(col => !columnasEnMapa.includes(col));
+    const columnasValidas = columnas.filter(col => columnasEnMapa.includes(col));
+    
+    console.log(`✅ Columnas válidas:`, columnasValidas);
     if (columnasInvalidas.length > 0) {
+        console.log(`❌ Columnas inválidas:`, columnasInvalidas);
         throw new Error(`Las siguientes columnas no están definidas en mapaERPEmployee para la tabla '${tabla}': ${columnasInvalidas.join(', ')}`);
     }
+    
+    console.log(`🎉 VALIDACIÓN EXITOSA: Todas las columnas son válidas para la tabla '${tabla}'`);
     
     return true;
 }
@@ -455,6 +466,53 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
     }
 }
 
+// SISTEMA INTELIGENTE: Usar mapaERP automáticamente para generar SQL
+function generarSQLAutomatica(mensaje) {
+    const msg = mensaje.toLowerCase();
+    
+    // Buscar automáticamente en mapaERP qué tabla coincide
+    let tablaEncontrada = null;
+    let columnasSeleccionadas = [];
+    
+    for (const [nombreTabla, infoTabla] of Object.entries(mapaERP)) {
+        // Buscar coincidencias en el nombre de la tabla o descripción
+        const palabrasTabla = nombreTabla.toLowerCase();
+        const descripcion = infoTabla.descripcion.toLowerCase();
+        
+        if (msg.includes(palabrasTabla) || 
+            msg.includes(palabrasTabla.slice(0, -1))) { // singular
+            
+            tablaEncontrada = nombreTabla;
+            
+            // Obtener automáticamente las columnas principales de mapaERP
+            const todasColumnas = Object.keys(infoTabla.columnas || {});
+            if (todasColumnas.length > 0) {
+                // Tomar las primeras 4-5 columnas más importantes
+                columnasSeleccionadas = todasColumnas.slice(0, Math.min(5, todasColumnas.length));
+            }
+            break;
+        }
+    }
+    
+    if (!tablaEncontrada) return null;
+    
+    // Detectar cantidad solicitada
+    let limite = 1;
+    const numeros = msg.match(/\b(\d+)\b/);
+    if (numeros) {
+        limite = parseInt(numeros[1]);
+    } else if (msg.includes('varios') || msg.includes('algunos')) {
+        limite = 3;
+    } else if (msg.includes('muchos') || msg.includes('todos')) {
+        limite = 10;
+    }
+    
+    // Generar SQL usando mapaERP automáticamente
+    const sqlGenerada = `SELECT ${columnasSeleccionadas.join(', ')} FROM ${tablaEncontrada} LIMIT ${limite}`;
+    
+    return sqlGenerada;
+}
+
 async function processQuery({ message, userId, conversationId }) {
     try {
         console.log('Mensaje:', { role: 'user', content: message });
@@ -505,6 +563,18 @@ async function processQuery({ message, userId, conversationId }) {
                 console.log('🔍 SQL generado por Modelo 2:', singleSql);
             } else {
                 console.log('⚠️ No se encontró consulta SQL en la respuesta del modelo');
+                
+                // SISTEMA INTELIGENTE: Generar SQL automáticamente cuando el modelo falle
+                const sqlAutomatica = generarSQLAutomatica(message);
+                if (sqlAutomatica) {
+                    console.log('🔧 SISTEMA INTELIGENTE: Generando SQL automáticamente');
+                    console.log('🔧 SQL AUTO-GENERADA:', sqlAutomatica);
+                    queries.push(sqlAutomatica);
+                } else {
+                    console.log('🚨 PREGUNTA ORIGINAL:', message);
+                    console.log('🚨 RESPUESTA SIN SQL:', response.substring(0, 200) + '...');
+                    console.log('🔥 ERROR CRÍTICO: No se pudo generar SQL automáticamente');
+                }
             }
         } else {
             console.log('🔍 SQLs generados por Modelo 2:', queries);
