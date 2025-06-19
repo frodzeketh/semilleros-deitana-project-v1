@@ -175,16 +175,25 @@ async function executeQuery(sql) {
 
 // Función para validar que la respuesta contiene una consulta SQL
 function validarRespuestaSQL(response) {
+    console.log(`🔍 VALIDANDO SQL en respuesta...`);
+    console.log(`📝 Respuesta (primeros 100 chars): ${response.substring(0, 100)}...`);
+    
     let sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
     if (!sqlMatch) {
+        console.log(`❌ No encontrado formato <sql>...</sql>`);
         sqlMatch = response.match(/```sql\s*([\s\S]*?)```/);
         if (sqlMatch) {
-            console.log('Advertencia: SQL encontrado en formato markdown, convirtiendo a formato <sql>');
+            console.log('✅ SQL encontrado en formato markdown, convirtiendo a formato <sql>');
             response = response.replace(/```sql\s*([\s\S]*?)```/, '<sql>$1</sql>');
             sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
+        } else {
+            console.log('❌ No encontrado formato de código SQL');
         }
+    } else {
+        console.log(`✅ Encontrado formato <sql>...</sql>`);
     }
     if (!sqlMatch) {
+        console.log(`🚨 CONFIRMADO: NO HAY SQL EN LA RESPUESTA`);
         return null;
     }
     let sql = sqlMatch[1].trim();
@@ -469,6 +478,7 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
 // SISTEMA INTELIGENTE: Usar mapaERP automáticamente para generar SQL
 function generarSQLAutomatica(mensaje) {
     const msg = mensaje.toLowerCase();
+    console.log(`🔧 SISTEMA INTELIGENTE: Analizando mensaje: "${mensaje}"`);
     
     // Buscar automáticamente en mapaERP qué tabla coincide
     let tablaEncontrada = null;
@@ -479,8 +489,12 @@ function generarSQLAutomatica(mensaje) {
         const palabrasTabla = nombreTabla.toLowerCase();
         const descripcion = infoTabla.descripcion.toLowerCase();
         
+        console.log(`🔍 Verificando tabla: ${nombreTabla} (${palabrasTabla})`);
+        
         if (msg.includes(palabrasTabla) || 
             msg.includes(palabrasTabla.slice(0, -1))) { // singular
+            
+            console.log(`✅ COINCIDENCIA ENCONTRADA: ${nombreTabla}`);
             
             tablaEncontrada = nombreTabla;
             
@@ -494,7 +508,10 @@ function generarSQLAutomatica(mensaje) {
         }
     }
     
-    if (!tablaEncontrada) return null;
+    if (!tablaEncontrada) {
+        console.log(`❌ NO SE ENCONTRÓ TABLA para: "${mensaje}"`);
+        return null;
+    }
     
     // Detectar cantidad solicitada
     let limite = 1;
@@ -507,9 +524,12 @@ function generarSQLAutomatica(mensaje) {
         limite = 10;
     }
     
+    console.log(`🎯 Tabla encontrada: ${tablaEncontrada}, Columnas: ${columnasSeleccionadas.join(', ')}, Límite: ${limite}`);
+    
     // Generar SQL usando mapaERP automáticamente
     const sqlGenerada = `SELECT ${columnasSeleccionadas.join(', ')} FROM ${tablaEncontrada} LIMIT ${limite}`;
     
+    console.log(`🚀 SQL GENERADA AUTOMÁTICAMENTE: ${sqlGenerada}`);
     return sqlGenerada;
 }
 
