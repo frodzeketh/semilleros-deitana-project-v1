@@ -73,8 +73,6 @@ function limitarResultados(results, limite = 5, aleatorio = false) {
 
 // Función para formatear la respuesta final
 async function formatFinalResponse(results, query) {
-    console.log('🔥 [SISTEMA] MODELO SQL + FORMATEADOR - Iniciando formateo de respuesta');
-    
     if (!results || results.length === 0) {
         return "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?";
     }
@@ -579,13 +577,6 @@ FORMATO OBLIGATORIO:
             const singleSql = validarRespuestaSQL(response);
             if (singleSql) queries.push(singleSql);
         }
-
-        // LOG: Determinar tipo de modelo usado
-        if (queries.length > 0) {
-            console.log('🔥 [SISTEMA] MODELO QUE GENERA SQL - Consultas detectadas:', queries.length);
-        } else {
-            console.log('🔥 [SISTEMA] MODELO NO GENERA SQL - Respuesta directa');
-        }
         if (queries.length > 1) {
             console.log('🗄️ [SQL-EXECUTOR] Ejecutando múltiples consultas SQL:', queries.length, 'consultas');
             let allResults = [];
@@ -655,8 +646,6 @@ FORMATO OBLIGATORIO:
                 }
             };
         }
-
-
 
         console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO (RESPUESTA DIRECTA SIN SQL) =====');
         return {
