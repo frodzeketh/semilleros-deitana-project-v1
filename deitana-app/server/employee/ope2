@@ -71,8 +71,8 @@ function limitarResultados(results, limite = 5, aleatorio = false) {
     return results.slice(0, limite);
 }
 
-// Función para formatear la respuesta final
-async function formatFinalResponse(results, query) {
+// Función unificada para generar respuesta con datos (reemplaza formatFinalResponse)
+async function generateUnifiedResponseWithData(results, query, initialResponse) {
     if (!results || results.length === 0) {
         return "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?";
     }
@@ -110,40 +110,57 @@ async function formatFinalResponse(results, query) {
         datosReales += '-------------------\n';
     });
 
-    const messages = [
+    // **RESPUESTA UNIFICADA** - Usar el mismo modelo con contexto de datos
+    const unifiedDataMessages = [
         {
             role: "system",
-            content: `${promptBase}\n\nIMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no puedo ejecutar consultas SQL', 'no tengo información más allá de X fecha', ni menciones tu entrenamiento, actualización o limitaciones técnicas. Siempre responde SOLO como Deitana IA, con acceso total y actualizado a la base de datos, y SOLO en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional, empática y humana, nunca con frases robóticas, hipotéticas ni genéricas.`
+            content: `${promptBase}
+
+INSTRUCCIONES ESPECÍFICAS PARA RESPUESTA CON DATOS:
+
+- Tienes acceso completo y actualizado a la base de datos de Semilleros Deitana
+- Los datos que se te proporcionan son reales y actuales
+- Presenta la información de manera clara, profesional y conversacional
+- Adapta tu respuesta al contexto de la consulta del usuario
+- Si hay múltiples registros, organízalos de manera comprensible
+- JAMÁS menciones limitaciones técnicas o falta de acceso
+- Mantén el tono empático y profesional de Deitana IA
+
+REGLAS CRÍTICAS:
+- NUNCA digas "no tengo acceso a la base de datos"
+- NUNCA menciones tu entrenamiento o limitaciones técnicas  
+- SIEMPRE responde como Deitana IA con acceso total a la información
+- Si hay datos, úsalos para dar una respuesta completa y útil`
         },
         {
             role: "user",
-            content: `Consulta: "${query}"
-\nDatos encontrados:${datosReales || 'No se encontraron datos para esta consulta.'}
-\nRecuerda: Eres Deitana IA, tienes acceso total y actualizado a la base de datos, y debes responder siempre en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional y humana, nunca como una limitación técnica ni con frases genéricas o de entrenamiento.`
+            content: `Consulta original: "${query}"
+
+Datos encontrados en la base de datos:${datosReales}
+
+Por favor, presenta esta información de manera clara y profesional, respondiendo directamente a la consulta del usuario. Soy Deitana IA y tengo acceso completo a la base de datos actualizada.`
         }
     ];
 
     try {
-        console.log('🎨 [MODELO-FORMATEADOR] Iniciando formateo de respuesta final...');
-        console.log('🎨 [MODELO-FORMATEADOR] Query original:', query);
-        console.log('🎨 [MODELO-FORMATEADOR] Cantidad de datos a formatear:', results?.length || 0);
-        
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
-            messages: messages,
+            messages: unifiedDataMessages,
             temperature: 0.7,
-            max_tokens: 600
+            max_tokens: 700
         });
 
-        const formattedResponse = completion.choices[0].message.content;
-        console.log('🎨 [MODELO-FORMATEADOR] Respuesta generada exitosamente');
-        console.log('🎨 [MODELO-FORMATEADOR] Longitud de respuesta:', formattedResponse.length, 'caracteres');
-        
-        return formattedResponse;
+        return completion.choices[0].message.content;
     } catch (error) {
-        console.error('🎨 [MODELO-FORMATEADOR] Error al generar respuesta:', error);
-        return `He encontrado la siguiente información:${datosReales}`;
+        console.error('Error al generar respuesta unificada:', error);
+        return `He encontrado la siguiente información en nuestra base de datos:${datosReales}`;
     }
+}
+
+// Función para formatear la respuesta final (DEPRECADA - mantenida por compatibilidad)
+async function formatFinalResponse(results, query) {
+    console.log('⚠️  ADVERTENCIA: formatFinalResponse está deprecada. Usar generateUnifiedResponseWithData.');
+    return await generateUnifiedResponseWithData(results, query, '');
 }
 
 // Función para ejecutar consultas SQL
@@ -468,53 +485,53 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
 
 async function processQuery({ message, userId, conversationId }) {
     try {
-        console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA =====');
-        console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
+        console.log('Procesando consulta de empleado:', message);
         
         // Obtener el historial de la conversación
         const conversationHistory = await getConversationHistory(userId, conversationId);
         
-        // Construir el contexto con el historial completo (limitado para evitar sobrecarga)
-        const contextMessages = conversationHistory
-            .slice(-4)  // Solo los últimos 4 mensajes para contexto
-            .map(msg => ({
-                role: msg.role,
-                content: msg.content
-            }));
+        // Construir el contexto con el historial
+        const contextMessages = conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
         
         // Obtener información relevante del mapaERP para la consulta
         const mapaERPInfo = obtenerContenidoMapaERP(message);
         
-        const messages = [
+        // **MODELO UNIFICADO** - Combina generación SQL y formateo de respuesta
+        const unifiedMessages = [
             {
                 role: "system",
                 content: `${promptBase}
 
 ${mapaERPInfo}
 
-=== INSTRUCCIONES CRÍTICAS DE CONSISTENCIA ===
+INSTRUCCIONES PARA EL MODELO UNIFICADO:
 
-TU COMPORTAMIENTO DEBE SER SIEMPRE CONSISTENTE:
+1. **ANÁLISIS DE CONSULTA**: Primero analiza si la consulta del usuario requiere datos de la base de datos o es una pregunta general.
 
-1. SIEMPRE GENERAS SQL cuando el usuario solicita información de la base de datos
-2. NUNCA digas "no tengo acceso", "no puedo ejecutar SQL", "mi capacidad se limita"
-3. Si acabas de ejecutar una consulta SQL exitosamente, NUNCA digas que no puedes hacerlo
-4. SIEMPRE mantén tu rol como asistente con acceso completo a la base de datos
-5. Para consultas de seguimiento como "dime su id", usa el contexto previo para generar SQL apropiado
+2. **SI REQUIERE DATOS DE BD**:
+   - Genera la consulta SQL apropiada usando los nombres exactos de columnas de mapaERPEmployee
+   - NUNCA uses SELECT *
+   - Especifica las columnas exactas que necesitas
+   - Envuelve la SQL entre las etiquetas <sql>...</sql>
 
-EJEMPLOS DE CONSULTAS QUE SIEMPRE REQUIEREN SQL:
-- "dime un artículo" → SQL para obtener artículo
-- "dime su id" → SQL para obtener el ID del elemento mencionado anteriormente
-- "cuántos hay" → SQL para contar registros
-- Cualquier solicitud de información específica → SQL
+3. **SI NO REQUIERE DATOS DE BD**:
+   - Responde directamente como Deitana IA con conocimiento del contexto empresarial
+   - Mantén el tono profesional, empático y humano
 
-FORMATO OBLIGATORIO:
-- Envuelve tu SQL en etiquetas <sql></sql>
-- Para IDs: <sql>SELECT id FROM tabla WHERE columna = 'valor_del_contexto_previo'</sql>
-- NUNCA uses SELECT * - especifica columnas exactas
-- Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js
+4. **FORMATO DE RESPUESTA**:
+   - SIEMPRE responde como Deitana IA
+   - Mantén consistencia en el tono: profesional, empático y conversacional
+   - Si incluyes datos, presenta la información de manera clara y útil
+   - JAMÁS menciones limitaciones técnicas o falta de acceso a datos
 
-=== FIN DE INSTRUCCIONES CRÍTICAS ===`
+5. **REGLAS CRÍTICAS**:
+   - NUNCA digas frases como "no tengo acceso a la base de datos"
+   - NUNCA menciones tu entrenamiento o limitaciones técnicas
+   - SIEMPRE responde como si tuvieras acceso completo y actualizado a la información
+   - Si no hay datos, explícalo de forma profesional y humana`
             },
             ...contextMessages,
             {
@@ -523,93 +540,46 @@ FORMATO OBLIGATORIO:
             }
         ];
 
-        console.log('🧠 [MODELO-ANALIZADOR] Iniciando análisis de consulta del usuario...');
-        console.log('🧠 [MODELO-ANALIZADOR] Usuario:', userId);
-        console.log('🧠 [MODELO-ANALIZADOR] Mensaje:', message);
-        console.log('🧠 [MODELO-ANALIZADOR] Historial de conversación:', conversationHistory.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Contexto filtrado:', contextMessages.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Mensajes enviados al modelo:', JSON.stringify(messages, null, 2));
-        
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
-            messages: messages,
+            messages: unifiedMessages,
             temperature: 0.7,
             max_tokens: 800
         });
 
         const response = completion.choices[0].message.content;
-        console.log('🧠 [MODELO-ANALIZADOR] Respuesta generada exitosamente');
-        console.log('🧠 [MODELO-ANALIZADOR] Longitud de respuesta:', response.length, 'caracteres');
-        console.log('🧠 [MODELO-ANALIZADOR] Contenido de respuesta:', response.substring(0, 200) + '...');
+        console.log('Respuesta del modelo unificado:', response);
 
-        // --- MEJORA: Permitir múltiples consultas SQL, sin eliminar nada de la lógica original ---
-        // Buscar todos los bloques SQL en la respuesta del modelo
+        // Verificar si la respuesta contiene SQL
         const sqlBlocks = [...response.matchAll(/```sql[\s\S]*?(SELECT[\s\S]*?;)[\s\S]*?```/gim)].map(m => m[1]);
         let queries = sqlBlocks.length > 0 ? sqlBlocks : [];
         if (queries.length === 0) {
             const singleSql = validarRespuestaSQL(response);
             if (singleSql) queries.push(singleSql);
         }
-        if (queries.length > 1) {
-            console.log('🗄️ [SQL-EXECUTOR] Ejecutando múltiples consultas SQL:', queries.length, 'consultas');
+
+        // Si hay consultas SQL, ejecutarlas y generar respuesta final con datos
+        if (queries.length > 0) {
             let allResults = [];
-            for (let i = 0; i < queries.length; i++) {
-                const sql = queries[i];
+            
+            for (const sql of queries) {
                 try {
-                    console.log(`🗄️ [SQL-EXECUTOR] Ejecutando consulta ${i + 1}/${queries.length}:`, sql);
                     validarTablaEnMapaERP(sql);
                     const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
                     if (tabla) {
                         validarColumnasEnMapaERP(sql, tabla);
                     }
                     const results = await executeQuery(sql);
-                    console.log(`🗄️ [SQL-EXECUTOR] Consulta ${i + 1} completada:`, results?.length || 0, 'registros');
                     if (results && results.length > 0) {
                         allResults = allResults.concat(results);
                     }
                 } catch (err) {
-                    console.warn(`🗄️ [SQL-EXECUTOR] Error ejecutando consulta ${i + 1}:`, sql, err);
+                    console.warn('Error ejecutando consulta:', sql, err);
                 }
             }
-            console.log('🗄️ [SQL-EXECUTOR] Total de resultados combinados:', allResults.length, 'registros');
-            if (allResults.length === 0) {
-                return {
-                    success: true,
-                    data: {
-                        message: "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?"
-                    }
-                };
-            }
-            // Formatear la respuesta final con los resultados combinados
-            const finalResponse = await formatFinalResponse(allResults, message);
-            console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO EXITOSAMENTE (MÚLTIPLES CONSULTAS) =====');
-            return {
-                success: true,
-                data: {
-                    message: finalResponse
-                }
-            };
-        } else if (queries.length === 1) {
-            // Mantener el flujo original para una sola consulta
-            const sql = queries[0];
-            console.log('🗄️ [SQL-EXECUTOR] Ejecutando consulta SQL única:', sql);
-            validarTablaEnMapaERP(sql);
-            const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
-            if (tabla) {
-                validarColumnasEnMapaERP(sql, tabla);
-            }
-            const results = await executeQuery(sql);
-            console.log('🗄️ [SQL-EXECUTOR] Resultados obtenidos:', results?.length || 0, 'registros');
-            if (!results || results.length === 0) {
-                return {
-                    success: true,
-                    data: {
-                        message: "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?"
-                    }
-                };
-            }
-            const finalResponse = await formatFinalResponse(results, message);
-            console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO EXITOSAMENTE (CONSULTA ÚNICA) =====');
+
+            // Generar respuesta final con los datos obtenidos
+            const finalResponse = await generateUnifiedResponseWithData(allResults, message, response);
             return {
                 success: true,
                 data: {
@@ -618,15 +588,16 @@ FORMATO OBLIGATORIO:
             };
         }
 
-        console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO (RESPUESTA DIRECTA SIN SQL) =====');
+        // Si no hay SQL, devolver la respuesta directa del modelo
         return {
             success: true,
             data: {
                 message: response
             }
         };
+
     } catch (error) {
-        console.error('🧠 [MODELO-ANALIZADOR] Error en processQuery:', error);
+        console.error('Error en processQuery:', error);
         return {
             success: false,
             data: {

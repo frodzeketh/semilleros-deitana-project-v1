@@ -124,10 +124,6 @@ async function formatFinalResponse(results, query) {
     ];
 
     try {
-        console.log('🎨 [MODELO-FORMATEADOR] Iniciando formateo de respuesta final...');
-        console.log('🎨 [MODELO-FORMATEADOR] Query original:', query);
-        console.log('🎨 [MODELO-FORMATEADOR] Cantidad de datos a formatear:', results?.length || 0);
-        
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
@@ -135,13 +131,9 @@ async function formatFinalResponse(results, query) {
             max_tokens: 600
         });
 
-        const formattedResponse = completion.choices[0].message.content;
-        console.log('🎨 [MODELO-FORMATEADOR] Respuesta generada exitosamente');
-        console.log('🎨 [MODELO-FORMATEADOR] Longitud de respuesta:', formattedResponse.length, 'caracteres');
-        
-        return formattedResponse;
+        return completion.choices[0].message.content;
     } catch (error) {
-        console.error('🎨 [MODELO-FORMATEADOR] Error al generar respuesta:', error);
+        console.error('Error al generar respuesta:', error);
         return `He encontrado la siguiente información:${datosReales}`;
     }
 }
@@ -468,19 +460,16 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
 
 async function processQuery({ message, userId, conversationId }) {
     try {
-        console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA =====');
-        console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
+        console.log('Procesando consulta de empleado:', message);
         
         // Obtener el historial de la conversación
         const conversationHistory = await getConversationHistory(userId, conversationId);
         
-        // Construir el contexto con el historial completo (limitado para evitar sobrecarga)
-        const contextMessages = conversationHistory
-            .slice(-4)  // Solo los últimos 4 mensajes para contexto
-            .map(msg => ({
-                role: msg.role,
-                content: msg.content
-            }));
+        // Construir el contexto con el historial
+        const contextMessages = conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
         
         // Obtener información relevante del mapaERP para la consulta
         const mapaERPInfo = obtenerContenidoMapaERP(message);
@@ -488,33 +477,7 @@ async function processQuery({ message, userId, conversationId }) {
         const messages = [
             {
                 role: "system",
-                content: `${promptBase}
-
-${mapaERPInfo}
-
-=== INSTRUCCIONES CRÍTICAS DE CONSISTENCIA ===
-
-TU COMPORTAMIENTO DEBE SER SIEMPRE CONSISTENTE:
-
-1. SIEMPRE GENERAS SQL cuando el usuario solicita información de la base de datos
-2. NUNCA digas "no tengo acceso", "no puedo ejecutar SQL", "mi capacidad se limita"
-3. Si acabas de ejecutar una consulta SQL exitosamente, NUNCA digas que no puedes hacerlo
-4. SIEMPRE mantén tu rol como asistente con acceso completo a la base de datos
-5. Para consultas de seguimiento como "dime su id", usa el contexto previo para generar SQL apropiado
-
-EJEMPLOS DE CONSULTAS QUE SIEMPRE REQUIEREN SQL:
-- "dime un artículo" → SQL para obtener artículo
-- "dime su id" → SQL para obtener el ID del elemento mencionado anteriormente
-- "cuántos hay" → SQL para contar registros
-- Cualquier solicitud de información específica → SQL
-
-FORMATO OBLIGATORIO:
-- Envuelve tu SQL en etiquetas <sql></sql>
-- Para IDs: <sql>SELECT id FROM tabla WHERE columna = 'valor_del_contexto_previo'</sql>
-- NUNCA uses SELECT * - especifica columnas exactas
-- Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js
-
-=== FIN DE INSTRUCCIONES CRÍTICAS ===`
+                content: promptBase + "\n\n" + mapaERPInfo + "\n\nIMPORTANTE: \n1. NUNCA uses SELECT * en tus consultas SQL.\n2. SIEMPRE especifica las columnas exactas que necesitas de la tabla.\n3. Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js.\n4. Las tablas y columnas disponibles son las que se muestran arriba.\n5. Si no estás seguro de qué columnas usar, usa las columnas principales de la tabla."
             },
             ...contextMessages,
             {
@@ -523,13 +486,6 @@ FORMATO OBLIGATORIO:
             }
         ];
 
-        console.log('🧠 [MODELO-ANALIZADOR] Iniciando análisis de consulta del usuario...');
-        console.log('🧠 [MODELO-ANALIZADOR] Usuario:', userId);
-        console.log('🧠 [MODELO-ANALIZADOR] Mensaje:', message);
-        console.log('🧠 [MODELO-ANALIZADOR] Historial de conversación:', conversationHistory.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Contexto filtrado:', contextMessages.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Mensajes enviados al modelo:', JSON.stringify(messages, null, 2));
-        
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
@@ -538,9 +494,7 @@ FORMATO OBLIGATORIO:
         });
 
         const response = completion.choices[0].message.content;
-        console.log('🧠 [MODELO-ANALIZADOR] Respuesta generada exitosamente');
-        console.log('🧠 [MODELO-ANALIZADOR] Longitud de respuesta:', response.length, 'caracteres');
-        console.log('🧠 [MODELO-ANALIZADOR] Contenido de respuesta:', response.substring(0, 200) + '...');
+        console.log('Respuesta del asistente:', response);
 
         // --- MEJORA: Permitir múltiples consultas SQL, sin eliminar nada de la lógica original ---
         // Buscar todos los bloques SQL en la respuesta del modelo
@@ -551,27 +505,22 @@ FORMATO OBLIGATORIO:
             if (singleSql) queries.push(singleSql);
         }
         if (queries.length > 1) {
-            console.log('🗄️ [SQL-EXECUTOR] Ejecutando múltiples consultas SQL:', queries.length, 'consultas');
             let allResults = [];
-            for (let i = 0; i < queries.length; i++) {
-                const sql = queries[i];
+            for (const sql of queries) {
                 try {
-                    console.log(`🗄️ [SQL-EXECUTOR] Ejecutando consulta ${i + 1}/${queries.length}:`, sql);
                     validarTablaEnMapaERP(sql);
                     const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
                     if (tabla) {
                         validarColumnasEnMapaERP(sql, tabla);
                     }
                     const results = await executeQuery(sql);
-                    console.log(`🗄️ [SQL-EXECUTOR] Consulta ${i + 1} completada:`, results?.length || 0, 'registros');
                     if (results && results.length > 0) {
                         allResults = allResults.concat(results);
                     }
                 } catch (err) {
-                    console.warn(`🗄️ [SQL-EXECUTOR] Error ejecutando consulta ${i + 1}:`, sql, err);
+                    console.warn('Error ejecutando consulta:', sql, err);
                 }
             }
-            console.log('🗄️ [SQL-EXECUTOR] Total de resultados combinados:', allResults.length, 'registros');
             if (allResults.length === 0) {
                 return {
                     success: true,
@@ -582,7 +531,6 @@ FORMATO OBLIGATORIO:
             }
             // Formatear la respuesta final con los resultados combinados
             const finalResponse = await formatFinalResponse(allResults, message);
-            console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO EXITOSAMENTE (MÚLTIPLES CONSULTAS) =====');
             return {
                 success: true,
                 data: {
@@ -592,14 +540,14 @@ FORMATO OBLIGATORIO:
         } else if (queries.length === 1) {
             // Mantener el flujo original para una sola consulta
             const sql = queries[0];
-            console.log('🗄️ [SQL-EXECUTOR] Ejecutando consulta SQL única:', sql);
+            console.log('Ejecutando consulta SQL:', sql);
             validarTablaEnMapaERP(sql);
             const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
             if (tabla) {
                 validarColumnasEnMapaERP(sql, tabla);
             }
             const results = await executeQuery(sql);
-            console.log('🗄️ [SQL-EXECUTOR] Resultados obtenidos:', results?.length || 0, 'registros');
+            console.log('Resultados de la consulta:', results);
             if (!results || results.length === 0) {
                 return {
                     success: true,
@@ -609,7 +557,6 @@ FORMATO OBLIGATORIO:
                 };
             }
             const finalResponse = await formatFinalResponse(results, message);
-            console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO EXITOSAMENTE (CONSULTA ÚNICA) =====');
             return {
                 success: true,
                 data: {
@@ -618,7 +565,6 @@ FORMATO OBLIGATORIO:
             };
         }
 
-        console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO (RESPUESTA DIRECTA SIN SQL) =====');
         return {
             success: true,
             data: {
@@ -626,7 +572,7 @@ FORMATO OBLIGATORIO:
             }
         };
     } catch (error) {
-        console.error('🧠 [MODELO-ANALIZADOR] Error en processQuery:', error);
+        console.error('Error en processQuery:', error);
         return {
             success: false,
             data: {

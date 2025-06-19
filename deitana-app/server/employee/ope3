@@ -71,10 +71,14 @@ function limitarResultados(results, limite = 5, aleatorio = false) {
     return results.slice(0, limite);
 }
 
-// Función para formatear la respuesta final
-async function formatFinalResponse(results, query) {
+// Función para formatear datos sin llamada adicional al modelo
+function formatDataForResponse(results, query) {
     if (!results || results.length === 0) {
-        return "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?";
+        return {
+            hasData: false,
+            formattedData: "",
+            message: "No se encontraron datos para esta consulta."
+        };
     }
 
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);
@@ -90,61 +94,65 @@ async function formatFinalResponse(results, query) {
     let datosReales = '';
     
     resultadosLimitados.forEach((resultado, index) => {
-        datosReales += `\nRegistro ${index + 1}:\n`;
+        datosReales += `\n${index + 1}. `;
         const campos = Object.entries(resultado);
-        campos.forEach(([campo, valor]) => {
-            let descripcion = campo;
-            if (tablaDetectada) {
-                descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
+        const camposImportantes = [];
+        
+        // Buscar el campo principal (nombre/denominación)
+        let nombrePrincipal = '';
+        const camposNombre = ['AR_DENO', 'nombre', 'denominacion', 'descripcion'];
+        for (const campoNombre of camposNombre) {
+            const campoEncontrado = campos.find(([campo]) => campo.toLowerCase() === campoNombre.toLowerCase());
+            if (campoEncontrado && campoEncontrado[1]) {
+                nombrePrincipal = campoEncontrado[1];
+                break;
             }
-            if (campo.toLowerCase().includes('fec') && valor) {
-                const fecha = new Date(valor);
-                valor = fecha.toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+        }
+        
+        if (nombrePrincipal) {
+            datosReales += `${nombrePrincipal}`;
+            
+            // Agregar información adicional relevante (precio, stock, referencia)
+            const camposAdicionales = [];
+            campos.forEach(([campo, valor]) => {
+                if (campo.toLowerCase().includes('precio') && valor && valor !== 0) {
+                    camposAdicionales.push(`Precio: ${valor}€`);
+                } else if (campo.toLowerCase().includes('stock') && valor !== null) {
+                    camposAdicionales.push(`Stock: ${valor || 'No disponible'}`);
+                } else if (campo.toLowerCase().includes('ref') && valor) {
+                    camposAdicionales.push(`Ref: ${valor}`);
+                }
+            });
+            
+            if (camposAdicionales.length > 0) {
+                datosReales += ` (${camposAdicionales.join(', ')})`;
             }
-            datosReales += `${descripcion}: ${valor}\n`;
-        });
-        datosReales += '-------------------\n';
+        } else {
+            // Fallback si no encuentra nombre principal
+            campos.forEach(([campo, valor]) => {
+                if (valor !== null && valor !== '') {
+                    let descripcion = campo;
+                    if (tablaDetectada) {
+                        descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
+                    }
+                    camposImportantes.push(`${descripcion}: ${valor}`);
+                }
+            });
+            datosReales += camposImportantes.join(' | ');
+        }
+        
+        datosReales += '\n';
     });
 
-    const messages = [
-        {
-            role: "system",
-            content: `${promptBase}\n\nIMPORTANTE: Jamás digas frases como 'no tengo acceso a la base de datos', 'no puedo ejecutar consultas SQL', 'no tengo información más allá de X fecha', ni menciones tu entrenamiento, actualización o limitaciones técnicas. Siempre responde SOLO como Deitana IA, con acceso total y actualizado a la base de datos, y SOLO en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional, empática y humana, nunca con frases robóticas, hipotéticas ni genéricas.`
-        },
-        {
-            role: "user",
-            content: `Consulta: "${query}"
-\nDatos encontrados:${datosReales || 'No se encontraron datos para esta consulta.'}
-\nRecuerda: Eres Deitana IA, tienes acceso total y actualizado a la base de datos, y debes responder siempre en base a los datos reales proporcionados. Si no hay datos, explícalo de forma profesional y humana, nunca como una limitación técnica ni con frases genéricas o de entrenamiento.`
-        }
-    ];
-
-    try {
-        console.log('🎨 [MODELO-FORMATEADOR] Iniciando formateo de respuesta final...');
-        console.log('🎨 [MODELO-FORMATEADOR] Query original:', query);
-        console.log('🎨 [MODELO-FORMATEADOR] Cantidad de datos a formatear:', results?.length || 0);
-        
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 600
-        });
-
-        const formattedResponse = completion.choices[0].message.content;
-        console.log('🎨 [MODELO-FORMATEADOR] Respuesta generada exitosamente');
-        console.log('🎨 [MODELO-FORMATEADOR] Longitud de respuesta:', formattedResponse.length, 'caracteres');
-        
-        return formattedResponse;
-    } catch (error) {
-        console.error('🎨 [MODELO-FORMATEADOR] Error al generar respuesta:', error);
-        return `He encontrado la siguiente información:${datosReales}`;
-    }
+    return {
+        hasData: true,
+        formattedData: datosReales,
+        message: ""
+    };
 }
+
+// Función para formatear la respuesta final (ELIMINADA - ahora usa un solo modelo)
+// Esta función ya no se usa, todo se maneja en processQuery con un solo modelo
 
 // Función para ejecutar consultas SQL
 async function executeQuery(sql) {
@@ -468,53 +476,29 @@ async function saveAssistantMessageToFirestore(userId, message, conversationId) 
 
 async function processQuery({ message, userId, conversationId }) {
     try {
-        console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA =====');
-        console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
+        console.log('Procesando consulta de empleado:', message);
         
         // Obtener el historial de la conversación
         const conversationHistory = await getConversationHistory(userId, conversationId);
         
-        // Construir el contexto con el historial completo (limitado para evitar sobrecarga)
-        const contextMessages = conversationHistory
-            .slice(-4)  // Solo los últimos 4 mensajes para contexto
-            .map(msg => ({
-                role: msg.role,
-                content: msg.content
-            }));
+        // Construir el contexto con el historial
+        const contextMessages = conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
         
         // Obtener información relevante del mapaERP para la consulta
         const mapaERPInfo = obtenerContenidoMapaERP(message);
         
-        const messages = [
+        // **UN SOLO MODELO** - Genera respuesta completa con o sin datos
+        const singleModelMessages = [
             {
                 role: "system",
                 content: `${promptBase}
 
 ${mapaERPInfo}
 
-=== INSTRUCCIONES CRÍTICAS DE CONSISTENCIA ===
-
-TU COMPORTAMIENTO DEBE SER SIEMPRE CONSISTENTE:
-
-1. SIEMPRE GENERAS SQL cuando el usuario solicita información de la base de datos
-2. NUNCA digas "no tengo acceso", "no puedo ejecutar SQL", "mi capacidad se limita"
-3. Si acabas de ejecutar una consulta SQL exitosamente, NUNCA digas que no puedes hacerlo
-4. SIEMPRE mantén tu rol como asistente con acceso completo a la base de datos
-5. Para consultas de seguimiento como "dime su id", usa el contexto previo para generar SQL apropiado
-
-EJEMPLOS DE CONSULTAS QUE SIEMPRE REQUIEREN SQL:
-- "dime un artículo" → SQL para obtener artículo
-- "dime su id" → SQL para obtener el ID del elemento mencionado anteriormente
-- "cuántos hay" → SQL para contar registros
-- Cualquier solicitud de información específica → SQL
-
-FORMATO OBLIGATORIO:
-- Envuelve tu SQL en etiquetas <sql></sql>
-- Para IDs: <sql>SELECT id FROM tabla WHERE columna = 'valor_del_contexto_previo'</sql>
-- NUNCA uses SELECT * - especifica columnas exactas
-- Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js
-
-=== FIN DE INSTRUCCIONES CRÍTICAS ===`
+`
             },
             ...contextMessages,
             {
@@ -523,110 +507,141 @@ FORMATO OBLIGATORIO:
             }
         ];
 
-        console.log('🧠 [MODELO-ANALIZADOR] Iniciando análisis de consulta del usuario...');
-        console.log('🧠 [MODELO-ANALIZADOR] Usuario:', userId);
-        console.log('🧠 [MODELO-ANALIZADOR] Mensaje:', message);
-        console.log('🧠 [MODELO-ANALIZADOR] Historial de conversación:', conversationHistory.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Contexto filtrado:', contextMessages.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Mensajes enviados al modelo:', JSON.stringify(messages, null, 2));
-        
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
-            messages: messages,
-            temperature: 0.7,
-            max_tokens: 800
+            messages: singleModelMessages,
+            temperature: 0.7,  // Reducido para mejor seguimiento de instrucciones
+            max_tokens: 1000
         });
 
         const response = completion.choices[0].message.content;
-        console.log('🧠 [MODELO-ANALIZADOR] Respuesta generada exitosamente');
-        console.log('🧠 [MODELO-ANALIZADOR] Longitud de respuesta:', response.length, 'caracteres');
-        console.log('🧠 [MODELO-ANALIZADOR] Contenido de respuesta:', response.substring(0, 200) + '...');
-
-        // --- MEJORA: Permitir múltiples consultas SQL, sin eliminar nada de la lógica original ---
-        // Buscar todos los bloques SQL en la respuesta del modelo
-        const sqlBlocks = [...response.matchAll(/```sql[\s\S]*?(SELECT[\s\S]*?;)[\s\S]*?```/gim)].map(m => m[1]);
-        let queries = sqlBlocks.length > 0 ? sqlBlocks : [];
-        if (queries.length === 0) {
-            const singleSql = validarRespuestaSQL(response);
-            if (singleSql) queries.push(singleSql);
+        console.log('Respuesta del modelo único:', response);
+        
+        // Detectar si debería haber generado SQL pero no lo hizo
+        const requiereDatos = /cliente|producto|inventario|stock|proveedor|pedido|partida|cuántos|cuántas|qué|dime|muestra|lista/i.test(message);
+        const tieneSQL = /<sql>|```sql/i.test(response);
+        if (requiereDatos && !tieneSQL) {
+            console.log('⚠️ ADVERTENCIA: La consulta parece requerir datos de BD pero no se generó SQL');
+            console.log('Mensaje original:', message);
+            console.log('Respuesta sin SQL:', response);
         }
-        if (queries.length > 1) {
-            console.log('🗄️ [SQL-EXECUTOR] Ejecutando múltiples consultas SQL:', queries.length, 'consultas');
+
+        // Verificar si la respuesta contiene SQL
+        let queries = [];
+        
+        // Primero buscar bloques <sql>...</sql> (formato principal según el prompt)
+        const sqlTagMatches = [...response.matchAll(/<sql>([\s\S]*?)<\/sql>/gim)];
+        if (sqlTagMatches.length > 0) {
+            queries = sqlTagMatches.map(m => m[1].trim());
+        } else {
+            // Como fallback, buscar bloques ```sql``` (sin requerir punto y coma)
+            const sqlBlockMatches = [...response.matchAll(/```sql\s*([\s\S]*?)```/gim)];
+            if (sqlBlockMatches.length > 0) {
+                queries = sqlBlockMatches.map(m => m[1].trim());
+            } else {
+                // Último fallback usando la función validarRespuestaSQL
+                const singleSql = validarRespuestaSQL(response);
+                if (singleSql) queries.push(singleSql);
+            }
+        }
+
+        // Si hay consultas SQL, ejecutarlas y insertar datos en la respuesta
+        if (queries.length > 0) {
             let allResults = [];
-            for (let i = 0; i < queries.length; i++) {
-                const sql = queries[i];
+            
+            for (const sql of queries) {
                 try {
-                    console.log(`🗄️ [SQL-EXECUTOR] Ejecutando consulta ${i + 1}/${queries.length}:`, sql);
                     validarTablaEnMapaERP(sql);
                     const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
                     if (tabla) {
                         validarColumnasEnMapaERP(sql, tabla);
                     }
                     const results = await executeQuery(sql);
-                    console.log(`🗄️ [SQL-EXECUTOR] Consulta ${i + 1} completada:`, results?.length || 0, 'registros');
                     if (results && results.length > 0) {
                         allResults = allResults.concat(results);
                     }
                 } catch (err) {
-                    console.warn(`🗄️ [SQL-EXECUTOR] Error ejecutando consulta ${i + 1}:`, sql, err);
+                    console.warn('Error ejecutando consulta:', sql, err);
                 }
             }
-            console.log('🗄️ [SQL-EXECUTOR] Total de resultados combinados:', allResults.length, 'registros');
-            if (allResults.length === 0) {
-                return {
-                    success: true,
-                    data: {
-                        message: "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?"
+
+            // Formatear datos y reemplazar el marcador en la respuesta
+            const dataFormat = formatDataForResponse(allResults, message);
+            let finalResponse = response;
+            
+            // Remover el bloque SQL de la respuesta final
+            finalResponse = finalResponse.replace(/<sql>[\s\S]*?<\/sql>/g, '').replace(/```sql[\s\S]*?```/g, '');
+            
+            console.log('🔍 Datos encontrados:', allResults.length, 'registros');
+            console.log('📝 Respuesta antes del reemplazo:', finalResponse);
+            
+            // Verificar si el modelo no usó [DATOS_AQUI] correctamente
+            if (!finalResponse.includes('[DATOS_AQUI]')) {
+                console.log('⚠️ ADVERTENCIA: El modelo no usó [DATOS_AQUI]. Forzando corrección...');
+                
+                // Buscar patrones problemáticos específicos para reemplazar
+                const patronesProblematicos = [
+                    /no tenemos registros?[^.]*\./gi,
+                    /no disponemos[^.]*\./gi,
+                    /no se encontr[^.]*\./gi,
+                    /actualmente no[^.]*\./gi,
+                    /no figura[^.]*\./gi
+                ];
+                
+                let fueCorregido = false;
+                patronesProblematicos.forEach(patron => {
+                    if (patron.test(finalResponse)) {
+                        finalResponse = finalResponse.replace(patron, '[DATOS_AQUI]');
+                        fueCorregido = true;
                     }
-                };
+                });
+                
+                // Si no se corrigió con patrones, buscar lugar apropiado para insertar datos
+                if (!fueCorregido) {
+                    // Buscar frases como "tenemos" o "contamos con" para insertar después
+                    if (/tenemos|contamos con|disponemos de/i.test(finalResponse)) {
+                        finalResponse = finalResponse.replace(
+                            /(tenemos|contamos con|disponemos de)/i, 
+                            '$1 [DATOS_AQUI]'
+                        );
+                    } else {
+                        // Como último recurso, agregar al principio de manera natural
+                        finalResponse = `En nuestro catálogo encontramos: [DATOS_AQUI]\n\n${finalResponse}`;
+                    }
+                }
+                console.log('🔧 Respuesta corregida:', finalResponse);
             }
-            // Formatear la respuesta final con los resultados combinados
-            const finalResponse = await formatFinalResponse(allResults, message);
-            console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO EXITOSAMENTE (MÚLTIPLES CONSULTAS) =====');
+            
+            if (dataFormat.hasData) {
+                // Reemplazar [DATOS_AQUI] con los datos reales
+                finalResponse = finalResponse.replace(/\[DATOS_AQUI\]/g, dataFormat.formattedData);
+                console.log('✅ Datos reemplazados correctamente');
+            } else {
+                // Si no hay datos, reemplazar con mensaje apropiado
+                finalResponse = finalResponse.replace(/\[DATOS_AQUI\]/g, 'No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?');
+                console.log('⚠️ No hay datos - mensaje de "no encontrado" insertado');
+            }
+            
+            console.log('📤 Respuesta final:', finalResponse);
+
             return {
                 success: true,
                 data: {
-                    message: finalResponse
-                }
-            };
-        } else if (queries.length === 1) {
-            // Mantener el flujo original para una sola consulta
-            const sql = queries[0];
-            console.log('🗄️ [SQL-EXECUTOR] Ejecutando consulta SQL única:', sql);
-            validarTablaEnMapaERP(sql);
-            const tabla = sql.match(/FROM\s+`?(\w+)`?/i)?.[1];
-            if (tabla) {
-                validarColumnasEnMapaERP(sql, tabla);
-            }
-            const results = await executeQuery(sql);
-            console.log('🗄️ [SQL-EXECUTOR] Resultados obtenidos:', results?.length || 0, 'registros');
-            if (!results || results.length === 0) {
-                return {
-                    success: true,
-                    data: {
-                        message: "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?"
-                    }
-                };
-            }
-            const finalResponse = await formatFinalResponse(results, message);
-            console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO EXITOSAMENTE (CONSULTA ÚNICA) =====');
-            return {
-                success: true,
-                data: {
-                    message: finalResponse
+                    message: finalResponse.trim()
                 }
             };
         }
 
-        console.log('🚀 [SISTEMA] ===== PROCESO COMPLETADO (RESPUESTA DIRECTA SIN SQL) =====');
+        // Si no hay SQL, devolver la respuesta directa del modelo
         return {
             success: true,
             data: {
                 message: response
             }
         };
+
     } catch (error) {
-        console.error('🧠 [MODELO-ANALIZADOR] Error en processQuery:', error);
+        console.error('Error en processQuery:', error);
         return {
             success: false,
             data: {

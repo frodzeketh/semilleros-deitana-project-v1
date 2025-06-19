@@ -474,9 +474,10 @@ async function processQuery({ message, userId, conversationId }) {
         // Obtener el historial de la conversación
         const conversationHistory = await getConversationHistory(userId, conversationId);
         
-        // Construir el contexto con el historial completo (limitado para evitar sobrecarga)
+        // Construir el contexto con el historial (solo mensajes del usuario para evitar confusión)
         const contextMessages = conversationHistory
-            .slice(-4)  // Solo los últimos 4 mensajes para contexto
+            .filter(msg => msg.role === 'user')  // Solo incluir mensajes del usuario
+            .slice(-3)  // Solo los últimos 3 mensajes del usuario para contexto
             .map(msg => ({
                 role: msg.role,
                 content: msg.content
@@ -488,33 +489,7 @@ async function processQuery({ message, userId, conversationId }) {
         const messages = [
             {
                 role: "system",
-                content: `${promptBase}
-
-${mapaERPInfo}
-
-=== INSTRUCCIONES CRÍTICAS DE CONSISTENCIA ===
-
-TU COMPORTAMIENTO DEBE SER SIEMPRE CONSISTENTE:
-
-1. SIEMPRE GENERAS SQL cuando el usuario solicita información de la base de datos
-2. NUNCA digas "no tengo acceso", "no puedo ejecutar SQL", "mi capacidad se limita"
-3. Si acabas de ejecutar una consulta SQL exitosamente, NUNCA digas que no puedes hacerlo
-4. SIEMPRE mantén tu rol como asistente con acceso completo a la base de datos
-5. Para consultas de seguimiento como "dime su id", usa el contexto previo para generar SQL apropiado
-
-EJEMPLOS DE CONSULTAS QUE SIEMPRE REQUIEREN SQL:
-- "dime un artículo" → SQL para obtener artículo
-- "dime su id" → SQL para obtener el ID del elemento mencionado anteriormente
-- "cuántos hay" → SQL para contar registros
-- Cualquier solicitud de información específica → SQL
-
-FORMATO OBLIGATORIO:
-- Envuelve tu SQL en etiquetas <sql></sql>
-- Para IDs: <sql>SELECT id FROM tabla WHERE columna = 'valor_del_contexto_previo'</sql>
-- NUNCA uses SELECT * - especifica columnas exactas
-- Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js
-
-=== FIN DE INSTRUCCIONES CRÍTICAS ===`
+                content: promptBase + "\n\n" + mapaERPInfo + "\n\nIMPORTANTE: \n1. NUNCA uses SELECT * en tus consultas SQL.\n2. SIEMPRE especifica las columnas exactas que necesitas de la tabla.\n3. Usa SOLO los nombres de columnas definidos en mapaERPEmployee.js.\n4. Las tablas y columnas disponibles son las que se muestran arriba.\n5. Si no estás seguro de qué columnas usar, usa las columnas principales de la tabla."
             },
             ...contextMessages,
             {
@@ -527,8 +502,6 @@ FORMATO OBLIGATORIO:
         console.log('🧠 [MODELO-ANALIZADOR] Usuario:', userId);
         console.log('🧠 [MODELO-ANALIZADOR] Mensaje:', message);
         console.log('🧠 [MODELO-ANALIZADOR] Historial de conversación:', conversationHistory.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Contexto filtrado:', contextMessages.length, 'mensajes');
-        console.log('🧠 [MODELO-ANALIZADOR] Mensajes enviados al modelo:', JSON.stringify(messages, null, 2));
         
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
