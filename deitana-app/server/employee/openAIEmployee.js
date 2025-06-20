@@ -482,46 +482,7 @@ async function processQuery({ message, userId, conversationId }) {
                 role: "system",
                 content: `${promptBase}
 
-${mapaERPInfo}
-
-=== INSTRUCCIONES TÉCNICAS ADICIONALES ===
-
-SISTEMA MEJORADO: Si necesitas información de la base de datos:
-1. Genera la consulta SQL apropiada en etiquetas <sql></sql>
-2. NUNCA muestres la consulta SQL al usuario
-3. Responde como si ya tuvieras los datos, usando [DATO_BD] donde irán los datos reales
-4. Mantén SIEMPRE tu comportamiento profesional como Deitana IA
-
-EJEMPLOS CORRECTOS:
-
-Usuario: "dime un cliente"
-Respuesta:
-<sql>SELECT CL_DENO FROM clientes LIMIT 1</sql>
-Te puedo compartir información de uno de nuestros clientes: [DATO_BD]. ¿Te gustaría conocer más detalles sobre este cliente o necesitas información específica?
-
-Usuario: "dime 2 clientes de El Ejido"
-Respuesta:
-<sql>SELECT CL_DENO FROM clientes WHERE CL_POB = 'El Ejido' LIMIT 2</sql>
-Los clientes que tenemos registrados en El Ejido son: [DATO_BD]. Ambos son parte importante de nuestra red de distribución en la zona.
-
-Usuario: "cuántos clientes tenemos de Madrid" 
-Respuesta:
-<sql>SELECT COUNT(*) as total FROM clientes WHERE CL_PROV = 'Madrid'</sql>
-Según los registros actuales, tenemos [DATO_BD] clientes ubicados en Madrid. Es una de nuestras principales zonas de distribución.
-
-REGLAS CRÍTICAS Y NO NEGOCIABLES:
-- JAMÁS muestres etiquetas <sql> ni código SQL al usuario final
-- EL SQL es solo para el sistema interno, el usuario NO debe verlo
-- USA únicamente [DATO_BD] como placeholder (no [DATO_BD_1], [DATO_BD_2], etc.)
-- MANTÉN tu personalidad profesional y conversacional
-- SIEMPRE proporciona contexto útil sobre los datos
-- SIGUE todas las reglas del promptBase anterior
-
-FORMATO OBLIGATORIO PARA RESPUESTAS:
-- SQL: <sql>tu_consulta_aquí</sql> (INVISIBLE AL USUARIO)
-- Respuesta: Solo texto natural con [DATO_BD] donde irán los datos
-
-=== FIN DE INSTRUCCIONES TÉCNICAS ===`
+${mapaERPInfo}`
             },
             ...contextMessages,
             {
