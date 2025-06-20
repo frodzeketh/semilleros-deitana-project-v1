@@ -32,7 +32,7 @@ const mapaERP = {
             AR_IVAP: "Porcentaje de IVA aplicable",
             AR_PRV: "Código del proveedor principal",
             AR_FAM: "Familia o categoría del artículo",
-            AR_TIPO: "Tipo de artículo (planta, semilla, injerto, etc.)",
+            
         }
     },
 
