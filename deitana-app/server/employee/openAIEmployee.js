@@ -112,37 +112,46 @@ async function formatFinalResponse(results, query) {
         datosReales += '-------------------\n';
     });
 
-    const messages = [
-        {
-            role: "system",
-            content: `${promptBase}
+            const messages = [
+            {
+                role: "system",
+                content: `Eres Deitana IA, asistente especializado de Semilleros Deitana.
 
-=== INSTRUCCIONES CRÍTICAS PARA MODELO-FORMATEADOR ===
+=== INSTRUCCIONES PARA FORMATEAR RESPUESTAS ===
 
-JAMÁS INVENTES DATOS:
-1. SOLO usa los datos reales proporcionados en "Datos encontrados"
-2. Si no hay datos reales, di claramente "No encontré información sobre [consulta] en la base de datos"
-3. NUNCA menciones nombres, productos, o información que no esté en los datos reales
-4. NUNCA digas "el tipo de tomate que encontré es..." si no hay datos reales
-5. Si los datos están vacíos, responde profesionalmente que no hay registros
+TU TRABAJO ES SIMPLE:
+1. Toma los datos reales que se te proporcionan 
+2. Responde de manera natural y profesional
+3. Si hay números/conteos, compártelos directamente
+4. Si hay registros, preséntalos de forma organizada
+5. Mantén un tono conversacional y útil
 
-EJEMPLO CORRECTO cuando no hay datos:
-"No encontré ningún tipo de tomate en la base de datos actual que coincida con tu búsqueda."
+PARA CONSULTAS DE ANÁLISIS/CONTEO:
+- Si recibes "total_clientes: 623" → "Según el análisis, hay 623 clientes de Madrid en la base de datos."
+- Si recibes datos de conteo, compártelos directamente y añade contexto útil
 
-EJEMPLO INCORRECTO (NUNCA hagas esto):
-"El tipo de tomate que encontré es TOMATE DELYCA..." (cuando no hay datos reales)
+PARA REGISTROS DETALLADOS:
+- Presenta la información de manera clara y organizada
+- Usa los nombres reales de los datos proporcionados
+- Añade contexto útil cuando sea relevante
 
-=== FIN DE INSTRUCCIONES CRÍTICAS ===`
-        },
-        {
-            role: "user",
-            content: `Consulta: "${query}"
+SOLO SI NO HAY DATOS:
+- Si realmente no se proporcionan datos o dice "NINGÚN DATO ENCONTRADO", entonces indica que no hay información
 
-Datos encontrados: ${datosReales || 'NINGÚN DATO ENCONTRADO - La consulta SQL no devolvió resultados.'}
+NUNCA DIGAS "no encontré información" SI HAY DATOS REALES PROPORCIONADOS.
 
-INSTRUCCIÓN: Responde SOLO basándote en los datos reales mostrados arriba. Si dice "NINGÚN DATO ENCONTRADO", debes responder que no hay información disponible para esa consulta.`
-        }
-    ];
+=== FIN DE INSTRUCCIONES ===`
+            },
+            {
+                role: "user",
+                content: `Consulta del usuario: "${query}"
+
+Datos reales de la base de datos:
+${datosReales || 'NINGÚN DATO ENCONTRADO - La consulta SQL no devolvió resultados.'}
+
+INSTRUCCIÓN: Formatea estos datos de manera natural y útil. Si hay datos reales, úsalos. Si dice "NINGÚN DATO ENCONTRADO", indica que no hay información.`
+            }
+        ];
 
     try {
         console.log('🎨 [MODELO-FORMATEADOR] Iniciando formateo de respuesta final...');
