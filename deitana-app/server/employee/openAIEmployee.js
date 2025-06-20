@@ -510,10 +510,38 @@ ${mapaERPInfo}`
         console.log('🧠 [MODELO-ÚNICO] Longitud de respuesta:', response.length, 'caracteres');
         console.log('🧠 [MODELO-ÚNICO] Contenido de respuesta:', response.substring(0, 200) + '...');
 
-        // --- MEJORA: Permitir múltiples consultas SQL, sin eliminar nada de la lógica original ---
-        // Buscar todos los bloques SQL en la respuesta del modelo
-        const sqlBlocks = [...response.matchAll(/```sql[\s\S]*?(SELECT[\s\S]*?;)[\s\S]*?```/gim)].map(m => m[1]);
-        let queries = sqlBlocks.length > 0 ? sqlBlocks : [];
+        // Detectar TODAS las consultas SQL (tanto en formato <sql> como ```sql)
+        let queries = [];
+        
+        // Buscar consultas en formato <sql></sql> (formato preferido)
+        const sqlTagMatches = [...response.matchAll(/<sql>([\s\S]*?)<\/sql>/gim)];
+        if (sqlTagMatches.length > 0) {
+            queries = sqlTagMatches.map(match => {
+                let sql = match[1].trim();
+                // Aplicar las mismas validaciones que validarRespuestaSQL
+                if (!sql.toLowerCase().startsWith('select')) {
+                    return null;
+                }
+                // Agregar LIMIT si no es consulta de conteo/agrupación
+                const esConsultaConteo = sql.toLowerCase().includes('count(*)');
+                const tieneDistinct = /select\s+distinct/i.test(sql);
+                const tieneGroupBy = /group by/i.test(sql);
+                const tieneJoin = /join/i.test(sql);
+                if (!esConsultaConteo && !tieneDistinct && !tieneGroupBy && !sql.toLowerCase().includes('limit') && !tieneJoin) {
+                    sql = sql.replace(/;*\s*$/, '');
+                    sql += ' LIMIT 10';
+                }
+                return sql;
+            }).filter(sql => sql !== null);
+        }
+        
+        // Si no encontró consultas <sql>, buscar en formato ```sql (fallback)
+        if (queries.length === 0) {
+            const sqlBlocks = [...response.matchAll(/```sql[\s\S]*?(SELECT[\s\S]*?;)[\s\S]*?```/gim)].map(m => m[1]);
+            queries = sqlBlocks;
+        }
+        
+        // Si aún no hay consultas, usar el método original
         if (queries.length === 0) {
             const singleSql = validarRespuestaSQL(response);
             if (singleSql) queries.push(singleSql);
@@ -552,12 +580,55 @@ ${mapaERPInfo}`
             
             console.log('🗄️ [SQL-EXECUTOR] Total de resultados obtenidos:', allResults.length, 'registros');
             
-            // Formatear los datos e insertarlos en la respuesta del modelo único
-            const datosFormateados = formatearResultados(allResults, message);
-            // Reemplazar todos los placeholders de datos (DATO_BD, DATO_BD_1, DATO_BD_2, etc.)
-            let finalResponse = response.replace(/\[DATO_BD[_\d]*\]/g, datosFormateados);
+            // Formatear los datos para múltiples consultas
+            let finalResponse = response;
             
-            // También eliminar cualquier etiqueta SQL que pueda haber quedado visible
+            // Si hay múltiples consultas con diferentes tipos de resultados, formatear inteligentemente
+            if (queries.length > 1) {
+                const resultadosPorConsulta = [];
+                let resultIndex = 0;
+                
+                // Procesar resultados por consulta
+                for (let i = 0; i < queries.length; i++) {
+                    const sql = queries[i];
+                    const resultadosEstaConsulta = [];
+                    
+                    // Determinar cuántos resultados pertenecen a esta consulta
+                    if (sql.toLowerCase().includes('count(*)')) {
+                        // Consulta de conteo - toma 1 resultado
+                        if (resultIndex < allResults.length) {
+                            resultadosEstaConsulta.push(allResults[resultIndex]);
+                            resultIndex++;
+                        }
+                    } else {
+                        // Consulta de datos - toma los siguientes resultados hasta la siguiente consulta
+                        const limite = sql.toLowerCase().includes('limit') ? 
+                            parseInt(sql.match(/limit\s+(\d+)/i)?.[1] || '10') : 10;
+                        
+                        for (let j = 0; j < limite && resultIndex < allResults.length; j++) {
+                            resultadosEstaConsulta.push(allResults[resultIndex]);
+                            resultIndex++;
+                        }
+                    }
+                    
+                    const datosFormateados = formatearResultados(resultadosEstaConsulta, message);
+                    resultadosPorConsulta.push(datosFormateados);
+                }
+                
+                // Reemplazar cada [DATO_BD] secuencialmente
+                resultadosPorConsulta.forEach(datos => {
+                    finalResponse = finalResponse.replace(/\[DATO_BD\]/, datos);
+                });
+                
+                // Limpiar cualquier [DATO_BD] restante
+                finalResponse = finalResponse.replace(/\[DATO_BD[_\d]*\]/g, '');
+            } else {
+                // Una sola consulta - usar el método original
+                const datosFormateados = formatearResultados(allResults, message);
+                finalResponse = finalResponse.replace(/\[DATO_BD[_\d]*\]/g, datosFormateados);
+            }
+            
+            // Eliminar cualquier etiqueta SQL que pueda haber quedado visible
             finalResponse = finalResponse.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
             
             console.log('🔥 [SISTEMA] MODELO ÚNICO - Datos insertados en respuesta exitosamente');
