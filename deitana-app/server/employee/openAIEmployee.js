@@ -52,6 +52,11 @@ async function processQuery({ message, userId, conversationId }) {
         // Obtener información relevante del mapaERP para la consulta
         const mapaERPInfo = obtenerContenidoMapaERP(message, conversationHistory);
         
+        // DEBUG: Log para ver exactamente qué información recibe GPT
+        console.log('🗺️ [DEBUG-MAPA] Información enviada a GPT:');
+        console.log('🗺️ [DEBUG-MAPA]', mapaERPInfo.substring(0, 500) + '...');
+        console.log('🗺️ [DEBUG-MAPA] Longitud total:', mapaERPInfo.length, 'caracteres');
+        
         // =====================================
         // CONSTRUCCIÓN DE MENSAJES PARA GPT
         // =====================================
