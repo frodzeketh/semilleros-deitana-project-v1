@@ -145,18 +145,18 @@ ${promptEjemplos}`
                 let sql = match[1].trim();
                 // Aplicar las mismas validaciones que validarRespuestaSQL
                 if (!sql.toLowerCase().startsWith('select')) {
-                    return null;
-                }
+        return null;
+    }
                 // Agregar LIMIT si no es consulta de conteo/agrupación
-                const esConsultaConteo = sql.toLowerCase().includes('count(*)');
-                const tieneDistinct = /select\s+distinct/i.test(sql);
-                const tieneGroupBy = /group by/i.test(sql);
-                const tieneJoin = /join/i.test(sql);
+    const esConsultaConteo = sql.toLowerCase().includes('count(*)');
+    const tieneDistinct = /select\s+distinct/i.test(sql);
+    const tieneGroupBy = /group by/i.test(sql);
+    const tieneJoin = /join/i.test(sql);
                 if (!esConsultaConteo && !tieneDistinct && !tieneGroupBy && !sql.toLowerCase().includes('limit') && !tieneJoin) {
-                    sql = sql.replace(/;*\s*$/, '');
-                    sql += ' LIMIT 50';
-                }
-                return sql;
+        sql = sql.replace(/;*\s*$/, '');
+        sql += ' LIMIT 50';
+    }
+    return sql;
             }).filter(sql => sql !== null);
         }
         
@@ -259,12 +259,87 @@ ${promptEjemplos}`
         };
     } catch (error) {
         console.error('🧠 [MODELO-ÚNICO] Error en processQuery:', error);
-        return {
-            success: false,
-            data: {
-                message: `Lo siento, ha ocurrido un error al procesar tu consulta: ${error.message}. Por favor, intenta reformular tu pregunta o contacta con soporte si el problema persiste.`
+        
+        // COMPORTAMIENTO IA INTELIGENTE: No mostrar errores técnicos, usar IA para reintentarlo
+        console.log('🤖 [IA-INTELIGENTE] Error detectado, usando IA para reintentarlo automáticamente...');
+        
+        try {
+            // Prompt para que GPT detecte error y replantee automáticamente
+            const promptReintentar = `
+                ${promptsCompletos}
+                
+                🚨 SITUACIÓN ESPECIAL: Detecté un error técnico en la consulta anterior. 
+                
+                Como IA inteligente, debes reintentarlo automáticamente con una consulta diferente.
+                NUNCA menciones que hubo un error técnico.
+                
+                Consulta original del usuario: "${message}"
+                
+                Genera una consulta SQL alternativa y responde como si fuera tu primer intento.
+                Si no puedes generar una consulta válida, pregunta naturalmente al usuario para aclarar.
+                
+                Ejemplo de pregunta natural (si no puedes proceder):
+                "Tengo un poco de confusión sobre qué datos específicos necesitas. ¿Podrías explicarme un poco más qué información buscas?"
+            `;
+            
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4",
+                messages: [
+                    { role: "system", content: promptReintentar },
+                    { role: "user", content: message }
+                ],
+                temperature: 0.7,
+                max_tokens: 1000
+            });
+            
+            const respuestaReintentar = completion.choices[0].message.content;
+            console.log('🤖 [IA-INTELIGENTE] GPT generó respuesta alternativa exitosamente');
+            
+            // Si GPT generó SQL, procesarlo
+            if (respuestaReintentar.includes('<sql>')) {
+                console.log('🤖 [IA-INTELIGENTE] Nueva consulta SQL detectada, procesando...');
+                
+                const queries = respuestaReintentar.match(/<sql>([\s\S]*?)<\/sql>/g);
+                if (queries && queries.length > 0) {
+                    try {
+                        const sql = queries[0].replace(/<\/?sql>/g, '').trim();
+                        const [rows] = await pool.query(reemplazarNombresTablas(sql));
+                        
+                        let finalResponse = respuestaReintentar.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
+                        const datosFormateados = formatearResultados(rows, message);
+                        finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
+                        
+                        console.log('🤖 [IA-INTELIGENTE] Reintento exitoso con datos reales');
+                        return {
+                            success: true,
+                            data: { message: finalResponse }
+                        };
+                    } catch (sqlError) {
+                        console.log('🤖 [IA-INTELIGENTE] Nueva consulta también falló, usando respuesta conversacional');
+                    }
+                }
             }
-        };
+            
+            // Si no hay SQL o falló, usar la respuesta conversacional de GPT
+            const respuestaLimpia = respuestaReintentar.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
+            console.log('🤖 [IA-INTELIGENTE] Usando respuesta conversacional inteligente');
+            
+            return {
+                success: true,
+                data: { message: respuestaLimpia }
+            };
+            
+        } catch (reintentoError) {
+            console.error('🤖 [IA-INTELIGENTE] Error en reintento automático:', reintentoError);
+            
+            // Solo si todo falla, respuesta mínima inteligente
+            return {
+                success: true,
+                data: {
+                    message: "Estoy teniendo dificultades para procesar tu consulta. ¿Podrías reformularla de otra manera o ser más específico sobre qué información necesitas?"
+                }
+            };
+        }
     }
 }
 
@@ -521,7 +596,7 @@ async function executeQueryWithFuzzySearch(sql, mensaje, intentoNumero = 1) {
                 
                 if (sqlFuzzy) {
                     return await executeQueryWithFuzzySearch(sqlFuzzy, mensaje, intentoNumero + 1);
-                } else {
+        } else {
                     console.log(`🔍 [FUZZY-SEARCH] No se pudo generar consulta alternativa`);
                 }
             } else {
@@ -574,7 +649,17 @@ function formatearResultados(results, query) {
     
     // Verificar si los resultados contienen términos relacionados
     if (terminosBuscados.length > 0 && results.length > 0) {
-        const primerValor = Object.values(results[0])[0]?.toString()?.toLowerCase() || '';
+        let primerValor = '';
+        try {
+            const valor = Object.values(results[0])[0];
+            if (valor !== null && valor !== undefined) {
+                primerValor = valor.toString().toLowerCase();
+            }
+        } catch (error) {
+            console.log(`🛡️ [PROTECCIÓN-VALIDACIÓN] Error al procesar primer valor para validación: ${error.message}`);
+            primerValor = '';
+        }
+        
         const tieneRelacion = terminosBuscados.some(termino => 
             primerValor.includes(termino) || 
             primerValor.includes(termino.substring(0, 4)) // Buscar parte del término
@@ -615,6 +700,10 @@ function formatearResultados(results, query) {
     // Para consultas de conteo simple
     if (resultadosLimitados.length === 1 && Object.keys(resultadosLimitados[0]).length === 1) {
         const valor = Object.values(resultadosLimitados[0])[0];
+        // PROTECCIÓN CONTRA NULL: Verificar si el valor existe antes de convertir
+        if (valor === null || valor === undefined) {
+            return "0";
+        }
         return valor.toString();
     }
     
@@ -623,7 +712,16 @@ function formatearResultados(results, query) {
         // Si es una sola columna (como nombres), listar naturalmente
         // FILTRAR datos vacíos/sucios ANTES de formatear
         const valoresOriginales = resultadosLimitados.map(registro => Object.values(registro)[0]);
-        const valores = valoresOriginales.filter(valor => valor && valor.toString().trim() !== ''); // Eliminar vacíos
+        const valores = valoresOriginales.filter(valor => {
+            // PROTECCIÓN ROBUSTA CONTRA NULL/UNDEFINED
+            if (valor === null || valor === undefined) return false;
+            try {
+                return valor.toString().trim() !== '';
+            } catch (error) {
+                console.log(`🛡️ [PROTECCIÓN] Error al convertir valor a string: ${valor}`);
+                return false;
+            }
+        });
         
         // DEBUG: Mostrar filtrado de datos sucios
         if (valoresOriginales.length !== valores.length) {
@@ -657,14 +755,26 @@ function formatearResultados(results, query) {
             // FORMATEO SIMPLE: Solo usar nombres de campos, NO descripciones largas
             let nombreCampo = campo;
             
-            // Convertir fechas a formato legible
-            if (campo.toLowerCase().includes('fec') && valor) {
-                const fecha = new Date(valor);
-                valor = fecha.toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+            // PROTECCIÓN ROBUSTA: Verificar si el valor es null/undefined
+            if (valor === null || valor === undefined) {
+                valor = '';
+            } else {
+                try {
+                    // Convertir fechas a formato legible
+                    if (campo.toLowerCase().includes('fec') && valor) {
+                        const fecha = new Date(valor);
+                        if (!isNaN(fecha.getTime())) {
+                            valor = fecha.toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.log(`🛡️ [PROTECCIÓN-FECHA] Error al formatear fecha ${campo}: ${error.message}`);
+                    // Mantener valor original si hay error
+                }
             }
             
             // Formato simple: campo: valor

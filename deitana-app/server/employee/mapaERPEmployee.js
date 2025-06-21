@@ -26,9 +26,7 @@ const mapaERP = {
         columnas: {
             id: "Código único que identifica cada artículo",
             AR_DENO: "Denominación o nombre del artículo",
-            AR_REF: "Referencia o código interno del artículo",
-            AR_STOK: "Stock actual del artículo",
-            AR_PVP: "Precio de venta al público",
+            AR_BAR: "Barra de codigo del artículo",      
             AR_IVAP: "Porcentaje de IVA aplicable",
             AR_PRV: "Código del proveedor principal",
             AR_FAM: "Familia o categoría del artículo",
@@ -135,7 +133,7 @@ const mapaERP = {
 
     envases_vta: {
         descripcion:
-          "Cataloga los diferentes tipos de envases y formatos utilizados para la comercialización de semillas y productos, detallando características físicas y comerciales.",
+          "Cataloga los diferentes tipos de envases y formatos utilizados para la comercialización de semillas y productos, detallando características físicas y comerciales, estos envases tambien los ocupamos en siembras, partidas y otras operativas.",
         tabla: "envases_vta",
         columnas: {
           id: "Identificador único del envase de venta (Clave Primaria)",
