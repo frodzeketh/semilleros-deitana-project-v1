@@ -330,15 +330,34 @@ ${promptEjemplos}`
             // Limpiar etiquetas SQL (GPT no debe mostrarlas al usuario)
             finalResponse = finalResponse.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
             
-            // JavaScript hace el reemplazo simple de marcadores con datos reales
-            const datosFormateados = formatearResultados(allResults, message);
-            
-            // DEBUG: Mostrar el reemplazo de marcadores
+            // NUEVO SISTEMA: Reemplazo individual de marcadores
             const marcadoresEncontrados = (finalResponse.match(/\[DATO_BD\]/g) || []).length;
             console.log(`🔄 [REEMPLAZO] Marcadores [DATO_BD] encontrados: ${marcadoresEncontrados}`);
-            console.log(`🔄 [REEMPLAZO] Datos formateados: "${datosFormateados}"`);
+            console.log(`🔄 [REEMPLAZO] Resultados disponibles: ${allResults.length}`);
             
-            finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
+            if (marcadoresEncontrados > 1 && allResults.length >= marcadoresEncontrados) {
+                // CASO: Múltiples marcadores - reemplazar individualmente
+                console.log(`🔄 [REEMPLAZO-INDIVIDUAL] Reemplazando ${marcadoresEncontrados} marcadores individualmente`);
+                
+                let indiceResultado = 0;
+                finalResponse = finalResponse.replace(/\[DATO_BD\]/g, () => {
+                    if (indiceResultado < allResults.length) {
+                        const resultado = allResults[indiceResultado];
+                        indiceResultado++;
+                        
+                        // Obtener el primer valor del registro
+                        const valor = Object.values(resultado)[0];
+                        console.log(`🔄 [REEMPLAZO-${indiceResultado}] "${valor}"`);
+                        return valor || '';
+                    }
+                    return '[DATO_BD]'; // Si no hay más resultados, mantener marcador
+                });
+            } else {
+                // CASO: Un solo marcador o múltiples marcadores con resultado único
+                const datosFormateados = formatearResultados(allResults, message);
+                console.log(`🔄 [REEMPLAZO] Datos formateados: "${datosFormateados}"`);
+                finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
+            }
             
             console.log(`🔄 [REEMPLAZO] Respuesta final: "${finalResponse.substring(0, 200)}${finalResponse.length > 200 ? '...' : ''}"`);
             
