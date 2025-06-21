@@ -60,6 +60,19 @@ async function processQuery({ message, userId, conversationId }) {
         console.log('🗺️ [DEBUG-MAPA]', mapaERPInfo.substring(0, 500) + '...');
         console.log('🗺️ [DEBUG-MAPA] Longitud total:', mapaERPInfo.length, 'caracteres');
         
+        // DEBUG ESPECÍFICO: Mostrar columnas de artículos y proveedores si están incluidas
+        if (mapaERPInfo.includes('articulos')) {
+            console.log('🔍 [DEBUG-COLUMNAS] Tabla artículos incluida en contexto');
+            if (mapaERP.articulos?.columnas) {
+                const columnasArticulos = Object.keys(mapaERP.articulos.columnas);
+                console.log('🔍 [DEBUG-COLUMNAS] Columnas de artículos:', columnasArticulos.join(', '));
+                const relacionProveedor = columnasArticulos.find(col => col.includes('PRV'));
+                if (relacionProveedor) {
+                    console.log(`🔗 [DEBUG-RELACION] Columna para relación con proveedores: ${relacionProveedor}`);
+                }
+            }
+        }
+        
         // DEBUG: Log para confirmar arquitectura modular
         console.log('🏗️ [ARQUITECTURA] Módulos del prompt cargados:');
         console.log('🏗️ [ARQUITECTURA] Base:', promptBase.length, 'chars');
@@ -434,12 +447,20 @@ function obtenerContenidoMapaERP(consulta, historialConversacion = []) {
             return `Tablas disponibles: ${Object.keys(mapaERP).join(', ')}`;
         }
 
-        // Generar información para GPT
+        // Generar información para GPT con detalles de columnas
         let respuesta = '';
         tablasRelevantes.forEach(([tabla, info]) => {
             respuesta += `\nTABLA ${tabla}:\n`;
             respuesta += `Descripción: ${info.descripcion}\n`;
             respuesta += `Columnas principales: ${Object.keys(info.columnas).join(', ')}\n`;
+            
+            // Agregar información de columnas de relación para JOINs
+            const columnasRelacion = Object.keys(info.columnas).filter(col => 
+                col.includes('_PRV') || col.includes('_CLI') || col.includes('_ID') || col === 'id'
+            );
+            if (columnasRelacion.length > 0) {
+                respuesta += `Columnas de relación para JOINs: ${columnasRelacion.join(', ')}\n`;
+            }
         });
 
         return respuesta;
@@ -480,6 +501,14 @@ async function executeQueryWithFuzzySearch(sql, mensaje, intentoNumero = 1) {
             const palabrasBusqueda = extraerPalabrasClave(mensaje);
             console.log(`🔍 [FUZZY-SEARCH] Palabras clave extraídas:`, palabrasBusqueda);
             
+            // INTELIGENCIA MEJORADA: Solo usar fuzzy search si el error NO es de columnas incorrectas
+            const errorSQL = sql.match(/ERROR|Unknown column|doesn't exist/i);
+            if (errorSQL) {
+                console.log(`🚫 [FUZZY-SEARCH] Error de SQL detectado, no usar fuzzy search genérico`);
+                console.log(`⚠️ [FUZZY-SEARCH] GPT debe corregir la consulta SQL original`);
+                return []; // Devolver vacío para que GPT se replantee
+            }
+            
             // Solo usar fuzzy search si hay palabras clave relevantes para productos
             if (palabrasBusqueda.length > 0) {
                 console.log(`🔍 [FUZZY-SEARCH] Evaluando ${palabrasBusqueda.length} palabras clave para fuzzy search`);
@@ -502,7 +531,16 @@ async function executeQueryWithFuzzySearch(sql, mensaje, intentoNumero = 1) {
         
         return rows;
     } catch (error) {
-        console.error(`🔍 [FUZZY-SEARCH] Error en intento ${intentoNumero}:`, error);
+        console.error(`🔍 [FUZZY-SEARCH] Error en intento ${intentoNumero}:`, error.message);
+        
+        // DIAGNÓSTICO INTELIGENTE DE ERRORES
+        if (error.message.includes('Unknown column')) {
+            const columnaIncorrecta = error.message.match(/'([^']+)'/)?.[1];
+            console.log(`🚨 [ERROR-SQL] Columna incorrecta detectada: ${columnaIncorrecta}`);
+            console.log(`🚨 [ERROR-SQL] GPT debe verificar nombres en mapaERP y corregir`);
+            console.log(`⚠️ [ERROR-SQL] NO usar fuzzy search genérico para errores de columnas`);
+            return []; // Devolver vacío para forzar a GPT a replantear
+        }
         
         if (intentoNumero < 3) {
             console.log(`🔍 [FUZZY-SEARCH] Reintentando con búsqueda más flexible...`);
@@ -526,6 +564,41 @@ async function executeQueryWithFuzzySearch(sql, mensaje, intentoNumero = 1) {
 function formatearResultados(results, query) {
     if (!results || results.length === 0) {
         return "no se encontraron resultados para esta consulta";
+    }
+    
+    // VALIDACIÓN INTELIGENTE: Detectar si los resultados son relevantes para la consulta
+    const palabrasConsulta = query.toLowerCase().split(/\s+/);
+    const terminosBuscados = palabrasConsulta.filter(p => p.length > 3);
+    
+    console.log(`🔍 [VALIDACIÓN-RESULTADOS] Términos buscados: ${terminosBuscados.join(', ')}`);
+    
+    // Verificar si los resultados contienen términos relacionados
+    if (terminosBuscados.length > 0 && results.length > 0) {
+        const primerValor = Object.values(results[0])[0]?.toString()?.toLowerCase() || '';
+        const tieneRelacion = terminosBuscados.some(termino => 
+            primerValor.includes(termino) || 
+            primerValor.includes(termino.substring(0, 4)) // Buscar parte del término
+        );
+        
+        if (!tieneRelacion) {
+            console.log(`⚠️ [VALIDACIÓN-RESULTADOS] POSIBLE IRRELEVANCIA: buscó "${terminosBuscados.join(', ')}" pero obtuvo "${primerValor}"`);
+            console.log(`⚠️ [VALIDACIÓN-RESULTADOS] GPT debería replantear la consulta`);
+        } else {
+            console.log(`✅ [VALIDACIÓN-RESULTADOS] Resultados parecen relevantes para la consulta`);
+        }
+    }
+    
+    // VALIDACIÓN ESPECÍFICA: Detectar campos vacíos en consultas de proveedores
+    if (query.toLowerCase().includes('proveedor') && results.length > 0) {
+        const camposVacios = results.filter(registro => {
+            const valores = Object.values(registro);
+            return valores.some(valor => valor === '' || valor === null);
+        });
+        
+        if (camposVacios.length > 0) {
+            console.log(`⚠️ [VALIDACIÓN-PROVEEDORES] ${camposVacios.length}/${results.length} registros tienen campos vacíos`);
+            console.log(`⚠️ [VALIDACIÓN-PROVEEDORES] GPT debería filtrar con: WHERE campo IS NOT NULL AND campo != ''`);
+        }
     }
 
     const pideCompleto = /completa|detallad[ao]s?|explicaci[óo]n|todo(s)?|todas/i.test(query);

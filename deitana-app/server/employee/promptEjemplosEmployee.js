@@ -152,6 +152,33 @@ No encontré ningún cliente con ese nombre en nuestros registros. ¿Podrías pr
 Usuario: "info"
 No estoy seguro sobre qué información específica necesitas. ¿Te refieres a datos de clientes, productos, tratamientos, o algo particular sobre Semilleros Deitana? Así podré ayudarte de manera más precisa.
 
-**🎯 ARQUITECTURA CONFIRMADA:** UN modelo GPT + UN [DATO_BD] + JavaScript formatea todo.`;
+**🚨 ERROR CRÍTICO - NO VALIDAR RESULTADOS:**
+Usuario: "dime 5 tipos de lechuga con sus proveedores"
+❌ GPT MAL genera: <sql>SELECT a.AR_DENO, p.PR_DENO FROM articulos a JOIN proveedores p ON a.AR_PROV = p.id WHERE a.AR_DENO LIKE '%lechuga%'</sql>
+❌ Error SQL: columna AR_PROV no existe (es AR_PRV)
+❌ Fuzzy search devuelve: "PREVICUR 1 LT", "SERENADE MAX", etc.
+❌ GPT continúa: "Los tipos de lechuga son PREVICUR 1 LT..." 
+→ ¡No se dio cuenta que PREVICUR no es lechuga!
+
+**✅ CORRECTO - VALIDACIÓN INTELIGENTE:**
+Usuario: "dime 5 tipos de lechuga con sus proveedores"
+✅ GPT genera: <sql>SELECT AR_DENO FROM articulos WHERE AR_DENO LIKE '%lechuga%' LIMIT 5</sql>
+✅ Si no hay resultados específicos de lechuga, GPT reconoce el problema
+✅ GPT replantea: "No encontré artículos específicos de lechuga en nuestra base. Permíteme buscar en variedades de cultivos"
+✅ Nueva consulta: <sql>SELECT VAR_DENO FROM variedades WHERE VAR_DENO LIKE '%lechuga%' LIMIT 5</sql>
+
+**🚨 ERROR REAL - CAMPOS AR_PRV VACÍOS:**
+Usuario: "recomiendame 5 tipos de lechuga que tengamos y sus proveedores"
+❌ GPT MAL genera: <sql>SELECT AR_DENO, AR_PRV FROM articulos WHERE AR_DENO LIKE '%lechuga%' AND AR_PRV IS NOT NULL LIMIT 5</sql>
+❌ Resultados: LECHUGA YUMA (AR_PRV: ''), LECHUGA WITEN (AR_PRV: ''), LECHUGA MIKONOS (AR_PRV: '00005')
+❌ GPT NO usa [DATO_BD] e inventa: "lechuga romana, iceberg, mantequilla"
+→ ¡Ignoró datos reales y creó información falsa!
+
+**✅ CORRECTO - FILTRAR CAMPOS VACÍOS + USAR [DATO_BD]:**
+Usuario: "recomiendame 5 tipos de lechuga que tengamos y sus proveedores"
+✅ GPT genera: <sql>SELECT a.AR_DENO, p.PR_DENO FROM articulos a JOIN proveedores p ON a.AR_PRV = p.id WHERE a.AR_DENO LIKE '%lechuga%' AND a.AR_PRV IS NOT NULL AND a.AR_PRV != '' LIMIT 5</sql>
+✅ GPT usa [DATO_BD]: "Los tipos de lechuga con proveedores asignados son [DATO_BD]. Algunos artículos no tienen proveedor asignado."
+
+**🎯 ARQUITECTURA CONFIRMADA:** UN modelo GPT + VALIDACIÓN DE RESULTADOS + UN [DATO_BD] + JavaScript formatea todo.`;
 
 module.exports = { promptEjemplos }; 
