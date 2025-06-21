@@ -2,6 +2,8 @@
 // IMPORTACIONES Y CONFIGURACIÓN INICIAL
 // =====================================
 
+const fs = require('fs');
+const path = require('path');
 const { OpenAI } = require('openai');
 const pool = require('../db');
 const chatManager = require('../utils/chatManager');
@@ -13,14 +15,120 @@ const { promptComportamiento } = require('./promptComportamientoEmployee');
 const { promptEjemplos } = require('./promptEjemplosEmployee');
 const mapaERP = require('./mapaERPEmployee');
 
-// =====================================
-// CONFIGURACIÓN DE OPENAI Y VARIABLES GLOBALES
-// =====================================
-
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
+
+// =====================================
+// SISTEMA RAG (RETRIEVAL-AUGMENTED GENERATION)
+// =====================================
+
+/**
+ * Función RAG que lee la base de conocimiento y extrae información relevante
+ * basada en la consulta del usuario
+ */
+function obtenerConocimientoRelevante(consulta) {
+    try {
+        console.log('📚 [RAG] Iniciando búsqueda en base de conocimiento...');
+        
+        // Leer el archivo de base de conocimiento
+        const rutaBaseConocimiento = path.join(__dirname, 'baseConocimiento.txt');
+        const contenidoCompleto = fs.readFileSync(rutaBaseConocimiento, 'utf8');
+        
+        // Extraer palabras clave de la consulta del usuario
+        const palabrasClave = consulta.toLowerCase()
+            .replace(/[¿?¡!.,;:()\[\]]/g, ' ')
+            .split(/\s+/)
+            .filter(palabra => palabra.length > 2)
+            .filter(palabra => !['que', 'cual', 'como', 'donde', 'cuando', 'quien', 'cuantos', 'cuantas'].includes(palabra));
+        
+        console.log('🔍 [RAG] Palabras clave extraídas:', palabrasClave);
+        
+        // Dividir el contenido en secciones
+        const secciones = contenidoCompleto.split(/SECCIÓN:/);
+        const informacionEmpresa = secciones[0]; // La parte inicial antes de las secciones
+        
+        let conocimientoRelevante = '';
+        let seccionesEncontradas = [];
+        
+        // Siempre incluir información básica de la empresa
+        if (palabrasClave.some(palabra => ['empresa', 'deitana', 'semilleros', 'historia', 'fundada'].includes(palabra))) {
+            conocimientoRelevante += '\n=== INFORMACIÓN DE LA EMPRESA ===\n';
+            conocimientoRelevante += informacionEmpresa.substring(0, 1000) + '...\n';
+        }
+        
+        // Buscar secciones relevantes
+        secciones.slice(1).forEach((seccion, index) => {
+            const tituloSeccion = seccion.split('\n')[0].trim();
+            const contenidoSeccion = seccion.substring(0, 1500); // Limitar tamaño por sección
+            
+            // Verificar si alguna palabra clave coincide con el contenido de la sección
+            const coincide = palabrasClave.some(palabra => {
+                const seccionLower = contenidoSeccion.toLowerCase();
+                return seccionLower.includes(palabra) || 
+                       tituloSeccion.toLowerCase().includes(palabra);
+            });
+            
+            if (coincide) {
+                console.log(`✅ [RAG] Sección relevante encontrada: ${tituloSeccion}`);
+                conocimientoRelevante += `\n=== SECCIÓN: ${tituloSeccion} ===\n`;
+                conocimientoRelevante += contenidoSeccion + '\n';
+                seccionesEncontradas.push(tituloSeccion);
+            }
+        });
+        
+        // Si no se encontraron secciones específicas, proporcionar contexto general
+        if (seccionesEncontradas.length === 0) {
+            console.log('⚠️ [RAG] No se encontraron secciones específicas, proporcionando contexto general');
+            conocimientoRelevante += '\n=== CONTEXTO GENERAL DISPONIBLE ===\n';
+            conocimientoRelevante += 'Tengo información sobre: clientes, artículos, proveedores, partidas, almacenes, sustratos, invernaderos, productos fitosanitarios, y más secciones del sistema ERP.\n';
+        }
+        
+        console.log(`📚 [RAG] Conocimiento extraído: ${conocimientoRelevante.length} caracteres`);
+        console.log(`📚 [RAG] Secciones incluidas: ${seccionesEncontradas.join(', ')}`);
+        
+        return conocimientoRelevante;
+        
+    } catch (error) {
+        console.error('❌ [RAG] Error al procesar base de conocimiento:', error);
+        return ''; // Retornar vacío en caso de error, el sistema continuará sin RAG
+    }
+}
+
+/**
+ * Función para combinar RAG con el mapaERP existente
+ */
+function obtenerContextoCompleto(consulta, historialConversacion = []) {
+    console.log('🧠 [CONTEXTO] Combinando RAG + mapaERP para contexto completo...');
+    
+    // Obtener conocimiento de RAG
+    const conocimientoRAG = obtenerConocimientoRelevante(consulta);
+    
+    // Obtener contexto del mapaERP (función existente)
+    const contextoERP = obtenerContenidoMapaERP(consulta, historialConversacion);
+    
+    // Combinar ambos contextos
+    let contextoCompleto = '';
+    
+    if (conocimientoRAG) {
+        contextoCompleto += '=== BASE DE CONOCIMIENTO SEMILLEROS DEITANA ===\n';
+        contextoCompleto += conocimientoRAG;
+        contextoCompleto += '\n';
+    }
+    
+    if (contextoERP) {
+        contextoCompleto += '=== ESTRUCTURA TÉCNICA DE TABLAS ERP ===\n';
+        contextoCompleto += contextoERP;
+    }
+    
+    console.log(`🧠 [CONTEXTO] Contexto total generado: ${contextoCompleto.length} caracteres`);
+    return contextoCompleto;
+}
+
+// =====================================
+// CONFIGURACIÓN DE VARIABLES GLOBALES
+// =====================================
 
 // Historial global de conversación (en memoria, para demo)
 const conversationHistory = [];
@@ -52,16 +160,16 @@ async function processQuery({ message, userId, conversationId }) {
                 content: msg.content
             }));
         
-        // Obtener información relevante del mapaERP para la consulta
-        const mapaERPInfo = obtenerContenidoMapaERP(message, conversationHistory);
+        // Obtener contexto completo: RAG + mapaERP para la consulta
+        const contextoCompleto = obtenerContextoCompleto(message, conversationHistory);
         
         // DEBUG: Log para ver exactamente qué información recibe GPT
-        console.log('🗺️ [DEBUG-MAPA] Información enviada a GPT:');
-        console.log('🗺️ [DEBUG-MAPA]', mapaERPInfo.substring(0, 500) + '...');
-        console.log('🗺️ [DEBUG-MAPA] Longitud total:', mapaERPInfo.length, 'caracteres');
+        console.log('📚 [DEBUG-RAG+ERP] Contexto completo enviado a GPT:');
+        console.log('📚 [DEBUG-RAG+ERP]', contextoCompleto.substring(0, 500) + '...');
+        console.log('📚 [DEBUG-RAG+ERP] Longitud total:', contextoCompleto.length, 'caracteres');
         
         // DEBUG ESPECÍFICO: Mostrar columnas de artículos y proveedores si están incluidas
-        if (mapaERPInfo.includes('articulos')) {
+        if (contextoCompleto.includes('articulos')) {
             console.log('🔍 [DEBUG-COLUMNAS] Tabla artículos incluida en contexto');
             if (mapaERP.articulos?.columnas) {
                 const columnasArticulos = Object.keys(mapaERP.articulos.columnas);
@@ -89,7 +197,7 @@ async function processQuery({ message, userId, conversationId }) {
                 role: "system",
                 content: `${promptBase}
 
-${mapaERPInfo}
+${contextoCompleto}
 
 ${promptTools}
 
@@ -266,7 +374,15 @@ ${promptEjemplos}`
         try {
             // Prompt para que GPT detecte error y replantee automáticamente
             const promptReintentar = `
-                ${promptsCompletos}
+                ${promptBase}
+
+                ${contextoCompleto}
+
+                ${promptTools}
+
+                ${promptComportamiento}
+
+                ${promptEjemplos}
                 
                 🚨 SITUACIÓN ESPECIAL: Detecté un error técnico en la consulta anterior. 
                 
