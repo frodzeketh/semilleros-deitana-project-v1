@@ -97,6 +97,15 @@ ${promptEjemplos}`
         console.log('🧠 [ETAPA-1] Consulta:', message);
         console.log('🧠 [ETAPA-1] Contexto disponible:', contextMessages.length, 'mensajes previos');
         
+        // DEBUG: Mostrar contexto conversacional que recibe GPT
+        if (contextMessages.length > 0) {
+            console.log('💬 [CONTEXTO] ===== HISTORIAL ENVIADO A GPT =====');
+            contextMessages.forEach((msg, index) => {
+                console.log(`💬 [CONTEXTO] ${index + 1}. ${msg.role}: "${msg.content}"`);
+            });
+            console.log('💬 [CONTEXTO] ===============================');
+        }
+        
         const completion = await openai.chat.completions.create({
             model: "gpt-4-turbo-preview",
             messages: messages,
@@ -572,10 +581,10 @@ function formatearResultados(results, query) {
         const campos = Object.entries(registro);
         const partes = [];
         campos.forEach(([campo, valor]) => {
-            let descripcion = campo;
-            if (tablaDetectada) {
-                descripcion = obtenerDescripcionColumna(tablaDetectada, campo) || campo;
-            }
+            // FORMATEO SIMPLE: Solo usar nombres de campos, NO descripciones largas
+            let nombreCampo = campo;
+            
+            // Convertir fechas a formato legible
             if (campo.toLowerCase().includes('fec') && valor) {
                 const fecha = new Date(valor);
                 valor = fecha.toLocaleDateString('es-ES', {
@@ -584,7 +593,9 @@ function formatearResultados(results, query) {
                     day: 'numeric'
                 });
             }
-            partes.push(`${descripcion}: ${valor}`);
+            
+            // Formato simple: campo: valor
+            partes.push(`${nombreCampo}: ${valor}`);
         });
         resultado += partes.join(' - ');
     });
