@@ -7,7 +7,10 @@ const pool = require('../db');
 const chatManager = require('../utils/chatManager');
 const admin = require('../firebase-admin');
 require('dotenv').config();
-const promptBase = require('./promptBaseEmployee').promptBase;
+const { promptBase } = require('./promptBaseEmployee');
+const { promptTools } = require('./promptToolsEmployee');
+const { promptComportamiento } = require('./promptComportamientoEmployee');
+const { promptEjemplos } = require('./promptEjemplosEmployee');
 const mapaERP = require('./mapaERPEmployee');
 
 // =====================================
@@ -57,6 +60,13 @@ async function processQuery({ message, userId, conversationId }) {
         console.log('🗺️ [DEBUG-MAPA]', mapaERPInfo.substring(0, 500) + '...');
         console.log('🗺️ [DEBUG-MAPA] Longitud total:', mapaERPInfo.length, 'caracteres');
         
+        // DEBUG: Log para confirmar arquitectura modular
+        console.log('🏗️ [ARQUITECTURA] Módulos del prompt cargados:');
+        console.log('🏗️ [ARQUITECTURA] Base:', promptBase.length, 'chars');
+        console.log('🏗️ [ARQUITECTURA] Tools:', promptTools.length, 'chars');
+        console.log('🏗️ [ARQUITECTURA] Comportamiento:', promptComportamiento.length, 'chars');
+        console.log('🏗️ [ARQUITECTURA] Ejemplos:', promptEjemplos.length, 'chars');
+        
         // =====================================
         // CONSTRUCCIÓN DE MENSAJES PARA GPT
         // =====================================
@@ -66,7 +76,13 @@ async function processQuery({ message, userId, conversationId }) {
                 role: "system",
                 content: `${promptBase}
 
-${mapaERPInfo}`
+${mapaERPInfo}
+
+${promptTools}
+
+${promptComportamiento}
+
+${promptEjemplos}`
             },
             ...contextMessages,
             {
@@ -175,7 +191,15 @@ ${mapaERPInfo}`
             
             // JavaScript hace el reemplazo simple de marcadores con datos reales
             const datosFormateados = formatearResultados(allResults, message);
+            
+            // DEBUG: Mostrar el reemplazo de marcadores
+            const marcadoresEncontrados = (finalResponse.match(/\[DATO_BD\]/g) || []).length;
+            console.log(`🔄 [REEMPLAZO] Marcadores [DATO_BD] encontrados: ${marcadoresEncontrados}`);
+            console.log(`🔄 [REEMPLAZO] Datos formateados: "${datosFormateados}"`);
+            
             finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
+            
+            console.log(`🔄 [REEMPLAZO] Respuesta final: "${finalResponse.substring(0, 200)}${finalResponse.length > 200 ? '...' : ''}"`);
             
             // ETAPA 3: GPT FORMATEA COMO CHATGPT NATURAL
             console.log('🧠 [ETAPA-3] ===== GPT FORMATEA RESPUESTA NATURAL =====');
@@ -515,7 +539,23 @@ function formatearResultados(results, query) {
     // Para múltiples registros - formato natural
     if (resultadosLimitados.length > 1 && Object.keys(resultadosLimitados[0]).length === 1) {
         // Si es una sola columna (como nombres), listar naturalmente
-        const valores = resultadosLimitados.map(registro => Object.values(registro)[0]);
+        // FILTRAR datos vacíos/sucios ANTES de formatear
+        const valoresOriginales = resultadosLimitados.map(registro => Object.values(registro)[0]);
+        const valores = valoresOriginales.filter(valor => valor && valor.toString().trim() !== ''); // Eliminar vacíos
+        
+        // DEBUG: Mostrar filtrado de datos sucios
+        if (valoresOriginales.length !== valores.length) {
+            console.log(`🧹 [DATOS-SUCIOS] Filtrados ${valoresOriginales.length - valores.length} registros vacíos/inválidos`);
+            console.log(`🧹 [DATOS-SUCIOS] Originales: [${valoresOriginales.map(v => `"${v}"`).join(', ')}]`);
+            console.log(`🧹 [DATOS-SUCIOS] Filtrados: [${valores.map(v => `"${v}"`).join(', ')}]`);
+        }
+        
+        if (valores.length === 0) {
+            return "no se encontraron datos válidos";
+        }
+        if (valores.length === 1) {
+            return valores[0];
+        }
         if (valores.length === 2) {
             return `${valores[0]} y ${valores[1]}`;
         } else if (valores.length > 2) {
