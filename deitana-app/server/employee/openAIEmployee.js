@@ -168,17 +168,28 @@ async function processQuery({ message, userId, conversationId }) {
         console.log('📚 [DEBUG-RAG+ERP]', contextoCompleto.substring(0, 500) + '...');
         console.log('📚 [DEBUG-RAG+ERP] Longitud total:', contextoCompleto.length, 'caracteres');
         
-        // DEBUG ESPECÍFICO: Mostrar columnas de artículos y proveedores si están incluidas
-        if (contextoCompleto.includes('articulos')) {
-            console.log('🔍 [DEBUG-COLUMNAS] Tabla artículos incluida en contexto');
-            if (mapaERP.articulos?.columnas) {
-                const columnasArticulos = Object.keys(mapaERP.articulos.columnas);
-                console.log('🔍 [DEBUG-COLUMNAS] Columnas de artículos:', columnasArticulos.join(', '));
-                const relacionProveedor = columnasArticulos.find(col => col.includes('PRV'));
-                if (relacionProveedor) {
-                    console.log(`🔗 [DEBUG-RELACION] Columna para relación con proveedores: ${relacionProveedor}`);
+        // DEBUG GENÉRICO: Mostrar columnas de todas las tablas incluidas en contexto
+        const tablasEnContexto = Object.keys(mapaERP).filter(tabla => 
+            contextoCompleto.toLowerCase().includes(tabla.toLowerCase())
+        );
+        
+        if (tablasEnContexto.length > 0) {
+            console.log('🔍 [DEBUG-TABLAS] Tablas incluidas en contexto:', tablasEnContexto.join(', '));
+            
+            tablasEnContexto.forEach(tabla => {
+                if (mapaERP[tabla]?.columnas) {
+                    const columnas = Object.keys(mapaERP[tabla].columnas);
+                    console.log(`🔍 [DEBUG-COLUMNAS] ${tabla}:`, columnas.join(', '));
+                    
+                    // Buscar columnas de relación (genérico)
+                    const columnasRelacion = columnas.filter(col => 
+                        col.includes('_PRV') || col.includes('_CLI') || col.includes('_ID') || col === 'id'
+                    );
+                    if (columnasRelacion.length > 0) {
+                        console.log(`🔗 [DEBUG-RELACION] ${tabla} - Columnas de relación:`, columnasRelacion.join(', '));
+                    }
                 }
-            }
+            });
         }
         
         // DEBUG: Log para confirmar arquitectura modular
