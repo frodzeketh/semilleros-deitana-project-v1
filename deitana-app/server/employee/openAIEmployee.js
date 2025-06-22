@@ -401,45 +401,71 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
             if (todosLosMarcadores.length > 0 && allResults.length > 0) {
                 console.log(`🔄 [REEMPLAZO-INTELIGENTE] Iniciando reemplazo inteligente...`);
                 
-                // Crear array con todos los valores de todos los registros
-                let todosLosValores = [];
-                allResults.forEach(registro => {
-                    Object.values(registro).forEach(valor => {
-                        if (valor !== null && valor !== undefined && valor !== '') {
-                            // Formatear fechas
-                            if (typeof valor === 'string' || valor instanceof Date) {
-                                try {
-                                    const fecha = new Date(valor);
-                                    if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
-                                        valor = fecha.toLocaleDateString('es-ES', {
-                                            year: 'numeric',
-                                            month: 'long', 
-                                            day: 'numeric'
-                                        });
-                                    }
-                                } catch (error) {
-                                    // Mantener valor original
+                // NUEVO SISTEMA: Reemplazo por correspondencia de nombres de campos
+                const primerRegistro = allResults[0];
+                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Datos disponibles:`, Object.keys(primerRegistro));
+                
+                // SISTEMA HÍBRIDO: Específico + Fallback inteligente para [DATO_BD]
+                let contadorDatoBD = 0;
+                const valoresOrdenados = Object.entries(primerRegistro).filter(([key, value]) => 
+                    value !== null && value !== undefined && value !== ''
+                );
+                
+                finalResponse = finalResponse.replace(/\[([^\]]+)\]/g, (marcadorCompleto, nombreCampo) => {
+                    console.log(`🔄 [REEMPLAZO-INTELIGENTE] Procesando marcador: ${marcadorCompleto}, campo: ${nombreCampo}`);
+                    
+                    // CASO 1: Marcador específico (ej: [PP_FEC], [id], [PR_DENO])
+                    if (nombreCampo !== 'DATO_BD' && primerRegistro.hasOwnProperty(nombreCampo)) {
+                        let valor = primerRegistro[nombreCampo];
+                        
+                        // Formatear fechas
+                        if (valor && (typeof valor === 'string' || valor instanceof Date)) {
+                            try {
+                                const fecha = new Date(valor);
+                                if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
+                                    valor = fecha.toLocaleDateString('es-ES', {
+                                        year: 'numeric',
+                                        month: 'long', 
+                                        day: 'numeric'
+                                    });
                                 }
+                            } catch (error) {
+                                // Mantener valor original
                             }
-                            todosLosValores.push(valor);
                         }
-                    });
-                });
-                
-                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Valores extraídos: ${todosLosValores.length}`);
-                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Primeros valores: ${todosLosValores.slice(0, 5).join(', ')}...`);
-                
-                // Reemplazar CUALQUIER marcador con los datos disponibles
-                let indiceValor = 0;
-                finalResponse = finalResponse.replace(/\[[^\]]+\]/g, (marcador) => {
-                    if (indiceValor < todosLosValores.length) {
-                        const valor = todosLosValores[indiceValor];
-                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcador} → "${valor}"`);
-                        indiceValor++;
+                        
+                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (campo específico)`);
                         return valor;
                     }
-                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcador}`);
-                    return marcador; // Mantener marcador si no hay más datos
+                    
+                    // CASO 2: Marcador genérico [DATO_BD] - usar orden inteligente
+                    if (nombreCampo === 'DATO_BD' && contadorDatoBD < valoresOrdenados.length) {
+                        const [clave, valor] = valoresOrdenados[contadorDatoBD];
+                        contadorDatoBD++;
+                        
+                        // Formatear fechas
+                        let valorFormateado = valor;
+                        if (valor && (typeof valor === 'string' || valor instanceof Date)) {
+                            try {
+                                const fecha = new Date(valor);
+                                if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
+                                    valorFormateado = fecha.toLocaleDateString('es-ES', {
+                                        year: 'numeric',
+                                        month: 'long', 
+                                        day: 'numeric'
+                                    });
+                                }
+                            } catch (error) {
+                                // Mantener valor original
+                            }
+                        }
+                        
+                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valorFormateado}" (DATO_BD ordinal: ${clave})`);
+                        return valorFormateado;
+                    }
+                    
+                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcadorCompleto}`);
+                    return marcadorCompleto; // Mantener marcador si no hay datos
                 });
             }
             

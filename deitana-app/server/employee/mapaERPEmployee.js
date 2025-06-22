@@ -297,11 +297,8 @@ const mapaERP = {
         PAR_DIASG: "Días de germinación.",
         PAR_PPLA: "Planta (¿denominación?).",
         PAR_PALV: "Alveolos (¿cantidad?).",
-        PAR_TOT: "Total (¿importe?).",
         PAR_DENO: "Denominación u observación de la partida (Ej: 'PARTIDA Nº ...').",
-        PAR_FECES: "Fechas (Solicitada 'E'/Entrega 'E'/Siembra 'S').",
-        PAR_PMER: "Nombre (¿?).",
-        PAR_NMCL: "Nombre de la semilla.",
+        PAR_NMCL: "Nombre De cliente Extra",
       },
       relaciones: {
         encargos: {
