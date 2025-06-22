@@ -401,22 +401,23 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
             if (todosLosMarcadores.length > 0 && allResults.length > 0) {
                 console.log(`🔄 [REEMPLAZO-INTELIGENTE] Iniciando reemplazo inteligente...`);
                 
-                // NUEVO SISTEMA: Reemplazo por correspondencia de nombres de campos
-                const primerRegistro = allResults[0];
-                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Datos disponibles:`, Object.keys(primerRegistro));
+                // SISTEMA SIMPLE Y ROBUSTO: Trabajar con TODOS los registros
+                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Registros disponibles: ${allResults.length}`);
                 
-                // SISTEMA HÍBRIDO: Específico + Fallback inteligente para [DATO_BD]
-                let contadorDatoBD = 0;
-                const valoresOrdenados = Object.entries(primerRegistro).filter(([key, value]) => 
-                    value !== null && value !== undefined && value !== ''
-                );
+                // MAPEO DIRECTO: 1 marcador = 1 registro
+                let contadorMarcadores = 0;
                 
                 finalResponse = finalResponse.replace(/\[([^\]]+)\]/g, (marcadorCompleto, nombreCampo) => {
-                    console.log(`🔄 [REEMPLAZO-INTELIGENTE] Procesando marcador: ${marcadorCompleto}, campo: ${nombreCampo}`);
+                    // SIMPLE: Cada marcador usa el registro correspondiente por orden
+                    const indiceRegistro = contadorMarcadores < allResults.length ? contadorMarcadores : 0;
+                    const registroActual = allResults[indiceRegistro];
                     
-                    // CASO 1: Marcador específico (ej: [PP_FEC], [id], [PR_DENO])
-                    if (nombreCampo !== 'DATO_BD' && primerRegistro.hasOwnProperty(nombreCampo)) {
-                        let valor = primerRegistro[nombreCampo];
+                    console.log(`🔄 [REEMPLAZO-INTELIGENTE] Marcador ${contadorMarcadores + 1}: ${marcadorCompleto} → Registro ${indiceRegistro + 1}/${allResults.length}`);
+                    contadorMarcadores++;
+                    
+                    // CASO 1: Marcador específico (ej: [id], [BN_DENO], [BN_ALV])
+                    if (nombreCampo !== 'DATO_BD' && registroActual.hasOwnProperty(nombreCampo)) {
+                        let valor = registroActual[nombreCampo];
                         
                         // Formatear fechas
                         if (valor && (typeof valor === 'string' || valor instanceof Date)) {
@@ -434,37 +435,24 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
                             }
                         }
                         
-                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (campo específico)`);
+                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (del registro ${indiceRegistro + 1})`);
                         return valor;
                     }
                     
-                    // CASO 2: Marcador genérico [DATO_BD] - usar orden inteligente
-                    if (nombreCampo === 'DATO_BD' && contadorDatoBD < valoresOrdenados.length) {
-                        const [clave, valor] = valoresOrdenados[contadorDatoBD];
-                        contadorDatoBD++;
+                    // CASO 2: Marcador genérico [DATO_BD] - primer valor del registro actual
+                    if (nombreCampo === 'DATO_BD') {
+                        const valoresDisponibles = Object.entries(registroActual).filter(([key, value]) => 
+                            value !== null && value !== undefined && value !== ''
+                        );
                         
-                        // Formatear fechas
-                        let valorFormateado = valor;
-                        if (valor && (typeof valor === 'string' || valor instanceof Date)) {
-                            try {
-                                const fecha = new Date(valor);
-                                if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
-                                    valorFormateado = fecha.toLocaleDateString('es-ES', {
-                                        year: 'numeric',
-                                        month: 'long', 
-                                        day: 'numeric'
-                                    });
-                                }
-                            } catch (error) {
-                                // Mantener valor original
-                            }
+                        if (valoresDisponibles.length > 0) {
+                            const [clave, valor] = valoresDisponibles[0];
+                            console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (DATO_BD del registro ${indiceRegistro + 1}: ${clave})`);
+                            return valor;
                         }
-                        
-                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valorFormateado}" (DATO_BD ordinal: ${clave})`);
-                        return valorFormateado;
                     }
                     
-                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcadorCompleto}`);
+                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcadorCompleto} en registro ${indiceRegistro + 1}`);
                     return marcadorCompleto; // Mantener marcador si no hay datos
                 });
             }
