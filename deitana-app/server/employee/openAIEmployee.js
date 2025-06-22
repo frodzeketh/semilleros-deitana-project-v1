@@ -377,6 +377,23 @@ ${promptComportamiento}`
             if (allResults.length === 0) {
                 console.log(`⚠️ [REEMPLAZO-INTELIGENTE] ¡NO HAY DATOS PARA REEMPLAZAR!`);
                 console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Todas las consultas SQL fallaron o no devolvieron datos`);
+                
+                // SOLUCIÓN: Si hay marcadores pero no datos, informar al usuario del problema
+                if (todosLosMarcadores.length > 0) {
+                    console.log(`🚨 [ERROR-CRÍTICO] GPT generó marcadores pero no hay datos para reemplazar`);
+                    console.log(`🚨 [ERROR-CRÍTICO] Esto indica que GPT usó nombres incorrectos de tablas/columnas`);
+                    
+                    finalResponse = `❌ **Error en la consulta:** La consulta generada usó nombres de tablas o columnas que no existen en el sistema.
+
+**Problema detectado:**
+- Se intentó buscar información pero la consulta falló
+- Es posible que se hayan usado nombres incorrectos de tablas o columnas
+
+**Solución:**
+Por favor, reformula tu pregunta o especifica mejor qué información necesitas. El sistema utilizará solo las tablas y columnas que están definidas correctamente.
+
+¿Puedes intentar hacer la consulta de otra manera?`;
+                }
             }
             
             if (todosLosMarcadores.length > 0 && allResults.length > 0) {
@@ -671,7 +688,12 @@ function obtenerContenidoMapaERP(consulta, historialConversacion = []) {
         tablasRelevantes.forEach(([tabla, info]) => {
             respuesta += `\nTABLA ${tabla}:\n`;
             respuesta += `Descripción: ${info.descripcion}\n`;
-            respuesta += `Columnas principales: ${Object.keys(info.columnas).join(', ')}\n`;
+            respuesta += `Columnas disponibles:\n`;
+            
+            // Mostrar cada columna con su descripción para que GPT entienda qué significa
+            Object.entries(info.columnas).forEach(([columna, descripcion]) => {
+                respuesta += `  - ${columna}: ${descripcion}\n`;
+            });
             
             // Agregar información de columnas de relación para JOINs
             const columnasRelacion = Object.keys(info.columnas).filter(col => 
