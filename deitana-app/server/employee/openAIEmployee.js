@@ -364,43 +364,64 @@ ${promptComportamiento}`
             // DEBUG: Mostrar respuesta antes del reemplazo
             console.log(`🔄 [DEBUG-ANTES] Respuesta antes de reemplazo: "${finalResponse}"`);
             
-            // NUEVO SISTEMA: Reemplazo individual de marcadores
-            const marcadoresEncontrados = (finalResponse.match(/\[DATO_BD\]/g) || []).length;
-            console.log(`🔄 [REEMPLAZO] Marcadores [DATO_BD] encontrados: ${marcadoresEncontrados}`);
-            console.log(`🔄 [REEMPLAZO] Resultados disponibles: ${allResults.length}`);
+            // SISTEMA INTELIGENTE: Buscar CUALQUIER marcador entre corchetes
+            const todosLosMarcadores = finalResponse.match(/\[[^\]]+\]/g) || [];
+            console.log(`🔄 [REEMPLAZO-INTELIGENTE] Marcadores encontrados: ${todosLosMarcadores.length}`);
+            console.log(`🔄 [REEMPLAZO-INTELIGENTE] Marcadores: ${todosLosMarcadores.join(', ')}`);
+            console.log(`🔄 [REEMPLAZO-INTELIGENTE] Resultados disponibles: ${allResults.length}`);
             
-            if (marcadoresEncontrados === 0) {
-                console.log(`⚠️ [REEMPLAZO] ¡NO SE ENCONTRARON MARCADORES [DATO_BD]!`);
-                console.log(`⚠️ [REEMPLAZO] GPT no está usando el formato correcto`);
+            if (todosLosMarcadores.length === 0) {
+                console.log(`⚠️ [REEMPLAZO-INTELIGENTE] No se encontraron marcadores para reemplazar`);
             }
             
             if (allResults.length === 0) {
-                console.log(`⚠️ [REEMPLAZO] ¡NO HAY DATOS PARA REEMPLAZAR!`);
-                console.log(`⚠️ [REEMPLAZO] Todas las consultas SQL fallaron o no devolvieron datos`);
+                console.log(`⚠️ [REEMPLAZO-INTELIGENTE] ¡NO HAY DATOS PARA REEMPLAZAR!`);
+                console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Todas las consultas SQL fallaron o no devolvieron datos`);
             }
             
-            if (marcadoresEncontrados > 1 && allResults.length >= marcadoresEncontrados) {
-                // CASO: Múltiples marcadores - reemplazar individualmente
-                console.log(`🔄 [REEMPLAZO-INDIVIDUAL] Reemplazando ${marcadoresEncontrados} marcadores individualmente`);
+            if (todosLosMarcadores.length > 0 && allResults.length > 0) {
+                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Iniciando reemplazo inteligente...`);
                 
-                let indiceResultado = 0;
-                finalResponse = finalResponse.replace(/\[DATO_BD\]/g, () => {
-                    if (indiceResultado < allResults.length) {
-                        const resultado = allResults[indiceResultado];
-                        indiceResultado++;
-                        
-                        // Obtener el primer valor del registro
-                        const valor = Object.values(resultado)[0];
-                        console.log(`🔄 [REEMPLAZO-${indiceResultado}] "${valor}"`);
-                        return valor || '';
-                    }
-                    return '[DATO_BD]'; // Si no hay más resultados, mantener marcador
+                // Crear array con todos los valores de todos los registros
+                let todosLosValores = [];
+                allResults.forEach(registro => {
+                    Object.values(registro).forEach(valor => {
+                        if (valor !== null && valor !== undefined && valor !== '') {
+                            // Formatear fechas
+                            if (typeof valor === 'string' || valor instanceof Date) {
+                                try {
+                                    const fecha = new Date(valor);
+                                    if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
+                                        valor = fecha.toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long', 
+                                            day: 'numeric'
+                                        });
+                                    }
+                                } catch (error) {
+                                    // Mantener valor original
+                                }
+                            }
+                            todosLosValores.push(valor);
+                        }
+                    });
                 });
-            } else {
-                // CASO: Un solo marcador o múltiples marcadores con resultado único
-                const datosFormateados = formatearResultados(allResults, message);
-                console.log(`🔄 [REEMPLAZO] Datos formateados: "${datosFormateados}"`);
-                finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
+                
+                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Valores extraídos: ${todosLosValores.length}`);
+                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Primeros valores: ${todosLosValores.slice(0, 5).join(', ')}...`);
+                
+                // Reemplazar CUALQUIER marcador con los datos disponibles
+                let indiceValor = 0;
+                finalResponse = finalResponse.replace(/\[[^\]]+\]/g, (marcador) => {
+                    if (indiceValor < todosLosValores.length) {
+                        const valor = todosLosValores[indiceValor];
+                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcador} → "${valor}"`);
+                        indiceValor++;
+                        return valor;
+                    }
+                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcador}`);
+                    return marcador; // Mantener marcador si no hay más datos
+                });
             }
             
             // DEBUG: Mostrar respuesta después del reemplazo
