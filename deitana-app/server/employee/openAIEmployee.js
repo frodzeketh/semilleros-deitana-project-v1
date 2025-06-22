@@ -10,9 +10,7 @@ const chatManager = require('../utils/chatManager');
 const admin = require('../firebase-admin');
 require('dotenv').config();
 const { promptBase } = require('./promptBaseEmployee');
-const { promptTools } = require('./promptToolsEmployee');
 const { promptComportamiento } = require('./promptComportamientoEmployee');
-const { promptEjemplos } = require('./promptEjemplosEmployee');
 const mapaERP = require('./mapaERPEmployee');
 
 // Inicializar el cliente de OpenAI
@@ -195,9 +193,8 @@ async function processQuery({ message, userId, conversationId }) {
         // DEBUG: Log para confirmar arquitectura modular
         console.log('🏗️ [ARQUITECTURA] Módulos del prompt cargados:');
         console.log('🏗️ [ARQUITECTURA] Base:', promptBase.length, 'chars');
-        console.log('🏗️ [ARQUITECTURA] Tools:', promptTools.length, 'chars');
         console.log('🏗️ [ARQUITECTURA] Comportamiento:', promptComportamiento.length, 'chars');
-        console.log('🏗️ [ARQUITECTURA] Ejemplos:', promptEjemplos.length, 'chars');
+        console.log('🏗️ [ARQUITECTURA] Total prompts reducidos para optimización de costos');
         
         // =====================================
         // CONSTRUCCIÓN DE MENSAJES PARA GPT
@@ -207,14 +204,10 @@ async function processQuery({ message, userId, conversationId }) {
             {
                 role: "system",
                 content: `${promptBase}
-
+                
 ${contextoCompleto}
 
-${promptTools}
-
-${promptComportamiento}
-
-${promptEjemplos}`
+${promptComportamiento}`
             },
             ...contextMessages,
             {
@@ -239,13 +232,41 @@ ${promptEjemplos}`
         }
         
         const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
+            model: "gpt-4-turbo-preview", // ← Cambiado a modelo más económico
             messages: messages,
             temperature: 0.7,
-            max_tokens: 800
+            max_tokens: 400 // ← Reducido para ahorrar costos
         });
 
         const response = completion.choices[0].message.content;
+        
+        // =====================================
+        // ANÁLISIS DE COSTOS Y TOKENS
+        // =====================================
+        const tokensUsados = completion.usage;
+        const promptTokens = tokensUsados.prompt_tokens;
+        const completionTokens = tokensUsados.completion_tokens;
+        const totalTokens = tokensUsados.total_tokens;
+        
+        // Costos aproximados para gpt-3.5-turbo (precios actualizados)
+        const costoPorPromptToken = 0.01 / 1000; // $0.01 por 1K tokens de entrada
+        const costoPorCompletionToken = 0.03 / 1000; // $0.03 por 1K tokens de salida
+        
+        const costoPrompt = promptTokens * costoPorPromptToken;
+        const costoCompletion = completionTokens * costoPorCompletionToken;
+        const costoTotal = costoPrompt + costoCompletion;
+        
+        console.log('💰 [ANÁLISIS-COSTOS] ===== TOKENS Y COSTOS =====');
+        console.log('💰 [TOKENS-ENTRADA] Prompt tokens:', promptTokens);
+        console.log('💰 [TOKENS-SALIDA] Completion tokens:', completionTokens);
+        console.log('💰 [TOKENS-TOTAL] Total tokens:', totalTokens);
+        console.log('💰 [COSTO-ENTRADA] Costo prompt: $' + costoPrompt.toFixed(6));
+        console.log('💰 [COSTO-SALIDA] Costo completion: $' + costoCompletion.toFixed(6));
+        console.log('💰 [COSTO-TOTAL] Costo total consulta: $' + costoTotal.toFixed(6));
+        console.log('💰 [COSTO-ESTIMADO] Costo por 100 consultas: $' + (costoTotal * 100).toFixed(4));
+        console.log('💰 [COSTO-ESTIMADO] Costo por 1000 consultas: $' + (costoTotal * 1000).toFixed(2));
+        console.log('💰 [ANÁLISIS-COSTOS] =====================================');
+        
         console.log('🧠 [ETAPA-1] GPT procesó la consulta exitosamente');
         console.log('📋 [RESPUESTA-GPT] Respuesta generada:', response);
         console.log('📋 [RESPUESTA-GPT] Longitud:', response.length, 'caracteres');
@@ -297,6 +318,11 @@ ${promptEjemplos}`
             console.log('🧠 [ETAPA-2] Decisión: CONSULTA SQL + INFORMACIÓN');
             console.log('🧠 [ETAPA-2] Consultas SQL generadas:', queries.length);
             console.log('🧠 [ETAPA-2] Tipo: Necesita datos de base de datos para responder');
+            
+            // DEBUG: Mostrar las consultas SQL que se van a ejecutar
+            queries.forEach((sql, index) => {
+                console.log(`🔍 [SQL-DEBUG] Consulta ${index + 1}: ${sql}`);
+            });
         } else {
             console.log('🧠 [ETAPA-2] Decisión: INFORMACIÓN EXTERNA/GENERAL');
             console.log('🧠 [ETAPA-2] Tipo: Saludo, información general, o conocimiento interno');
@@ -312,17 +338,22 @@ ${promptEjemplos}`
             for (let i = 0; i < queries.length; i++) {
                 const sql = queries[i];
                 try {
-                    console.log(`⚙️ [JAVASCRIPT] Ejecutando consulta ${i + 1}/${queries.length}`);
+                    console.log(`⚙️ [JAVASCRIPT] Ejecutando consulta ${i + 1}/${queries.length}: ${sql}`);
                     const results = await executeQueryWithFuzzySearch(sql, message);
+                    console.log(`⚙️ [JAVASCRIPT] Resultados consulta ${i + 1}:`, results);
                     if (results && results.length > 0) {
                         allResults = allResults.concat(results);
+                        console.log(`⚙️ [JAVASCRIPT] Total acumulado: ${allResults.length} registros`);
+                    } else {
+                        console.log(`⚠️ [JAVASCRIPT] Consulta ${i + 1} no devolvió resultados`);
                     }
                 } catch (err) {
-                    console.warn(`⚙️ [JAVASCRIPT] Error ejecutando consulta ${i + 1}:`, err);
+                    console.error(`❌ [JAVASCRIPT] Error ejecutando consulta ${i + 1}:`, err.message);
+                    console.error(`❌ [JAVASCRIPT] SQL que falló: ${sql}`);
                 }
             }
             
-            console.log(`⚙️ [JAVASCRIPT] Datos obtenidos: ${allResults.length} registros`);
+            console.log(`⚙️ [JAVASCRIPT] RESUMEN: ${allResults.length} registros obtenidos en total`);
             console.log('⚙️ [JAVASCRIPT] Reemplazando marcadores con datos reales...');
             
             let finalResponse = response;
@@ -330,10 +361,23 @@ ${promptEjemplos}`
             // Limpiar etiquetas SQL (GPT no debe mostrarlas al usuario)
             finalResponse = finalResponse.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
             
+            // DEBUG: Mostrar respuesta antes del reemplazo
+            console.log(`🔄 [DEBUG-ANTES] Respuesta antes de reemplazo: "${finalResponse}"`);
+            
             // NUEVO SISTEMA: Reemplazo individual de marcadores
             const marcadoresEncontrados = (finalResponse.match(/\[DATO_BD\]/g) || []).length;
             console.log(`🔄 [REEMPLAZO] Marcadores [DATO_BD] encontrados: ${marcadoresEncontrados}`);
             console.log(`🔄 [REEMPLAZO] Resultados disponibles: ${allResults.length}`);
+            
+            if (marcadoresEncontrados === 0) {
+                console.log(`⚠️ [REEMPLAZO] ¡NO SE ENCONTRARON MARCADORES [DATO_BD]!`);
+                console.log(`⚠️ [REEMPLAZO] GPT no está usando el formato correcto`);
+            }
+            
+            if (allResults.length === 0) {
+                console.log(`⚠️ [REEMPLAZO] ¡NO HAY DATOS PARA REEMPLAZAR!`);
+                console.log(`⚠️ [REEMPLAZO] Todas las consultas SQL fallaron o no devolvieron datos`);
+            }
             
             if (marcadoresEncontrados > 1 && allResults.length >= marcadoresEncontrados) {
                 // CASO: Múltiples marcadores - reemplazar individualmente
@@ -359,6 +403,16 @@ ${promptEjemplos}`
                 finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
             }
             
+            // DEBUG: Mostrar respuesta después del reemplazo
+            console.log(`🔄 [DEBUG-DESPUÉS] Respuesta después de reemplazo: "${finalResponse}"`);
+            
+            // Verificar si aún quedan marcadores sin reemplazar
+            const marcadoresRestantes = (finalResponse.match(/\[DATO_BD\]/g) || []).length;
+            if (marcadoresRestantes > 0) {
+                console.log(`⚠️ [ERROR-REEMPLAZO] ¡QUEDAN ${marcadoresRestantes} MARCADORES SIN REEMPLAZAR!`);
+                console.log(`⚠️ [ERROR-REEMPLAZO] Esto causará que se muestre [DATO_BD] al usuario`);
+            }
+            
             console.log(`🔄 [REEMPLAZO] Respuesta final: "${finalResponse.substring(0, 200)}${finalResponse.length > 200 ? '...' : ''}"`);
             
             // ETAPA 3: GPT FORMATEA COMO CHATGPT NATURAL
@@ -366,6 +420,13 @@ ${promptEjemplos}`
             console.log('🧠 [ETAPA-3] Datos integrados con comportamientos de promptBaseEmployee');
             console.log('🧠 [ETAPA-3] Estilo: Conversacional, amigable y contextual tipo ChatGPT');
             console.log('🧠 [ETAPA-3] Resultado: Respuesta completa lista para usuario');
+            
+            // VERIFICACIÓN ANTI-ROBÓTICA
+            if (finalResponse.toLowerCase().includes('actualmente, contamos con')) {
+                console.log('⚠️ [ANTI-ROBÓTICO] ¡DETECTADO PATRÓN REPETITIVO!');
+                console.log('⚠️ [ANTI-ROBÓTICO] El modelo está ignorando instrucciones de variedad');
+                console.log('⚠️ [ANTI-ROBÓTICO] promptComportamiento no se está aplicando correctamente');
+            }
             
             console.log('🎉 [RESUMEN] ===== PROCESO COMPLETADO EXITOSAMENTE =====');
             console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
@@ -396,96 +457,12 @@ ${promptEjemplos}`
             }
         };
     } catch (error) {
-        console.error('🧠 [MODELO-ÚNICO] Error en processQuery:', error);
+        console.error('❌ [ERROR] Error en processQuery:', error);
         
-        // COMPORTAMIENTO IA INTELIGENTE: No mostrar errores técnicos, usar IA para reintentarlo
-        console.log('🤖 [IA-INTELIGENTE] Error detectado, usando IA para reintentarlo automáticamente...');
-        
-        try {
-            // Prompt para que GPT detecte error y replantee automáticamente
-            const promptReintentar = `
-                ${promptBase}
-
-                ${contextoCompleto}
-
-                ${promptTools}
-
-                ${promptComportamiento}
-
-                ${promptEjemplos}
-                
-                🚨 SITUACIÓN ESPECIAL: Detecté un error técnico en la consulta anterior. 
-                
-                Como IA inteligente, debes reintentarlo automáticamente con una consulta diferente.
-                NUNCA menciones que hubo un error técnico.
-                
-                Consulta original del usuario: "${message}"
-                
-                Genera una consulta SQL alternativa y responde como si fuera tu primer intento.
-                Si no puedes generar una consulta válida, pregunta naturalmente al usuario para aclarar.
-                
-                Ejemplo de pregunta natural (si no puedes proceder):
-                "Tengo un poco de confusión sobre qué datos específicos necesitas. ¿Podrías explicarme un poco más qué información buscas?"
-            `;
-            
-            const completion = await openai.chat.completions.create({
-                model: "gpt-4",
-                messages: [
-                    { role: "system", content: promptReintentar },
-                    { role: "user", content: message }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
-            });
-            
-            const respuestaReintentar = completion.choices[0].message.content;
-            console.log('🤖 [IA-INTELIGENTE] GPT generó respuesta alternativa exitosamente');
-            
-            // Si GPT generó SQL, procesarlo
-            if (respuestaReintentar.includes('<sql>')) {
-                console.log('🤖 [IA-INTELIGENTE] Nueva consulta SQL detectada, procesando...');
-                
-                const queries = respuestaReintentar.match(/<sql>([\s\S]*?)<\/sql>/g);
-                if (queries && queries.length > 0) {
-                    try {
-                        const sql = queries[0].replace(/<\/?sql>/g, '').trim();
-                        const [rows] = await pool.query(reemplazarNombresTablas(sql));
-                        
-                        let finalResponse = respuestaReintentar.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
-                        const datosFormateados = formatearResultados(rows, message);
-                        finalResponse = finalResponse.replace(/\[DATO_BD\]/g, datosFormateados);
-                        
-                        console.log('🤖 [IA-INTELIGENTE] Reintento exitoso con datos reales');
-                        return {
-                            success: true,
-                            data: { message: finalResponse }
-                        };
-                    } catch (sqlError) {
-                        console.log('🤖 [IA-INTELIGENTE] Nueva consulta también falló, usando respuesta conversacional');
-                    }
-                }
-            }
-            
-            // Si no hay SQL o falló, usar la respuesta conversacional de GPT
-            const respuestaLimpia = respuestaReintentar.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
-            console.log('🤖 [IA-INTELIGENTE] Usando respuesta conversacional inteligente');
-            
-            return {
-                success: true,
-                data: { message: respuestaLimpia }
-            };
-            
-        } catch (reintentoError) {
-            console.error('🤖 [IA-INTELIGENTE] Error en reintento automático:', reintentoError);
-            
-            // Solo si todo falla, respuesta mínima inteligente
-            return {
-                success: true,
-                data: {
-                    message: "Estoy teniendo dificultades para procesar tu consulta. ¿Podrías reformularla de otra manera o ser más específico sobre qué información necesitas?"
-                }
-            };
-        }
+        return {
+            success: false,
+            error: 'Error procesando consulta'
+        };
     }
 }
 
@@ -891,42 +868,47 @@ function formatearResultados(results, query) {
         return valores[0];
     }
     
-    // Para registros complejos con múltiples campos
+    // Para registros complejos con múltiples campos - FORMATO NATURAL SIN NOMBRES TÉCNICOS
     let resultado = '';
     resultadosLimitados.forEach((registro, index) => {
-        if (index > 0) resultado += ', ';
         const campos = Object.entries(registro);
-        const partes = [];
+        
+        // ESTRATEGIA SIMPLE: Mostrar todos los valores, sin clasificaciones complejas
+        const valoresLimpios = [];
+        
         campos.forEach(([campo, valor]) => {
-            // FORMATEO SIMPLE: Solo usar nombres de campos, NO descripciones largas
-            let nombreCampo = campo;
-            
             // PROTECCIÓN ROBUSTA: Verificar si el valor es null/undefined
             if (valor === null || valor === undefined) {
-                valor = '';
-            } else {
-                try {
-                    // Convertir fechas a formato legible
-                    if (campo.toLowerCase().includes('fec') && valor) {
-                        const fecha = new Date(valor);
-                        if (!isNaN(fecha.getTime())) {
-                            valor = fecha.toLocaleDateString('es-ES', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.log(`🛡️ [PROTECCIÓN-FECHA] Error al formatear fecha ${campo}: ${error.message}`);
-                    // Mantener valor original si hay error
-                }
+                return;
             }
             
-            // Formato simple: campo: valor
-            partes.push(`${nombreCampo}: ${valor}`);
+            // Limpiar y formatear valor
+            try {
+                // Convertir fechas a formato legible  
+                if (campo.toLowerCase().includes('fec') && valor) {
+                    const fecha = new Date(valor);
+                    if (!isNaN(fecha.getTime())) {
+                        valor = fecha.toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long', 
+                            day: 'numeric'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log(`🛡️ [PROTECCIÓN-FECHA] Error al formatear fecha ${campo}: ${error.message}`);
+                // Mantener valor original si hay error
+            }
+            
+            // Solo agregar valores no vacíos
+            if (valor && valor.toString().trim() !== '') {
+                valoresLimpios.push(valor);
+            }
         });
-        resultado += partes.join(' - ');
+        
+        // CONSTRUCCIÓN DEL RESULTADO: Todos los valores separados naturalmente
+        if (index > 0) resultado += ', ';
+        resultado += valoresLimpios.join(' - ');
     });
 
     return resultado;
