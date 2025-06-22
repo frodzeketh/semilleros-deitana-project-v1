@@ -372,6 +372,8 @@ ${promptComportamiento}`
             
             if (todosLosMarcadores.length === 0) {
                 console.log(`⚠️ [REEMPLAZO-INTELIGENTE] No se encontraron marcadores para reemplazar`);
+                
+
             }
             
             if (allResults.length === 0) {

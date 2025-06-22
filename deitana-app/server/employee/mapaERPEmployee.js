@@ -282,10 +282,10 @@ const mapaERP = {
         PAR_FEC: "Fecha de la partida.",
         PAR_TIPO: "Tipo de semilla ('D': Depósito cliente, 'N': No depósito).",
         PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
+        PAR_CCL: "Cliente asociado. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
         PAR_LOTE: "Lote de la semilla.",
         PAR_PGER: "Porcentaje de germinación.",
         PAR_TSI: "Tipo de siembra. Clave foránea a la tabla 't-siembras' para obtener la denominación (TSI_DENO) y detalles.",
-        
         PAR_ALVS: "Cantidad de semillas a sembrar.",
         PAR_PLAS: "Cantidad de plantas solicitadas.",
         PAR_PLAP: "Cantidad de plantas aproximadas.",
