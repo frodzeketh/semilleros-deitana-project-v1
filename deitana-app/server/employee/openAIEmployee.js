@@ -12,6 +12,8 @@ require('dotenv').config();
 const { promptBase } = require('./promptBaseEmployee');
 const { promptComportamiento } = require('./promptComportamientoEmployee');
 const mapaERP = require('./mapaERPEmployee');
+const pineconeMemoria = require('../utils/pinecone');
+const comandosMemoria = require('../utils/comandosMemoria');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -144,6 +146,21 @@ async function processQuery({ message, userId, conversationId }) {
         console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
         
         // =====================================
+        // VERIFICAR COMANDOS ESPECIALES DE MEMORIA
+        // =====================================
+        
+        try {
+            const comandoMemoriaResult = await comandosMemoria.procesarComandoMemoria(message, userId);
+            if (comandoMemoriaResult) {
+                console.log('🧠 [COMANDO-MEMORIA] Comando especial de memoria procesado');
+                return comandoMemoriaResult;
+            }
+        } catch (error) {
+            console.log('⚠️ [COMANDO-MEMORIA] Error procesando comando de memoria:', error.message);
+            // Continuar con el flujo normal si hay error
+        }
+        
+        // =====================================
         // PREPARACIÓN DEL CONTEXTO Y HISTORIAL
         // =====================================
         
@@ -160,6 +177,15 @@ async function processQuery({ message, userId, conversationId }) {
         
         // Obtener contexto completo: RAG + mapaERP para la consulta
         const contextoCompleto = obtenerContextoCompleto(message, conversationHistory);
+        
+        // NUEVA FUNCIONALIDAD: Agregar memoria semántica de Pinecone
+        let contextoMemoria = '';
+        try {
+            contextoMemoria = await pineconeMemoria.agregarContextoMemoria(userId, message);
+            console.log('🧠 [PINECONE-INTEGRACIÓN] Memoria semántica agregada al contexto');
+        } catch (error) {
+            console.log('⚠️ [PINECONE-INTEGRACIÓN] Error obteniendo memoria, continuando sin ella:', error.message);
+        }
         
         // DEBUG: Log para ver exactamente qué información recibe GPT
         console.log('📚 [DEBUG-RAG+ERP] Contexto completo enviado a GPT:');
@@ -206,6 +232,8 @@ async function processQuery({ message, userId, conversationId }) {
                 content: `${promptBase}
                 
 ${contextoCompleto}
+
+${contextoMemoria}
 
 ${promptComportamiento}`
             },
@@ -486,6 +514,14 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
             console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
             console.log('🎉 [RESUMEN] JavaScript solo hizo trabajo mecánico (SQL + reemplazo)');
             
+            // NUEVA FUNCIONALIDAD: Guardar memoria automáticamente
+            try {
+                await pineconeMemoria.guardarAutomatico(userId, message, finalResponse);
+                console.log('💾 [PINECONE-INTEGRACIÓN] Memoria automática guardada');
+            } catch (error) {
+                console.log('⚠️ [PINECONE-INTEGRACIÓN] Error guardando memoria automática:', error.message);
+            }
+            
             return {
                 success: true,
                 data: {
@@ -503,6 +539,14 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
         console.log('🎉 [RESUMEN] ===== PROCESO COMPLETADO EXITOSAMENTE =====');
         console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
         console.log('🎉 [RESUMEN] No se requirió acceso a base de datos');
+        
+        // NUEVA FUNCIONALIDAD: Guardar memoria automáticamente
+        try {
+            await pineconeMemoria.guardarAutomatico(userId, message, response);
+            console.log('💾 [PINECONE-INTEGRACIÓN] Memoria automática guardada (sin SQL)');
+        } catch (error) {
+            console.log('⚠️ [PINECONE-INTEGRACIÓN] Error guardando memoria automática:', error.message);
+        }
         
         return {
             success: true,

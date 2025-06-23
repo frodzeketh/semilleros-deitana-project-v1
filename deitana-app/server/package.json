@@ -14,15 +14,16 @@
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
+    "@pinecone-database/pinecone": "^6.1.1",
     "axios": "^1.6.7",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "firebase": "^10.8.0",
     "firebase-admin": "^13.4.0",
     "mysql2": "^3.14.0",
-    "openai": "^4.98.0",
-    "firebase": "^10.8.0"
+    "openai": "^4.98.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"
