@@ -12,8 +12,6 @@ require('dotenv').config();
 const { promptBase } = require('./promptBaseEmployee');
 const { promptComportamiento } = require('./promptComportamientoEmployee');
 const mapaERP = require('./mapaERPEmployee');
-const pineconeMemoria = require('../utils/pinecone');
-const comandosMemoria = require('../utils/comandosMemoria');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -146,21 +144,6 @@ async function processQuery({ message, userId, conversationId }) {
         console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
         
         // =====================================
-        // VERIFICAR COMANDOS ESPECIALES DE MEMORIA
-        // =====================================
-        
-        try {
-            const comandoMemoriaResult = await comandosMemoria.procesarComandoMemoria(message, userId);
-            if (comandoMemoriaResult) {
-                console.log('🧠 [COMANDO-MEMORIA] Comando especial de memoria procesado');
-                return comandoMemoriaResult;
-            }
-        } catch (error) {
-            console.log('⚠️ [COMANDO-MEMORIA] Error procesando comando de memoria:', error.message);
-            // Continuar con el flujo normal si hay error
-        }
-        
-        // =====================================
         // PREPARACIÓN DEL CONTEXTO Y HISTORIAL
         // =====================================
         
@@ -177,15 +160,6 @@ async function processQuery({ message, userId, conversationId }) {
         
         // Obtener contexto completo: RAG + mapaERP para la consulta
         const contextoCompleto = obtenerContextoCompleto(message, conversationHistory);
-        
-        // NUEVA FUNCIONALIDAD: Agregar memoria semántica de Pinecone
-        let contextoMemoria = '';
-        try {
-            contextoMemoria = await pineconeMemoria.agregarContextoMemoria(userId, message);
-            console.log('🧠 [PINECONE-INTEGRACIÓN] Memoria semántica agregada al contexto');
-        } catch (error) {
-            console.log('⚠️ [PINECONE-INTEGRACIÓN] Error obteniendo memoria, continuando sin ella:', error.message);
-        }
         
         // DEBUG: Log para ver exactamente qué información recibe GPT
         console.log('📚 [DEBUG-RAG+ERP] Contexto completo enviado a GPT:');
@@ -232,8 +206,6 @@ async function processQuery({ message, userId, conversationId }) {
                 content: `${promptBase}
                 
 ${contextoCompleto}
-
-${contextoMemoria}
 
 ${promptComportamiento}`
             },
@@ -401,7 +373,46 @@ ${promptComportamiento}`
             if (todosLosMarcadores.length === 0) {
                 console.log(`⚠️ [REEMPLAZO-INTELIGENTE] No se encontraron marcadores para reemplazar`);
                 
-
+                // SOLUCIÓN AUTOMÁTICA: Si hay datos pero no marcadores, generar respuesta automática
+                if (allResults.length > 0) {
+                    console.log(`🔄 [AUTO-RESPUESTA] Generando respuesta automática con datos obtenidos`);
+                    
+                    const primerRegistro = allResults[0];
+                    console.log(`🔄 [AUTO-RESPUESTA] Datos disponibles:`, Object.keys(primerRegistro));
+                    
+                    // Generar una respuesta automática con los datos
+                    let respuestaConDatos = `¡Por supuesto! Aquí tienes la información solicitada:\n\n`;
+                    
+                    // Formatear los datos de manera legible
+                    Object.entries(primerRegistro).forEach(([campo, valor]) => {
+                        if (valor !== null && valor !== undefined && valor !== '') {
+                            // Formatear fechas
+                            let valorFormateado = valor;
+                            if (valor && (typeof valor === 'string' || valor instanceof Date)) {
+                                try {
+                                    const fecha = new Date(valor);
+                                    if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
+                                        valorFormateado = fecha.toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long', 
+                                            day: 'numeric'
+                                        });
+                                    }
+                                } catch (error) {
+                                    // Mantener valor original
+                                }
+                            }
+                            respuestaConDatos += `• **${campo}**: ${valorFormateado}\n`;
+                        }
+                    });
+                    
+                    respuestaConDatos += `\n¿Te sirve esta información? ¿Necesitas algún detalle específico adicional?`;
+                    
+                    console.log(`🔄 [AUTO-RESPUESTA] Respuesta generada automáticamente`);
+                    finalResponse = respuestaConDatos;
+                } else {
+                    console.log(`⚠️ [AUTO-RESPUESTA] Sin datos disponibles para generar respuesta automática`);
+                }
             }
             
             if (allResults.length === 0) {
@@ -429,58 +440,101 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
             if (todosLosMarcadores.length > 0 && allResults.length > 0) {
                 console.log(`🔄 [REEMPLAZO-INTELIGENTE] Iniciando reemplazo inteligente...`);
                 
-                // SISTEMA SIMPLE Y ROBUSTO: Trabajar con TODOS los registros
-                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Registros disponibles: ${allResults.length}`);
+                // ✅ SOLUCIÓN: FILTRAR REGISTROS VACÍOS ANTES DE PROCESAR
+                const registrosValidos = allResults.filter(registro => {
+                    // Filtrar registros donde TODOS los valores sean válidos
+                    const valores = Object.values(registro);
+                    return valores.some(valor => 
+                        valor !== null && valor !== undefined && valor !== '' && valor.toString().trim() !== ''
+                    );
+                });
                 
-                // MAPEO DIRECTO: 1 marcador = 1 registro
-                let contadorMarcadores = 0;
+                console.log(`🔄 [FILTRADO] Total registros: ${allResults.length}, Registros válidos: ${registrosValidos.length}`);
+                
+                if (registrosValidos.length === 0) {
+                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] No hay registros válidos después del filtrado`);
+                    return finalResponse;
+                }
+                
+                // ✅ NUEVO SISTEMA: Usar TODOS los registros válidos con contador
+                let contadorRegistros = 0;
+                console.log(`🔄 [REEMPLAZO-INTELIGENTE] Datos disponibles en registros válidos:`, registrosValidos.map(r => Object.keys(r)));
                 
                 finalResponse = finalResponse.replace(/\[([^\]]+)\]/g, (marcadorCompleto, nombreCampo) => {
-                    // SIMPLE: Cada marcador usa el registro correspondiente por orden
-                    const indiceRegistro = contadorMarcadores < allResults.length ? contadorMarcadores : 0;
-                    const registroActual = allResults[indiceRegistro];
+                    console.log(`🔄 [REEMPLAZO-INTELIGENTE] Procesando marcador: ${marcadorCompleto}, campo: ${nombreCampo}`);
                     
-                    console.log(`🔄 [REEMPLAZO-INTELIGENTE] Marcador ${contadorMarcadores + 1}: ${marcadorCompleto} → Registro ${indiceRegistro + 1}/${allResults.length}`);
-                    contadorMarcadores++;
-                    
-                    // CASO 1: Marcador específico (ej: [id], [BN_DENO], [BN_ALV])
-                    if (nombreCampo !== 'DATO_BD' && registroActual.hasOwnProperty(nombreCampo)) {
-                        let valor = registroActual[nombreCampo];
-                        
-                        // Formatear fechas
-                        if (valor && (typeof valor === 'string' || valor instanceof Date)) {
-                            try {
-                                const fecha = new Date(valor);
-                                if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
-                                    valor = fecha.toLocaleDateString('es-ES', {
-                                        year: 'numeric',
-                                        month: 'long', 
-                                        day: 'numeric'
-                                    });
+                    // ✅ CASO 1: Marcador específico - usar contador para recorrer TODOS los registros
+                    if (nombreCampo !== 'DATO_BD') {
+                        // Buscar el siguiente registro que tenga este campo con valor válido
+                        for (let i = contadorRegistros; i < registrosValidos.length; i++) {
+                            const registro = registrosValidos[i];
+                            if (registro.hasOwnProperty(nombreCampo) && 
+                                registro[nombreCampo] !== null && 
+                                registro[nombreCampo] !== undefined && 
+                                registro[nombreCampo] !== '' &&
+                                registro[nombreCampo].toString().trim() !== '') {
+                                
+                                let valor = registro[nombreCampo];
+                                contadorRegistros = i + 1; // Avanzar al siguiente registro
+                                
+                                // Formatear fechas
+                                if (valor && (typeof valor === 'string' || valor instanceof Date)) {
+                                    try {
+                                        const fecha = new Date(valor);
+                                        if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
+                                            valor = fecha.toLocaleDateString('es-ES', {
+                                                year: 'numeric',
+                                                month: 'long', 
+                                                day: 'numeric'
+                                            });
+                                        }
+                                    } catch (error) {
+                                        // Mantener valor original
+                                    }
                                 }
-                            } catch (error) {
-                                // Mantener valor original
+                                
+                                console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (registro ${i + 1})`);
+                                return valor;
                             }
                         }
                         
-                        console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (del registro ${indiceRegistro + 1})`);
-                        return valor;
+                        console.log(`⚠️ [REEMPLAZO-INTELIGENTE] No se encontró valor válido para ${marcadorCompleto}`);
+                        return marcadorCompleto;
                     }
                     
-                    // CASO 2: Marcador genérico [DATO_BD] - primer valor del registro actual
-                    if (nombreCampo === 'DATO_BD') {
-                        const valoresDisponibles = Object.entries(registroActual).filter(([key, value]) => 
-                            value !== null && value !== undefined && value !== ''
-                        );
+                    // ✅ CASO 2: Marcador genérico [DATO_BD] - usar el siguiente registro disponible
+                    if (nombreCampo === 'DATO_BD' && contadorRegistros < registrosValidos.length) {
+                        const registro = registrosValidos[contadorRegistros];
+                        contadorRegistros++;
                         
-                        if (valoresDisponibles.length > 0) {
-                            const [clave, valor] = valoresDisponibles[0];
-                            console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valor}" (DATO_BD del registro ${indiceRegistro + 1}: ${clave})`);
-                            return valor;
+                        // Tomar el primer valor válido del registro
+                        const entradas = Object.entries(registro);
+                        for (const [clave, valor] of entradas) {
+                            if (valor !== null && valor !== undefined && valor !== '' && valor.toString().trim() !== '') {
+                                // Formatear fechas
+                                let valorFormateado = valor;
+                                if (valor && (typeof valor === 'string' || valor instanceof Date)) {
+                                    try {
+                                        const fecha = new Date(valor);
+                                        if (!isNaN(fecha.getTime()) && valor.toString().includes('T')) {
+                                            valorFormateado = fecha.toLocaleDateString('es-ES', {
+                                                year: 'numeric',
+                                                month: 'long', 
+                                                day: 'numeric'
+                                            });
+                                        }
+                                    } catch (error) {
+                                        // Mantener valor original
+                                    }
+                                }
+                                
+                                console.log(`🔄 [REEMPLAZO-INTELIGENTE] ${marcadorCompleto} → "${valorFormateado}" (DATO_BD: ${clave})`);
+                                return valorFormateado;
+                            }
                         }
                     }
                     
-                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcadorCompleto} en registro ${indiceRegistro + 1}`);
+                    console.log(`⚠️ [REEMPLAZO-INTELIGENTE] Sin datos para ${marcadorCompleto}`);
                     return marcadorCompleto; // Mantener marcador si no hay datos
                 });
             }
@@ -514,14 +568,6 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
             console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
             console.log('🎉 [RESUMEN] JavaScript solo hizo trabajo mecánico (SQL + reemplazo)');
             
-            // NUEVA FUNCIONALIDAD: Guardar memoria automáticamente
-            try {
-                await pineconeMemoria.guardarAutomatico(userId, message, finalResponse);
-                console.log('💾 [PINECONE-INTEGRACIÓN] Memoria automática guardada');
-            } catch (error) {
-                console.log('⚠️ [PINECONE-INTEGRACIÓN] Error guardando memoria automática:', error.message);
-            }
-            
             return {
                 success: true,
                 data: {
@@ -539,14 +585,6 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
         console.log('🎉 [RESUMEN] ===== PROCESO COMPLETADO EXITOSAMENTE =====');
         console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
         console.log('🎉 [RESUMEN] No se requirió acceso a base de datos');
-        
-        // NUEVA FUNCIONALIDAD: Guardar memoria automáticamente
-        try {
-            await pineconeMemoria.guardarAutomatico(userId, message, response);
-            console.log('💾 [PINECONE-INTEGRACIÓN] Memoria automática guardada (sin SQL)');
-        } catch (error) {
-            console.log('⚠️ [PINECONE-INTEGRACIÓN] Error guardando memoria automática:', error.message);
-        }
         
         return {
             success: true,
