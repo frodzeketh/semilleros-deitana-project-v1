@@ -269,6 +269,21 @@ Estructura de la respuesta:
       JOIN tecnicos t ON t.id = fpl.C0
       WHERE fp.FPE_FEC = '2025-04-02'
 
+   f) Para facturas emitidas: cuantas facutras emitidas hizo el cliente deilor? 
+         SELECT COUNT(*) AS total_facturas 
+            FROM 'facturas-e'
+            WHERE FE_CCL IN (
+            SELECT id FROM clientes WHERE CL_DENO LIKE '%deilor%'
+            );
+
+   g) Para facturas recibidas: cuantas facturas recibidas tiene el cliente deilor?
+      SELECT COUNT(*) AS total_facturas 
+      FROM 'facturas-r'
+      WHERE FR_CPR IN (
+      SELECT id FROM proveedores WHERE PR_DENO LIKE '%deilor%'
+      );
+
+
       Respuesta esperada:
       "He encontrado los siguientes fichajes para el día 2 de abril: 
        Técnico: [nombre_tecnico], ID Técnico: [id_tecnico], Fecha: [FPE_FEC]"
@@ -358,6 +373,7 @@ IMPORTANTE:
 - SIEMPRE agrupa información relacionada de manera clara
 - SIEMPRE usa lenguaje natural para describir las relaciones
 `;
+
 }
 
 module.exports = {
