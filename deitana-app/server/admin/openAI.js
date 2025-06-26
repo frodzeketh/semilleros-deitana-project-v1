@@ -6,6 +6,9 @@ const { OpenAI } = require('openai');
 const pool = require('../db');
 const chatManager = require('../utils/chatManager');
 const admin = require('../firebase-admin');
+const pineconeMemoria = require('../utils/pinecone');
+const comandosMemoria = require('../utils/comandosMemoria');
+const langfuseUtils = require('../utils/langfuse');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
@@ -640,6 +643,13 @@ async function fuzzySearchRetry(sql, userQuery) {
  * @returns {Object} Respuesta procesada
  */
 async function processQuery({ message, userId }) {
+    // =====================================
+    // INICIO DE TRACE LANGFUSE PARA OBSERVABILIDAD COMPLETA
+    // =====================================
+    
+    const tiempoInicio = Date.now();
+    const trace = langfuseUtils.iniciarTrace(userId, message, 'admin');
+    
     try {
         console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA ADMIN =====');
         console.log('🚀 [SISTEMA] Procesando consulta de administrador:', message);
@@ -653,8 +663,20 @@ async function processQuery({ message, userId }) {
         console.log('💾 [FIRESTORE] Guardando mensaje del usuario...');
         await saveMessageToFirestore(userId, message, true);
 
-        const contenidoMapaERP = obtenerContenidoMapaERP(message);
         conversationHistory.push({ role: "user", content: message });
+
+        // =====================================
+        // PROCESAMIENTO DE COMANDOS ESPECIALES DE MEMORIA
+        // =====================================
+        
+        const comandoMemoria = await comandosMemoria.procesarComandoMemoria(message, userId);
+        if (comandoMemoria) {
+            console.log('🧠 [COMANDO-MEMORIA] Comando especial de memoria procesado');
+            await saveAssistantMessageToFirestore(userId, comandoMemoria.data.message);
+            return comandoMemoria;
+        }
+
+        const contenidoMapaERP = obtenerContenidoMapaERP(message);
 
         // =====================================
         // VALIDACIÓN DE CONSULTAS ESPECIALES
@@ -716,10 +738,30 @@ async function processQuery({ message, userId }) {
         console.log('🧠 [CONTEXTO] Historial de conversación:', historyForAI.length, 'mensajes');
         console.log('🧠 [CONTEXTO] Contenido mapaERP:', contenidoMapaERP.length, 'caracteres');
 
+        // =====================================
+        // INTEGRACIÓN CON MEMORIA SEMÁNTICA PINECONE
+        // =====================================
+        
+        let contextoPinecone = '';
+        try {
+            console.log('🧠 [PINECONE] Obteniendo contexto de memoria semántica...');
+            contextoPinecone = await pineconeMemoria.agregarContextoMemoria(userId, message);
+            if (contextoPinecone) {
+                console.log('✅ [PINECONE] Contexto de memoria agregado exitosamente');
+                console.log('🧠 [PINECONE] Longitud del contexto:', contextoPinecone.length, 'caracteres');
+            } else {
+                console.log('ℹ️ [PINECONE] No se encontraron recuerdos relevantes para esta consulta');
+            }
+        } catch (error) {
+            console.error('❌ [PINECONE] Error obteniendo contexto de memoria:', error.message);
+            contextoPinecone = ''; // Continuar sin memoria si hay error
+        }
+
         const systemPrompt = `
 
 ${promptBase}
 
+${contextoPinecone}
 ${contenidoMapaERP}${contextoDatos}`;
 
         // =====================================
@@ -745,6 +787,9 @@ ${contenidoMapaERP}${contextoDatos}`;
             console.log('🧠 [ETAPA-1] Mensajes a enviar:', messages.length);
             
             // ========== LLAMADA ÚNICA OPTIMIZADA A OPENAI ==========
+            console.log('📊 [LANGFUSE] Registrando llamada a OpenAI...');
+            const tiempoLlamada = Date.now();
+            
             const completion = await openai.chat.completions.create({
                 model: "gpt-4-turbo-preview", // ← MODELO CLARAMENTE DEFINIDO
                 messages: messages,
@@ -752,8 +797,29 @@ ${contenidoMapaERP}${contextoDatos}`;
                 max_tokens: 2000 // ← Aumentado para respuestas completas con análisis
             });
             
+            const tiempoRespuesta = Date.now() - tiempoLlamada;
             response = completion.choices[0].message.content;
             conversationHistory.push({ role: "assistant", content: response });
+            
+            // =====================================
+            // REGISTRO EN LANGFUSE DE LA LLAMADA OPENAI
+            // =====================================
+            
+            const tokensLlamada = completion.usage;
+            const costoEstimado = (tokensLlamada.prompt_tokens * 0.01 + tokensLlamada.completion_tokens * 0.03) / 1000;
+            
+            langfuseUtils.registrarLlamadaOpenAI(trace, {
+                modelo: "gpt-4-turbo-preview",
+                temperature: 0.7,
+                maxTokens: 2000,
+                prompt: systemPrompt + '\n\nUsuario: ' + message,
+                respuesta: response,
+                promptTokens: tokensLlamada.prompt_tokens,
+                completionTokens: tokensLlamada.completion_tokens,
+                totalTokens: tokensLlamada.total_tokens,
+                costoEstimado: costoEstimado,
+                tiempoRespuesta: tiempoRespuesta
+            });
             
             // =====================================
             // ANÁLISIS DE COSTOS Y TOKENS
@@ -801,6 +867,33 @@ ${contenidoMapaERP}${contextoDatos}`;
                 
                 await saveAssistantMessageToFirestore(userId, response);
                 console.log('✅ [SISTEMA] Respuesta conversacional enviada correctamente');
+                
+                // =====================================
+                // GUARDADO AUTOMÁTICO EN MEMORIA SEMÁNTICA
+                // =====================================
+                
+                try {
+                    console.log('💾 [PINECONE] Guardando conversación en memoria semántica...');
+                    await pineconeMemoria.guardarAutomatico(userId, message, response);
+                    console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+                } catch (error) {
+                    console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                    // No interrumpir el flujo si falla el guardado
+                }
+                
+                // =====================================
+                // FINALIZACIÓN DE TRACE LANGFUSE
+                // =====================================
+                
+                const tiempoTotal = Date.now() - tiempoInicio;
+                langfuseUtils.finalizarTrace(trace, {
+                    respuestaFinal: response,
+                    exito: true,
+                    tiempoTotal: tiempoTotal,
+                    tokensTotal: tokensLlamada.total_tokens,
+                    costoTotal: costoEstimado
+                });
+                
                 return {
                     success: true,
                     data: { message: response }
@@ -906,6 +999,20 @@ ${contenidoMapaERP}${contextoDatos}`;
                 
                 console.log('✅ [SQL-RESULTADOS] Datos encontrados exitosamente');
                 console.log('📊 [PROCESAMIENTO] Procesando', results.length, 'registros encontrados');
+                
+                // =====================================
+                // REGISTRO DE SQL EN LANGFUSE
+                // =====================================
+                
+                langfuseUtils.registrarSQL(trace, {
+                    sqlGenerado: sql,
+                    mensajeUsuario: message,
+                    resultadosCount: results.length,
+                    tiempoEjecucion: Date.now() - tiempoInicio,
+                    sqlValido: true,
+                    tuvoReintentos: false,
+                    fuzzySearchUsado: false
+                });
                 
                 // HAY RESULTADOS - Procesar con sistema de marcadores
                 let tipo = 'dato';
@@ -1058,6 +1165,33 @@ ${contenidoMapaERP}${contextoDatos}`;
                 await saveAssistantMessageToFirestore(userId, finalMessage);
                 console.log('✅ [SISTEMA] Respuesta final enviada correctamente');
                 console.log('🎯 [RESUMEN] OPTIMIZACIÓN COMPLETA: Una sola llamada GPT generó SQL + análisis completo');
+                
+                // =====================================
+                // GUARDADO AUTOMÁTICO EN MEMORIA SEMÁNTICA
+                // =====================================
+                
+                try {
+                    console.log('💾 [PINECONE] Guardando conversación en memoria semántica...');
+                    await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
+                    console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+                } catch (error) {
+                    console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                    // No interrumpir el flujo si falla el guardado
+                }
+                
+                // =====================================
+                // FINALIZACIÓN DE TRACE LANGFUSE
+                // =====================================
+                
+                const tiempoTotal = Date.now() - tiempoInicio;
+                langfuseUtils.finalizarTrace(trace, {
+                    respuestaFinal: finalMessage,
+                    exito: true,
+                    tiempoTotal: tiempoTotal,
+                    tokensTotal: tokensLlamada.total_tokens,
+                    costoTotal: costoEstimado
+                });
+                
                 return { success: true, data: { message: finalMessage } };
                 
             } catch (error) {
@@ -1090,16 +1224,75 @@ ${contenidoMapaERP}${contextoDatos}`;
         };
         await saveAssistantMessageToFirestore(userId, fallbackResponse.data.message);
         console.log('✅ [FALLBACK] Respuesta de fallback enviada');
+        
+        // =====================================
+        // GUARDADO AUTOMÁTICO EN MEMORIA SEMÁNTICA
+        // =====================================
+        
+        try {
+            console.log('💾 [PINECONE] Guardando conversación fallback en memoria semántica...');
+            await pineconeMemoria.guardarAutomatico(userId, message, fallbackResponse.data.message);
+            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+        } catch (error) {
+            console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+            // No interrumpir el flujo si falla el guardado
+        }
+        
+        // =====================================
+        // FINALIZACIÓN DE TRACE LANGFUSE
+        // =====================================
+        
+        const tiempoTotal = Date.now() - tiempoInicio;
+        langfuseUtils.finalizarTrace(trace, {
+            respuestaFinal: fallbackResponse.data.message,
+            exito: true,
+            tiempoTotal: tiempoTotal,
+            tokensTotal: 0,
+            costoTotal: 0
+        });
+        
         return fallbackResponse;
         
     } catch (error) {
         console.error('💥 [SISTEMA-ERROR] Error crítico en processQuery:', error);
         console.error('💥 [SISTEMA-ERROR] Stack trace:', error.stack);
         
+        // =====================================
+        // REGISTRO DE ERROR EN LANGFUSE
+        // =====================================
+        
+        langfuseUtils.registrarError(trace, error, 'sistema-critico');
+        
         const errorMessage = "Disculpa, tuve un problema procesando tu consulta. ¿Podrías intentar de nuevo con una pregunta más específica?";
         await saveAssistantMessageToFirestore(userId, errorMessage);
         
         console.log('🚨 [SISTEMA-ERROR] Respuesta de error enviada al usuario');
+        
+        // =====================================
+        // GUARDADO AUTOMÁTICO EN MEMORIA SEMÁNTICA
+        // =====================================
+        
+        try {
+            console.log('💾 [PINECONE] Guardando conversación con error en memoria semántica...');
+            await pineconeMemoria.guardarAutomatico(userId, message, errorMessage);
+            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+        } catch (memoryError) {
+            console.error('❌ [PINECONE] Error guardando en memoria:', memoryError.message);
+            // No interrumpir el flujo si falla el guardado
+        }
+        
+        // =====================================
+        // FINALIZACIÓN DE TRACE LANGFUSE
+        // =====================================
+        
+        const tiempoTotal = Date.now() - tiempoInicio;
+        langfuseUtils.finalizarTrace(trace, {
+            respuestaFinal: errorMessage,
+            exito: false,
+            tiempoTotal: tiempoTotal,
+            tokensTotal: 0,
+            costoTotal: 0
+        });
         
         return {
             success: true,

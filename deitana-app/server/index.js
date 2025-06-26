@@ -10,6 +10,7 @@ const { processQuery } = require('./admin/openAI');
 const { processQuery: processQueryEmployee } = require('./employee/openAIEmployee');
 const { verifyToken } = require('./middleware/authMiddleware');
 const chatManager = require('./utils/chatManager');
+const langfuseRoutes = require('./routes/langfuseMetrics');
 
 dotenv.config();
 
@@ -40,6 +41,9 @@ app.use(bodyParser.json());
 
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../build')));
+
+// Rutas de métricas de Langfuse
+app.use('/api/langfuse', langfuseRoutes);
 
 // Middleware para verificar si es empleado
 const isEmployee = (req, res, next) => {
