@@ -1,3 +1,7 @@
+// =====================================
+// IMPORTACIONES Y CONFIGURACIÓN INICIAL
+// =====================================
+
 const { OpenAI } = require('openai');
 const pool = require('../db');
 const chatManager = require('../utils/chatManager');
@@ -11,12 +15,24 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
+// =====================================
+// CONFIGURACIÓN DE VARIABLES GLOBALES
+// =====================================
+
 // Historial global de conversación (en memoria, para demo)
 const conversationHistory = [];
 // Contexto de datos reales de la última consulta relevante
 let lastRealData = null;
 
-// Función para formatear resultados en Markdown
+// =====================================
+// FUNCIONES AUXILIARES - FORMATEO Y UTILIDADES
+// =====================================
+
+/**
+ * Función para formatear resultados en Markdown
+ * @param {Array} results - Resultados de la consulta SQL
+ * @returns {string} Resultados formateados en Markdown
+ */
 function formatResultsAsMarkdown(results) {
     if (!results || results.length === 0) {
         return "No se han encontrado resultados para tu consulta.";
@@ -36,7 +52,12 @@ function formatResultsAsMarkdown(results) {
     return markdown;
 }
 
-// Función para obtener la descripción de una columna
+/**
+ * Función para obtener la descripción de una columna desde mapaERP
+ * @param {string} tabla - Nombre de la tabla
+ * @param {string} columna - Nombre de la columna
+ * @returns {string} Descripción de la columna o el nombre original
+ */
 function obtenerDescripcionColumna(tabla, columna) {
     if (mapaERP[tabla] && mapaERP[tabla].columnas && mapaERP[tabla].columnas[columna]) {
         return mapaERP[tabla].columnas[columna];
@@ -44,7 +65,11 @@ function obtenerDescripcionColumna(tabla, columna) {
     return columna;
 }
 
-// Función para determinar la tabla basada en las columnas
+/**
+ * Función para determinar la tabla basada en las columnas
+ * @param {Array} columnas - Array de nombres de columnas
+ * @returns {string|null} Nombre de la tabla o null si no se encuentra
+ */
 function determinarTabla(columnas) {
     for (const [tabla, info] of Object.entries(mapaERP)) {
         const columnasTabla = Object.keys(info.columnas || {});
@@ -55,7 +80,13 @@ function determinarTabla(columnas) {
     return null;
 }
 
-// Función para limitar resultados (ahora permite aleatoriedad si se solicita)
+/**
+ * Función para limitar resultados con opción de aleatorización
+ * @param {Array} results - Resultados de la consulta
+ * @param {number} limite - Número máximo de resultados (default: 5)
+ * @param {boolean} aleatorio - Si se deben seleccionar registros aleatorios (default: false)
+ * @returns {Array} Resultados limitados
+ */
 function limitarResultados(results, limite = 5, aleatorio = false) {
     if (!results || results.length === 0) return [];
     if (aleatorio && results.length > 1) {
@@ -109,51 +140,72 @@ async function formatFinalResponse(results, query) {
     return `He encontrado la siguiente información:${datosReales}`;
 }
 
-// Función para ejecutar consultas SQL
+// =====================================
+// FUNCIONES DE EJECUCIÓN Y VALIDACIÓN SQL
+// =====================================
+
+/**
+ * Función para ejecutar consultas SQL con manejo de errores
+ * @param {string} sql - Consulta SQL a ejecutar
+ * @returns {Promise<Array>} Resultados de la consulta
+ */
 async function executeQuery(sql) {
     try {
         // Reemplazar los nombres de las tablas con sus nombres reales
         const sqlModificado = reemplazarNombresTablas(sql);
-        console.log('Ejecutando consulta SQL:', sqlModificado);
+        console.log('🔍 [SQL-EXEC] Ejecutando:', sqlModificado);
         const [rows] = await pool.query(sqlModificado);
-        console.log('Resultados de la consulta:', rows);
+        console.log('📊 [SQL-RESULT] Filas devueltas:', rows.length);
         
         if (rows.length === 0) {
-            console.log('La consulta no devolvió resultados');
+            console.log('⚠️ [SQL-RESULT] La consulta no devolvió resultados');
             return [];
         }
 
         return rows;
     } catch (error) {
-        console.error('Error al ejecutar la consulta:', error);
+        console.error('❌ [SQL-EXEC] Error ejecutando consulta:', error.message);
+        console.error('❌ [SQL-EXEC] SQL:', sql);
         throw error;
     }
 }
 
-// Función para validar que la respuesta contiene una consulta SQL
+/**
+ * Función para validar que la respuesta contiene una consulta SQL válida
+ * @param {string} response - Respuesta de OpenAI
+ * @returns {string|null} SQL validado o null si no es válido
+ */
 function validarRespuestaSQL(response) {
+    console.log('🔍 [SQL-VALIDATION] Validando respuesta para extraer SQL...');
+    
     // Primero intentar con etiquetas <sql>
     let sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
     // Si no encuentra, intentar con bloques de código SQL
     if (!sqlMatch) {
         sqlMatch = response.match(/```sql\s*([\s\S]*?)```/);
         if (sqlMatch) {
-            console.log('Advertencia: SQL encontrado en formato markdown, convirtiendo a formato <sql>');
+            console.log('⚠️ [SQL-VALIDATION] SQL encontrado en formato markdown, convirtiendo');
             response = response.replace(/```sql\s*([\s\S]*?)```/, '<sql>$1</sql>');
             sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
         }
     }
     if (!sqlMatch) {
+        console.log('❌ [SQL-VALIDATION] No se encontró SQL en la respuesta');
         return null; // Permitir respuestas sin SQL
     }
     let sql = sqlMatch[1].trim();
     if (!sql) {
+        console.error('❌ [SQL-VALIDATION] La consulta SQL está vacía');
         throw new Error('La consulta SQL está vacía');
     }
     // Validar que es una consulta SQL válida
     if (!sql.toLowerCase().startsWith('select')) {
+        console.error('❌ [SQL-VALIDATION] La consulta no es SELECT');
         throw new Error('La consulta debe comenzar con SELECT');
     }
+    
+    console.log('✅ [SQL-VALIDATION] SQL válido extraído');
+    
     // Validar y corregir sintaxis común
     if (sql.includes('OFFSET')) {
         const offsetMatch = sql.match(/LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i);
@@ -162,6 +214,7 @@ function validarRespuestaSQL(response) {
                 /LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i,
                 `LIMIT ${offsetMatch[2]}, ${offsetMatch[1]}`
             );
+            console.log('🔄 [SQL-VALIDATION] Corregida sintaxis OFFSET');
         }
     }
     // Verificar si es una consulta de conteo
@@ -170,12 +223,16 @@ function validarRespuestaSQL(response) {
     const tieneGroupBy = /group by/i.test(sql);
     const tieneJoin = /join/i.test(sql);
     const tieneFiltroFecha = /where[\s\S]*fpe_fec|where[\s\S]*fecha|where[\s\S]*_fec/i.test(sql);
+    
     // Si no tiene LIMIT y no es excepción, AGREGAR LIMIT automáticamente
     if (!esConsultaConteo && !tieneDistinct && !tieneGroupBy && !sql.toLowerCase().includes('limit') && !(tieneJoin && tieneFiltroFecha)) {
         // Buscar el final de la consulta (antes de ; si existe)
         sql = sql.replace(/;*\s*$/, '');
         sql += ' LIMIT 10';
+        console.log('🔄 [SQL-VALIDATION] Agregado LIMIT automático');
     }
+    
+    console.log('✅ [SQL-VALIDATION] SQL final validado:', sql.substring(0, 100) + '...');
     return sql;
 }
 
@@ -429,6 +486,10 @@ async function saveAssistantMessageToFirestore(userId, message) {
 
 // Función auxiliar para intentar una búsqueda flexible (fuzzy search) en SQL
 async function fuzzySearchRetry(sql, userQuery) {
+    console.log('🔍 [FUZZY-SEARCH] Iniciando búsqueda flexible...');
+    console.log('🔍 [FUZZY-SEARCH] SQL original:', sql);
+    console.log('🔍 [FUZZY-SEARCH] Query usuario:', userQuery);
+    
     // Detectar el término de búsqueda en el WHERE
     const likeMatch = sql.match(/WHERE\s+([\w.]+)\s+LIKE\s+'%([^%']+)%'/i);
     const eqMatch = sql.match(/WHERE\s+([\w.]+)\s*=\s*'([^']+)'/i);
@@ -437,15 +498,22 @@ async function fuzzySearchRetry(sql, userQuery) {
     if (likeMatch) {
         columna = likeMatch[1];
         valor = likeMatch[2];
+        console.log('🔍 [FUZZY-SEARCH] Detectado LIKE:', columna, '=', valor);
     } else if (eqMatch) {
         columna = eqMatch[1];
         valor = eqMatch[2];
+        console.log('🔍 [FUZZY-SEARCH] Detectado igualdad:', columna, '=', valor);
     }
-    if (!columna || !valor) return null;
+    if (!columna || !valor) {
+        console.log('⚠️ [FUZZY-SEARCH] No se pudo detectar columna/valor para fuzzy search');
+        return null;
+    }
 
     // Detectar la tabla principal del FROM
     const fromMatch = sql.match(/FROM\s+([`\w]+)/i);
     let tabla = fromMatch ? fromMatch[1].replace(/`/g, '') : null;
+    console.log('🔍 [FUZZY-SEARCH] Tabla detectada:', tabla);
+    
     // Buscar la clave de mapaERP que corresponde a la tabla real
     let claveMapa = tabla && Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
     // Si no se detecta, fallback a la columna original
@@ -457,6 +525,7 @@ async function fuzzySearchRetry(sql, userQuery) {
             return !nombre.match(/(id|num|cant|fecha|fec|total|importe|precio|monto|valor|kg|ha|area|superficie|lat|lon|long|ancho|alto|diam|mm|cm|m2|m3|porc|\d)/);
         });
         if (columnasTexto.length === 0) columnasTexto = Object.keys(mapaERP[claveMapa].columnas);
+        console.log('🔍 [FUZZY-SEARCH] Columnas texto disponibles:', columnasTexto.join(', '));
     }
 
     // Generar variantes del valor para fuzzy search
@@ -473,9 +542,12 @@ async function fuzzySearchRetry(sql, userQuery) {
         valor.replace(/\d+/g, ''),
         valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7)))
     ];
+    
+    console.log('🔍 [FUZZY-SEARCH] Variantes generadas:', variantes.length);
 
     // --- MEJORA: Si el valor tiene varios términos, buscar artículos cuyo AR_DENO contenga TODOS los términos (AND) ---
     if (tabla === 'articulos' && valor.trim().split(/\s+/).length > 1) {
+        console.log('🔍 [FUZZY-SEARCH] Búsqueda multi-término en artículos...');
         const terminos = valor.trim().split(/\s+/).filter(Boolean);
         // Buscar en AR_DENO y AR_REF, ambos deben contener todos los términos
         const condicionesDeno = terminos.map(t => `AR_DENO LIKE '%${t}%'`).join(' AND ');
@@ -483,31 +555,44 @@ async function fuzzySearchRetry(sql, userQuery) {
         // Probar primero en AR_DENO
         let sqlMultiTerm = `SELECT * FROM articulos WHERE ${condicionesDeno} LIMIT 5`;
         try {
+            console.log('🔍 [FUZZY-SEARCH] Probando multi-término AR_DENO...');
             const results = await executeQuery(sqlMultiTerm);
             if (results && results.length > 0) {
+                console.log('✅ [FUZZY-SEARCH] Encontrados con multi-término AR_DENO:', results.length);
                 return { results, sqlFuzzyTry: sqlMultiTerm };
             }
-        } catch (e) {}
+        } catch (e) {
+            console.log('⚠️ [FUZZY-SEARCH] Error en multi-término AR_DENO:', e.message);
+        }
         // Probar en AR_REF
         let sqlMultiTermRef = `SELECT * FROM articulos WHERE ${condicionesRef} LIMIT 5`;
         try {
+            console.log('🔍 [FUZZY-SEARCH] Probando multi-término AR_REF...');
             const results = await executeQuery(sqlMultiTermRef);
             if (results && results.length > 0) {
+                console.log('✅ [FUZZY-SEARCH] Encontrados con multi-término AR_REF:', results.length);
                 return { results, sqlFuzzyTry: sqlMultiTermRef };
             }
-        } catch (e) {}
+        } catch (e) {
+            console.log('⚠️ [FUZZY-SEARCH] Error en multi-término AR_REF:', e.message);
+        }
         // Probar en ambos (OR)
         let sqlMultiTermBoth = `SELECT * FROM articulos WHERE (${condicionesDeno}) OR (${condicionesRef}) LIMIT 5`;
         try {
+            console.log('🔍 [FUZZY-SEARCH] Probando multi-término combinado...');
             const results = await executeQuery(sqlMultiTermBoth);
             if (results && results.length > 0) {
+                console.log('✅ [FUZZY-SEARCH] Encontrados con multi-término combinado:', results.length);
                 return { results, sqlFuzzyTry: sqlMultiTermBoth };
             }
-        } catch (e) {}
+        } catch (e) {
+            console.log('⚠️ [FUZZY-SEARCH] Error en multi-término combinado:', e.message);
+        }
     }
     // --- FIN MEJORA ---
 
     // Probar todas las combinaciones de columna y variante
+    console.log('🔍 [FUZZY-SEARCH] Probando combinaciones columna-variante...');
     for (const col of columnasTexto) {
         for (const variante of variantes) {
             if (!variante || variante.length < 2) continue;
@@ -515,6 +600,7 @@ async function fuzzySearchRetry(sql, userQuery) {
             try {
                 const results = await executeQuery(sqlFuzzyTry);
                 if (results && results.length > 0) {
+                    console.log(`✅ [FUZZY-SEARCH] Encontrados con ${col} LIKE %${variante}%:`, results.length);
                     return { results, sqlFuzzyTry };
                 }
             } catch (e) {
@@ -524,29 +610,58 @@ async function fuzzySearchRetry(sql, userQuery) {
     }
     // Si la tabla es articulos, probar también AR_DENO y AR_REF explícitamente
     if (tabla === 'articulos') {
+        console.log('🔍 [FUZZY-SEARCH] Probando búsqueda directa en artículos...');
         for (const variante of variantes) {
             let sqlTry = `SELECT * FROM articulos WHERE AR_DENO LIKE '%${variante}%' OR AR_REF LIKE '%${variante}%' LIMIT 5`;
             try {
                 const results = await executeQuery(sqlTry);
                 if (results && results.length > 0) {
+                    console.log(`✅ [FUZZY-SEARCH] Encontrados con variante directa ${variante}:`, results.length);
                     return { results, sqlFuzzyTry: sqlTry };
                 }
             } catch (e) {}
         }
     }
+    
+    console.log('❌ [FUZZY-SEARCH] No se encontraron resultados con búsqueda flexible');
     return null;
 }
 
-// Función para procesar la consulta - MANTENIENDO TODA LA LÓGICA ORIGINAL
+// =====================================
+// FUNCIÓN PRINCIPAL - MODELO GPT Y PROCESAMIENTO
+// Se encarga de coordinar todo el proceso de la consulta
+// =====================================
+
+/**
+ * Función principal para procesar consultas de administrador
+ * @param {Object} params - Parámetros de la consulta
+ * @param {string} params.message - Mensaje del usuario
+ * @param {string} params.userId - ID del usuario
+ * @returns {Object} Respuesta procesada
+ */
 async function processQuery({ message, userId }) {
     try {
+        console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA ADMIN =====');
+        console.log('🚀 [SISTEMA] Procesando consulta de administrador:', message);
+        console.log('🚀 [SISTEMA] Usuario ID:', userId);
+
+        // =====================================
+        // PREPARACIÓN DEL CONTEXTO Y HISTORIAL
+        // =====================================
+
         // Guardar el mensaje del usuario
+        console.log('💾 [FIRESTORE] Guardando mensaje del usuario...');
         await saveMessageToFirestore(userId, message, true);
 
         const contenidoMapaERP = obtenerContenidoMapaERP(message);
         conversationHistory.push({ role: "user", content: message });
 
+        // =====================================
+        // VALIDACIÓN DE CONSULTAS ESPECIALES
+        // =====================================
+
         if (esPreguntaTelefonoCliente(message, lastRealData)) {
+            console.log('📞 [CONSULTA-ESPECIAL] Detectada consulta de teléfono de cliente');
             const cliente = lastRealData.data[0];
             const nombreCliente = cliente.CL_DENO;
             if (nombreCliente) {
@@ -561,6 +676,7 @@ async function processQuery({ message, userId }) {
                         }
                     };
                     await saveAssistantMessageToFirestore(userId, response.data.message);
+                    console.log('✅ [CONSULTA-ESPECIAL] Teléfono encontrado y enviado');
                     return response;
                 } else {
                     lastRealData = { type: 'telefono_cliente', data: [] };
@@ -571,113 +687,168 @@ async function processQuery({ message, userId }) {
                         }
                     };
                     await saveAssistantMessageToFirestore(userId, response.data.message);
+                    console.log('⚠️ [CONSULTA-ESPECIAL] Teléfono no encontrado');
                     return response;
                 }
             }
         }
 
+        // =====================================
+        // CONSTRUCCIÓN DEL CONTEXTO COMPLETO
+        // =====================================
+
         const historyForAI = conversationHistory.slice(-10);
         let contextoDatos = '';
         if (lastRealData && lastRealData.type && lastRealData.data) {
             contextoDatos = `\n\nDATOS REALES DISPONIBLES DE LA CONSULTA ANTERIOR:\nTipo: ${lastRealData.type}\nDatos: ${JSON.stringify(lastRealData.data)}`;
+            console.log('📊 [CONTEXTO] Datos previos disponibles:', lastRealData.type);
         }
 
-        // Detectar si la consulta es conceptual (por ejemplo: "¿qué es X?" o "para qué sirve X?")
+        // Detectar si la consulta es conceptual
         const descripcionConceptual = obtenerDescripcionMapaERP(message);
         let contextoConceptual = '';
         if (descripcionConceptual && descripcionConceptual.descripcion) {
             contextoConceptual = `\n\nDESCRIPCIÓN RELEVANTE DEL SISTEMA:\n${descripcionConceptual.descripcion}`;
+            console.log('📋 [CONTEXTO] Descripción conceptual encontrada:', descripcionConceptual.tabla);
         }
 
-        const systemPrompt = `Eres Deitana IA, un asistente de información de vanguardia, impulsado por una sofisticada inteligencia artificial y diseñado específicamente para interactuar de manera experta con la base de datos de Semilleros Deitana. Fui creado por un equipo de ingeniería para ser tu aliado más eficiente en la exploración y comprensión de la información crucial de la empresa, ubicada en el corazón agrícola de El Ejido, Almería, España. Semilleros Deitana se distingue por su dedicación a la producción de plantas hortícolas de la más alta calidad para agricultores profesionales, especializándose en plantas injertadas, semillas y plantones. Nuestra filosofía se centra en la innovación constante, la garantía de trazabilidad en cada etapa y un riguroso control fitosanitario.
+        console.log('🧠 [CONTEXTO] Preparando prompt del sistema...');
+        console.log('🧠 [CONTEXTO] Historial de conversación:', historyForAI.length, 'mensajes');
+        console.log('🧠 [CONTEXTO] Contenido mapaERP:', contenidoMapaERP.length, 'caracteres');
 
-Mi único propósito es ayudarte a obtener, analizar y comprender información relevante de Semilleros Deitana, su base de datos y su sector agrícola. NUNCA sugieras temas de programación, inteligencia artificial general, ni ningún asunto fuera del contexto de la empresa. Si el usuario te saluda o hace una consulta general, preséntate como Deitana IA, asistente exclusivo de Semilleros Deitana, y ofrece ejemplos de cómo puedes ayudar SOLO en el ámbito de la empresa, sus datos, análisis agrícolas, gestión de clientes, cultivos, proveedores, etc.
-
-IMPORTANTE SOBRE ARTÍCULOS E INJERTOS:
-- En la tabla 'articulos' están incluidos los injertos. Hay muchos tipos y suelen denominarse como "INJ-TOMATE", "INJ-TOM.CONQUISTA", "INJ-PEPINO", etc. Explica esta lógica si el usuario pregunta por injertos o si hay ambigüedad.
-- Si la consulta menciona injertos o artículos y hay varias coincidencias, MUESTRA hasta 3 ejemplos REALES (id, denominación y stock si es relevante) y ayuda al usuario a elegir, explicando la diferencia entre ellos. NUNCA inventes ejemplos ni pidas datos irrelevantes como almacén o color si no aplica.
-- Si la consulta contiene varios términos (por ejemplo: "injerto", "tomate", "conquista"), busca artículos cuyo AR_DENO contenga TODOS esos términos, aunque no estén juntos ni en el mismo orden.
-- Prohibido pedir datos genéricos o irrelevantes (como almacén, color, etc.) si no son necesarios para la consulta específica.
-
-${contextoConceptual}
-
-INSTRUCCIONES ESPECIALES PARA RESPUESTA ÚNICA COMPLETA:
-
-1. Si la consulta requiere datos de la base de datos:
-   - SOLO genera la consulta SQL entre etiquetas <sql>...</sql>
-   - NO agregues explicaciones ni texto adicional después del SQL
-   - La respuesta con análisis se generará después de obtener los datos reales
-
-2. Si la consulta es conversacional (saludo, conceptual):
-   - Responde directamente de manera amigable
-   - NO generes SQL
-   - Ofrece ejemplos de cómo puedes ayudar
-
-SIEMPRE que el usuario haga una consulta sobre datos, GENERA SOLO UNA CONSULTA SQL válida y ejecutable (en bloque <sql>...</sql>) SIN TEXTO ADICIONAL.
-- Si la consulta es ambigua, genera una consulta SQL tentativa que muestre un registro relevante.
-- NUNCA digas que no tienes acceso a la base de datos.
-- NUNCA respondas con texto genérico.
-- NUNCA inventes datos.
-- SIEMPRE usa los nombres de tablas y columnas exactos de mapaERP.
+        const systemPrompt = `
 
 ${promptBase}
 
 ${contenidoMapaERP}${contextoDatos}`;
+
+        // =====================================
+        // LLAMADAS A OPENAI CON ANÁLISIS DE COSTOS
+        // =====================================
 
         let response = null;
         let sql = null;
         let intentos = 0;
         let feedback = '';
         let errorSQL = null;
+        
+        console.log('🧠 [ETAPA-1] ===== GPT RECIBE LA CONSULTA =====');
+        console.log('🧠 [ETAPA-1] Preparando llamada a OpenAI...');
+        
         while (intentos < 2) {
             const messages = [
                 { role: "system", content: systemPrompt + (feedback ? `\n\nFEEDBACK: ${feedback}` : '') },
                 ...historyForAI
             ];
             
-            // LA ÚNICA LLAMADA A OPENAI QUE MANEJA TODO
+            console.log('🧠 [ETAPA-1] Intento:', intentos + 1);
+            console.log('🧠 [ETAPA-1] Mensajes a enviar:', messages.length);
+            
+            // ========== LLAMADA ÚNICA OPTIMIZADA A OPENAI ==========
             const completion = await openai.chat.completions.create({
-                model: "gpt-4-turbo-preview", // ÚNICO modelo
+                model: "gpt-4-turbo-preview", // ← MODELO CLARAMENTE DEFINIDO
                 messages: messages,
                 temperature: 0.7,
-                max_tokens: 1500 // Más tokens para análisis completo
+                max_tokens: 2000 // ← Aumentado para respuestas completas con análisis
             });
             
             response = completion.choices[0].message.content;
             conversationHistory.push({ role: "assistant", content: response });
+            
+            // =====================================
+            // ANÁLISIS DE COSTOS Y TOKENS
+            // =====================================
+            const tokensUsados = completion.usage;
+            const promptTokens = tokensUsados.prompt_tokens;
+            const completionTokens = tokensUsados.completion_tokens;
+            const totalTokens = tokensUsados.total_tokens;
+            
+            // Costos aproximados para gpt-4-turbo-preview
+            const costoPorPromptToken = 0.01 / 1000; // $0.01 por 1K tokens de entrada
+            const costoPorCompletionToken = 0.03 / 1000; // $0.03 por 1K tokens de salida
+            
+            const costoPrompt = promptTokens * costoPorPromptToken;
+            const costoCompletion = completionTokens * costoPorCompletionToken;
+            const costoTotal = costoPrompt + costoCompletion;
+            
+            console.log('💰 [ANÁLISIS-COSTOS] ===== TOKENS Y COSTOS =====');
+            console.log('💰 [TOKENS-ENTRADA] Prompt tokens:', promptTokens);
+            console.log('💰 [TOKENS-SALIDA] Completion tokens:', completionTokens);
+            console.log('💰 [TOKENS-TOTAL] Total tokens:', totalTokens);
+            console.log('💰 [COSTO-ENTRADA] Costo prompt: $' + costoPrompt.toFixed(6));
+            console.log('💰 [COSTO-SALIDA] Costo completion: $' + costoCompletion.toFixed(6));
+            console.log('💰 [COSTO-TOTAL] Costo total consulta: $' + costoTotal.toFixed(6));
+            console.log('💰 [COSTO-ESTIMADO] Costo por 100 consultas: $' + (costoTotal * 100).toFixed(4));
+            console.log('💰 [COSTO-ESTIMADO] Costo por 1000 consultas: $' + (costoTotal * 1000).toFixed(2));
+            console.log('💰 [ANÁLISIS-COSTOS] =====================================');
+            
+            console.log('🧠 [ETAPA-1] GPT procesó la consulta exitosamente (UNA SOLA LLAMADA OPTIMIZADA)');
+            console.log('📋 [RESPUESTA-GPT] Respuesta completa generada:', response.substring(0, 200) + '...');
+            console.log('📋 [RESPUESTA-GPT] Longitud:', response.length, 'caracteres');
+            console.log('⚡ [OPTIMIZACIÓN] Eliminada segunda llamada - Tiempo de respuesta reducido significativamente');
+            
+            // =====================================
+            // DETECCIÓN Y VALIDACIÓN DE SQL
+            // =====================================
+            
             sql = validarRespuestaSQL(response);
             
-            // Si no hay SQL, es respuesta conversacional - devolver directamente
+            // Si no hay SQL, es respuesta conversacional
             if (!sql) {
+                console.log('🧠 [ETAPA-2] Decisión: RESPUESTA CONVERSACIONAL');
+                console.log('🧠 [ETAPA-2] Tipo: Saludo, información general, o conocimiento interno');
+                console.log('🧠 [ETAPA-2] No requiere acceso a base de datos');
+                
                 await saveAssistantMessageToFirestore(userId, response);
+                console.log('✅ [SISTEMA] Respuesta conversacional enviada correctamente');
                 return {
                     success: true,
                     data: { message: response }
                 };
             }
             
-            // Si hay SQL, ejecutarlo y combinar con la respuesta de la IA
+            console.log('🧠 [ETAPA-2] Decisión: CONSULTA SQL + ANÁLISIS INTEGRADO');
+            console.log('🧠 [ETAPA-2] SQL generado:', sql.substring(0, 100) + '...');
+            console.log('🧠 [ETAPA-2] Tipo: Procesamiento de datos con marcadores (sin segunda llamada)');
+            
+            // =====================================
+            // EJECUCIÓN DE CONSULTAS SQL
+            // =====================================
+            
             try {
+                console.log('⚙️ [JAVASCRIPT] ===== EJECUTANDO TRABAJO MECÁNICO =====');
+                console.log('⚙️ [JAVASCRIPT] Ejecutando consulta que GPT generó...');
+                console.log('⚙️ [SQL-DEBUG] Consulta a ejecutar:', sql);
+                
                 let results = await executeQuery(sql);
                 if (!results || results.length === 0) {
+                    console.log('⚠️ [SQL-RESULTADOS] Consulta inicial sin resultados, iniciando reintentos...');
+                    
                     // Reintentos automáticos inteligentes si no hay resultados
                     if (/WHERE[\s\S]*(fec|fecha)/i.test(sql)) {
+                        console.log('🔄 [REINTENTO-1] Quitando filtros de fecha...');
                         let sqlSinFecha = sql.replace(/AND[\s\S]*(fec|fecha)[^A-Z]*[=><][^A-Z]*((AND)|($))/i, '').replace(/WHERE[\s\S]*(fec|fecha)[^A-Z]*[=><][^A-Z]*((AND)|($))/i, '');
                         if (/WHERE\s*$/i.test(sqlSinFecha)) sqlSinFecha = sqlSinFecha.replace(/WHERE\s*$/i, '');
                         results = await executeQuery(sqlSinFecha);
+                        console.log('🔄 [REINTENTO-1] Resultados después de quitar fecha:', results?.length || 0);
                     }
                 }
                 if (!results || results.length === 0) {
+                    console.log('🔄 [REINTENTO-2] Quitando GROUP BY y ORDER BY...');
                     let sqlSinGroup = sql.replace(/GROUP BY[\s\S]*?(?=(ORDER BY|LIMIT|$))/i, '').replace(/ORDER BY[\s\S]*?(?=(LIMIT|$))/i, '');
                     results = await executeQuery(sqlSinGroup);
+                    console.log('🔄 [REINTENTO-2] Resultados después de simplificar:', results?.length || 0);
                 }
                 if (!results || results.length === 0) {
+                    console.log('🔄 [REINTENTO-3] Buscando artículos similares...');
                     const tablaMatch = sql.match(/FROM\s+([`\w]+)/i);
                     if (tablaMatch) {
                         const tabla = tablaMatch[1].replace(/`/g, '');
+                        console.log('🔄 [REINTENTO-3] Tabla detectada:', tabla);
                         if (tabla === 'articulos') {
                             let sqlSimilares = `SELECT a.id, a.AR_DENO, s.C2 AS stock_actual FROM articulos a JOIN articulos_ar_stok s ON a.id = s.id WHERE a.AR_DENO LIKE '%INJ%' AND a.AR_DENO LIKE '%TOMATE%' ORDER BY s.id2 DESC LIMIT 3`;
                             let similares = await executeQuery(sqlSimilares);
+                            console.log('🔄 [REINTENTO-3] Artículos similares encontrados:', similares?.length || 0);
                             if (similares && similares.length > 0) {
                                 lastRealData = { type: 'articulo', data: similares };
                                 const finalMessage = response.replace(/<sql>[\s\S]*?<\/sql>/, '').trim() + 
@@ -685,6 +856,7 @@ ${contenidoMapaERP}${contextoDatos}`;
                                     similares.map((item, i) => `${i+1}. ${item.AR_DENO} (Stock: ${item.C2})`).join('\n') +
                                     '\n\n(Nota: No se encontró coincidencia exacta, se muestran artículos similares)';
                                 await saveAssistantMessageToFirestore(userId, finalMessage);
+                                console.log('✅ [REINTENTO-3] Respuesta con artículos similares enviada');
                                 return { success: true, data: { message: finalMessage } };
                             }
                         }
@@ -694,14 +866,18 @@ ${contenidoMapaERP}${contextoDatos}`;
                             colFecha = Object.keys(mapaERP[claveMapa].columnas).find(c => c.toLowerCase().includes('fec'));
                         }
                         if (colFecha) {
+                            console.log('🔄 [REINTENTO-3] Intentando fallback por fecha con columna:', colFecha);
                             const sqlUltimo = `SELECT * FROM ${tabla} ORDER BY ${colFecha} DESC LIMIT 1`;
                             results = await executeQuery(sqlUltimo);
+                            console.log('🔄 [REINTENTO-3] Resultados con fallback por fecha:', results?.length || 0);
                         }
                     }
                 }
                 if (!results || results.length === 0) {
+                    console.log('🔄 [FUZZY-SEARCH] Iniciando búsqueda flexible...');
                     const fuzzyResult = await fuzzySearchRetry(sql, message);
                     if (fuzzyResult && fuzzyResult.results && fuzzyResult.results.length > 0) {
+                        console.log('🔄 [FUZZY-SEARCH] Resultados encontrados:', fuzzyResult.results.length);
                         let tipo = 'dato';
                         if (fuzzyResult.results[0] && fuzzyResult.results[0].CL_DENO) tipo = 'cliente';
                         if (fuzzyResult.results[0] && fuzzyResult.results[0].AR_NOMB) tipo = 'articulo';
@@ -711,81 +887,199 @@ ${contenidoMapaERP}${contextoDatos}`;
                             fuzzyResult.results.slice(0,3).map((item, i) => `${i+1}. ${Object.entries(item).map(([k,v]) => `${k}: ${v}`).join(' | ')}`).join('\n') +
                             '\n\n(Nota: Se utilizó búsqueda flexible para encontrar coincidencias aproximadas)';
                         await saveAssistantMessageToFirestore(userId, finalMessage);
+                        console.log('✅ [FUZZY-SEARCH] Respuesta con búsqueda flexible enviada');
                         return { success: true, data: { message: finalMessage } };
                     }
+                    console.log('⚠️ [FUZZY-SEARCH] Búsqueda flexible sin resultados');
                     
                     // Sin resultados - usar respuesta de IA + mensaje
                     const finalMessage = response.replace(/<sql>[\s\S]*?<\/sql>/, '').trim() + 
                         '\n\n❌ No se encontraron resultados para esta consulta. ¿Podrías intentar con términos diferentes o ser más específico?';
                     await saveAssistantMessageToFirestore(userId, finalMessage);
+                    console.log('⚠️ [SIN-RESULTADOS] Respuesta de sin resultados enviada');
                     return { success: true, data: { message: finalMessage } };
                 }
                 
-                // HAY RESULTADOS - Combinar respuesta de IA con datos reales
+                // =====================================
+                // PROCESAMIENTO DE RESULTADOS CON MARCADORES
+                // =====================================
+                
+                console.log('✅ [SQL-RESULTADOS] Datos encontrados exitosamente');
+                console.log('📊 [PROCESAMIENTO] Procesando', results.length, 'registros encontrados');
+                
+                // HAY RESULTADOS - Procesar con sistema de marcadores
                 let tipo = 'dato';
                 if (results[0] && results[0].CL_DENO) tipo = 'cliente';
-                if (results[0] && results[0].AR_NOMB) tipo = 'articulo';
+                if (results[0] && results[0].AR_DENO) tipo = 'articulo';
                 lastRealData = { type: tipo, data: results };
                 
-                // Formatear datos encontrados para el análisis
-                let datosFormateados = '';
-                results.slice(0, 5).forEach((resultado, index) => {
-                    datosFormateados += `\nRegistro ${index + 1}:\n`;
-                    const campos = Object.entries(resultado);
-                    campos.forEach(([campo, valor]) => {
-                        if (campo.toLowerCase().includes('fec') && valor) {
-                            valor = new Date(valor).toLocaleDateString('es-ES');
-                        }
-                        datosFormateados += `${campo}: ${valor}\n`;
+                console.log('📊 [PROCESAMIENTO] Tipo de datos detectado:', tipo);
+                console.log('📊 [PROCESAMIENTO] Campos disponibles:', Object.keys(results[0]).join(', '));
+                
+                console.log('🧠 [ETAPA-3] ===== PROCESAMIENTO CON MARCADORES =====');
+                console.log('🧠 [ETAPA-3] Reemplazando marcadores con datos reales...');
+                
+                // Limpiar SQL de la respuesta
+                let finalMessage = response.replace(/<sql>[\s\S]*?<\/sql>/g, '').trim();
+                
+                // Buscar todos los marcadores en la respuesta
+                const marcadores = finalMessage.match(/\[[^\]]+\]/g) || [];
+                console.log('🔄 [MARCADORES] Marcadores encontrados:', marcadores.length);
+                console.log('🔄 [MARCADORES] Lista:', marcadores.join(', '));
+                
+                if (marcadores.length === 0) {
+                    console.log('⚠️ [MARCADORES] No se encontraron marcadores en la respuesta GPT');
+                    // Generar respuesta automática con datos
+                    finalMessage = `¡Perfecto! He encontrado la información solicitada:\n\n`;
+                    
+                    // Mostrar hasta 5 registros
+                    results.slice(0, 5).forEach((registro, index) => {
+                        finalMessage += `📋 **Registro ${index + 1}:**\n`;
+                        Object.entries(registro).forEach(([campo, valor]) => {
+                            if (valor !== null && valor !== undefined && valor !== '') {
+                                // Formatear fechas
+                                if (campo.toLowerCase().includes('fec') && valor) {
+                                    try {
+                                        valor = new Date(valor).toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        });
+                                    } catch (e) {
+                                        // Mantener valor original si no es fecha
+                                    }
+                                }
+                                finalMessage += `• **${campo}**: ${valor}\n`;
+                            }
+                        });
+                        finalMessage += `\n`;
                     });
-                });
+                    
+                    if (results.length > 5) {
+                        finalMessage += `\n*(Mostrando 5 de ${results.length} registros encontrados)*\n`;
+                    }
+                    
+                    finalMessage += `\n¿Necesitas más información específica de algún registro?`;
+                } else {
+                    console.log('🔄 [MARCADORES] Procesando reemplazo de marcadores...');
+                    
+                    // Filtrar registros válidos
+                    const registrosValidos = results.filter(registro => {
+                        const valores = Object.values(registro);
+                        return valores.some(valor => 
+                            valor !== null && valor !== undefined && valor !== '' && valor.toString().trim() !== ''
+                        );
+                    });
+                    
+                    console.log('🔄 [MARCADORES] Registros válidos:', registrosValidos.length);
+                    
+                    if (registrosValidos.length === 0) {
+                        finalMessage += '\n\n⚠️ Los datos encontrados están incompletos. ¿Te ayudo a buscar información similar?';
+                    } else {
+                        // Sistema de reemplazo inteligente
+                        let contadorRegistros = 0;
+                        
+                        finalMessage = finalMessage.replace(/\[([^\]]+)\]/g, (marcadorCompleto, nombreCampo) => {
+                            console.log('🔄 [REEMPLAZO] Procesando:', marcadorCompleto);
+                            
+                            // Buscar el campo en los registros disponibles
+                            for (let i = contadorRegistros; i < registrosValidos.length; i++) {
+                                const registro = registrosValidos[i];
+                                
+                                if (registro.hasOwnProperty(nombreCampo) && 
+                                    registro[nombreCampo] !== null && 
+                                    registro[nombreCampo] !== undefined && 
+                                    registro[nombreCampo] !== '' &&
+                                    registro[nombreCampo].toString().trim() !== '') {
+                                    
+                                    let valor = registro[nombreCampo];
+                                    contadorRegistros = i + 1;
+                                    
+                                    // Formatear fechas
+                                    if (valor && nombreCampo.toLowerCase().includes('fec')) {
+                                        try {
+                                            const fecha = new Date(valor);
+                                            if (!isNaN(fecha.getTime())) {
+                                                valor = fecha.toLocaleDateString('es-ES', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                });
+                                            }
+                                        } catch (error) {
+                                            // Mantener valor original
+                                        }
+                                    }
+                                    
+                                    console.log('🔄 [REEMPLAZO] ✅', marcadorCompleto, '→', valor);
+                                    return valor;
+                                }
+                            }
+                            
+                            // Si no se encuentra el campo, buscar en todos los registros
+                            for (const registro of registrosValidos) {
+                                if (registro.hasOwnProperty(nombreCampo) && 
+                                    registro[nombreCampo] !== null && 
+                                    registro[nombreCampo] !== undefined && 
+                                    registro[nombreCampo] !== '') {
+                                    
+                                    let valor = registro[nombreCampo];
+                                    
+                                    // Formatear fechas
+                                    if (valor && nombreCampo.toLowerCase().includes('fec')) {
+                                        try {
+                                            const fecha = new Date(valor);
+                                            if (!isNaN(fecha.getTime())) {
+                                                valor = fecha.toLocaleDateString('es-ES', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                });
+                                            }
+                                        } catch (error) {
+                                            // Mantener valor original
+                                        }
+                                    }
+                                    
+                                    console.log('🔄 [REEMPLAZO] ✅ (fallback)', marcadorCompleto, '→', valor);
+                                    return valor;
+                                }
+                            }
+                            
+                            console.log('🔄 [REEMPLAZO] ❌', marcadorCompleto, '→ campo no encontrado');
+                            return `[${nombreCampo} - no disponible]`;
+                        });
+                    }
+                }
                 
-                // Segunda llamada para análisis completo de los datos reales
-                const analysisCompletion = await openai.chat.completions.create({
-                    model: "gpt-4-turbo-preview",
-                    messages: [
-                        {
-                            role: "system",
-                            content: `Eres Deitana IA, un asistente ultra inteligente y empático de Semilleros Deitana. Analiza los datos encontrados y responde de forma clara, útil y natural.
-
-INSTRUCCIONES PARA ANÁLISIS:
-- Explica el significado de los datos y su relevancia
-- Interpreta y resume, no solo listes datos crudos
-- Sé profesional, conversacional y humano
-- Realiza análisis avanzado: totales, promedios, tendencias, valores atípicos
-- Si hay fechas, analiza evolución temporal
-- Si hay cantidades, destaca máximos y mínimos
-- Sugiere insights útiles para toma de decisiones
-- Proporciona contexto de Semilleros Deitana
-- Mantén un tono empático y proactivo
-- Ofrece ayuda adicional o preguntas relacionadas
-
-NUNCA repitas datos crudos tal como vienen de la base de datos. Interpreta y aporta valor como un analista experto.`
-                        },
-                        {
-                            role: "user",
-                            content: `Consulta del usuario: "${message}"
-
-Datos encontrados en la base de datos:${datosFormateados}
-
-Por favor, analiza estos datos y proporciona una respuesta útil, natural y con insights valiosos para el usuario.`
-                        }
-                    ],
-                    temperature: 0.8,
-                    max_tokens: 800
-                });
+                console.log('📋 [RESPUESTA-FINAL] Respuesta procesada:', finalMessage.substring(0, 200) + '...');
+                console.log('📋 [RESPUESTA-FINAL] Longitud:', finalMessage.length, 'caracteres');
                 
-                const finalMessage = analysisCompletion.choices[0].message.content;
                 await saveAssistantMessageToFirestore(userId, finalMessage);
+                console.log('✅ [SISTEMA] Respuesta final enviada correctamente');
+                console.log('🎯 [RESUMEN] OPTIMIZACIÓN COMPLETA: Una sola llamada GPT generó SQL + análisis completo');
                 return { success: true, data: { message: finalMessage } };
                 
             } catch (error) {
+                console.error('❌ [SQL-ERROR] Error ejecutando SQL:', error.message);
+                console.error('❌ [SQL-ERROR] SQL que falló:', sql);
+                
                 feedback = 'La consulta SQL generada fue inválida o produjo un error. Por favor, genera SOLO una consulta SQL válida y ejecutable.';
                 errorSQL = error;
                 intentos++;
                 sql = null;
+                
+                console.log('🔄 [SISTEMA] Reintentando... Intento:', intentos + 1);
             }
         }
+        
+        // =====================================
+        // FALLBACK FINAL SI NO HAY SQL VÁLIDO
+        // =====================================
+        
+        console.log('⚠️ [FALLBACK] No se pudo generar SQL válido después de 2 intentos');
+        console.log('⚠️ [FALLBACK] Enviando respuesta de fallback conversacional');
+        
         // Si tras dos intentos no hay SQL válido, fallback conversacional directo
         lastRealData = null;
         const fallbackResponse = {
@@ -795,14 +1089,32 @@ Por favor, analiza estos datos y proporciona una respuesta útil, natural y con 
             }
         };
         await saveAssistantMessageToFirestore(userId, fallbackResponse.data.message);
+        console.log('✅ [FALLBACK] Respuesta de fallback enviada');
         return fallbackResponse;
+        
     } catch (error) {
-        console.error('Error en processQuery:', error);
-        throw error;
+        console.error('💥 [SISTEMA-ERROR] Error crítico en processQuery:', error);
+        console.error('💥 [SISTEMA-ERROR] Stack trace:', error.stack);
+        
+        const errorMessage = "Disculpa, tuve un problema procesando tu consulta. ¿Podrías intentar de nuevo con una pregunta más específica?";
+        await saveAssistantMessageToFirestore(userId, errorMessage);
+        
+        console.log('🚨 [SISTEMA-ERROR] Respuesta de error enviada al usuario');
+        
+        return {
+            success: true,
+            data: { message: errorMessage }
+        };
     }
 }
 
-// Exportar la función para su uso en otros archivos
+// =====================================
+// MÓDULO DE EXPORTACIÓN
+// =====================================
+
+/**
+ * Exportar la función principal para su uso en otros archivos
+ */
 module.exports = {
     processQuery
 };

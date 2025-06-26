@@ -1,0 +1,350 @@
+DESCRIPCIÓN DE SECCIONES DEL SISTEMA ERP - SEMILLEROS DEITANA
+===============================================================
+
+/* ======================================================================================================================================================================*/
+/* ARCHIVOS                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+  /* Archivos – Generales – Acciones Comerciales */
+  
+"Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido."
+
+  /* Archivos – Generales – Acciones Comerciales - Observaciones */
+  
+"Tabla que registra información detallada sobre observaciones, incidencias y feedback. Almacena notas asociadas a cada acción en acciones_com, divididas en filas según el id2."
+
+  /* Archivos – Generales – Artículos */
+  
+"Nuestros artículos son los productos, insumos o bienes con los que trabajamos en Semilleros Deitana. Para cada uno registramos información clave como su descripción, categoría, unidad de medida, precio y características específicas, lo que nos permite asegurar su correcta gestión, control y trazabilidad en cada etapa del proceso. Incluye detalles de stock."
+
+  /* Archivos – Generales – Clientes */
+  
+"Información de clientes activos"
+
+  /* Archivos – Generales – Familias y Grupos */
+  
+"Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia."
+
+  /* Archivos – Generales – Formas de pago/cobro */
+  
+"Define y gestiona las formas de pago y cobro utilizadas en transacciones comerciales. Actúa como un catálogo maestro para estandarizar operaciones financieras, vincular transacciones y gestionar vencimientos."
+
+  /* Archivos – Generales – Nuestros bancos */
+  
+"Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros."
+
+  /* Archivos – Generales – Proveedores */
+  
+"La tabla 'proveedores' dentro del sistema ERP centraliza la información detallada de todos los proveedores con los que opera Semilleros Deitana. Cada registro representa un proveedor único, identificado mediante un código (id). Esta tabla almacena datos cruciales que abarcan información fiscal, detalles de contacto, datos bancarios y aspectos administrativos, incluyendo domicilio, provincia, CIF, y registros de la última compra, entre otros."
+
+  /* Archivos – Generales – Vendedores/Usuarios */
+  
+"La tabla 'vendedores' del sistema ERP de Semilleros Deitana constituye el repositorio centralizado para la gestión de la información de los usuarios internos que desempeñan funciones de venta o que simplemente tienen acceso al sistema como usuarios."
+
+  /* Archivos – Auxiliares – Bandejas */
+  
+"La tabla 'bandejas' dentro del sistema ERP contiene un listado exhaustivo y detallado de las características técnicas y económicas asociadas a los diferentes tipos de bandejas (ya sean físicas, reutilizables o desechables) que se emplean en los procesos de siembra y cultivo en alvéolos. Es importante notar que esta sección también puede incluir información relativa a macetas u otros contenedores utilizados en estos procesos."
+
+  /* Archivos – Auxiliares – Casas comerciales */
+  
+"Gestión y almacenamiento de información de las casas comerciales con las que Semilleros Deitana interactúa. Es fundamental para mantener un registro organizado de socios comerciales y sus datos clave."
+
+  /* Archivos – Auxiliares – Categorias */
+  
+"Define las categorías laborales utilizadas en Semilleros Deitana para establecer condiciones contractuales y económicas de los trabajadores (salario, horarios, costes). No son categorías de producto."
+
+  /* Archivos – Auxiliares – Créditos caución */
+  
+"Gestión y seguimiento de seguros de crédito (créditos caución) asociados a clientes para proteger frente al riesgo de impago. Permite registrar y consultar pólizas o acuerdos de seguro de crédito específicos."
+
+  /* Archivos – Auxiliares – Delegaciones */
+  
+"Representa las delegaciones o almacenes físicos y operativos de la empresa. Sirve como referencia para identificar la ubicación asociada a una acción en el ERP y vincular recursos financieros por defecto."
+
+  /* Archivos – Auxiliares – Dispositivos móviles */
+  
+"Gestión centralizada de dispositivos móviles (PDAs u otros terminales portátiles) utilizados en Semilleros Deitana..."
+
+  /* Archivos – Auxiliares – Envases de venta */
+  
+"Cataloga los diferentes tipos de envases y formatos utilizados para la comercialización de semillas y productos, detallando características físicas y comerciales."
+
+  /* Archivos - Auxiliares - Invernaderos */
+  
+"Contiene la información base de las estructuras físicas de invernaderos, utilizadas para siembra y cultivo. Incluye identificación, vinculación a almacenes, secciones y filas. Nota: Existen otras tablas relacionadas (secciones, filas, tratamientos) no detalladas aquí."
+
+  /* Archivos - Auxiliares - Motivos */
+  
+"Catálogo estandarizado de causas o razones predefinidas utilizadas para documentar y clasificar eventos, acciones o situaciones internas (Ej: plagas, descartes, incidencias)."
+
+  /* Archivos - Auxiliares - Paises */
+  
+"Catálogo maestro de referencia con el listado de países relevantes para la actividad comercial y productiva de la empresa (origen/destino productos, ubicación clientes/proveedores). Diseñada para servir como soporte a otras tablas."
+
+  /* Archivos - Auxiliares - Procesos */
+  
+"Define las etapas o procedimientos del ciclo productivo agrícola (semillero), como germinación o trasplante. Contiene campos que controlan la lógica interna del ERP para estas etapas."
+
+  /* Archivos – Auxiliares – Productos Fitosanitarios */
+  
+"Gestión y registro detallado de productos fitosanitarios para tratamientos agronómicos (prevención, control de plagas/enfermedades). Centraliza información técnica y de uso para aplicación segura y trazabilidad."
+
+  /* Archivos – Auxiliares – Rutas */
+  
+"Define las rutas, incluyendo su código, nombre y el artículo asociado, que generalmente representa un servicio de transporte."
+
+  /* Archivos – Auxiliares – Sección Tareas */
+  
+"Catálogo de categorías o tipos de tareas operativas y administrativas (injertos, siembra, riegos, limpieza, etc.). Fundamental para clasificar y cuantificar mano de obra y actividades en partes de trabajo y reportes."
+
+  /* Archivos – Auxiliares – Sectores y Subsectores */
+  
+"Define clasificaciones de origen para pedidos y clientesCrucial para análisis segmentación y seguimiento por canal. Nota: Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos existen y se usan para clasificación."
+
+  /* Archivos – Auxiliares – Sustratos */
+  
+"Gestión y registro de materiales o mezclas utilizados como medio de cultivo. Esencial para control de costes, precios y planificación de materiales en la producción."
+
+  /* Archivos – Auxiliares – Ubicaciones */
+  
+"Catálogo centralizado de ubicaciones físicas o lógicas (invernaderos, semilleros, almacenes) relevantes para las operaciones. Proporciona referencia espacial estandarizada para organizar, trazar y optimizar actividades y recursos."
+
+  /* Archivos – Auxiliares – Zonas */
+  
+"Catálogo para organizar áreas físicas o lógicas operativas (trabajo, producción, almacenamiento). Fundamental para estructurar espacialmente, mejorar trazabilidad y optimizar gestión de inventario y tareas."
+
+  /* Archivos – Otros – Departamentos */
+  
+"Cataloga las áreas o unidades funcionales de la empresa (administración, producción, etc.). Fundamental para asignar responsabilidades, gestionar usuarios/roles, clasificar tareas y generar reportes por área."
+
+  /* Archivos – Otros – Secciones Trabajadores */
+  
+"Cataloga áreas funcionales, grupos o secciones internas a las que pertenecen los trabajadores. Fundamental para la gestión de RRHH, asignación de tareas y reportes de personal segmentados."
+
+  /* Archivos – Otros – Tareas Per */
+  
+"Gestión detallada de tareas internas realizadas por el personal. Cada tarea se vincula a una 'Sección de Tarea' (de la tabla tareas_seccion). Esencial para partes de trabajo, seguimiento de tiempo/recursos y análisis de productividad."
+
+/* ======================================================================================================================================================================*/
+/* PRODUCCION                                                                                                                                                             */
+/* ======================================================================================================================================================================*/
+
+  /* Producción - Partes – Partes de Siembra */
+  
+"Parte de siembra. Registra operaciones de siembra documentando cuándo,partes de siembra, quién, qué semilla, dónde se sembró (almacén), lote y resultados globales (bandejas/palet, total bandejas). Fundamental para documentar el proceso, vincular insumos/personal/ubicación y controlar la producción desde el inicio."
+
+  /* Produccion-Partes-Partes Extendido */
+  
+"Registra información extendida relacionada con partes de producción, incluyendo número de partida, fecha, hora, usuario, tipo y los invernaderos de origen y destino."
+
+  /* Produccion-Partes-Partes de tratamiento */
+  
+"Registra los partes de tratamiento fitosanitario, incluyendo información general, personal involucrado, aplicador y equipo utilizado, problema fitosanitario y el tratamiento aplicado. Contiene relaciones con las zonas tratadas, productos utilizados y familias a tratar."
+
+  /* Produccion-Partes-Partes de Visita */
+  
+"Registra las visitas realizadas, documentando la fecha, hora, el usuario que la gestionó, y el cliente o proveedor asociado a la visita. Esta sección también detalla las partidas específicas que fueron objeto de la visita."
+
+/* ======================================================================================================================================================================*/
+/* Injertos                                                                                                                                                      */
+/* ======================================================================================================================================================================*/
+
+  /* Injertos - Utilidades – Medias bandejas */
+  
+"Registra información sobre medias bandejas, incluyendo el código de partida, alveolos, huecos, etiqueta, cantidad de plantas, fecha y hora de registro, y el operario asociado. El 'id' suele coincidir con el código de partida."
+
+  /* Injertos - Utilidades – Escandallo Injertos */
+  
+"Registra los detalles del escandallo de injertos, incluyendo el código de partida, información de alveolos y huecos, etiqueta, cantidad de plantas y bandejas, fecha y hora de registro, y el operario asociado. El 'id' suele ser un código de identificación único para cada registro de escandallo."
+
+  /* Injertos - Injertos por fases – Técnicos fases */
+  
+"Registra la asignación de técnicos a diferentes fases de los injertos por partida y fecha. Detalla qué técnicos trabajaron en una fase específica de una partida y la cantidad de bandejas asociadas a su trabajo."
+
+  /* Injertos - Injertos por fases – Partes injertos sandía */
+  
+"Registra los partes de injerto de sandía, documentando la máquina 'enterradora' y el operario que realizaron el injerto, la partida de siembra asociada, el número de bandejas procesadas, la fecha y hora de la operación, y una etiqueta identificativa. También incluye un código de operario más corto."
+
+  /* Injertos - Injertos por fases – Partes injertos tomate */
+  
+"Registra los partes de injerto de tomate, documentando al operario que realizó el injerto, la partida de siembra asociada, el número de bandejas procesadas, la fecha y hora de la operación, y una etiqueta identificativa. Incluye tanto un identificador largo como un código corto para el operario."
+
+/* ======================================================================================================================================================================*/
+/* VENTAS                                                                                                                                                       */
+/* ======================================================================================================================================================================*/
+
+  /* Ventas – Gestion – Encargos de siembra */
+  
+"Registra los encargos de siembra de los clientes, incluyendo información del cliente, almacén, fecha, vendedor, forma de pago y estado. Contiene relaciones con observaciones, costes adicionales, reservas de plantas y las partidas de siembra asociadas."
+
+  /* Ventas – Gestion – Albaranes de Venta */
+  
+"Registra y gestiona los albaranes de venta. Documenta la salida de productos hacia clientes, crucial para control de inventario, confirmación de entregas y base para facturación."
+
+  /* Ventas – Gestion – Devoluciones clientes */
+  
+"Registra las devoluciones de los clientes, incluyendo la fecha, el usuario que gestionó la devolución, la delegación donde se realizó, y el cliente que hizo la devolución. Contiene relaciones con los carros devueltos y las observaciones sobre la devolución."
+
+  /* Ventas – Gestion – Registro de Facturas Emitidas */
+  
+"Registra y administra las facturas de venta emitidas por la empresa a sus clientes. Esta tabla es fundamental para la documentación de ventas, el control financiero y la gestión de cobros."
+
+  /* Ventas - Otros - Partidas */
+  
+"Registra las partidas de siembra, vinculadas a los encargos de los clientes. Contiene información sobre la fecha, tipo de semilla (propia o no), la semilla utilizada, lote, germinación, tipo de siembra, sustrato, cantidades (semillas, plantas, alveolos, bandejas), fechas (siembra, entrega, solicitada) y denominación/observaciones."
+
+  /* Ventas – Otros – Reservas */
+  
+"Gestiona las reservas de diversos tipos de pedidos, como siembras normales, injertos o componentes. Es clave para el seguimiento de las reservas para un cliente, detallando la semilla, la germinación esperada y las particularidades del proceso de siembra."
+
+  /* Ventas – Gestión Comercial – Futuros Clientes */
+  
+"Gestiona la información de clientes potenciales o 'futuros clientes' para el equipo de ventas. Incluye datos de contacto, fiscales, comerciales y detalles sobre su actividad, así como un historial de observaciones para el seguimiento de la prospección."
+
+/* ======================================================================================================================================================================*/
+/* COBROS                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+  /* Cobros – General – Cartera de Cobros */
+  
+"Administra la 'cartera de cobros', registrando documentos o partidas pendientes de cobro a clientes. Permite seguimiento de importes adeudados, fechas de vencimiento y vinculación con vendedor, cliente y banco."
+
+  /* Cobros – General – Remesas Cobros */
+  
+"Gestiona 'remesas de cobro', agrupando partidas pendientes (de Cartera de cobros) para su presentación conjunta a un banco. Esencial para automatizar y controlar el proceso de cobro bancario y conciliación."
+
+  /* Cobros - General - Control de impagos */
+  
+"Gestiona el control de facturas impagadas, permitiendo el seguimiento de los pagos parciales y la identificación de los agentes de cobro. Se enlaza con la tabla de facturas emitidas para obtener el monto total original de la factura."
+
+  /* Cobros – Caja – Movimientos Caja Bancos */
+  
+"Registra y gestiona los traspasos de fondos entre las diferentes cajas (efectivo) y cuentas bancarias de la empresa. Documenta flujos monetarios internos para control de tesorería y conciliación."
+
+/* ======================================================================================================================================================================*/
+/* COMPRAS                                                                                                                                                             */
+/* ======================================================================================================================================================================*/
+
+  /* Compras – Gestión Compras – Albaranes Compra */
+  
+"Registra y administra los albaranes de compra, documentando la recepción de mercancías o servicios de proveedores. Crucial para control de inventario, verificación de pedidos, validación de facturas y seguimiento de condiciones comerciales."
+
+  /* Compras – Gestión Compras – Pedidos a Proveedor */
+  
+"Registra y sigue los pedidos de compra realizados a proveedores. Es el punto de partida formal para solicitar la adquisición de bienes o servicios. Es crucial para la planificación de compras, el control de inventario, la gestión de proveedores y sirve como base para las recepciones de mercancía y las facturas de compra."
+
+  /* Compras – Facturación Compras – Registro de Facturas Recibidas */
+  
+"Registra y gestiona las facturas recibidas de proveedores. Punto de entrada formal de documentos de cobro de proveedores. Crucial para control financiero, cuentas por pagar, validación y base para pagos."
+
+  /* Compras – Facturación Compras – Facturas de Gastos */
+  
+"Registra facturas correspondientes a gastos generales de la empresa, distintos de compras de inventario (incluye pagos de préstamos). Documenta costos operativos y administrativos para control, contabilidad y análisis."
+
+  /* Compras – General Pagos – Cartera de pagos */
+  
+"Administra la 'cartera de pagos', registrando obligaciones pendientes a proveedores y otros acreedores. Permite seguimiento de cantidades adeudadas, fechas de vencimiento, y vinculación con acreedor, banco de origen y responsable interno."
+
+  /* Compras – General Pagos – Remesas de Pago */
+  
+"Gestiona 'remesas de pago', agrupando partidas pendientes (de Cartera de pagos) para su procesamiento conjunto, típicamente vía banco. Facilita y automatiza el proceso de pago a proveedores de forma masiva."
+
+/* ======================================================================================================================================================================*/
+/* ORNAMENTAL                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+  /* Ornamental – Compras – Albarán Compra Ornamental */
+  
+"Registra y administra los albaranes de compra, documentando la recepción de mercancías o servicios de proveedores. Crucial para control de inventario, verificación de pedidos, validación de facturas y seguimiento de condiciones comerciales."
+
+  /* Ornamental – Ventas – Albarán venta Ornamental */
+  
+"Registra y gestiona los albaranes de venta específicos para productos ornamentales. Documenta la salida de productos hacia clientes, crucial para control de inventario, confirmación de entregas y base para facturación."
+
+  /* Ornamental – Ventas – Registro Facturas Emitidas */
+  
+"Registra las facturas de venta emitidas por la empresa. Incluye información sobre el cliente, almacén, vendedor, fecha, montos y forma de pago."
+
+  /* Ornamental – Producción – Partes */
+  
+"Registra operaciones/partes de producción en partidas de plantas ornamentales (cambios de envase, traslados, etc.). Formaliza y traza actividades, documentando cantidades, envases y ubicaciones antes/después. Crucial para control, trazabilidad y gestión del inventario por ubicación/envase."
+
+/* ======================================================================================================================================================================*/
+/* ALMACEN                                                                                                                                                            */
+/* ======================================================================================================================================================================*/
+
+  /* Almacen - General - Tratamientos fitosanitarios */
+  
+"Catálogo de tratamientos fitosanitarios, incluyendo su denominación y método de aplicación. Contiene relaciones con las plagas que ataca, los productos fitosanitarios utilizados y las familias afectadas."
+
+  /* Almacen - General - Telefonos */
+  
+"Catálogo centralizado para el registro y administración de los números de teléfono utilizados por la empresa. Documenta números, extensiones, estado, operadora y otros detalles para gestión interna de comunicaciones."
+
+  /* Almacén - Almacén - Recuentos plantas */
+  
+"Gestiona los recuentos e inventarios de plantas. Registra la fecha del recuento, el vendedor y el almacén responsables, y una descripción del inventario. Los detalles de las plantas contadas se almacenan en una tabla relacionada."
+
+  /* Almacen - Almacen - Consumo */
+  
+"Registra eventos de 'consumo', es decir, salidas de inventario por motivos distintos a ventas (uso interno, mermas, etc.). Documenta la salida de inventario por almacén y fecha, con una descripción del responsable y el valor total, además de los detalles de los artículos consumidos."
+
+  /* Almacén - Varios - Remesas */
+  
+"Registra envíos o movimientos específicos de artículos del almacén, vinculados a lotes y clientes. Permite documentar salidas de inventario por consumo/envío no estándar y adjuntar observaciones detalladas. Crucial para trazabilidad por lote y documentación de movimientos específicos."
+
+  /* Almacén - Varios - Tarifas de precios */
+  
+"Gestiona las diferentes tarifas de precios para plantas, especificando el período de validez, el almacén asociado y el título de la tarifa. Un registro principal puede tener múltiples líneas de detalle que definen los precios por artículo y tipo de tarifa."
+
+  /* Almacén - Varios - Carros */
+  
+"Registra y gestiona 'Carros' (trolleys/racks móviles) utilizados para mover o enviar bandejas/plantas. Rastrea su identificación, estado, cliente asociado y fecha de retirada. Útil para gestión de activos de transporte."
+
+  /* Almacén - Varios - Depositos */
+  
+"Registra información sobre 'Depósitos' (monetarios o de mercancía) asociados a encargos de siembra. Documenta el depósito, su fecha, almacén y el encargo de siembra relacionado. Crucial para seguimiento de depósitos vinculados a órdenes de siembra."
+
+  /* Almacén – Maquinaria - Maquinaria */
+  
+"Registra y administra las máquinas y equipos utilizados por la empresa como un inventario detallado. Permite mantener un registro completo de características, adquisición, seguro, operador actual y tipo de maquinaria. Crucial para gestión de activos, mantenimiento, control y asignación."
+
+  /* Almacén – Maquinaria - Tipo Maquinaria */
+  
+"Define y gestiona las categorías o tipos de maquinaria utilizados por la empresa. Funciona como un catálogo maestro para estandarizar la clasificación de equipos y sirve como referencia para otros módulos."
+
+  /* Almacén – Maquinaria - Reparaciones */
+  
+"Registra el historial de reparaciones de maquinaria y equipos. Documenta qué máquina se arregló, cuándo, quién (técnico/proveedor), dónde (almacén) y cuánto costó. Fundamental para seguimiento de mantenimiento, costos y rendimiento de equipos."
+
+  /* Almacén – Maquinaria - Partes Gasoil */
+  
+"Registra y gestiona los 'Partes de Gasoil', documentando la carga o el consumo de combustible asociado a máquinas y vehículos. Permite control detallado de quién carga, en qué máquina, fecha, almacén y tipo de combustible para control de costes y gestión de maquinaria."
+
+  /* Almacén – Maquinaria - Entregas Material(EPI) */
+  
+"Registra entregas de material (específicamente EPI u otros artículos) desde el almacén al personal/técnicos. Documenta y traza qué se entrega, a quién, cuándo y desde dónde. Crucial para gestión de inventario de EPI, cumplimiento de normativas y control de costes."
+
+  /* Tecnicos */
+  
+"Información de los técnicos de la empresa, incluyendo su nombre, teléfono, email y otros datos relevantes, así como su historial laboral y contractual."
+
+/* ======================================================================================================================================================================*/
+/* Partes y Tratamientos                                                                                                                                                        */
+/* ======================================================================================================================================================================*/
+
+  /* Partes y Tratamientos – Personal – Fichajes personal */
+  
+"Registra los fichajes diarios de los técnicos, con información general del día. Los detalles de cada fichaje (técnico, ubicación, tarea, hora inicio/fin) se encuentran en la tabla relacionada 'fichajesperso_fpe_lna'."
+
+  /* Partes y Tratamientos – Aplicadores Fitosanitarios */
+  
+"Catálogo de aplicadores fitosanitarios registrados en el sistema, identificados por un código único y una denominación."
+
+  /* Partes y Tratamientos – Equipos Fitosanitarios */
+  
+"Catálogo de equipos fitosanitarios registrados en el sistema, identificados por un código único y una denominación."
+
+  /* Tarifas */
+  
+"Registra las diferentes tarifas disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe." 
