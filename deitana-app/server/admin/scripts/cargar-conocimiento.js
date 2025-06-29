@@ -2,7 +2,7 @@
 // SCRIPT PARA CARGAR CONOCIMIENTO DE EMPRESA
 // =====================================
 
-const ragInteligente = require('./ragInteligente');
+const ragInteligente = require('../core/ragInteligente');
 const fs = require('fs');
 const path = require('path');
 
@@ -16,13 +16,18 @@ const CONFIG = {
     // Archivos de conocimiento a procesar
     archivos: [
         {
-            ruta: './baseConocimiento.txt',
+            ruta: '../data/baseConocimiento.txt',
             categoria: 'empresa_general',
             version: '1.0'
         },
         {
-            ruta: './descripcionERP.txt', 
+            ruta: '../data/descripcionERP.txt', 
             categoria: 'erp_sistema',
+            version: '1.0'
+        },
+        {
+            ruta: '../data/conocimiento-empresa-optimizado.txt',
+            categoria: 'empresa_optimizada',
             version: '1.0'
         }
         // Añadir más archivos aquí cuando estén disponibles
@@ -292,4 +297,4 @@ if (args.includes('--verify') || args.includes('-v')) {
     main();
 }
 
-module.exports = { cargarTodoElConocimiento, verificarSistema }; 
+module.exports = { cargarTodoElConocimiento, verificarSistema };

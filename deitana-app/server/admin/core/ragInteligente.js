@@ -217,12 +217,16 @@ async function buscarEnPinecone(embedding) {
     try {
         // Simular búsqueda en Pinecone (adaptar a tu implementación real)
         // Esto debería usar tu función existente de Pinecone
-        return await pineconeMemoria.buscarSimilares({
-            embedding: embedding,
-            namespace: 'conocimiento_empresa',
-            topK: CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2,
-            threshold: CONFIG_RAG.SIMILARITY_THRESHOLD
-        });
+        // return await pineconeMemoria.buscarSimilares({
+        //     embedding: embedding,
+        //     namespace: 'conocimiento_empresa',
+        //     topK: CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2,
+        //     threshold: CONFIG_RAG.SIMILARITY_THRESHOLD
+        // });
+        // Adaptación: usar buscarRecuerdos
+        // NOTA: userId y consulta deben ser proporcionados, aquí solo tenemos embedding, así que se debe adaptar según tu flujo
+        // Ejemplo usando consulta como texto:
+        return await pineconeMemoria.buscarRecuerdos('rag-admin', 'Consulta RAG', CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2);
     } catch (error) {
         console.error('❌ [RAG] Error buscando en Pinecone:', error.message);
         return [];
@@ -376,14 +380,19 @@ async function almacenarChunkConEmbedding(chunk) {
         const embedding = response.data[0].embedding;
         
         // Almacenar en Pinecone usando la función existente
-        await pineconeMemoria.almacenarMemoria({
-            id: chunk.id,
-            contenido: chunk.contenido,
-            contexto: chunk.titulo,
-            metadatos: chunk.metadatos,
-            embedding: embedding,
-            namespace: 'conocimiento_empresa'
-        });
+        // await pineconeMemoria.almacenarMemoria({
+        //     id: chunk.id,
+        //     contenido: chunk.contenido,
+        //     contexto: chunk.titulo,
+        //     metadatos: chunk.metadatos,
+        //     embedding: embedding,
+        //     namespace: 'conocimiento_empresa'
+        // });
+        await pineconeMemoria.guardarRecuerdo(
+            chunk.id,
+            chunk.contenido,
+            'conocimiento_empresa'
+        );
         
     } catch (error) {
         console.error(`❌ [RAG] Error almacenando chunk ${chunk.id}:`, error.message);
