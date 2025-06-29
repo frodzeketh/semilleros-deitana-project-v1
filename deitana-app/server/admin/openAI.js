@@ -12,6 +12,7 @@ const langfuseUtils = require('../utils/langfuse');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
+const { construirPromptInteligente } = require('./prompts/construirPrompt');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -736,7 +737,6 @@ async function processQuery({ message, userId }) {
 
         console.log('🧠 [CONTEXTO] Preparando prompt del sistema...');
         console.log('🧠 [CONTEXTO] Historial de conversación:', historyForAI.length, 'mensajes');
-        console.log('🧠 [CONTEXTO] Contenido mapaERP:', contenidoMapaERP.length, 'caracteres');
 
         // =====================================
         // INTEGRACIÓN CON MEMORIA SEMÁNTICA PINECONE
@@ -757,12 +757,30 @@ async function processQuery({ message, userId }) {
             contextoPinecone = ''; // Continuar sin memoria si hay error
         }
 
-        const systemPrompt = `
-
-${promptBase}
-
-${contextoPinecone}
-${contenidoMapaERP}${contextoDatos}`;
+        // =====================================
+        // CONSTRUCCIÓN INTELIGENTE DEL PROMPT CON IA
+        // =====================================
+        
+        console.log('🧠 [IA-INTELIGENTE] Construyendo prompt con inteligencia artificial...');
+        const promptOptimizado = await construirPromptInteligente(
+            message, 
+            mapaERP,
+            openai, // Cliente de OpenAI para análisis de intención 
+            contextoPinecone, 
+            contextoDatos,
+            process.env.NODE_ENV === 'development' // modo desarrollo
+        );
+        
+        const systemPrompt = promptOptimizado.prompt;
+        const configModelo = promptOptimizado.configModelo;
+        
+        console.log('🧠 [IA-INTELIGENTE] Métricas de construcción inteligente:');
+        console.log('🧠 [IA-INTELIGENTE] Intención detectada:', promptOptimizado.intencion);
+        console.log('🧠 [IA-INTELIGENTE] Modelo seleccionado:', configModelo.modelo);
+        console.log('🧠 [IA-INTELIGENTE] Razón selección:', configModelo.razon);
+        console.log('🧠 [IA-INTELIGENTE] Tablas relevantes:', promptOptimizado.tablasRelevantes);
+        console.log('🧠 [IA-INTELIGENTE] Usa IA:', promptOptimizado.metricas.usaIA);
+        console.log('🧠 [IA-INTELIGENTE] Tablas detectadas:', promptOptimizado.metricas.tablasDetectadas);
 
         // =====================================
         // LLAMADAS A OPENAI CON ANÁLISIS DE COSTOS
@@ -788,13 +806,16 @@ ${contenidoMapaERP}${contextoDatos}`;
             
             // ========== LLAMADA ÚNICA OPTIMIZADA A OPENAI ==========
             console.log('📊 [LANGFUSE] Registrando llamada a OpenAI...');
+            console.log('🤖 [MODELO-DINÁMICO] Usando modelo:', configModelo.modelo);
+            console.log('🤖 [MODELO-DINÁMICO] Max tokens:', configModelo.maxTokens);
+            console.log('🤖 [MODELO-DINÁMICO] Temperature:', configModelo.temperature);
             const tiempoLlamada = Date.now();
             
             const completion = await openai.chat.completions.create({
-                model: "gpt-4-turbo-preview", // ← MODELO CLARAMENTE DEFINIDO
+                model: configModelo.modelo, // ← MODELO SELECCIONADO DINÁMICAMENTE
                 messages: messages,
-                temperature: 0.7,
-                max_tokens: 2000 // ← Aumentado para respuestas completas con análisis
+                temperature: configModelo.temperature,
+                max_tokens: configModelo.maxTokens // ← TOKENS OPTIMIZADOS POR COMPLEJIDAD
             });
             
             const tiempoRespuesta = Date.now() - tiempoLlamada;
@@ -809,35 +830,49 @@ ${contenidoMapaERP}${contextoDatos}`;
             const costoEstimado = (tokensLlamada.prompt_tokens * 0.01 + tokensLlamada.completion_tokens * 0.03) / 1000;
             
             langfuseUtils.registrarLlamadaOpenAI(trace, {
-                modelo: "gpt-4-turbo-preview",
-                temperature: 0.7,
-                maxTokens: 2000,
+                modelo: configModelo.modelo,
+                temperature: configModelo.temperature,
+                maxTokens: configModelo.maxTokens,
                 prompt: systemPrompt + '\n\nUsuario: ' + message,
                 respuesta: response,
                 promptTokens: tokensLlamada.prompt_tokens,
                 completionTokens: tokensLlamada.completion_tokens,
                 totalTokens: tokensLlamada.total_tokens,
                 costoEstimado: costoEstimado,
-                tiempoRespuesta: tiempoRespuesta
+                tiempoRespuesta: tiempoRespuesta,
+                intencionDetectada: promptOptimizado.intencion,
+                tablasRelevantes: promptOptimizado.tablasRelevantes,
+                razonSeleccionModelo: configModelo.razon,
+                usaIA: promptOptimizado.metricas.usaIA
             });
             
             // =====================================
-            // ANÁLISIS DE COSTOS Y TOKENS
+            // ANÁLISIS DE COSTOS Y TOKENS DINÁMICO
             // =====================================
             const tokensUsados = completion.usage;
             const promptTokens = tokensUsados.prompt_tokens;
             const completionTokens = tokensUsados.completion_tokens;
             const totalTokens = tokensUsados.total_tokens;
             
-            // Costos aproximados para gpt-4-turbo-preview
-            const costoPorPromptToken = 0.01 / 1000; // $0.01 por 1K tokens de entrada
-            const costoPorCompletionToken = 0.03 / 1000; // $0.03 por 1K tokens de salida
+            // Costos por modelo (por 1K tokens)
+            const costosModelos = {
+                'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
+                'gpt-4o': { input: 0.005, output: 0.015 },
+                'gpt-4-turbo-preview': { input: 0.01, output: 0.03 }
+            };
+            
+            const costosModelo = costosModelos[configModelo.modelo] || costosModelos['gpt-4-turbo-preview'];
+            const costoPorPromptToken = costosModelo.input / 1000;
+            const costoPorCompletionToken = costosModelo.output / 1000;
             
             const costoPrompt = promptTokens * costoPorPromptToken;
             const costoCompletion = completionTokens * costoPorCompletionToken;
             const costoTotal = costoPrompt + costoCompletion;
             
-            console.log('💰 [ANÁLISIS-COSTOS] ===== TOKENS Y COSTOS =====');
+            console.log('💰 [ANÁLISIS-COSTOS] ===== INTELIGENCIA ARTIFICIAL =====');
+            console.log('💰 [MODELO-USADO] Modelo seleccionado:', configModelo.modelo);
+            console.log('💰 [IA-INTELIGENTE] Intención:', promptOptimizado.intencion.tipo, '| Complejidad:', promptOptimizado.intencion.complejidad);
+            console.log('💰 [IA-INTELIGENTE] Razón selección:', configModelo.razon);
             console.log('💰 [TOKENS-ENTRADA] Prompt tokens:', promptTokens);
             console.log('💰 [TOKENS-SALIDA] Completion tokens:', completionTokens);
             console.log('💰 [TOKENS-TOTAL] Total tokens:', totalTokens);
@@ -846,12 +881,13 @@ ${contenidoMapaERP}${contextoDatos}`;
             console.log('💰 [COSTO-TOTAL] Costo total consulta: $' + costoTotal.toFixed(6));
             console.log('💰 [COSTO-ESTIMADO] Costo por 100 consultas: $' + (costoTotal * 100).toFixed(4));
             console.log('💰 [COSTO-ESTIMADO] Costo por 1000 consultas: $' + (costoTotal * 1000).toFixed(2));
+            console.log('💰 [IA-INTELIGENTE] Tablas relevantes incluidas:', promptOptimizado.tablasRelevantes.join(', ') || 'Ninguna');
             console.log('💰 [ANÁLISIS-COSTOS] =====================================');
             
-            console.log('🧠 [ETAPA-1] GPT procesó la consulta exitosamente (UNA SOLA LLAMADA OPTIMIZADA)');
+            console.log('🧠 [ETAPA-1] GPT procesó la consulta exitosamente (UNA SOLA LLAMADA INTELIGENTE)');
             console.log('📋 [RESPUESTA-GPT] Respuesta completa generada:', response.substring(0, 200) + '...');
             console.log('📋 [RESPUESTA-GPT] Longitud:', response.length, 'caracteres');
-            console.log('⚡ [OPTIMIZACIÓN] Eliminada segunda llamada - Tiempo de respuesta reducido significativamente');
+            console.log('⚡ [IA-INTELIGENTE] Procesamiento con IA real - Precisión y eficiencia maximizada');
             
             // =====================================
             // DETECCIÓN Y VALIDACIÓN DE SQL
