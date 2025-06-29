@@ -3,16 +3,16 @@
 // =====================================
 
 const { OpenAI } = require('openai');
-const pool = require('../db');
-const chatManager = require('../utils/chatManager');
-const admin = require('../firebase-admin');
-const pineconeMemoria = require('../utils/pinecone');
-const comandosMemoria = require('../utils/comandosMemoria');
-const langfuseUtils = require('../utils/langfuse');
+const pool = require('../../db');
+const chatManager = require('../../utils/chatManager');
+const admin = require('../../firebase-admin');
+const pineconeMemoria = require('../../utils/pinecone');
+const comandosMemoria = require('../../utils/comandosMemoria');
+const langfuseUtils = require('../../utils/langfuse');
 require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
-const { construirPromptInteligente } = require('./prompts/construirPrompt');
+const { construirPromptInteligente } = require('../prompts/construirPrompt');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({

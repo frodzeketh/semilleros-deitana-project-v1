@@ -2,7 +2,7 @@
 // SCRIPT DE PRUEBA - OPTIMIZACIÓN DE COSTOS
 // =====================================
 
-const { construirPrompt } = require('./prompts/construirPrompt');
+const { construirPrompt } = require('../prompts/construirPrompt');
 const mapaERP = require('./mapaERP');
 
 // Casos de prueba para demostrar la optimización
@@ -125,7 +125,7 @@ function probarDeteccionIntencion() {
         "Comparar rendimiento anual"
     ];
     
-    const { analizarIntencion } = require('./prompts/construirPrompt');
+    const { analizarIntencion } = require('../prompts/construirPrompt');
     
     mensajesPrueba.forEach(mensaje => {
         const intencion = analizarIntencion(mensaje);

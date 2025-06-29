@@ -7,7 +7,7 @@ const { sqlRules } = require('./sqlRules');
 const { formatoRespuesta } = require('./formatoRespuesta');
 const { ejemplosSQL, ejemplosConversacion } = require('./ejemplos');
 const { comportamiento } = require('./comportamiento');
-const ragInteligente = require('../ragInteligente');
+const ragInteligente = require('../core/ragInteligente');
 
 /**
  * Analiza la intención del usuario usando IA real en lugar de patrones regex
@@ -332,4 +332,4 @@ module.exports = {
     analizarIntencionIA,
     detectarTablasRelevantesIA,
     seleccionarModeloInteligente
-}; 
+};

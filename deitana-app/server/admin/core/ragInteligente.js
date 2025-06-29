@@ -3,7 +3,7 @@
 // =====================================
 
 const { OpenAI } = require('openai');
-const pineconeMemoria = require('../utils/pinecone');
+const pineconeMemoria = require('../../utils/pinecone');
 require('dotenv').config();
 
 const openai = new OpenAI({
@@ -430,4 +430,4 @@ module.exports = {
     procesarYAlmacenarConocimiento,
     calcularCostoEstimado,
     CONFIG_RAG
-}; 
+};
