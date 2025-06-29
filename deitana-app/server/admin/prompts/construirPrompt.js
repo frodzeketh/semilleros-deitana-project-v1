@@ -245,6 +245,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     if (necesitaRAG) {
         console.log('🧠 [RAG] Recuperando conocimiento de empresa...');
         try {
+            global.__consultaUsuarioRAG = mensaje; // Asegura que la consulta real esté disponible para RAG
             contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
             if (contextoRAG) {
                 console.log('✅ [RAG] Contexto de empresa agregado');

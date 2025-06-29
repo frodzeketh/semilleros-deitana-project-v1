@@ -226,7 +226,12 @@ async function buscarEnPinecone(embedding) {
         // Adaptación: usar buscarRecuerdos
         // NOTA: userId y consulta deben ser proporcionados, aquí solo tenemos embedding, así que se debe adaptar según tu flujo
         // Ejemplo usando consulta como texto:
-        return await pineconeMemoria.buscarRecuerdos('rag-admin', 'Consulta RAG', CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2);
+        // return await pineconeMemoria.buscarRecuerdos('rag-admin', 'Consulta RAG', CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2);
+        // CORRECCIÓN: usar la consulta real del usuario
+        if (!global.__consultaUsuarioRAG) {
+            throw new Error('No se ha proporcionado la consulta del usuario para la búsqueda RAG.');
+        }
+        return await pineconeMemoria.buscarRecuerdos('rag-admin', global.__consultaUsuarioRAG, CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2);
     } catch (error) {
         console.error('❌ [RAG] Error buscando en Pinecone:', error.message);
         return [];
