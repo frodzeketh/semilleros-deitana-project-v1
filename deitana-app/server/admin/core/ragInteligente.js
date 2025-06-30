@@ -16,8 +16,8 @@ const openai = new OpenAI({
 
 const CONFIG_RAG = {
     // Chunking inteligente
-    CHUNK_SIZE: 800,           // Caracteres por fragmento
-    CHUNK_OVERLAP: 200,        // Solapamiento entre fragmentos
+    CHUNK_SIZE: 1200,           // Aumentado para fragmentos más ricos
+    CHUNK_OVERLAP: 400,         // Más solapamiento para contexto
     MAX_CHUNKS_PER_QUERY: 3,   // Máximo fragmentos relevantes por consulta
     
     // Umbrales de relevancia
@@ -178,7 +178,7 @@ async function recuperarConocimientoRelevante(consulta, userId) {
     try {
         // Generar embedding de la consulta
         const response = await openai.embeddings.create({
-            model: "text-embedding-3-small", // Modelo más económico
+            model: "text-embedding-3-large", // Embedding de máxima calidad
             input: consulta,
             encoding_format: "float"
         });
@@ -239,6 +239,17 @@ async function buscarEnPinecone(embedding) {
 }
 
 /**
+ * Extrae palabras clave de la consulta para filtrar fragmentos
+ */
+function extraerTérminosClaveConsulta(consulta) {
+    // Extrae palabras con mayúscula inicial (nombres propios), roles y procesos simples
+    // Puedes mejorar este extractor según tus necesidades
+    const posiblesNombres = consulta.match(/([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/g) || [];
+    // Añadir aquí lógica para roles/procesos si tienes un listado
+    return posiblesNombres.map(t => t.trim()).filter(Boolean);
+}
+
+/**
  * Filtra fragmentos según relevancia y diversidad
  */
 function filtrarFragmentosOptimos(resultados, consulta) {
@@ -254,24 +265,25 @@ function filtrarFragmentosOptimos(resultados, consulta) {
         return [];
     }
     
-    // Selección inteligente para diversidad
-    const seleccionados = [];
-    const tiposIncluidos = new Set();
-    
-    for (const resultado of ordenados) {
-        if (seleccionados.length >= CONFIG_RAG.MAX_CHUNKS_PER_QUERY) break;
-        
-        const tipo = resultado.metadatos?.tipo || 'general';
-        
-        // Incluir si es muy relevante O si agrega diversidad
-        if (resultado.score >= CONFIG_RAG.HIGH_RELEVANCE || !tiposIncluidos.has(tipo)) {
-            seleccionados.push(resultado);
-            tiposIncluidos.add(tipo);
-            console.log(`✅ [RAG] Seleccionado: ${tipo} (score: ${resultado.score.toFixed(3)})`);
+    // --- NUEVO: Priorizar coincidencias exactas ---
+    const terminosClave = extraerTérminosClaveConsulta(consulta);
+    const fragmentosCoincidenciaExacta = [];
+    const fragmentosRestantes = [];
+    for (const frag of ordenados) {
+        const contenido = frag.contenido.toLowerCase();
+        const hayCoincidencia = terminosClave.some(tc => contenido.includes(tc.toLowerCase()));
+        if (hayCoincidencia) {
+            fragmentosCoincidenciaExacta.push(frag);
+        } else {
+            fragmentosRestantes.push(frag);
         }
     }
-    
-    console.log(`🎯 [RAG] Seleccionados ${seleccionados.length} fragmentos diversos`);
+    // Si hay coincidencias exactas, priorizarlas y limitar a MAX_CHUNKS_PER_QUERY
+    const seleccionados = [...fragmentosCoincidenciaExacta, ...fragmentosRestantes].slice(0, CONFIG_RAG.MAX_CHUNKS_PER_QUERY);
+    seleccionados.forEach(frag => {
+        console.log(`✅ [RAG] Seleccionado: ${(frag.metadatos?.tipo || 'general')} (score: ${frag.score?.toFixed(3)})`);
+    });
+    console.log(`🎯 [RAG] Seleccionados ${seleccionados.length} fragmentos (priorizando coincidencias exactas)`);
     return seleccionados;
 }
 
@@ -377,7 +389,7 @@ async function almacenarChunkConEmbedding(chunk) {
     try {
         // Generar embedding
         const response = await openai.embeddings.create({
-            model: "text-embedding-3-small",
+            model: "text-embedding-3-large", // Embedding de máxima calidad
             input: chunk.contenido,
             encoding_format: "float"
         });

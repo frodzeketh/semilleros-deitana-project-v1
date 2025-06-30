@@ -1,0 +1,2060 @@
+Semilleros Deitana, S.L. es una destacada empresa agrícola española con sede en Totana, Murcia. Fundada en 1989, cuenta con más de 25 años de experiencia en la producción de plantas hortícolas. Se especializa en técnicas de injerto para cultivos clave como el tomate, la sandía, el pepino y el melón, y también produce una variedad de otros vegetales, incluyendo puerro, brócoli, lechuga, cebolla, apio, así como plantas aromáticas. La empresa está comprometida con la calidad, como lo demuestra su certificación ISO 9001, y pone un fuerte énfasis en la sostenibilidad a través de prácticas agrícolas responsables. Bajo el liderazgo de los hermanos Galera Carmona, Antonio Francisco y José Luis, Semilleros Deitana se ha convertido en un referente en el sector agrícola de la región de Murcia.
+Descripción General de la Empresa
+Semilleros Deitana, S.L. es una compañía con más de 25 años de experiencia en el sector agrícola, dedicada a la producción de plantas hortícolas. Su especialidad principal es el injerto de cultivos como tomate, sandía, pepino y melón, y también ofrece una amplia gama de otros productos vegetales y aromáticos. Con sede en Totana, Murcia, la empresa se destaca por su compromiso con la calidad, respaldado por la certificación ISO 9001, y su inversión en tecnología e investigación.
+Sostenibilidad y Servicios
+La empresa integra prácticas agrícolas sostenibles en sus procesos, promoviendo la productividad y resiliencia de los cultivos. Ofrecen sus productos a precios competitivos y proporcionan servicios de presupuesto a solicitud, adaptándose a las necesidades de los agricultores.
+Nota Detallada
+Semilleros Deitana, S.L. es una empresa española con sede en Totana, Murcia, fundada en 1989, según información recopilada de diversas fuentes en línea. Con más de 25 años de experiencia, se ha establecido como un líder en la producción de plantas hortícolas, con un enfoque particular en el injerto de cultivos clave como tomate, sandía, pepino y melón. Además, la empresa produce una variedad de otros vegetales, incluyendo puerro, brócoli, lechuga, cebolla, apio, y una amplia gama de plantas aromáticas, lo que refleja su versatilidad en el sector agrícola.
+La compañía cuenta con la certificación ISO 9001, lo que avala su compromiso con la calidad. Esta certificación, junto con una constante inversión en tecnología e investigación, asegura que sus productos cumplen con altos estándares. Su enfoque en la innovación se evidencia en su especialización en técnicas de injerto, que mejoran la resistencia y productividad de los cultivos. Por ejemplo, ofrecen injertos de sandía a precios competitivos, con fechas aproximadas de siembra que varían desde 35 días en verano hasta 55-60 días en invierno.
+En términos de sostenibilidad, Semilleros Deitana se posiciona como un actor clave en el desarrollo de la agricultura sostenible. Integran prácticas agrícolas responsables en sus procesos de producción y distribución, promoviendo cultivos que son productivos y resilientes. Su visión está orientada hacia un modelo agrícola más equitativo y respetuoso con el medio ambiente, según se menciona en una página dedicada a su perfil en Mas Brocoli. Aunque no se proporcionaron detalles específicos numéricos, su enfoque incluye la investigación y el uso de semillas de alta calidad que apoyan estas metas.
+La empresa también ofrece servicios adicionales, como la posibilidad de solicitar presupuestos para sus productos, lo que facilita la planificación agrícola para sus clientes. Su ubicación en Carretera de Mazarrón km 2, Totana, Murcia 30850, ES, y su tamaño, estimado entre 51 y 200 empleados, reflejan su capacidad operativa. Sin embargo, algunas fuentes, como RocketReach, mencionan un número menor de empleados (13) y un ingreso de 28,3 millones de dólares, lo que podría indicar variaciones en los datos disponibles. Dado que la información más reciente proviene de LinkedIn, se prioriza esta última para mayor precisión.
+Es importante destacar que, aunque se intentó acceder a su sitio web oficial, no se proporcionó un enlace directo en la información disponible.
+En resumen, Semilleros Deitana, S.L. es una empresa consolidada en el sector agrícola español, con un enfoque en la calidad, la innovación y la sostenibilidad, ofreciendo una amplia gama de productos y servicios para apoyar a los agricultores.
+Datos Básicos de la Empresa
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SECCIÓN: CLIENTES
+DESCRIPCIÓN GENERAL:
+Los clientes son las personas o empresas con las que Semilleros Deitana comercializa sus productos. La información de los clientes incluye sus datos de contacto, ubicación y detalles comerciales relevantes para establecer y mantener una relación fluida. Es fundamental tener un registro completo para la gestión de ventas, seguimiento y comunicación. Cada cliente tiene un código único que lo identifica en nuestra base de datos.
+
+Columnas:
+ID: Código único que identifica a cada cliente.
+CL_DENO: Nombre o denominación del cliente (razón social o nombre completo).
+CL_DOM: Domicilio o dirección completa del cliente.
+CL_POB: Población o ciudad a la que pertenece el domicilio del cliente.
+CL_PROV: Provincia del domicilio del cliente.
+CL_CDP: Código postal del domicilio del cliente.
+CL_TEL: Número de teléfono de contacto del cliente.
+CL_FAX: Número de FAX del cliente, si aplica.
+CL_CIF: Código de Identificación Fiscal (CIF) o NIF del cliente.
+CL_EMA: Dirección de correo electrónico del cliente para comunicaciones.
+CL_WEB: Página web del cliente, si la tiene.
+CL_PAIS: País de residencia o establecimiento del cliente.
+CL_IBAN: Número de cuenta bancaria del cliente en formato IBAN para gestiones de pago.
+CL_TARI: Tipo de TARIFA de precios asignada al cliente.
+
+Ejemplo de un Cliente:
+ID: SANZ ORADOR , ROBERTO
+Denominación: ROBERTO
+Domicilio: GONZALO HERRERO 20, BAJO A
+Población: MADRID
+Provincia: MADRID
+Código Postal: 28039
+Teléfono: 607926419
+FAX: 968123457
+CIF: B12345678
+Email: info@agricoladelsol.com
+Web: www.agricoladelsol.com
+País: ESPAÑA
+IBAN: ES1234
+Tarifa: TIPO A
+
+
+
+SECCIÓN: ARTÍCULOS
+DESCRIPCIÓN GENERAL:
+Los artículos representan todo tipo de productos que comercializa la empresa. Pueden ser productos fitosanitarios, semillas, injertos, portainjertos, sustratos, fertilizantes, tipos de semillas, algunas de las caracteristicas es que los injertos pueden tener denominacion como INJ, tambien PORTAINJ, pies de tomate, muchos tipos de pie de tomate(Un pie es literalmente la parte inferior de la planta, es decir, el sistema radicular y el tallo base sobre el que se injerta otra variedad). Los articulos, semillas, injertos, tienen un proveedor designado, no son nuestros, sino que el campo de proveedor almacena quien provee estos articulos, semillas, etc, en caso de que este campo se encuentre vacio, es simplemente por que no se registro un proveedor.
+
+id: "Significa codigo unico de cada articulo, semilla, injerto, portainjertos, pie de tomate, producto fitosanitarios, etc."
+AR_DENO: "Denominación o nombre del artículo, semilla, injerto, portainjertos, pie de tomate, producto fitosanitarios, etc."
+AR_BAR: "Codigo de barra del artículo"
+AR_IVAP: "Porcentaje de IVA aplicable"
+AR_PRV: "ID del proveedor principal asociado al artículo. Indica quién suministra el artículo (semillas, injertos, etc.). Si el cliente no provee el insumo, este campo identifica al proveedor del artículo en nuestra base."
+AR_FAM: "Familia o categoría del artículo"
+
+Ejemplo de un Articulo, semilla, planta, portainjerto, injerto, etc.
+
+ID: 00000013
+Denominación: TOMATE AMARELO
+Codigo de barra: 7100000219990
+Iva: 1
+Codigo del proveedor: 00359
+Familia: 0015
+
+
+SECCIÓN: BANDEJAS
+DESCRIPCIÓN GENERAL:
+Esta sección es un catálogo de las bandejas que utiliza la empresa. Esta bandejas la utilizamos en siembras, partidas, etc..
+
+Columnas:
+ID: Código único que identifica cada tipo de bandeja.
+BN_DENO: Denominación o nombre de la bandeja.
+BN_ALV: Número total de alvéolos (huecos) que tiene la bandeja.
+BN_RET: Indica si la bandeja es Reutilizable (SI o NO).
+
+Ejemplo de una Bandeja:
+ID: 001
+Denominación: BANDEJA FORESTAL 104 ALV
+Alvéolos: 104
+Reutilizable: SI
+
+
+SECCIÓN: PROVEEDORES
+DESCRIPCIÓN GENERAL:
+La sección de proveedores se encarga de gestionar toda la información de las empresas o personas que suministran productos o servicios a Semilleros Deitana. Aquí se incluyen sus datos de contacto y otros detalles comerciales esenciales para una relación fluida y eficiente, como la forma de pago preferida y los datos bancarios.
+
+Columnas:
+ID: Código único que identifica a cada proveedor.
+PR_DENO: Nombre o denominación social del proveedor.
+PR_DOM: Domicilio o dirección física del proveedor.
+PR_POB: Población o ciudad del proveedor.
+PR_PROV: Provincia del proveedor.
+PR_CDP: Código postal del proveedor.
+PR_TEL: Número(s) de teléfono de contacto del proveedor.
+PR_FAX: Número de FAX del proveedor, si lo tiene.
+PR_CIF: Código de Identificación Fiscal (CIF) del proveedor.
+PR_EMA: Dirección de correo electrónico del proveedor.
+PR_WEB: Dirección de la página web del proveedor.
+PR_DOMEN: Domicilio o detalles específicos para el envío de facturas.
+PR_PAIS: País de residencia o establecimiento del proveedor.
+PR_FPG: Forma de pago preferida por el proveedor (ej., transferencia, cheque).
+PR_IBAN: Número de cuenta bancaria del proveedor en formato IBAN.
+
+Ejemplo de un Proveedor:
+ID: 00359
+Denominación: SUMINISTROS AGRICOLAS S.A.
+Domicilio: AV. DE LA HUERTA, 50
+Población: ALMERÍA
+Provincia: ALMERÍA
+Código Postal: 04008
+Teléfono: 950789012
+FAX: 950789013
+CIF: A98765432
+Email: contacto@suministrosagricolas.es
+Web: www.suministrosagricolas.es
+Domicilio de Envío: C/ ALMACEN, 10 (para facturas)
+País: ESPAÑA
+Forma de Pago: 001
+IBAN: ES9876543210987654321098
+
+
+SECCIÓN: FORMAS DE PAGO/COBRO
+DESCRIPCIÓN GENERAL:
+La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente.
+
+Columnas:
+ID: Código único que identifica cada forma de pago o cobro. Es la clave primaria de esta tabla.
+FP_DENO: Denominación o descripción de la forma de pago, como por ejemplo, 'RECIBO 90 DIAS F.F.' o 'TRANSFERENCIA INMEDIATA'.
+FP_NVT: Número de vencimientos asociados a esta forma de pago. Indica en cuántas partes se divide el pago o cobro.
+FP_CART: Indica si esta forma de pago se gestiona en la cartera de cobros/pagos. Esto es relevante para el seguimiento de documentos pendientes.
+FP_RW: Referencia relacionada con la web. El propósito específico de este campo no está detallado, pero podría vincularse a funcionalidades online.
+
+Ejemplo de una Forma de Pago/Cobro:
+ID: 001
+Denominación: TRANSFERENCIA 30 DÍAS
+Número de Vencimientos: 1
+Gestiona en Cartera: NO
+Referencia Web: N/A
+ 
+
+SECCIÓN: VENDEDORES
+DESCRIPCIÓN GENERAL:
+La sección de vendedores en el sistema ERP de Semilleros Deitana es el punto central para gestionar la información de todo el personal interno que realiza funciones de venta o que, simplemente, tiene acceso al sistema como usuario. Aquí se almacena la información clave de cada individuo, facilitando la administración de sus roles y datos de contacto.
+
+Columnas:
+ID: Código único que identifica a cada vendedor o usuario dentro del sistema.
+VD_DENO: Denominación o nombre completo del vendedor o usuario.
+VD_DOM: Domicilio del vendedor o usuario.
+VD_POB: Población de residencia del vendedor o usuario.
+VD_PROV: Provincia de residencia del vendedor o usuario.
+VD_PDA: Número técnico asociado. Este campo es una clave foránea que se vincula con la tabla de técnicos, indicando la relación con un perfil técnico si aplica.
+
+Ejemplo de un Vendedor:
+ID: 007
+Denominación: JUAN PÉREZ GÓMEZ
+Domicilio: C/ LOS NARANJOS, 5
+Población: ALICANTE
+Provincia: ALICANTE
+Número Técnico Asociado: 003
+
+
+SECCIÓN: CASAS COMERCIALES
+DESCRIPCIÓN GENERAL:
+La sección de Casas Comerciales (casas_com) se enfoca en la gestión y el almacenamiento de la información de todas las empresas o entidades con las que Semilleros Deitana mantiene una relación comercial. Es vital para llevar un registro organizado de estos socios, incluyendo sus datos identificativos y de contacto, lo que facilita la colaboración y el seguimiento.
+
+Columnas:
+ID: Es el identificador único de cada casa comercial y funciona como la clave primaria de esta tabla.
+CC_DENO: La Denominación social legal de la casa comercial.
+CC_NOM: El Nombre comercial por el que se conoce a la casa comercial.
+CC_DOM: El Domicilio físico o la dirección de la casa comercial.
+CC_POB: La Población donde se encuentra el domicilio.
+CC_PROV: La Provincia del domicilio de la casa comercial.
+CC_CDP: El Código Postal correspondiente al domicilio.
+CC_TEL: El Número de teléfono de contacto de la casa comercial.
+CC_FAX: El Número de fax de la casa comercial, si lo tienen.
+CC_CIF: El Código de Identificación Fiscal (CIF) de la casa comercial.
+CC_EMA: La Dirección de correo electrónico para comunicaciones.
+CC_WEB: La Dirección del sitio web de la casa comercial.
+
+Ejemplo de una Casa Comercial:
+ID: 005
+Denominación Social: AGROTECH SOLUTIONS S.L.
+Nombre Comercial: AGROTECH
+Domicilio: C/ TECNOLOGÍA, 15
+Población: SEVILLA
+Provincia: SEVILLA
+Código Postal: 41007
+Teléfono: 954112233
+FAX: 954112234
+CIF: B41987654
+Email: info@agrotech.es
+Web: www.agrotech.es
+
+
+SECCIÓN: ALMACENES
+DESCRIPCIÓN GENERAL:
+La sección de almacenes es fundamental para representar las distintas delegaciones o ubicaciones físicas y operativas de la empresa. Su propósito principal es servir como una referencia clara para identificar la localización específica asociada a cualquier acción o transacción dentro del sistema ERP. Además, permite vincular recursos financieros por defecto, como cajas y cuentas bancarias, a cada almacén.
+
+Columnas:
+ID: Código único que identifica cada delegación o almacén. Es la clave primaria de esta tabla.
+AM_DENO: Denominación o nombre de la delegación/almacén (por ejemplo: 'GARDEN', 'ALMACÉN CENTRAL').
+AM_CAJA: Denominación de la 'Caja Almacén / Sucursal Efectivo' por defecto. Este campo se relaciona con la tabla bancos a través de su id para obtener la descripción (BA_DENO) de la caja o sucursal de efectivo predeterminada para este almacén.
+AM_BCO: Denominación del 'Banco Cobros / Pagos Defectos' por defecto. Similar a AM_CAJA, este campo se vincula con la tabla bancos (por id) para obtener la descripción (BA_DENO) del banco predeterminado para las operaciones de cobro y pago de este almacén.
+
+Ejemplo de un Almacén:
+ID: 001
+Denominación: ALMACÉN CENTRAL
+Caja por Defecto: CAJA PRINCIPAL
+Banco por Defecto: BANCO AGRARIO
+
+
+SECCIÓN: ENVASES DE VENTA
+DESCRIPCIÓN GENERAL:
+La sección de Envases de Venta (envases_vta) es un catálogo de los distintos tipos de envases y formatos que utilizamos para comercializar nuestras semillas y productos. Además de describir sus características físicas y comerciales, estos envases también son fundamentales para otras operaciones internas como siembras y la gestión de partidas.
+
+Columnas:
+ID: Es el identificador único de cada envase de venta y funciona como la clave primaria de esta tabla.
+EV_DENO: La denominación o nombre del envase (por ejemplo: "Sobre pequeño", "Bolsa 1 Kg", "Caja 10 unidades").
+EV_NEM: La unidad de medida del envase (por ejemplo: UD para unidad, SB para sobre, L para litro, KG para kilogramo).
+EV_CANT: La cantidad total de producto contenida en el envase.
+EV_UDSS: El número de unidades por presentación o por sobre, si el envase contiene múltiples unidades individuales (aplica cuando, por ejemplo, un sobre contiene varias semillas).
+
+Ejemplo de un Envase de Venta:
+ID: 001
+Denominación: SOBRE GRANDE SEMILLAS
+Unidad de Medida: SB
+Cantidad: 100
+Unidades por Presentación: 10
+
+
+SECCIÓN: INVERNADEROS
+DESCRIPCIÓN GENERAL:
+La sección de invernaderos contiene la información base de todas las estructuras físicas utilizadas por la empresa para la siembra y el cultivo. Aquí se registra su identificación, su vinculación con los almacenes correspondientes, y detalles sobre sus secciones y filas. Es importante tener en cuenta que, aunque no se detallan aquí, existen otras tablas relacionadas que complementan esta información, como las tablas de secciones, filas y tratamientos específicos.
+
+Columnas:
+ID: Es el identificador único de cada invernadero, funcionando como la clave primaria de esta tabla.
+INV_DENO: La denominación o nombre completo del invernadero (por ejemplo: "A4 Pg.28-Parcela.1000").
+INV_ALM: El código del almacén asociado o vinculado a este invernadero. Este campo actúa como una clave foránea que referencia la tabla de almacenes.
+INV_NSECI: El número de secciones inicial o de referencia del invernadero.
+INV_NSEC: El número total de secciones que componen el invernadero.
+INV_NFIL: El número total de filas que contiene el invernadero.
+INV_EXLT: Indica las secciones excluidas de tratamientos, lo que puede ser útil para la gestión de cultivos específicos o áreas de prueba.
+
+
+Ejemplo de un Invernadero:
+ID: 001
+Denominación: INVERNADERO PRINCIPAL SUR
+Almacén Asociado: 001 (ALMACÉN CENTRAL)
+Secciones Iniciales: 1
+Total Secciones: 5
+Total Filas: 20
+Secciones Excluidas de Tratamientos: SECCION 3
+
+
+SECCIÓN: PRODUCTOS FITOSANITARIOS
+DESCRIPCIÓN GENERAL:
+Esta sección, referida internamente como tipo_trat, se dedica a la gestión y el registro detallado de los productos fitosanitarios utilizados en los tratamientos agronómicos de Semilleros Deitana. Su objetivo es centralizar la información técnica y de uso de estos productos, ya sean para prevención, control de plagas o enfermedades, garantizando una aplicación segura y una trazabilidad completa.
+
+Columnas:
+ID: Identificador único del producto fitosanitario. Es la clave primaria.
+TTR_NOM: Nombre comercial del producto (Ej: PREVICUR ENERGY).
+TTR_DOS: Dosis estándar o recomendada para su aplicación (Ej: 0,2-0,3 %).
+TTR_FOR: Fórmula o principio(s) activo(s) del producto.
+TTR_ENS: Campo auxiliar con información incierta, que puede estar vacío.
+TTR_ECO: Indica si el producto es ecológico ('S' para Sí, 'N' para No).
+TTR_BIO: Indica si el producto es de origen biológico ('S' para Sí, 'N' para No).
+TTR_ESP: Especies vegetales autorizadas o recomendadas para su uso (Ej: CALABACÍN - MELÓN).
+TTR_AGN: Agentes nocivos que combate (Ej: FITOPHTHORA - PITIUM).
+TTR_INT: Enlace web (para ficha técnica, registro, etc.).
+TTR_REG: Número de registro oficial del producto.
+TTR_FCAD: Fecha de caducidad del producto.
+
+Ejemplo de un Producto Fitosanitario:
+ID: 001
+Nombre Comercial: PREVICUR ENERGY
+Dosis: 0.25 %
+Fórmula: Propamocarb + Fosetil-Al
+Ecológico: N
+Biológico: N
+Especies: CALABACÍN - MELÓN
+Agentes Nocivos: FITOPHTHORA - PITIUM
+Nº Registro: 21345
+
+
+
+SECCIÓN: SECTORES
+DESCRIPCIÓN GENERAL:
+La sección de sectores define las clasificaciones de origen para pedidos y clientes. Es un elemento crucial para realizar análisis, segmentación y seguimiento por canal dentro de Semilleros Deitana. Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos de estos sectores existen y se utilizan activamente para fines de clasificación.
+
+Columnas:
+ID: Código único del sector o subsector. Es la clave primaria.
+SC_DENO: Nombre o denominación del sector o subsector (Ej: SIN ASIGNAR, TIENDA, INTERNET, PROFESIONAL).
+
+Ejemplo de un Sector:
+ID: 002
+Denominación: PROFESIONAL
+
+
+
+SECCIÓN: SUSTRATOS
+DESCRIPCIÓN GENERAL:
+La sección de sustratos se encarga de la gestión y el registro de los materiales o mezclas que utilizamos como medio de cultivo. Es una parte esencial del sistema para el control de costes, la fijación de precios y la planificación de materiales necesarios en los procesos de producción.
+
+Columnas:
+ID: Código único del sustrato. Es la clave primaria.
+SUS_DENO: Denominación o nombre descriptivo del sustrato (Ej: PERLITA PELIGRAM, SUST.ESPECIAL).
+SUS_PVP: Precio de venta al público por alvéolo. Su tipo de dato es DECIMAL.
+SUS_COS: Coste interno por alvéolo. Su tipo de dato es DECIMAL.
+
+Ejemplo de un Sustrato:
+ID: 001
+Denominación: SUST. ESPECIAL INICIO
+PVP por alvéolo: 0.05
+Coste por alvéolo: 0.03
+
+
+
+SECCIÓN: UBICACIONES
+DESCRIPCIÓN GENERAL:
+La sección de ubicaciones es un catálogo centralizado de todas las localizaciones físicas o lógicas relevantes para las operaciones de la empresa, incluyendo invernaderos, semilleros y almacenes. Proporciona una referencia espacial estandarizada, crucial para organizar, trazar y optimizar todas las actividades y recursos.
+
+Columnas:
+ID: Código único de la ubicación. Es la clave primaria.
+UBI_DENO: Denominación o nombre descriptivo de la ubicación (Ej: 'SEMILLERO A', 'Semillero C', 'ALMACÉN NORTE').
+
+Ejemplo de una Ubicación:
+ID: 003
+Denominación: SEMILLERO C
+
+
+
+SECCIÓN: ZONAS
+DESCRIPCIÓN GENERAL:
+La sección de zonas es un catálogo diseñado para organizar áreas físicas o lógicas dentro de las operaciones de la empresa, como zonas de trabajo, producción o almacenamiento. Es fundamental para la estructuración espacial, la mejora de la trazabilidad y la optimización de la gestión de inventario y tareas.
+
+Columnas:
+ID: Código único de la zona. Es la clave primaria.
+ZN_DENO: Denominación o nombre descriptivo de la zona (Ej: Garden, ZONA PRODUCCIÓN 1).
+ZN_SUB: Subzona o código de agrupación secundaria. Este campo puede estar vacío.
+ZN_RUTA: Campo asociado a una ruta. Este campo también puede estar vacío.
+
+Ejemplo de una Zona:
+ID: 001
+Denominación: ZONA SEMILLERO A
+Subzona: SUB-A1
+
+
+
+
+SECCIÓN: DEPARTAMENTOS
+DESCRIPCIÓN GENERAL:
+La sección de departamentos cataloga las diferentes áreas o unidades funcionales dentro de la empresa, como administración, producción, etc. Es esencial para asignar responsabilidades, gestionar usuarios y roles, clasificar tareas y generar reportes segmentados por área.
+
+Columnas:
+ID: Código único del departamento. Es la clave primaria.
+DEP_DENO: Denominación o nombre del departamento (Ej: COORDINADOR, ADMINISTRACION, PRODUCCION).
+
+Ejemplo de un Departamento:
+ID: 002
+Denominación: PRODUCCIÓN
+
+
+
+SECCIÓN: SECCIONES DE TRABAJADORES
+DESCRIPCIÓN GENERAL:
+La sección de secciones de trabajadores cataloga las áreas funcionales, grupos o secciones internas a las que pertenece el personal de la empresa. Es fundamental para la gestión de Recursos Humanos, la asignación de tareas específicas y la generación de reportes de personal segmentados por su área de trabajo.
+
+Columnas:
+ID: Código único de la sección de trabajador. Es la clave primaria.
+SE_DENO: Denominación o nombre de la sección (Ej: ADMINISTRACION, PRODUCCION, MANTENIMIENTO).
+
+Ejemplo de una Sección de Trabajadores:
+ID: 001
+Denominación: ADMINISTRACION
+
+
+
+
+SECCIÓN: TAREAS DE PERSONAL
+DESCRIPCIÓN GENERAL:
+La sección de Tareas de Personal (tareas_per) se encarga de la gestión detallada de las tareas internas que realiza el personal de Semilleros Deitana. Cada tarea se vincula a una "Sección de Tarea" específica, que se encuentra en la tabla tareas_seccion. Esta estructura es esencial para la elaboración de partes de trabajo, el seguimiento preciso del tiempo y los recursos invertidos, y para el análisis de la productividad general.
+
+Columnas:
+ID: Código único de la tarea. Es la clave primaria.
+TARP_DENO: Denominación o nombre de la tarea (por ejemplo: "H.CARRETILLERO", "H.LIMPIEZA GENERAL").
+TARP_SECC: Código de la sección de tarea a la que pertenece esta tarea. Este campo es una clave foránea que se relaciona con la tabla tareas_seccion.
+TARP_TIPO: Tipo general de tarea (por ejemplo: 'Otros', 'Siembra', 'Mantenimiento').
+
+Relaciones:
+Tareas_Seccion:
+Tabla Relacionada: tareas_seccion
+Tipo de Relación: Muchos a uno (Varias tareas de personal pueden pertenecer a una misma sección de tarea).
+Campo de Enlace Local: TARP_SECC
+Campo de Enlace Externo: id (o TARS_COD en la tabla tareas_seccion)
+Descripción: Esta relación vincula cada tarea con su sección correspondiente. Permite obtener la denominación de la sección (TARS_DENO) a partir del código TARP_SECC registrado en la tarea.
+
+Ejemplo de una Tarea de Personal:
+ID: 001
+Denominación: H. CARRETILLERO
+Código Sección: 01 (Sección de Logística, por ejemplo)
+Tipo de Tarea: Otros
+
+
+
+
+SECCIÓN: PARTIDAS
+DESCRIPCIÓN GENERAL:
+La sección de partidas se encarga de registrar las diferentes tandas de siembra, las cuales están directamente vinculadas a los encargos de los clientes. Contiene una amplia gama de información, desde la fecha y el tipo de semilla utilizada (propia o de depósito del cliente), el lote y porcentaje de germinación, hasta detalles del tipo de siembra, el sustrato empleado, y las cantidades sembradas (semillas, plantas, alvéolos, bandejas). También se registran fechas clave como la de siembra, entrega y la solicitada, así como una denominación o campo de observaciones para cada partida.
+
+Columnas:
+ID: ID de la partida, funcionando como Clave Primaria.
+PAR_ENC: Número del encargo asociado. Es una clave foránea que se relaciona con la tabla encargos.
+PAR_FEC: Fecha de la partida.
+PAR_TIPO: Tipo de semilla utilizada. Puede ser 'D' (Depósito cliente) o 'N' (No depósito).
+PAR_SEM: Semilla utilizada. Es una clave foránea a la tabla articulos, permitiendo obtener la denominación (AR_DENO) de la semilla.
+PAR_LOTE: Lote específico de la semilla.
+PAR_PGER: Porcentaje de germinación de la semilla en esta partida.
+PAR_TSI: Tipo de siembra. Es una clave foránea a la tabla t-siembras para obtener su denominación (TSI_DENO) y otros detalles.
+PAR_ALVS: Cantidad de semillas a sembrar.
+PAR_PLAS: Cantidad de plantas solicitadas.
+PAR_PLAP: Cantidad de plantas aproximadas.
+PAR_PLS: Cantidad de alvéolos solicitados.
+PAR_BASI: Cantidad de bandejas de siembra.
+PAR_FECS: Fecha de siembra.
+PAR_DIASS: Días de siembra.
+PAR_FECE: Fecha de entrega.
+PAR_DIASG: Días de germinación.
+PAR_PPLA: Denominación o identificación de la planta.
+PAR_PALV: Cantidad de alvéolos.
+PAR_TOT: Total (posiblemente un importe).
+PAR_DENO: Denominación u observación específica de la partida (Ej: 'PARTIDA Nº ...').
+PAR_FECES: Fechas relevantes (Solicitada 'E'/Entrega 'E'/Siembra 'S').
+PAR_PMER: Nombre (uso no especificado).
+PAR_NMCL: Nombre de la semilla.
+Relaciones:
+Encargos:
+
+Tabla Relacionada: encargos
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PAR_ENC
+Campo de Enlace Externo: id
+Descripción: Vincula cada partida con el encargo de cliente al que corresponde.
+Artículos:
+
+Tabla Relacionada: articulos
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PAR_SEM
+Campo de Enlace Externo: id
+Descripción: Vincula la partida con el artículo (semilla) específico utilizado.
+Tipos de Siembras:
+
+Tabla Relacionada: t-siembras
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PAR_TSI
+Campo de Enlace Externo: id
+Descripción: Vincula la partida con el tipo de siembra aplicado.
+Sustratos:
+
+Tabla Relacionada: sustratos
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: Se infiere que el campo de enlace local sería PAR_SUS o similar, pero no está explícitamente en columnas.
+Campo de Enlace Externo: id
+Descripción: Vincula la partida con el sustrato utilizado.
+Clientes:
+
+Tabla Relacionada: clientes
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PAR_CCL (inferido del contexto de "encargos" que tienen un cliente asociado)
+Campo de Enlace Externo: id
+Descripción: Vincula la partida con el cliente correspondiente, generalmente a través de su encargo.
+Ejemplo de una Partida:
+ID: 2024001
+Nº Encargo: 12345
+Fecha Partida: 2024-03-15
+Tipo Semilla: N (No depósito)
+Semilla Utilizada: 00000013 (TOMATE AMARELO)
+Lote: T-AM-2024-001
+% Germinación: 95
+Tipo de Siembra: 01 (Siembra Directa)
+Cantidad Semillas: 10000
+Plantas Solicitadas: 9500
+Plantas Aproximadas: 9700
+Alvéolos Solicitados: 10000
+Bandejas de Siembra: 100
+Fecha Siembra: 2024-03-16
+Días Siembra: 1
+Fecha Entrega: 2024-05-20
+Días Germinación: 5
+Denominación: PARTIDA Nº 2024001 TOMATE AMARELO
+Fecha Solicitada: 2024-05-15
+Nombre Semilla: TOMATE AMARELO
+
+
+
+SECCIÓN: PEDIDOS A PROVEEDORES
+DESCRIPCIÓN GENERAL:
+La sección de Pedidos a Proveedores (pedidos_pr) se encarga de registrar y dar seguimiento a todas las solicitudes de compra que la empresa realiza a sus proveedores. Es el punto de partida formal para la adquisición de bienes o servicios, siendo crucial para la planificación de compras, el control de inventario y la gestión de la relación con los proveedores. Además, sirve como base fundamental para las recepciones de mercancía y la posterior emisión de facturas de compra.
+
+Columnas:
+ID: Número único que identifica cada pedido a proveedor. Es la clave primaria. Este ID se utiliza como clave foránea en la tabla pedidos_pr_pp_lna para detallar los artículos de cada pedido.
+PP_CPR: Código del proveedor. Es una clave foránea a la tabla proveedores, permitiendo obtener la denominación (PR_DENO) del proveedor al que se le hizo el pedido.
+PP_ALM: Almacén de recepción designado. Es una clave foránea a la tabla almacenes, que permite obtener la denominación (AM_DENO) del almacén donde se espera recibir la mercancía.
+PP_FEC: Fecha en que se emitió el pedido.
+PP_FSV: Fecha esperada de entrega por parte del proveedor (conocida como 'fecha servir').
+PP_FP: Forma de pago acordada. Es una clave foránea a la tabla fpago, para obtener la denominación (FP_DENO) de la forma de pago utilizada.
+PP_BRU: Monto bruto total del pedido antes de impuestos y descuentos.
+PP_NETO: Monto neto del pedido después de descuentos, pero antes de impuestos.
+PP_IMPU: Costo total de los impuestos aplicados al pedido.
+PP_TTT: Monto total final del pedido, incluyendo todos los costes.
+PP_PDP: Persona dentro de la empresa (usuario/empleado) que realizó o solicitó el pedido ('Pedido por').
+Relaciones:
+Proveedores:
+
+Tabla Relacionada: proveedores
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PP_CPR
+Campo de Enlace Externo: id
+Descripción: Vincula el pedido con el proveedor al que se le realizó la solicitud de compra.
+Almacenes:
+
+Tabla Relacionada: almacenes
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PP_ALM
+Campo de Enlace Externo: id
+Descripción: Vincula el pedido con el almacén donde se espera recibir la mercancía.
+Formas de Pago/Cobro:
+
+Tabla Relacionada: fpago
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: PP_FP
+Campo de Enlace Externo: id
+Descripción: Vincula el pedido con la forma de pago acordada para esa transacción.
+Líneas de Pedido a Proveedores (pedidos_pr_pp_lna):
+
+Tabla Relacionada: pedidos_pr_pp_lna
+Tipo de Relación: Uno a muchos (Un pedido a proveedor puede incluir múltiples artículos o líneas de pedido).
+Campo de Enlace Local: id (ID del pedido en la tabla principal pedidos_pr)
+Campo de Enlace Externo: id (ID del pedido en la tabla de detalle pedidos_pr_pp_lna)
+Descripción: Esta tabla detalla los artículos específicos solicitados en cada línea del pedido a proveedor.
+Estructura Relacionada:
+id: Código del pedido (es el mismo id que en pedidos_pr).
+id2: Identificador secuencial de la línea de pedido, para diferenciar los distintos artículos dentro del mismo pedido (ej: '1', '2', '3').
+C0: Código del artículo que se pidió al proveedor. Es una clave foránea a la tabla articulos para obtener su denominación (AR_DENO).
+C1: Código del envase de venta. Es una clave foránea a la tabla envases_vta para obtener su denominación (EV_DENO).
+C2: Número de sobres.
+C3: Unidades por sobre.
+C4: Precio de compra (P/Compra).
+C5: Porcentaje de descuento (Descuento %).
+
+Relaciones Internas de Detalle:
+Artículos:
+Tabla Relacionada: articulos
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: C0
+Campo de Enlace Externo: id
+Descripción: Vincula la línea del pedido con el artículo correspondiente para obtener su denominación.
+Envases de Venta:
+Tabla Relacionada: envases_vta
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: C1
+Campo de Enlace Externo: id
+Descripción: Vincula la línea del pedido con el tipo de envase de venta para obtener su denominación.
+
+
+SECCIÓN: TARIFAS DE PLANTAS
+DESCRIPCIÓN GENERAL:
+La sección de Tarifas de Plantas (tarifas_plantas) se encarga de la gestión de los diferentes precios aplicables a las plantas. Cada tarifa especifica su período de validez, el almacén al que está asociada y un título descriptivo. Un registro de tarifa principal puede contener múltiples líneas de detalle que definen los precios individuales por artículo y por tipo de tarifa, permitiendo una gran flexibilidad en la política de precios.
+
+Columnas:
+ID: Código identificador único de la tarifa. Es la clave primaria.
+TAP_DENO: Denominación o título de la tarifa (ej: 'TARIFA ACTUALIZA 2024 – ULTIMA').
+TAP_DFEC: Fecha de inicio de validez de la tarifa de precio (ej: '2024-05-04').
+TAP_HFEC: Fecha de fin de validez de la tarifa de precio (ej: '2025-12-31').
+TAP_ALM: Código del almacén asociado a la tarifa. Es una clave foránea a la tabla almacenes, para obtener la denominación (AM_DENO) del almacén.
+Relaciones:
+Almacenes:
+
+Tabla Relacionada: almacenes
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: TAP_ALM
+Campo de Enlace Externo: id
+Descripción: Vincula la tarifa de plantas con el almacén al que aplica.
+Líneas de Tarifas de Plantas (tarifas_plantas_tap_lna):
+
+Tabla Relacionada: tarifas_plantas_tap_lna
+Tipo de Relación: Uno a muchos (Una tarifa puede contener múltiples líneas de precios para diferentes productos/tipos).
+Campo de Enlace Local: id (ID de la tarifa en la tabla principal tarifas_plantas)
+Campo de Enlace Externo: id (ID de la tarifa en la tabla de detalle tarifas_plantas_tap_lna)
+Descripción: Esta tabla detalla los precios de los productos específicos incluidos en una tarifa, especificando el tipo de tarifa, así como los costes y precios de venta.
+Estructura Relacionada:
+id: Código de la tarifa (es el mismo id que en tarifas_plantas).
+id2: Identificador secuencial de la línea de detalle (indica la cantidad de productos con precios actualizados).
+C0: Código del artículo. Es una clave foránea a la tabla articulos, para obtener su denominación (AR_DENO).
+C1: Tipo de tarifa (ej: 'A', 'B'), que afecta el precio. Puede haber múltiples tipos para un mismo producto.
+C2: Tipo de siembra (ej: '5001').
+C3: Campo de propósito desconocido ('No se sabe').
+C4: Porcentaje (%).
+C5: Coste de producción.
+C6: Campo de propósito desconocido ('No se sabe').
+C7: Coste de la semilla.
+C8: Coste del patrón.
+C9: Incremento.
+C10: Precio de Venta al Público (PvP) Fijo por Bandeja.
+C11: Precio de Venta al Público (PvP) por Planta.
+C12: Precio de Venta al Público (PvP) por Bandeja.
+Relaciones Internas de Detalle:
+Artículos:
+Tabla Relacionada: articulos
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: C0
+Campo de Enlace Externo: id
+Descripción: Vincula la línea de precio con el artículo correspondiente para obtener su denominación.
+Tipos de Siembras (Posible):
+Tabla Relacionada: t-siembras (hipotética, si C2 es una clave foránea).
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: C2
+Campo de Enlace Externo: id
+Descripción: Podría vincular la línea de precio con el tipo de siembra.
+
+
+
+SECCIÓN: MAQUINARIA
+DESCRIPCIÓN GENERAL:
+La sección de Maquinaria registra y administra todas las máquinas y equipos utilizados por la empresa, funcionando como un inventario detallado. Permite mantener un registro completo de sus características, el historial de adquisición, información de seguro, el operador actual y el tipo general de maquinaria. Esta información es crucial para la gestión de activos, el mantenimiento, el control de inventario y la asignación eficiente de recursos.
+
+Columnas:
+ID: Código identificador único de cada máquina o equipo. Es la clave primaria.
+MA_MOD: Modelo de la maquinaria (Ej: 'Balanza-2 CABEZAL INV.B COBOS').
+MA_TIPO: Tipo de maquinaria (campo genérico, distinto de MA_TP).
+MA_NU: Información relacionada con el uso de la maquinaria.
+MA_AFAB: Año de Fabricación de la maquinaria.
+MA_FCOM: Año de compra de la maquinaria.
+MA_BAS: Número de Bastidor de la maquinaria.
+MA_VSE: Fecha de vencimiento del seguro.
+MA_COM: Nombre de la compañía de seguro (campo de texto).
+MA_TRAB: Código del trabajador técnico conductor actual. Es una clave foránea a la tabla tecnicos, para obtener la denominación (TN_DENO) del operario.
+MA_TP: Código del tipo general de maquinaria. Es una clave foránea a la tabla tipo-maq, para obtener la denominación (TM_DENO) de la categoría a la que pertenece la máquina.
+Relaciones:
+Técnicos:
+
+Tabla Relacionada: tecnicos
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: MA_TRAB
+Campo de Enlace Externo: id
+Descripción: Vincula la maquinaria con el trabajador técnico que la opera o conduce actualmente.
+Tipos de Maquinaria:
+
+Tabla Relacionada: tipo-maq
+Tipo de Relación: Muchos a uno
+Campo de Enlace Local: MA_TP
+Campo de Enlace Externo: id
+Descripción: Vincula la maquinaria con su tipo general, definido en la tabla tipo-maq
+
+
+
+
+SECCIÓN: TIPOS DE MAQUINARIA
+DESCRIPCIÓN GENERAL:
+La sección de Tipos de Maquinaria (tipo-maq) se encarga de definir y gestionar las diferentes categorías o tipos de maquinaria que utiliza la empresa. Funciona como un catálogo maestro para estandarizar la clasificación de todos los equipos y sirve como una referencia clave para otros módulos del sistema.
+
+Columnas:
+ID: Código identificador único asignado a cada tipo de maquinaria. Es la clave primaria.
+TM_DENO: Denominación o nombre descriptivo del tipo de máquina (Ej: 'CAMION', 'TRACTOR', 'SEMBRADORA').
+Relaciones:
+Maquinaria:
+Tabla Relacionada: maquinaria
+Tipo de Relación: Uno a muchos (Un tipo puede aplicarse a muchas máquinas).
+Campo de Enlace Local: id (El ID del tipo de maquinaria en esta tabla).
+Campo de Enlace Externo: MA_TP (El campo en la tabla maquinaria que referencia a tipo-maq.id).
+Descripción: Esta tabla es referenciada por la tabla maquinaria (mediante el campo MA_TP) para clasificar cada máquina individual por su tipo.
+
+
+
+
+SECCIÓN: TÉCNICOS
+DESCRIPCIÓN GENERAL:
+La sección de Técnicos (tecnicos) almacena la información de los técnicos de la empresa. Esto incluye sus datos personales como nombre, teléfono, domicilio, población, código postal y número de identificación fiscal, así como su estado de actividad. Además, permite mantener un registro de su historial laboral y contractual, lo cual es crucial para la gestión de recursos humanos.
+
+Columnas:
+ID: Código identificador único del técnico. Es la clave primaria.
+TN_DENO: Nombre completo del técnico.
+TN_TEL: Número de teléfono del técnico.
+TN_DOM: Domicilio del técnico.
+TN_POB: Población del técnico.
+TN_CDP: Código postal del técnico.
+TN_CIF: Número de identificación fiscal del técnico.
+TN_ACT: Estado de actividad del técnico (Ej: 'A' - Activo, 'I' - Inactivo, 'B' - Baja).
+
+Relaciones:
+Historial de Técnicos (tecnicos_tn_hist):
+Tabla Relacionada: tecnicos_tn_hist
+Tipo de Relación: Uno a muchos (Un técnico puede tener múltiples registros en su historial).
+Campo de Enlace Local: id (El ID del técnico en esta tabla).
+Campo de Enlace Externo: id (El ID del técnico en la tabla de historial).
+Descripción: Vincula al técnico con su historial laboral y contractual detallado, incluyendo fechas de inicio/fin, área, lugar de trabajo y tipo de contrato.
+
+
+
+SECCIÓN: APLICADORES FITOSANITARIOS
+DESCRIPCIÓN GENERAL:
+La sección de Aplicadores Fitosanitarios (aplicadores_fit) es un catálogo de las personas registradas en el sistema que están autorizadas para aplicar productos fitosanitarios. Cada aplicador se identifica por un código único y una denominación.
+
+Columnas:
+ID: Código ID único del aplicador fitosanitario. Es la clave primaria.
+AFI_DENO: Denominación del aplicador fitosanitario (Ej: 'LUIS TUBON').
+
+
+
+SECCIÓN: EQUIPOS FITOSANITARIOS
+DESCRIPCIÓN GENERAL:
+La sección de Equipos Fitosanitarios (equipo_fito) es un catálogo de los equipos utilizados para la aplicación de productos fitosanitarios registrados en el sistema. Cada equipo se identifica por un código único y una denominación.
+
+Columnas:
+ID: Código único del equipo fitosanitario. Es la clave primaria.
+EFI_DENO: Denominación del equipo fitosanitario (Ej: 'ATOMIZADOR 1000L', 'PULVERIZADOR DE ESPALDA').
+
+
+
+
+SECCIÓN: TARIFAS
+DESCRIPCIÓN GENERAL:
+La sección de Tarifas (tarifas) registra las diferentes tarifas de precios disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe, permitiendo una clara distinción entre las políticas de precios aplicadas.
+
+Columnas:
+ID: Identificador único de la tarifa. Es la clave primaria.
+TP_DENO: Denominación o descripción de la tarifa (ej: 'Tarifa A', 'Tarifa por Volumen', 'Tarifa Especial Clientes VIP').
+
+
+
+
+
+
+
+
+
+
+
+
+Manual de Procesos y su Integración con el ERP de Semilleros Deitana
+Este manual detalla la integración de los procesos operativos de Semilleros Deitana con su sistema ERP, explicando cómo cada etapa del flujo de trabajo se gestiona y registra dentro de las diferentes secciones del sistema.
+
+1. Inicio del Proceso: Encargo del Cliente
+El proceso se inicia con un encargo del cliente, que puede involucrar semilla aportada por el cliente o solicitada al semillero. En esta fase crucial, se elige el tipo de bandeja para la siembra (ej. 52, 54, 104, 150, 198, 260, 322, 874, 589 de cebolla o 322 de plástico para brócoli/puerros) según la planta, variedad y destino del cultivo, lo que impacta directamente en la cantidad de alvéolos, volumen de turba, coste de producción, espaciado y manejo del cultivo. Una vez definido, se programa la siembra con la cantidad de semillas o plantas solicitadas. La información de este encargo se registra en Ventas – Gestion – Encargos de siembra, mientras que los tipos de bandejas y sus características se encuentran en Archivos – Auxiliares – Bandejas. La gestión del stock de semillas se vincula con Archivos – Generales – Artículos.
+
+2. Validación y Tarifa del Encargo
+Tras la recepción del encargo (por teléfono, en persona o WhatsApp), se revisa si el cliente aporta su propia semilla o solicita la del semillero, y se confirma la variedad, fecha de siembra y cantidad. Es fundamental verificar encargos previos para calcular la tarifa adecuada. Antes de la siembra, se elabora y envía al cliente un encargo valorado (incluyendo variedad, tipo de bandeja, cantidad, fechas, precio unitario y total, condiciones de cobro y observaciones) para su aprobación y firma. La asignación de la tarifa (A, B, C, D) se basa en el volumen anual de plantas que el cliente adquiere, con pesos diferentes según el tipo de planta (brócoli vs. injertos de tomate), lo cual se configura y gestiona en Almacén - Varios - Tarifas de precios y Archivos – Generales – Clientes. Una vez validado el encargo firmado, se registra en Ventas – Gestion – Encargos de siembra, se bloquea automáticamente la semilla en cámara (si es del cliente) en Ventas - Otros - Partidas y se programa la siembra. Si hay pago anticipado obligatorio (para clientes nuevos o de riesgo), el seguimiento se realiza mediante Cobros – General – Cartera de Cobros y Cobros - General - Control de impagos.
+
+3. Programación de Siembra y Pedido de Semilla
+Validado el encargo, la información clave se registra en el ERP para reservar la fecha de siembra y asegurar los recursos. Esto incluye el tipo de bandeja, variedad, cantidad de bandejas/plantas/alvéolos, cliente, y fechas previstas de siembra y salida, todo ello dentro de Ventas - Otros - Partidas. El técnico asignado ajusta el calendario para evitar solapamientos. Si el cliente no aporta la semilla, el técnico realiza el pedido al proveedor correspondiente (ej. Semillas Fitó, Sakata), definiendo lote, cantidad (con margen de germinación), condiciones de entrega y certificaciones (ej. ecológica). Este pedido se genera desde el ERP como “Pedido Proveedor Semilla” en Compras – Gestión Compras – Pedidos a Proveedor, asociado a la partida. Si la semilla ya está en cámara, se bloquea automáticamente el lote en el sistema (evitando duplicidades) y se prepara la cantidad exacta con etiquetas individuales para bandejas, gestionándose el inventario en Archivos – Generales – Artículos. Paralelamente, se verifica la disponibilidad de sustrato específico (Archivos – Auxiliares – Sustratos) y bandejas adecuadas (Archivos – Auxiliares – Bandejas), así como fungicidas para tratamientos iniciales (Archivos – Auxiliares – Productos Fitosanitarios).
+
+4. Generación de Partida en el ERP y Etiquetado
+El mismo día de la siembra, el encargado administrativo genera la partida oficial en el ERP, asociándola al encargo validado. Se asigna un número de partida único y se registran datos como cliente, variedad, tipo y lote de semilla, tipo de siembra (manual, máquina, injerto), tipo de bandeja, fechas de siembra y salida estimada, y la cantidad total de bandejas, alvéolos y plantas. Todos estos datos se almacenan en Ventas - Otros - Partidas. Se genera una etiqueta grande con código de barras (incluyendo número de partida, variedad, fechas de siembra y salida, cantidad de bandejas) y etiquetas individuales para cada bandeja (también con código de barras), esenciales para trazabilidad y escaneado con PDA (Archivos – Auxiliares – Dispositivos móviles). Estas etiquetas se pegan antes de la entrada a la cámara de germinación. El equipo de siembra prepara las bandejas vacías, ajusta la sembradora al tipo de semilla, bandeja y cultivo, llena las bandejas con sustrato, siembra y apila en carros. Un operario escanea las bandejas con la PDA para validar su etiquetado y registro. Finalmente, el responsable selecciona y registra la cámara de germinación de destino, actualizando la ubicación de la partida en el ERP con la cámara asignada, posición/fila y día de entrada. Esta ubicación se gestiona mediante Archivos – Auxiliares – Ubicaciones e Invernaderos. Este paso cierra el ciclo inicial, dejando la partida lista para el control de germinación y posterior traslado.
+
+5. Entrada en Cámara de Germinación
+Las bandejas sembradas y etiquetadas se trasladan en carros a la cámara de germinación asignada en el ERP. Cada carro se deposita considerando la humedad/temperatura óptima, el tiempo estimado de germinación y restricciones por tratamientos. El encargado de siembra o suministros registra en el sistema la cámara asignada, número de carro/lote interno, fila/posición (si aplica), fecha exacta de entrada y la partida asociada a cada carro, garantizando la trazabilidad completa en Ventas - Otros - Partidas. El ERP controla los días de germinación estándar y genera un aviso automático a la PDA del encargado cuando se ha alcanzado el plazo estimado para la salida al invernadero. Antes de sacar las bandejas, el técnico realiza un control visual de la germinación (porcentaje, uniformidad, problemas), y si es correcto, se aprueba la liberación de la partida. Cualquier incidencia se registraría en Archivos – Generales – Acciones Comerciales - Observaciones o categorizarse con Archivos - Auxiliares - Motivos.
+
+6. Traslado al Invernadero (Registro de Fila y Sector)
+Una vez cumplidos los días de germinación, el sistema ERP genera un aviso automático a la PDA del encargado de suministros, indicando la partida, fechas, variedad y número de bandejas a trasladar (Ventas - Otros - Partidas). El encargado traslada los carros al invernadero asignado y extiende las bandejas sobre mesas o pasillos, considerando la variedad, espaciado y distribución por sectores. Usando la PDA, el operario escanea las bandejas (una a una o por carro) y asigna a cada grupo su fila, sector o subsector, e invernadero correspondiente, junto con posibles observaciones. Este registro se guarda automáticamente en el sistema en Ventas - Otros - Partidas, vinculando la ubicación real con la partida y utilizando los catálogos de Archivos – Auxiliares – Invernaderos, Archivos – Auxiliares – Ubicaciones y Archivos – Auxiliares – Sectores y Subsectores. Una vez extendida, la partida entra en fase de mantenimiento, y el técnico de cultivo puede programar riegos, tratamientos (Producción - Partes - Partes de tratamiento), conteos o revisiones desde el ERP, registrándose todo por ubicación para mantener la trazabilidad hasta la entrega al cliente.
+
+7. Orden de Carga y Logística
+Cuando una partida está lista para su salida, el encargado de suministros la marca como “de poner” en el sistema mediante la PDA, indicando que la planta es apta para ser retirada (actualizando el estado en Ventas - Otros - Partidas). El cliente contacta a la oficina para solicitar la recogida, y el personal administrativo consulta el sistema para verificar si la partida está marcada como “de poner”, informando al cliente la disponibilidad y acordando día y hora estimada. Confirmada la recogida, el personal de suministros accede a la orden en su PDA, localiza la partida en el invernadero, escanea cada bandeja para validar la trazabilidad, las coloca en carros por cliente y las marca como “preparadas”. El sistema valida que las cantidades coincidan con el encargo aprobado. Finalmente, se realiza la carga del camión, se emite el albarán de entrega con los detalles de la partida, cliente, variedad y cantidad (Ventas – Gestion – Albaranes de Venta), y se firma digitalmente o en papel al salir, asegurando que el camión llegue puntual.
+
+8. Cobro (Anticipado, Parcial, a 30 Días, etc.)
+Las condiciones de cobro, definidas desde el encargo valorado, se mantienen registradas en el sistema (Archivos – Generales – Formas de pago/cobro). Para clientes habituales y solventes, se permite el pago a 30 días post-entrega, con facturación tras la salida de la planta y seguimiento mediante conciliación bancaria interna. Para clientes nuevos o de riesgo, se exige un 50% de pago por adelantado y el 50% restante antes de la retirada de la planta, bloqueando el encargo y la entrega hasta la recepción de los ingresos. También pueden existir condiciones especiales (contado, transferencia inmediata, convenios). El equipo de administración verifica manualmente los bancos para confirmar los ingresos (anticipados, segundos tramos, o plazos a 30 días) y actualiza el estado de las facturas a “cobradas” en el ERP, utilizando Cobros – General – Cartera de Cobros, Cobros - General - Control de impagos y Cobros – Caja – Movimientos Caja Bancos. Si un cliente intenta retirar una partida sin haber cumplido los pagos, la entrega se retiene hasta la regularización, reflejándose automáticamente en el ERP o comunicándose desde la oficina.
+
+9. Facturación y Conciliación Contable
+Actualmente, el proceso de facturación es manual y se realiza después de la entrega de la planta. El equipo administrativo verifica la entrega (albarán firmado), consulta el encargo aprobado y emite la factura correspondiente en el ERP (Ventas – Gestion – Registro de Facturas Emitidas). La factura incluye datos del cliente, variedad, cantidad, tipo de bandeja, precio unitario y total, fecha de entrega, forma de pago y vencimiento. Cada factura se vincula directamente al encargo previamente valorado (Ventas – Gestion – Encargos de siembra) para asegurar la coincidencia de importes. Si hay variaciones en la entrega real, la factura se ajusta manualmente antes de su emisión. La conciliación bancaria también es manual; el equipo contable revisa diariamente los movimientos bancarios (Cobros – Caja – Movimientos Caja Bancos), relaciona los ingresos con las facturas emitidas y las marca como “cobradas” en el ERP, manteniendo un control interno paralelo. Los ajustes contables por gastos no categorizados adecuadamente en el ERP (ej. materiales, fitosanitarios, sustratos, servicios) requieren que el director financiero revise y reclasifique manualmente los apuntes y corrija asientos para obtener informes financieros fiables, un proceso que actualmente supone una carga administrativa elevada y se busca optimizar con herramientas como Power BI en colaboración con Twinko.
+
+10. FICHA 4: PROTOCOLO CUANDO EL CLIENTE TRAE SEMILLAS Y DICE “QUIERO TODO”
+Este protocolo es obligatorio para evitar errores y exceso de producción cuando un cliente solicita sembrar todas sus semillas.
+
+Cálculos obligatorios a realizar antes de sembrar:
+
+Cálculo de bandejas de cabezas a sembrar: Se divide el número total de semillas entre 198 (plantas por bandeja estándar). Por ejemplo, 8.000 semillas / 198 = 40,40 bandejas, que se redondea a 41 bandejas completas sembradas. El resto de la semilla queda en cámara para semillero (con caducidad de 6 meses). Esta información se gestiona en Ventas - Otros - Partidas.
+
+Cálculo de bandejas injertadas: Se calcula sobre 185 plantas por bandeja (ajuste operativo). Por ejemplo, 41 bandejas x 185 = 7.585 plantas, que se redondea a 73 bandejas injertadas. Los detalles de los injertos se relacionan con las secciones de Injertos – Utilidades – Medias bandejas y Escandallo Injertos, y las operaciones se registran en Injertos - Injertos por fases – Partes injertos sandía y Partes injertos tomate.
+
+Gestión del excedente: No se siembra más de lo calculado. Si se ha sembrado más por error, las bandejas extra se etiquetan como semillero (Ventas - Otros - Partidas). Si se injerta más de lo necesario, las plantas sobrantes se llevan a la zona de repicado (sector 17, gestionado en Archivos – Auxiliares – Ubicaciones) y se ponen a la venta.
+
+Qué ha pasado en el caso real: Se entregaron 8 sobres al sembrador, quien sembró todo, resultando en 43 bandejas. No se avisó a Miras de injertar solo 73 bandejas, por lo que se injertaron todas las cabezas, resultando en casi 700 plantas sobrantes fuera del cálculo previsto.
+
+Instrucciones de corrección: Corregir la partida del cliente, dejando solo 73 bandejas injertadas (Ventas - Otros - Partidas). El resto se marca como planta de semillero. Si hay dudas, revisar con Pedro y notificar a José Luis una vez corregido.
+
+Nuevas normas obligatorias (a aplicar en todos los casos):
+
+Al cliente se le debe explicar la cuenta antes de que se vaya, incluso si quiere sembrar todo.
+
+Esta cuenta debe aparecer reflejada en el encargo desde el principio (Ventas – Gestion – Encargos de siembra).
+
+Pedro Muñoz será responsable de que todos los encargos salgan ya con esta fórmula aplicada.
+Esto garantizará que el cliente sepa exactamente la planta que va a tener, que no se siembren ni más ni menos pies de lo que corresponde, y que el semillero disponga del control del excedente.
+
+¿Y si la germinación baja de 180 plantas por bandeja?:
+Cuando una partida de cabezas injertables tiene una germinación inferior a 180 plantas por bandeja, se sigue el siguiente protocolo:
+
+Notificar al proveedor: Se informa a la casa comercial responsable del lote y se solicita reposición de semilla si procede (Archivos – Generales – Proveedores).
+
+Buscar refuerzo en el sector 17 (zona de repicado): Revisar si hay cabezas o plantas sobrantes para completar las 180 plantas por bandeja. Si hay margen, se puede subir hasta 185 por bandeja (Archivos – Auxiliares – Ubicaciones).
+
+Mínimo garantizado: 180 plantas por bandeja: Este es el estándar que el semillero debe garantizar.
+
+Mermas normales tras el injerto: Aun cuando se injerten 180–185 plantas, pueden perderse 2 o 3 por bandeja. Esta pérdida es esperada y aceptable.
+
+Atención al cliente si reclama: Si falta alguna bandeja, se intentará cubrir con sobrante disponible en otras zonas. Se gestiona caso por caso con criterio técnico y comercial.
+
+El asistente debe comprender que cuando un cliente quiere sembrarlo todo: se debe seguir un protocolo matemático claro, el sobrante no se destruye sino que se reaprovecha, y si hay germinación débil, se compensa dentro de lo posible y se notifica a la casa proveedora.
+
+11. FICHA 6: SISTEMA DE FICHAJE Y ORGANIZACIÓN POR SECTORES Y TAREAS
+Este protocolo detalla la organización general del personal y el sistema de fichaje implementado para optimizar la distribución de operarios y medir la productividad.
+
+Organización general del personal: Antiguamente, el reparto de operarios se hacía manualmente, causando esperas. Esto se solucionó con un sistema de sectorización que reorganizó la distribución del personal. Actualmente, la empresa está dividida en 14 sectores. Cada sector tiene un encargado propio con una PDA y un número fijo de operarios asignados el día anterior a través de una pantalla visual. Así, cada trabajador sabe a qué sector va al día siguiente, sin necesidad de preguntar. Esta estructura se refleja en Archivos – Otros – Secciones Trabajadores y Archivos – Auxiliares – Sectores y Subsectores.
+
+Fichaje de entrada: Los operarios fichan en la entrada principal antes de su hora asignada. Si fichan incluso un minuto tarde, el sistema descuenta media hora automáticamente. Este fichaje registra la hora de entrada al recinto, pero no la tarea ni el sector aún. Esta funcionalidad se gestiona en Partes y Tratamientos – Personal – Fichajes personal.
+
+Fichaje interno por sector y tarea: Una vez dentro, cada operario va directamente a su sector asignado. El encargado del sector lo ficha dentro del sistema: primero lo da de alta en el sector, luego lo asocia a una tarea concreta de ese sector (usando el listado de tareas y códigos). Si un operario termina su tarea y sobra en ese sector, el encargado avisa al Encargado General (que supervisa todos los sectores). El operario es dado de baja por su encargado actual, y el Encargado General lo reasigna a otro sector donde falte personal. El nuevo encargado lo da de alta en su sector y lo vuelve a asociar a una actividad. Este proceso de asignación y seguimiento de tareas y personal se registra en Partes y Tratamientos – Personal – Fichajes personal y utiliza los catálogos de Archivos – Auxiliares – Sección Tareas y Archivos – Otros – Tareas Per.
+
+Ventajas del sistema actual: Permite medir con precisión las horas dedicadas por sector y el tiempo destinado a cada tarea. Esta información se acumula mensualmente y anualmente, sirviendo para análisis de carga laboral, estudios de productividad y cálculo de incentivos.
+
+Actividades incentivadas y productividad: Algunas tareas están ligadas a incentivos por productividad. Por ejemplo: Sector: Injertos hacer (código 1). Tarea: Z-ENTERRAR (código 63). Tasa: 600 plantas por hora. Esto significa que los rendimientos pueden compararse con un estándar productivo para aplicar el incentivo correspondiente. En otro momento se documentará cómo se calcula el incentivo con base en estas tasas.
+
+El asistente debe saber que: Hay una diferencia entre fichar entrada y fichar actividad. El encargado sectorial es el responsable de fichar dentro. El Encargado General coordina los traslados de personal. Toda esta estructura está diseñada para que el sistema pueda asignar tiempos, tareas y rendimientos de forma objetiva, apoyándose en la información de Partes y Tratamientos – Personal – Fichajes personal, Archivos – Auxiliares – Sección Tareas y Archivos – Otros – Tareas Per.
+
+11.1. Listado de Secciones y Tareas por Código
+A continuación, se presenta una tabla detallada de las secciones y tareas con sus respectivos códigos, utilizada para el fichaje y la organización del personal.
+
+SECCIONES
+
+COD. SECC
+
+TAREAS
+
+COD. TAREA
+
+
+
+
+
+H. CARRETILLERO INJERTOS
+
+259
+
+
+
+
+
+MOVER BANDEJAS INJERTOS
+
+260
+
+
+
+
+
+SACUDIR BANDEJAS INJERTOS
+
+261
+
+
+
+
+
+Z-CARGAR PARA INJERTAR
+
+65
+
+
+
+
+
+Z-DEVOLVER PLANTA SOBRANTE
+
+66
+
+
+
+
+
+Z-ENTERRAR
+
+63
+
+
+
+
+
+Z-ENTERRAR PUA
+
+300
+
+INJERTOS HACER
+
+1
+
+Z-HORAS FORMACION INJERTOS
+
+276
+
+
+
+
+
+Z-INJERTAR PEPINO
+
+237
+
+
+
+
+
+Z-INJERTAR SANDIA
+
+62
+
+
+
+
+
+Z-INJERTAR SANDIA PUA
+
+299
+
+
+
+
+
+Z-INJERTAR TOMATE(104)
+
+179
+
+
+
+
+
+Z-LIMPIAR ALMACEN DE INJERTOS
+
+183
+
+
+
+
+
+Z-MOVER INJERTOS EN CAMARA
+
+67
+
+
+
+
+
+Z-PREP.BAND.PARA INJERTOS
+
+185
+
+
+
+
+
+Z-REPICAR EN ALMACEN INJ.
+
+64
+
+SIEMBRA
+
+2
+
+CAMBIAR FUNDAS
+
+221
+
+
+
+
+
+CAMBIAR MAQUINA
+
+91
+
+
+
+
+
+H.SIEMBRA
+
+8
+
+
+
+
+
+LIMPIAR MAQUINA
+
+94
+
+
+
+
+
+PONER ETIQUETAS
+
+37
+
+
+
+
+
+SEMBRAR EN 104 ALV
+
+48
+
+
+
+
+
+SEMBRAR EN 150 ALV
+
+49
+
+
+
+
+
+SEMBRAR EN 198 ALV
+
+50
+
+
+
+
+
+SEMBRAR EN 260 ALV
+
+51
+
+
+
+
+
+SEMBRAR EN 322 ALV
+
+52
+
+
+
+
+
+SEMBRAR EN 54 ALV
+
+47
+
+
+
+
+
+SEMBRAR EN 589 ALV
+
+280
+
+
+
+
+
+SEMBRAR EN 874 ALV
+
+53
+
+
+
+
+
+Z-SEMBRAR AROMATICA A MANO (260)
+
+89
+
+
+
+
+
+Z-SEMBRAR AROMATICA A MANO (322)
+
+88
+
+
+
+
+
+Z-SEMBRAR AROMATICA A MANO (874)
+
+87
+
+LAVADO BANDEJAS
+
+3
+
+H.SACAR BANDEJAS DE LOS CARROS
+
+205
+
+
+
+
+
+LAVAR BANDEJAS
+
+290
+
+
+
+
+
+SACUDIR BANDEJAS
+
+292
+
+
+
+
+
+Z-SACUDIR BANDEJAS (104)
+
+107
+
+
+
+
+
+Z-SACUDIR BANDEJAS (198)
+
+108
+
+
+
+
+
+Z-SACUDIR BANDEJAS (260)
+
+109
+
+
+
+
+
+Z-SACUDIR BANDEJAS (322)
+
+110
+
+
+
+
+
+Z-SACUDIR BANDEJAS (54)
+
+106
+
+
+
+
+
+Z-SACUDIR BANDEJAS (874)
+
+111
+
+RIEGO
+
+5
+
+APRENDIZAJE RIEGOS
+
+282
+
+
+
+
+
+GUARDIA DE RIEGO
+
+226
+
+
+
+
+
+H.ENCARGADO RIEGO
+
+239
+
+
+
+
+
+H.RIEGO
+
+18
+
+
+
+
+
+SUPERVISION TECNICOS
+
+ALP
+
+
+
+
+
+Z-ABONADO
+
+144
+
+
+
+
+
+Z-FUMIGACION
+
+145
+
+
+
+
+
+Z-MANTENIMIENTO RIEGO
+
+142
+
+
+
+
+
+Z-RIEGO CON MANGUERA
+
+143
+
+OFICINAS
+
+6
+
+ADJUNTO DIRECCION
+
+295
+
+
+
+
+
+H.ADMINISTRACION
+
+1
+
+
+
+
+
+H.TECNICO
+
+174
+
+
+
+
+
+PRACTICAS INFORMATICA
+
+257
+
+
+
+
+
+REPARTO ADMIN.
+
+258
+
+
+
+
+
+RESP. MANTENIMIENTO
+
+267
+
+
+
+
+
+RR.HH.
+
+ALN
+
+
+
+
+
+TECNICO CALIDAD
+
+262
+
+
+
+
+
+TECNICO INJERTOS
+
+203
+
+
+
+
+
+Z-INFORMATICA
+
+171
+
+
+
+
+
+H.RECOGER CARROS
+
+186
+
+REPARTO
+
+7
+
+H.TIRAR RECICLAJE
+
+195
+
+
+
+
+
+MANTENIMIENTO CAMIONES
+
+287
+
+
+
+
+
+Z-REPARTIR PLANTA
+
+125
+
+GARDEN
+
+9
+
+ADMINISTRACION GARDEN
+
+266
+
+
+
+
+
+EXTENDER MACETAS
+
+242
+
+
+
+
+
+GARDEN: LIMPIEZA
+
+298
+
+
+
+
+
+H.GARDEN
+
+21
+
+
+
+
+
+INVENTARIO GARDEN
+
+265
+
+
+
+
+
+JARDINES CLIENTES - GARDEN
+
+ALQ
+
+
+
+
+
+MANTENIMIENTO GARDEN
+
+272
+
+
+
+
+
+PODAR GARDEN
+
+264
+
+
+
+
+
+QUITAR HIERBA GARDEN
+
+263
+
+
+
+
+
+RECEPCION DE PEDIDOS
+
+ALU
+
+
+
+
+
+REPOSICION ARTICULOS GARDEN
+
+271
+
+
+
+
+
+RIEGO GARDEN
+
+252
+
+
+
+
+
+TIENDA ONLINE / PAQUETES
+
+247
+
+
+
+
+
+Z-DEPENDIENTE / AT CLIENTE
+
+169
+
+
+
+
+
+Z-LIMPIAR MACETAS
+
+167
+
+
+
+
+
+Z-REPICAR BANDEJAS
+
+166
+
+
+
+
+
+Z-REPICAR MACETAS
+
+168
+
+TRABAJOS INVERNADERO
+
+11
+
+DESCOPAR SANDIA (54)
+
+206
+
+
+
+
+
+DESCOPAR TOMATE
+
+235
+
+
+
+
+
+H.ESCANDALLOS
+
+13
+
+
+
+
+
+H.PREPARADO INJ.TOMATE (104)
+
+26
+
+
+
+
+
+H.REPICAR
+
+32
+
+
+
+
+
+OTRAS LIMPIEZAS INJERTOS
+
+240
+
+
+
+
+
+PODAR INJERTO TOMATE
+
+236
+
+
+
+
+
+REPICAR PACKS GARDEN
+
+296
+
+
+
+
+
+Z-ESCANDALLOS (NO INJERTOS)
+
+182
+
+
+
+
+
+Z-QUITAR HIERBA A TOMILLO
+
+123
+
+
+
+
+
+Z-RECUPERAR SANDIA (54)
+
+104
+
+
+
+
+
+Z-RELLENAR CON VERMICULITA
+
+60
+
+INJERTOS TRABAJO
+
+12
+
+H.PREPARADO INJ.SANDIA (54)
+
+42
+
+
+
+
+
+Z-CORTAR SANDIA (54)
+
+103
+
+
+
+
+
+Z-LIMPIAR CALABAZA (54)
+
+41
+
+SUMINISTROS
+
+13
+
+H.LIAR Y REGAR CARROS
+
+197
+
+
+
+
+
+LLENADO BIDONES
+
+297
+
+
+
+
+
+MOVER CARROS EN SEMILLERO
+
+126
+
+
+
+
+
+PREPARAR EMPAQUETADO
+
+249
+
+
+
+
+
+Z-CARGAR BANDEJAS
+
+118
+
+
+
+
+
+Z-CORTAR CEBOLLA/PUERROS
+
+24
+
+
+
+
+
+Z-DAR VUELTA A BANDEJAS
+
+184
+
+
+
+
+
+Z-EXTENDER BANDEJAS
+
+119
+
+
+
+
+
+Z-LLENAR SACAS DE TURBA
+
+31
+
+
+
+
+
+Z-LLENAR SACOS TURBA
+
+164
+
+
+
+
+
+Z-MOVER BANDEJAS
+
+120
+
+
+
+
+
+Z-TIRAR PLANTA
+
+122
+
+MANTENIMIENTOS EMPRESA
+
+14
+
+ETIQUETADO GENERAL
+
+216
+
+
+
+
+
+H.LIMPIAR OFICINA
+
+200
+
+
+
+
+
+H.MANTENIMIENTO INVERNADEROS / MEC
+
+175
+
+
+
+
+
+H.MECANICA
+
+7
+
+
+
+
+
+H.PONER PLASTICOS
+
+14
+
+
+
+
+
+H.PONER VIGAS
+
+15
+
+
+
+
+
+H.REPARAR MAQUINA LAVADORA-BAN
+
+192
+
+
+
+
+
+MANTENIMIENTO BARREDORA
+
+217
+
+
+
+
+
+REPARACION CARROS
+
+156
+
+
+
+
+
+REPARACION MAQUINA SIEMBRA
+
+154
+
+
+
+
+
+REPARAR CAMARA INJERTOS
+
+218
+
+
+
+
+
+Z-ALBAÑILERIA EMPRESA
+
+40
+
+
+
+
+
+Z-CAMBIAR PLASTICOS
+
+130
+
+
+
+
+
+Z-CERRAR VENTANA MANUAL
+
+36
+
+
+
+
+
+Z-GARDEN MANTENIMIENTO
+
+302
+
+
+
+
+
+Z-JARDIN EMPRESA
+
+23
+
+
+
+
+
+Z-LIMPIAR EMPRESA
+
+136
+
+
+
+
+
+Z-PINTAR INSTALACIONES
+
+137
+
+
+
+
+
+Z-QUEMAR HIERBA
+
+128
+
+
+
+
+
+Z-SEPARAR SECTORES INVERNADEROS
+
+135
+
+
+
+
+
+Z-SOMBREAR
+
+131
+
+MANTENIMIENTOS CASAS PARTICULARES
+
+15
+
+H.ARREGLAR CASAS-ALQUILER
+
+194
+
+
+
+
+
+REPARACIONES CASAS PARTICULARES
+
+39
+
+
+
+
+
+Z-JARDIN CASAS
+
+59
+
+
+
+
+
+Z-LIMPIAR CASAS
+
+141
+
+LOGISTICA
+
+16
+
+FORMACION CARRETILLEROS
+
+229
+
+
+
+
+
+H.CARRETILLERO
+
+4
+
+
+
+
+
+H.MOV.PALETS EN CAMARA
+
+61
+
+
+
+
+
+TALLER
+
+148
+
+
+
+
+
+Z-INVENTARIO INVERNADEROS
+
+124
+
+
+
+
+
+Z-MOVER PALETS DE BAND.SEMBRADAS
+
+152
+
+GENERAL
+
+17
+
+FORMACION RIESGOS LABORALES / CURSOS
+
+241
+
+
+
+
+
+RECONOCIMIENTO MEDICO
+
+245
+
+ALMUERZO
+
+22
+
+H.ALMUERZO
+
+201
+
+CALEFACCION
+
+23
+
+TRABAJOS AUXILIARES
+
+ALS
+
+
+
+
+
+TRITURADO EXTERIOR
+
+ALT
+
+
+
+
+
+TRITURAR PODAS
+
+ALR
+
+ARCHIVO LAVADO
+
+90
+
+Z-LAVAR BANDEJAS (104)
+
+113
+
+
+
+
+
+Z-SACUDIR BANDEJAS (150)
+
+207
+
+
+
+
+
+Z-SACUDIR BANDEJAS (589)
+
+275
+
+ARCHIVO REPARTO
+
+94
+
+H.REPARTO LOGISTICA
+
+25
+
+
+
+
+
+
+
+253
+

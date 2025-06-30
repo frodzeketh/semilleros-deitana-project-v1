@@ -16,21 +16,10 @@ const CONFIG = {
     // Archivos de conocimiento a procesar
     archivos: [
         {
-            ruta: '../data/baseConocimiento.txt',
-            categoria: 'empresa_general',
-            version: '1.0'
-        },
-        {
-            ruta: '../data/descripcionERP.txt', 
-            categoria: 'erp_sistema',
-            version: '1.0'
-        },
-        {
-            ruta: '../data/conocimiento-empresa-optimizado.txt',
-            categoria: 'empresa_optimizada',
+            ruta: '../data/informacionEmpresa.txt',
+            categoria: 'empresa_completa',
             version: '1.0'
         }
-        // Añadir más archivos aquí cuando estén disponibles
     ],
     
     // Metadatos adicionales
@@ -259,8 +248,7 @@ OPCIONES:
    --dry-run, -d  Simula la carga sin enviar a Pinecone
 
 ARCHIVOS REQUERIDOS:
-   • baseConocimiento.txt - Información general de la empresa
-   • descripcionERP.txt - Descripción del sistema ERP
+   • informacionEmpresa.txt - Información completa de la empresa
    
 VARIABLES DE ENTORNO:
    • OPENAI_API_KEY - Clave de API de OpenAI

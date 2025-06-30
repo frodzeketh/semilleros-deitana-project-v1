@@ -14,10 +14,9 @@ const ragInteligente = require('../core/ragInteligente');
  */
 async function analizarIntencionIA(mensaje, openaiClient) {
     console.log('🧠 [INTENCION-IA] Analizando consulta con inteligencia artificial...');
-    
     try {
         const completion = await openaiClient.chat.completions.create({
-            model: 'gpt-4o-mini', // Modelo rápido y económico para clasificación
+            model: 'gpt-4-turbo-preview', // SIEMPRE usar GPT-4.1 preview para clasificación
             messages: [{
                 role: 'system',
                 content: `Eres un clasificador de intenciones para un asistente ERP agrícola de Semilleros Deitana.
@@ -81,15 +80,13 @@ Responde SOLO con: SALUDO|CONSULTA_SIMPLE|CONSULTA_COMPLEJA|CONVERSACION|COMANDO
  */
 async function detectarTablasRelevantesIA(mensaje, mapaERP, openaiClient) {
     console.log('📊 [TABLAS-IA] Detectando tablas relevantes con IA...');
-    
     const tablasDisponibles = Object.keys(mapaERP);
     const descripcionesTablas = tablasDisponibles.map(tabla => 
         `${tabla}: ${mapaERP[tabla].descripcion || 'Sin descripción'}`
     ).join('\n');
-
     try {
         const completion = await openaiClient.chat.completions.create({
-            model: 'gpt-4o-mini',
+            model: 'gpt-4-turbo-preview', // SIEMPRE usar GPT-4.1 preview para detección de tablas
             messages: [{
                 role: 'system',
                 content: `Analiza la consulta del usuario y determina qué tablas del ERP son relevantes.
@@ -178,43 +175,12 @@ function construirContextoMapaERP(tablasRelevantes, mapaERP) {
  * Selecciona el modelo GPT más apropiado según la complejidad Y tipo de tarea
  */
 function seleccionarModeloInteligente(intencion, tablasRelevantes) {
-    const { tipo, complejidad, requiereIA } = intencion;
-    
-    // Para tareas que NO requieren IA sofisticada
-    if (!requiereIA) {
-        return {
-            modelo: 'gpt-4o-mini',
-            maxTokens: 500,
-            temperature: 0.7,
-            razon: 'Respuesta simple sin consulta SQL'
-        };
-    }
-    
-    // Para consultas SQL: siempre usar modelos capaces
-    if (tipo === 'sql') {
-        if (complejidad === 'compleja' || tablasRelevantes.length > 2) {
-            return {
-                modelo: 'gpt-4o',
-                maxTokens: 2000,
-                temperature: 0.3, // Más determinístico para SQL complejo
-                razon: 'SQL complejo con múltiples tablas'
-            };
-        } else {
-            return {
-                modelo: 'gpt-4o',
-                maxTokens: 1200,
-                temperature: 0.3, // Más determinístico para SQL
-                razon: 'SQL simple pero requiere precisión'
-            };
-        }
-    }
-    
-    // Para conversaciones: modelo equilibrado
+    // SIEMPRE usar GPT-4.1 preview para cualquier tarea IA
     return {
-        modelo: 'gpt-4o-mini',
-        maxTokens: 800,
-        temperature: 0.8, // Más creativo para conversación
-        razon: 'Conversación general'
+        modelo: 'gpt-4-turbo-preview',
+        maxTokens: 2000,
+        temperature: 0.3,
+        razon: 'Siempre usar el mejor modelo GPT-4.1 preview para máxima calidad.'
     };
 }
 
@@ -255,12 +221,19 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         }
     }
     
+    // Instrucción explícita para priorizar y citar información literal del archivo de conocimiento
+    const instruccionCitasLiterales = `IMPORTANTE: Si en el contexto proporcionado (archivo de conocimiento de empresa) encuentras una coincidencia EXACTA de un nombre propio, rol, proceso o persona mencionada en la consulta del usuario, DEBES priorizar y citar literalmente el fragmento correspondiente en tu respuesta. No inventes ni generalices. Si hay coincidencia exacta, responde usando literalmente el texto del archivo y cita la fuente como "[Fuente: archivo de conocimiento]". Si no hay coincidencia exacta, responde normalmente.`;
+
+    // Instrucción reforzada para que la IA solo use el contexto y no invente
+    const instruccionContextoFiel = `IMPORTANTE: Debes basar tu respuesta únicamente en el contexto proporcionado (archivo de conocimiento de empresa y contexto RAG). Si la información no está en el contexto, responde: "No tengo información suficiente en la base de conocimiento para responder a tu pregunta". No inventes ni rellenes con información genérica. Si el contexto es extenso, sintetiza y explica de forma clara, pero siempre fiel al contenido real.`;
+    
     // 3. Seleccionar modelo de forma inteligente
     const configModelo = seleccionarModeloInteligente(intencion, tablasRelevantes);
     console.log('🤖 [PROMPT-BUILDER] Modelo seleccionado:', configModelo.modelo, '-', configModelo.razon);
     
     // 4. Construir prompt según tipo de consulta
     let promptCompleto = promptBase;
+    promptCompleto += `\n\n${instruccionContextoFiel}`;
     
     switch (intencion.tipo) {
         case 'saludo':
@@ -296,9 +269,9 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
             break;
     }
     
-    // 5. Agregar contextos adicionales
+    // 5. Agregar contexto RAG SIEMPRE, aunque sea consulta SQL/simple
     if (contextoRAG) {
-        promptCompleto += `\n\n${contextoRAG}`;
+        promptCompleto += `\n\n=== CONTEXTO DE CONOCIMIENTO ===\n${contextoRAG}`;
     }
     
     if (contextoPinecone) {
