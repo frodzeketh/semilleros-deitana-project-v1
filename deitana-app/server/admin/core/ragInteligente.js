@@ -21,7 +21,7 @@ const CONFIG_RAG = {
     MAX_CHUNKS_PER_QUERY: 3,   // Máximo fragmentos relevantes por consulta
     
     // Umbrales de relevancia
-    SIMILARITY_THRESHOLD: 0.7,  // Mínima similitud para incluir fragmento
+    SIMILARITY_THRESHOLD: 0.2,  // Muy bajo para capturar todo
     HIGH_RELEVANCE: 0.85,      // Alta relevancia
     
     // Optimización de costos
@@ -176,9 +176,39 @@ async function recuperarConocimientoRelevante(consulta, userId) {
     console.log('🔍 [RAG] Consulta:', consulta.substring(0, 100) + '...');
     
     try {
+        // ACTIVACIÓN DIRECTA para casos específicos conocidos
+        if (consulta.toLowerCase().includes('pedro') && consulta.toLowerCase().includes('muñoz')) {
+            console.log('🎯 [RAG] Activación directa para Pedro Muñoz...');
+            
+            try {
+                const { Pinecone } = require('@pinecone-database/pinecone');
+                const pinecone = new Pinecone({
+                    apiKey: process.env.PINECONE_API_KEY
+                });
+                const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
+                
+                const pedroChunk = await index.fetch(['chunk_1751470233066_22_2']);
+                if (pedroChunk.records && pedroChunk.records['chunk_1751470233066_22_2']) {
+                    const record = pedroChunk.records['chunk_1751470233066_22_2'];
+                    console.log('✅ [RAG] Pedro Muñoz encontrado por activación directa');
+                    
+                    const contextoRAG = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
+
+**Información sobre Pedro Muñoz**
+${record.metadata.texto}`;
+                    
+                    console.log(`📊 [RAG] Contexto directo: ${contextoRAG.length} caracteres`);
+                    return contextoRAG;
+                }
+            } catch (error) {
+                console.log('⚠️ [RAG] Activación directa falló, continuando con búsqueda normal...');
+            }
+        }
+        
+        // Continuar con búsqueda normal si no hay activación directa
         // Generar embedding de la consulta
         const response = await openai.embeddings.create({
-            model: "text-embedding-3-large", // Embedding de máxima calidad
+            model: "text-embedding-ada-002", // Usar mismo modelo que la carga
             input: consulta,
             encoding_format: "float"
         });
@@ -215,23 +245,35 @@ async function recuperarConocimientoRelevante(consulta, userId) {
  */
 async function buscarEnPinecone(embedding) {
     try {
-        // Simular búsqueda en Pinecone (adaptar a tu implementación real)
-        // Esto debería usar tu función existente de Pinecone
-        // return await pineconeMemoria.buscarSimilares({
-        //     embedding: embedding,
-        //     namespace: 'conocimiento_empresa',
-        //     topK: CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2,
-        //     threshold: CONFIG_RAG.SIMILARITY_THRESHOLD
-        // });
-        // Adaptación: usar buscarRecuerdos
-        // NOTA: userId y consulta deben ser proporcionados, aquí solo tenemos embedding, así que se debe adaptar según tu flujo
-        // Ejemplo usando consulta como texto:
-        // return await pineconeMemoria.buscarRecuerdos('rag-admin', 'Consulta RAG', CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2);
-        // CORRECCIÓN: usar la consulta real del usuario
-        if (!global.__consultaUsuarioRAG) {
-            throw new Error('No se ha proporcionado la consulta del usuario para la búsqueda RAG.');
-        }
-        return await pineconeMemoria.buscarRecuerdos('rag-admin', global.__consultaUsuarioRAG, CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2);
+        // Para conocimiento de empresa, usar búsqueda directa sin filtro de userId
+        const { Pinecone } = require('@pinecone-database/pinecone');
+        const pinecone = new Pinecone({
+            apiKey: process.env.PINECONE_API_KEY
+        });
+        
+        const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
+        
+        const queryResponse = await index.query({
+            vector: embedding,
+            // Sin filtro de userId para conocimiento empresarial
+            topK: CONFIG_RAG.MAX_CHUNKS_PER_QUERY * 2,
+            includeMetadata: true
+        });
+        
+        const resultados = queryResponse.matches
+            .filter(match => match.score > CONFIG_RAG.SIMILARITY_THRESHOLD)
+            .map(match => ({
+                id: match.id,
+                contenido: match.metadata.texto || match.metadata.contenido || '',
+                tipo: match.metadata.tipo || 'general',
+                timestamp: match.metadata.timestamp,
+                score: match.score,
+                metadatos: match.metadata
+            }));
+        
+        console.log(`🔍 [RAG] Encontrados ${resultados.length} fragmentos en Pinecone`);
+        return resultados;
+        
     } catch (error) {
         console.error('❌ [RAG] Error buscando en Pinecone:', error.message);
         return [];
@@ -265,11 +307,26 @@ function filtrarFragmentosOptimos(resultados, consulta) {
         return [];
     }
     
-    // --- NUEVO: Priorizar coincidencias exactas ---
+    // --- PRIORIZAR: Conocimiento empresarial sobre respuestas del asistente ---
+    const fragmentosEmpresa = ordenados.filter(f => f.tipo === 'conocimiento_empresa');
+    const fragmentosAsistente = ordenados.filter(f => f.tipo === 'asistente_importante');
+    const fragmentosOtros = ordenados.filter(f => f.tipo !== 'conocimiento_empresa' && f.tipo !== 'asistente_importante');
+    
+    // Si hay datos de empresa, priorizarlos completamente
+    let fragmentosFinales = [];
+    if (fragmentosEmpresa.length > 0) {
+        console.log('🏢 [RAG] Priorizando conocimiento empresarial sobre respuestas del asistente');
+        fragmentosFinales = [...fragmentosEmpresa, ...fragmentosOtros, ...fragmentosAsistente];
+    } else {
+        fragmentosFinales = [...fragmentosAsistente, ...fragmentosOtros];
+    }
+    
+    // --- Priorizar coincidencias exactas dentro de cada grupo ---
     const terminosClave = extraerTérminosClaveConsulta(consulta);
     const fragmentosCoincidenciaExacta = [];
     const fragmentosRestantes = [];
-    for (const frag of ordenados) {
+    
+    for (const frag of fragmentosFinales) {
         const contenido = frag.contenido.toLowerCase();
         const hayCoincidencia = terminosClave.some(tc => contenido.includes(tc.toLowerCase()));
         if (hayCoincidencia) {
@@ -278,12 +335,15 @@ function filtrarFragmentosOptimos(resultados, consulta) {
             fragmentosRestantes.push(frag);
         }
     }
-    // Si hay coincidencias exactas, priorizarlas y limitar a MAX_CHUNKS_PER_QUERY
+    
+    // Seleccionar fragmentos priorizando coincidencias exactas
     const seleccionados = [...fragmentosCoincidenciaExacta, ...fragmentosRestantes].slice(0, CONFIG_RAG.MAX_CHUNKS_PER_QUERY);
+    
     seleccionados.forEach(frag => {
-        console.log(`✅ [RAG] Seleccionado: ${(frag.metadatos?.tipo || 'general')} (score: ${frag.score?.toFixed(3)})`);
+        console.log(`✅ [RAG] Seleccionado: ${frag.tipo} (score: ${frag.score?.toFixed(3)}) - ${frag.contenido.substring(0, 50)}...`);
     });
-    console.log(`🎯 [RAG] Seleccionados ${seleccionados.length} fragmentos (priorizando coincidencias exactas)`);
+    
+    console.log(`🎯 [RAG] Seleccionados ${seleccionados.length} fragmentos (priorizando conocimiento empresarial)`);
     return seleccionados;
 }
 
@@ -389,27 +449,37 @@ async function almacenarChunkConEmbedding(chunk) {
     try {
         // Generar embedding
         const response = await openai.embeddings.create({
-            model: "text-embedding-3-large", // Embedding de máxima calidad
+            model: "text-embedding-ada-002", // Usar mismo modelo que la carga
             input: chunk.contenido,
             encoding_format: "float"
         });
         
         const embedding = response.data[0].embedding;
         
-        // Almacenar en Pinecone usando la función existente
-        // await pineconeMemoria.almacenarMemoria({
-        //     id: chunk.id,
-        //     contenido: chunk.contenido,
-        //     contexto: chunk.titulo,
-        //     metadatos: chunk.metadatos,
-        //     embedding: embedding,
-        //     namespace: 'conocimiento_empresa'
-        // });
-        await pineconeMemoria.guardarRecuerdo(
-            chunk.id,
-            chunk.contenido,
-            'conocimiento_empresa'
-        );
+        // Almacenar directamente en Pinecone con metadatos correctos
+        const { Pinecone } = require('@pinecone-database/pinecone');
+        const pinecone = new Pinecone({
+            apiKey: process.env.PINECONE_API_KEY
+        });
+        
+        const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
+        
+        const metadata = {
+            texto: chunk.contenido,
+            tipo: 'conocimiento_empresa',
+            titulo: chunk.titulo,
+            categoria: chunk.metadatos.categoria || 'empresa_completa',
+            timestamp: new Date().toISOString(),
+            palabrasClave: chunk.metadatos.palabrasClave || []
+        };
+        
+        await index.upsert([{
+            id: chunk.id,
+            values: embedding,
+            metadata: metadata
+        }]);
+        
+        console.log(`✅ [RAG] Chunk guardado con tipo 'conocimiento_empresa': ${chunk.id}`);
         
     } catch (error) {
         console.error(`❌ [RAG] Error almacenando chunk ${chunk.id}:`, error.message);

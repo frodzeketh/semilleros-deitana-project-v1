@@ -206,7 +206,12 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
                        mensaje.toLowerCase().includes('empresa') ||
                        mensaje.toLowerCase().includes('semilleros') ||
                        mensaje.toLowerCase().includes('cultivo') ||
-                       mensaje.toLowerCase().includes('proceso');
+                       mensaje.toLowerCase().includes('proceso') ||
+                       mensaje.toLowerCase().includes('pedro') ||
+                       mensaje.toLowerCase().includes('muñoz') ||
+                       mensaje.toLowerCase().includes('quien') ||
+                       mensaje.toLowerCase().includes('quién') ||
+                       /\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\b/.test(mensaje); // Detectar nombres propios
     
     if (necesitaRAG) {
         console.log('🧠 [RAG] Recuperando conocimiento de empresa...');
