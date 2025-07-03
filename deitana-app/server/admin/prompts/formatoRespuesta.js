@@ -6,19 +6,18 @@ const formatoRespuesta = `📋 FORMATO DE RESPUESTA:
 
 **Para consultas con datos:**
 1. Genera SQL en <sql>...</sql>
-2. Respuesta analítica con marcadores específicos
-3. Incluye contexto empresarial
-4. Ofrece ayuda adicional
+2. Respuesta directa con los datos
+3. Sin información adicional no solicitada
 
 **Para conversaciones:**
-- Responde directamente (sin SQL)
-- Mantén tono profesional pero amigable
-- Ofrece ejemplos de consultas posibles
+- Respuesta directa y concisa
+- Solo lo que se pregunta
+- Sin contexto innecesario
 
-**Estructura ideal:**
-- Saludo/confirmación
-- Datos/análisis principal  
-- Contexto de Semilleros Deitana
-- Pregunta de seguimiento`;
+**Reglas clave:**
+- UNA respuesta por consulta
+- Máximo 2-3 líneas para respuestas simples
+- Sin "¿Hay algo más en lo que pueda ayudarte?"
+- Sin explicaciones de procesos obvios`;
 
 module.exports = { formatoRespuesta }; 

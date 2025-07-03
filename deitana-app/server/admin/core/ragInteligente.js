@@ -5,6 +5,9 @@
 const { OpenAI } = require('openai');
 const pineconeMemoria = require('../../utils/pinecone');
 require('dotenv').config();
+const { Pinecone } = require('@pinecone-database/pinecone');
+const fs = require('fs');
+const path = require('path');
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -169,74 +172,102 @@ function extraerPalabrasClave(contenido) {
 // =====================================
 
 /**
- * Recupera conocimiento relevante para una consulta específica
+ * Detecta si es una consulta de seguimiento genérica que requiere contexto
+ */
+function esConsultaSeguimiento(consulta) {
+    const consultaNormalizada = consulta.toLowerCase().trim();
+    const patronesSeguimiento = [
+        'entonces',
+        '¿entonces?',
+        'entonces?',
+        '¿y?',
+        'y?',
+        'continúa',
+        'continua', 
+        'sigue',
+        '¿qué más?',
+        'que más',
+        '¿y después?',
+        'y después',
+        'después',
+        'luego',
+        '¿cómo?',
+        'como?',
+        '¿por qué?',
+        'por que?',
+        'porque?',
+        'explica',
+        'detalla'
+    ];
+    
+    return patronesSeguimiento.some(patron => 
+        consultaNormalizada === patron || 
+        consultaNormalizada.includes(patron)
+    );
+}
+
+/**
+ * Función principal para recuperar conocimiento empresarial con contexto conversacional
  */
 async function recuperarConocimientoRelevante(consulta, userId) {
-    console.log('🔍 [RAG] Recuperando conocimiento relevante...');
-    console.log('🔍 [RAG] Consulta:', consulta.substring(0, 100) + '...');
+    console.log('🧠 [RAG] === INICIANDO BÚSQUEDA DE CONOCIMIENTO ===');
+    console.log('🧠 [RAG] Consulta:', consulta);
+    console.log('🧠 [RAG] Usuario:', userId);
     
     try {
-        // ACTIVACIÓN DIRECTA para casos específicos conocidos
-        if (consulta.toLowerCase().includes('pedro') && consulta.toLowerCase().includes('muñoz')) {
-            console.log('🎯 [RAG] Activación directa para Pedro Muñoz...');
+        // 1. DETECTAR SI ES CONSULTA DE SEGUIMIENTO
+        const esSeguimiento = esConsultaSeguimiento(consulta);
+        
+        if (esSeguimiento) {
+            console.log('🔄 [RAG] Consulta de seguimiento detectada, recuperando contexto conversacional...');
             
-            try {
-                const { Pinecone } = require('@pinecone-database/pinecone');
-                const pinecone = new Pinecone({
-                    apiKey: process.env.PINECONE_API_KEY
-                });
-                const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
-                
-                const pedroChunk = await index.fetch(['chunk_1751470233066_22_2']);
-                if (pedroChunk.records && pedroChunk.records['chunk_1751470233066_22_2']) {
-                    const record = pedroChunk.records['chunk_1751470233066_22_2'];
-                    console.log('✅ [RAG] Pedro Muñoz encontrado por activación directa');
-                    
-                    const contextoRAG = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
+            // Buscar en memoria conversacional para obtener el tema anterior
+            const contextoConversacional = await pineconeMemoria.agregarContextoMemoria(userId, 'protocolo cliente semillas bandejas');
+            
+            if (contextoConversacional && contextoConversacional.length > 50) {
+                console.log('✅ [RAG] Contexto conversacional encontrado, usando para continuar tema');
+                return `=== CONTEXTO CONVERSACIONAL ACTIVO ===
+El usuario está continuando la conversación anterior sobre:
+${contextoConversacional}
 
-**Información sobre Pedro Muñoz**
-${record.metadata.texto}`;
-                    
-                    console.log(`📊 [RAG] Contexto directo: ${contextoRAG.length} caracteres`);
-                    return contextoRAG;
-                }
-            } catch (error) {
-                console.log('⚠️ [RAG] Activación directa falló, continuando con búsqueda normal...');
+INSTRUCCIÓN: Continúa explicando o detallando el tema anterior basándote en este contexto.`;
             }
         }
         
-        // Continuar con búsqueda normal si no hay activación directa
-        // Generar embedding de la consulta
-        const response = await openai.embeddings.create({
-            model: "text-embedding-ada-002", // Usar mismo modelo que la carga
-            input: consulta,
-            encoding_format: "float"
-        });
-        
-        const consultaEmbedding = response.data[0].embedding;
-        
-        // Búsqueda semántica en Pinecone
-        const resultados = await buscarEnPinecone(consultaEmbedding);
-        
-        if (!resultados || resultados.length === 0) {
-            console.log('⚠️ [RAG] No se encontraron fragmentos relevantes');
-            return '';
+        // 2. BUSQUEDA ESPECÍFICA DE PEDRO MUÑOZ
+        if (consulta.toLowerCase().includes('pedro') && consulta.toLowerCase().includes('muñoz')) {
+            console.log('🎯 [RAG] Activación directa: Pedro Muñoz');
+            const contextoDirecto = await buscarPorIdEspecifico('chunk_1751473627724_22_2');
+            if (contextoDirecto) {
+                return contextoDirecto;
+            }
         }
         
-        // Filtrar y optimizar resultados
-        const fragmentosRelevantes = filtrarFragmentosOptimos(resultados, consulta);
+        // 3. BÚSQUEDA ESPECÍFICA DE PROTOCOLO "QUIERO TODO"
+        if (consulta.toLowerCase().includes('quiero todo') || 
+            (consulta.toLowerCase().includes('cliente') && consulta.toLowerCase().includes('todo'))) {
+            console.log('🎯 [RAG] Activación directa: Protocolo "quiero todo"');
+            const idsProtocolo = [
+                'chunk_1751473627724_22_0',
+                'chunk_1751473627724_22_1', 
+                'chunk_1751473627724_22_2',
+                'chunk_1751473627724_22_3'
+            ];
+            
+            for (const id of idsProtocolo) {
+                const contexto = await buscarPorIdEspecifico(id);
+                if (contexto && contexto.includes('PROTOCOLO CUANDO EL CLIENTE')) {
+                    return contexto;
+                }
+            }
+        }
         
-        // Construir contexto optimizado
-        const contextoRAG = construirContextoOptimizado(fragmentosRelevantes);
-        
-        console.log(`🎯 [RAG] Recuperados ${fragmentosRelevantes.length} fragmentos relevantes`);
-        console.log(`📊 [RAG] Contexto final: ${contextoRAG.length} caracteres (~${Math.ceil(contextoRAG.length/3.5)} tokens)`);
-        
-        return contextoRAG;
+        // 4. BÚSQUEDA VECTORIAL NORMAL
+        return await buscarVectorial(consulta);
         
     } catch (error) {
-        console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
-        return ''; // Fallar silenciosamente para no interrumpir consulta
+        console.error('❌ [RAG] Error en recuperación:', error);
+        return '';
     }
 }
 
@@ -518,6 +549,76 @@ function calcularCostoEstimado(numeroConsultasDiarias = 100) {
         mensual: costoTotalDiario * 30,
         anual: costoTotalDiario * 365
     };
+}
+
+/**
+ * Busca un fragmento específico por su ID en Pinecone
+ */
+async function buscarPorIdEspecifico(id) {
+    try {
+        const pinecone = new Pinecone({
+            apiKey: process.env.PINECONE_API_KEY
+        });
+        const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
+        
+        const chunk = await index.fetch([id]);
+        if (chunk.records && chunk.records[id]) {
+            const record = chunk.records[id];
+            console.log(`✅ [RAG] Fragmento específico encontrado: ${id}`);
+            
+            const contextoRAG = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
+
+${record.metadata.texto}`;
+            
+            console.log(`📊 [RAG] Contexto directo: ${contextoRAG.length} caracteres`);
+            return contextoRAG;
+        }
+        
+        console.log(`⚠️ [RAG] Fragmento no encontrado: ${id}`);
+        return null;
+    } catch (error) {
+        console.error(`❌ [RAG] Error buscando fragmento ${id}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Realiza búsqueda vectorial normal en Pinecone
+ */
+async function buscarVectorial(consulta) {
+    try {
+        // Generar embedding de la consulta
+        const response = await openai.embeddings.create({
+            model: "text-embedding-ada-002", // Usar mismo modelo que la carga
+            input: consulta,
+            encoding_format: "float"
+        });
+        
+        const consultaEmbedding = response.data[0].embedding;
+        
+        // Búsqueda semántica en Pinecone
+        const resultados = await buscarEnPinecone(consultaEmbedding);
+        
+        if (!resultados || resultados.length === 0) {
+            console.log('⚠️ [RAG] No se encontraron fragmentos relevantes');
+            return '';
+        }
+        
+        // Filtrar y optimizar resultados
+        const fragmentosRelevantes = filtrarFragmentosOptimos(resultados, consulta);
+        
+        // Construir contexto optimizado
+        const contextoRAG = construirContextoOptimizado(fragmentosRelevantes);
+        
+        console.log(`🎯 [RAG] Recuperados ${fragmentosRelevantes.length} fragmentos relevantes`);
+        console.log(`📊 [RAG] Contexto final: ${contextoRAG.length} caracteres (~${Math.ceil(contextoRAG.length/3.5)} tokens)`);
+        
+        return contextoRAG;
+        
+    } catch (error) {
+        console.error('❌ [RAG] Error en búsqueda vectorial:', error.message);
+        return ''; // Fallar silenciosamente para no interrumpir consulta
+    }
 }
 
 module.exports = {

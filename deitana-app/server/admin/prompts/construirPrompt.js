@@ -6,7 +6,7 @@ const { promptBase } = require('./base');
 const { sqlRules } = require('./sqlRules');
 const { formatoRespuesta } = require('./formatoRespuesta');
 const { ejemplosSQL, ejemplosConversacion } = require('./ejemplos');
-const { comportamiento } = require('./comportamiento');
+const { comportamiento, comportamientoAsistente } = require('./comportamiento');
 const ragInteligente = require('../core/ragInteligente');
 
 /**
@@ -261,7 +261,9 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
             break;
             
         case 'conversacion':
-            promptCompleto += `\n\n${formatoRespuesta}`;
+            // Para conversaciones, incluir comportamiento específico
+            promptCompleto += `\n\n${comportamientoAsistente}`;
+            promptCompleto += `\n\n${formatoRespuesta}\n\n${ejemplosConversacion}`;
             break;
             
         case 'memoria':
@@ -292,6 +294,20 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         promptCompleto += `\n\n${comportamiento}`;
     }
     
+    // 4. Añadir instrucciones finales críticas
+    promptCompleto += `
+
+🔥 INSTRUCCIONES CRÍTICAS:
+- Genera UNA sola respuesta, no múltiples opciones
+- Sé conciso: máximo 3-4 líneas para consultas simples
+- No añadas contexto no solicitado
+- No preguntes "¿Algo más?" automáticamente  
+- Habla como empleado interno, no como servicio de atención al cliente
+- Si la consulta es simple, la respuesta debe ser simple
+
+IMPORTANTE: Eres un asistente INTERNO. Los usuarios son EMPLEADOS de Semilleros Deitana.
+`;
+
     return {
         prompt: promptCompleto,
         configModelo: configModelo,
