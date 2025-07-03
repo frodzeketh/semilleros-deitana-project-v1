@@ -262,7 +262,70 @@ INSTRUCCIÓN: Continúa explicando o detallando el tema anterior basándote en e
             }
         }
         
-        // 4. BÚSQUEDA VECTORIAL NORMAL
+        // 4. BÚSQUEDA ESPECÍFICA DE BANDEJAS
+        if (consulta.toLowerCase().includes('bandeja') || 
+            consulta.toLowerCase().includes('etiquetado') ||
+            consulta.toLowerCase().includes('alvéolo') ||
+            consulta.toLowerCase().includes('cultivo especificaciones')) {
+            console.log('🎯 [RAG] Activación directa: Información sobre bandejas');
+            
+            const contextoBandejas = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
+
+**TIPOS DE BANDEJAS SEGÚN CULTIVO Y ESPECIFICACIONES**
+
+**Tipos disponibles:**
+- 52, 54, 104, 150, 198, 260, 322, 874 alvéolos
+- 589 alvéolos (específica para cebolla)
+- 322 alvéolos de plástico (para brócoli/puerros)
+- BANDEJA FORESTAL 104 ALV (ejemplo específico)
+
+**Especificaciones de bandejas:**
+- ID: Código único que identifica cada tipo de bandeja
+- BN_DENO: Denominación o nombre de la bandeja
+- BN_ALV: Número total de alvéolos (huecos) que tiene la bandeja
+- BN_RET: Indica si la bandeja es Reutilizable (SI o NO)
+
+**Ejemplo concreto:**
+- ID: 001
+- Denominación: BANDEJA FORESTAL 104 ALV
+- Alvéolos: 104
+- Reutilizable: SI
+
+**PROTOCOLO DE ETIQUETADO DE BANDEJAS**
+
+**Etiquetas principales:**
+1. **Etiqueta grande con código de barras** que incluye:
+   - Número de partida
+   - Variedad
+   - Fechas de siembra y salida
+   - Cantidad de bandejas
+
+2. **Etiquetas individuales para cada bandeja** que incluyen:
+   - Código de barras individual
+   - Información de trazabilidad
+   - Para escaneado con PDA (dispositivos móviles)
+
+**Proceso de etiquetado:**
+- Las etiquetas se pegan antes de la entrada a la cámara de germinación
+- Son esenciales para trazabilidad y escaneado con PDA
+- Permiten validación del etiquetado y registro en el sistema
+- Se utilizan durante todo el proceso hasta la entrega final
+
+**Cálculos con bandejas:**
+- Bandeja estándar de cabezas: 198 plantas por bandeja
+- Bandeja para injertos: 185 plantas por bandeja (ajuste operativo)
+- Mínimo garantizado tras injerto: 180 plantas por bandeja
+- Se pueden perder 2-3 plantas por bandeja tras el injerto (merma normal)
+
+**Gestión en el ERP:**
+- La información se encuentra en: Archivos → Auxiliares → Bandejas
+- Vinculado con gestión de stock y partidas
+- Relacionado con Ventas → Otros → Partidas para seguimiento`;
+            
+            return contextoBandejas;
+        }
+        
+        // 5. BÚSQUEDA VECTORIAL NORMAL
         return await buscarVectorial(consulta);
         
     } catch (error) {

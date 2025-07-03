@@ -229,8 +229,22 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // Instrucción explícita para priorizar y citar información literal del archivo de conocimiento
     const instruccionCitasLiterales = `IMPORTANTE: Si en el contexto proporcionado (archivo de conocimiento de empresa) encuentras una coincidencia EXACTA de un nombre propio, rol, proceso o persona mencionada en la consulta del usuario, DEBES priorizar y citar literalmente el fragmento correspondiente en tu respuesta. No inventes ni generalices. Si hay coincidencia exacta, responde usando literalmente el texto del archivo y cita la fuente como "[Fuente: archivo de conocimiento]". Si no hay coincidencia exacta, responde normalmente.`;
 
-    // Instrucción reforzada para que la IA solo use el contexto y no invente
-    const instruccionContextoFiel = `IMPORTANTE: Debes basar tu respuesta únicamente en el contexto proporcionado (archivo de conocimiento de empresa y contexto RAG). Si la información no está en el contexto, responde: "No tengo información suficiente en la base de conocimiento para responder a tu pregunta". No inventes ni rellenes con información genérica. Si el contexto es extenso, sintetiza y explica de forma clara, pero siempre fiel al contenido real.`;
+    // Instrucción reforzada para que la IA responda de forma inteligente
+    const instruccionContextoFiel = `IMPORTANTE: Debes basar tu respuesta en el contexto proporcionado (archivo de conocimiento de empresa y contexto RAG). Si la información específica no está en el contexto, pero tienes conocimiento relacionado, proporciona esa información útil. Si no tienes información relevante, ofrece ayuda alternativa como "Puedo ayudarte a buscar información sobre [tema relacionado] o consultar [fuente específica]". 
+
+🚨 PROHIBIDO ABSOLUTAMENTE:
+- NUNCA respondas con "No tengo información suficiente"
+- NUNCA respondas con "No tengo información suficiente en la base de conocimiento"
+- NUNCA respondas con "No tengo información suficiente para responder"
+- NUNCA respondas con frases similares que indiquen falta de información
+
+✅ EN SU LUGAR, SIEMPRE:
+- Ofrece información relacionada que sí tengas
+- Sugiere alternativas de búsqueda
+- Proporciona contexto útil
+- Sé proactivo y útil
+
+Siempre intenta ser útil y proactivo, nunca te excuses por falta de información.`;
     
     // 3. Seleccionar modelo de forma inteligente
     const configModelo = seleccionarModeloInteligente(intencion, tablasRelevantes);
@@ -304,6 +318,18 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
 - No preguntes "¿Algo más?" automáticamente  
 - Habla como empleado interno, no como servicio de atención al cliente
 - Si la consulta es simple, la respuesta debe ser simple
+
+🚨 PROHIBIDO ABSOLUTAMENTE - NUNCA RESPONDAS:
+- "No tengo información suficiente"
+- "No tengo información suficiente en la base de conocimiento"
+- "No tengo información suficiente para responder"
+- Cualquier variación de estas frases
+
+✅ SIEMPRE RESPONDE DE FORMA ÚTIL:
+- Si no tienes la información exacta, ofrece información relacionada
+- Sugiere alternativas de búsqueda
+- Proporciona contexto útil
+- Sé proactivo y nunca te excuses
 
 IMPORTANTE: Eres un asistente INTERNO. Los usuarios son EMPLEADOS de Semilleros Deitana.
 `;
