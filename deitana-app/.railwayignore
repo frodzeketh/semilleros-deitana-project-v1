@@ -1,0 +1,20 @@
+# Archivos de testeo que pueden interferir con el deploy
+server/test*.js
+server/debug*.js
+server/limpiar-pinecone.js
+server/OPTIMIZACION-COMPLETADA.md
+server/MEMORIA-PINECONE.md
+
+# Archivos de desarrollo
+*.log
+.DS_Store
+node_modules/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos temporales
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log* 
