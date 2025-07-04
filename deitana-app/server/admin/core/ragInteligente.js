@@ -365,7 +365,7 @@ Antes de sacar las bandejas, el técnico realiza:
 - La información se encuentra en: Archivos → Auxiliares → Bandejas
 - Vinculado con gestión de stock y partidas
 - Relacionado con Ventas → Otros → Partidas para seguimiento`;
-            
+        
             return contextoBandejas;
         }
         

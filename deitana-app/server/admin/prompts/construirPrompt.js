@@ -35,13 +35,13 @@ function analizarIntencionBasica(mensaje) {
     // Si pregunta sobre tipos, procedimientos, funciones, manuales, etc. Y menciona entidades ERP
     if (consultasRAGSQL.test(mensajeLower) && entidadesERP.test(mensajeLower)) {
         return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
-    }
-    
+        }
+
     // Si pregunta sobre manuales, procesos, cámaras, etc. (sin entidades ERP específicas)
     const consultasRAGPuro = /(manual|proceso|procedimiento|cámara|camara|germinación|germinacion|entrada|siembra|cultivo|injerto|qué se hace|que se hace|cómo es|como es)/i;
     if (consultasRAGPuro.test(mensajeLower)) {
         return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
-    }
+        }
     
     // Patrones de consultas conversacionales (DEBE IR DESPUÉS DE RAG)
     if (/^(qué es|que es|explica|cómo|como|cuál|cual|por qué|porque|ayuda)\b/.test(mensajeLower)) {
@@ -298,10 +298,10 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     }
     
     // Añadir estructura de datos solo si es necesario
-    if (contextoMapaERP) {
+            if (contextoMapaERP) {
         promptFinal += `${contextoMapaERP}\n\n`;
-    }
-    
+            }
+            
     // Añadir reglas SQL solo para consultas SQL
     if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
         promptFinal += `${sqlRules}\n\n`;
