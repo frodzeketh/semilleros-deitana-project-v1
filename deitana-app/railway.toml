@@ -3,6 +3,6 @@
    buildCommand = "npm run build"
 
    [deploy]
-   startCommand = "cd server && npm start"
-   healthcheckPath = "/"
-   healthcheckTimeout = 100
+   startCommand = "cd server && npm install && npm start"
+   healthcheckPath = "/test"
+   healthcheckTimeout = 300
