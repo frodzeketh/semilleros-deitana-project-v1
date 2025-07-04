@@ -830,11 +830,11 @@ async function processQuery({ message, userId }) {
                 console.log('📊 [TOKENS] Output:', tokensLlamada.completion_tokens);
                 console.log('📊 [TOKENS] Total:', tokensLlamada.total_tokens);
                 console.log('💰 [COSTO] Estimado: $', costoEstimado.toFixed(6));
-            
-            // =====================================
+                
+                // =====================================
                 // PROCESAMIENTO DE RESPUESTA ÚNICA
-            // =====================================
-
+                // =====================================
+                
                 // =====================================
                 // PROCESAMIENTO SEGÚN TIPO DE CONSULTA
                 // =====================================
@@ -871,7 +871,7 @@ async function processQuery({ message, userId }) {
                         console.log('💾 [PINECONE] Guardando conversación RAG+SQL en memoria semántica...');
                         await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
                         console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-                    } catch (error) {
+                                        } catch (error) {
                         console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
                     }
                     
@@ -897,28 +897,28 @@ async function processQuery({ message, userId }) {
                         const finalMessage = await formatFinalResponse(results, message);
                         
                         console.log('📋 [RESPUESTA-FINAL] Respuesta optimizada:', finalMessage.substring(0, 200) + '...');
-                        console.log('📋 [RESPUESTA-FINAL] Longitud:', finalMessage.length, 'caracteres');
-                        
-                        await saveAssistantMessageToFirestore(userId, finalMessage);
-                        console.log('✅ [SISTEMA] Respuesta final enviada correctamente');
+                console.log('📋 [RESPUESTA-FINAL] Longitud:', finalMessage.length, 'caracteres');
+                
+                await saveAssistantMessageToFirestore(userId, finalMessage);
+                console.log('✅ [SISTEMA] Respuesta final enviada correctamente');
                         console.log('🎯 [RESUMEN] OPTIMIZACIÓN EXITOSA: Una sola llamada GPT generó respuesta completa');
-                        
+                
                         // Continuar con el guardado en memoria
-                        try {
-                            console.log('💾 [PINECONE] Guardando conversación en memoria semántica...');
-                            await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
-                            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-                        } catch (error) {
-                            console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
-                        }
-                        
-                        const tiempoTotal = Date.now() - tiempoInicio;
+                try {
+                    console.log('💾 [PINECONE] Guardando conversación en memoria semántica...');
+                    await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
+                    console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+                } catch (error) {
+                    console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                }
+                
+                const tiempoTotal = Date.now() - tiempoInicio;
                         console.log('📊 [MÉTRICAS] Tiempo total:', tiempoTotal, 'ms');
                         console.log('📊 [MÉTRICAS] Tokens totales:', tokensLlamada.total_tokens);
                         console.log('📊 [MÉTRICAS] Costo estimado: $', costoEstimado.toFixed(6));
                         console.log('📊 [MÉTRICAS] Optimizado: true, Llamadas IA: 1');
-                        
-                        return { success: true, data: { message: finalMessage } };
+                
+                return { success: true, data: { message: finalMessage } };
                     } else {
                         // No hay SQL, puede ser respuesta conversacional
                         console.log('ℹ️ [CONVERSACION] No se detectó SQL, procesando como conversación');
@@ -930,7 +930,7 @@ async function processQuery({ message, userId }) {
                         try {
                             await pineconeMemoria.guardarAutomatico(userId, message, respuestaIA);
                             console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-                        } catch (error) {
+            } catch (error) {
                             console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
                         }
                         

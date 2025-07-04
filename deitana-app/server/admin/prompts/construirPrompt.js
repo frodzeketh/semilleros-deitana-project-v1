@@ -28,7 +28,22 @@ function analizarIntencionBasica(mensaje) {
         return { tipo: 'memoria', complejidad: 'simple', requiereIA: false };
     }
     
-    // Patrones de consultas conversacionales
+    // Patrones de consultas que requieren RAG + SQL combinado (DEBE IR ANTES DE CONVERSACION)
+    const consultasRAGSQL = /(qué tipos?|que tipos?|cuáles?|cuales?|cómo se|como se|procedimiento|proceso|función|funcion|utiliza|usa|emplea|manual|entrada|cámara|camara|germinación|germinacion)/i;
+    const entidadesERP = /(cliente|proveedor|articulo|bandeja|tecnico|accion|pedido|factura|almacen|invernadero)/i;
+    
+    // Si pregunta sobre tipos, procedimientos, funciones, manuales, etc. Y menciona entidades ERP
+    if (consultasRAGSQL.test(mensajeLower) && entidadesERP.test(mensajeLower)) {
+        return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
+    }
+    
+    // Si pregunta sobre manuales, procesos, cámaras, etc. (sin entidades ERP específicas)
+    const consultasRAGPuro = /(manual|proceso|procedimiento|cámara|camara|germinación|germinacion|entrada|siembra|cultivo|injerto|qué se hace|que se hace|cómo es|como es)/i;
+    if (consultasRAGPuro.test(mensajeLower)) {
+        return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
+    }
+    
+    // Patrones de consultas conversacionales (DEBE IR DESPUÉS DE RAG)
     if (/^(qué es|que es|explica|cómo|como|cuál|cual|por qué|porque|ayuda)\b/.test(mensajeLower)) {
         return { tipo: 'conversacion', complejidad: 'media', requiereIA: true };
     }
@@ -36,15 +51,6 @@ function analizarIntencionBasica(mensaje) {
     // Patrones de consultas complejas SQL
     if (/\b(análisis|análisys|compara|comparison|tendencia|trend|reporte|report|estadística|statistic)\b/.test(mensajeLower)) {
         return { tipo: 'sql', complejidad: 'compleja', requiereIA: true };
-    }
-    
-    // Patrones de consultas que requieren RAG + SQL combinado
-    const consultasRAGSQL = /(qué tipos?|que tipos?|cuáles?|cuales?|cómo se|como se|procedimiento|proceso|función|funcion|utiliza|usa|emplea)/i;
-    const entidadesERP = /(cliente|proveedor|articulo|bandeja|tecnico|accion|pedido|factura|almacen|invernadero)/i;
-    
-    // Si pregunta sobre tipos, procedimientos, funciones, etc. Y menciona entidades ERP
-    if (consultasRAGSQL.test(mensajeLower) && entidadesERP.test(mensajeLower)) {
-        return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
     }
     
     // Patrones de consultas SQL puras (listados, cantidades, etc.)
@@ -178,18 +184,23 @@ IMPORTANTE: Responde de forma NATURAL y CONVERSACIONAL, como si fueras un emplea
     // Instrucciones específicas según el tipo
     if (intencion.tipo === 'rag_sql') {
         instrucciones += `PROCESO PARA CONSULTAS RAG + SQL COMBINADO:
-1. PRIMERO: Usa el conocimiento empresarial para explicar el contexto, procedimientos y tipos
+1. PRIMERO: Usa la información del conocimiento empresarial como GUÍA para explicar el contexto, procedimientos y tipos
 2. SEGUNDO: Si es apropiado, genera una consulta SQL para dar ejemplos concretos: <sql>SELECT...</sql>
 3. TERCERO: Combina la información del RAG con ejemplos de la base de datos
 4. Responde de forma NATURAL y CONVERSACIONAL
 5. Usa EXACTAMENTE las columnas que aparecen en la estructura de datos proporcionada
 
-EJEMPLOS:
-- Para bandejas: Explica tipos según cultivo, luego muestra ejemplos de la BD
-- Para procedimientos: Explica el proceso, luego busca ejemplos relevantes
-- Para proveedores: Explica el rol, luego muestra proveedores concretos
+IMPORTANTE: 
+- El conocimiento empresarial es una GUÍA, no la única fuente
+- SIEMPRE responde, incluso si no encuentras información específica
+- Si hay información en el RAG, úsala como base pero puedes complementar
+- Si no hay información específica, explica el concepto general
+- Prioriza ser útil y completo sobre ser restrictivo
 
-IMPORTANTE: Prioriza la información del conocimiento empresarial sobre los datos crudos.
+EJEMPLOS:
+- Para bandejas: Explica tipos según cultivo (usando info del RAG), luego muestra ejemplos de la BD
+- Para procedimientos: Explica el proceso (usando info del RAG), luego busca ejemplos relevantes
+- Para cámaras: Explica el proceso (usando info del RAG), complementa con información general si es necesario
 
 `;
     } else if (intencion.tipo === 'sql') {
@@ -205,15 +216,21 @@ EJEMPLOS CORRECTOS:
 - "3 artículos" → <sql>SELECT AR_DENO FROM articulos LIMIT 3</sql>
 - "5 técnicos" → <sql>SELECT TN_DENO FROM tecnicos LIMIT 5</sql>
 - "4 almacenes" → <sql>SELECT AM_DENO FROM almacenes LIMIT 4</sql>
+- "10 bandejas" → <sql>SELECT BN_DENO FROM bandejas LIMIT 10</sql>
 
-IMPORTANTE: Revisa la estructura de datos proporcionada para usar las columnas correctas.
+IMPORTANTE: 
+- Revisa la estructura de datos proporcionada para usar las columnas correctas
+- SIEMPRE genera SQL válido, no te quedes sin responder
+- Si no encuentras la tabla exacta, usa la más similar disponible
 
 `;
     } else if (intencion.tipo === 'conversacion') {
         instrucciones += `RESPUESTAS CONVERSACIONALES:
 - Habla como empleado conocedor de la empresa
-- Usa información del archivo de conocimiento empresarial
-- Sé específico sobre Semilleros Deitana
+- Usa información del archivo de conocimiento empresarial como GUÍA
+- Sé específico sobre Semilleros Deitana cuando sea posible
+- SIEMPRE responde de forma útil y completa
+- Si no tienes información específica, explica el concepto general
 - Pregunta qué más puede ayudar
 
 `;
@@ -260,11 +277,23 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 5. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone);
     
-    // 6. Ensamblar prompt final
+    // 6. OBTENER CONOCIMIENTO RAG (solo para conversaciones y RAG+SQL)
+    let contextoRAG = '';
+    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') {
+        try {
+            console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+            contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
+            console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
+        } catch (error) {
+            console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
+        }
+    }
+    
+    // 7. Ensamblar prompt final
     let promptFinal = instruccionesNaturales;
     
-    // Añadir conocimiento empresarial para conversaciones
-    if (intencion.tipo === 'conversacion') {
+    // Añadir conocimiento empresarial para conversaciones y RAG+SQL
+    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') {
         promptFinal += `${promptBase}\n\n`;
     }
     
@@ -276,6 +305,11 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // Añadir reglas SQL solo para consultas SQL
     if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
         promptFinal += `${sqlRules}\n\n`;
+    }
+    
+    // Añadir contexto RAG si existe
+    if (contextoRAG) {
+        promptFinal += `CONOCIMIENTO EMPRESARIAL RELEVANTE:\n${contextoRAG}\n\n`;
     }
     
     // Añadir contexto de datos previos si existe

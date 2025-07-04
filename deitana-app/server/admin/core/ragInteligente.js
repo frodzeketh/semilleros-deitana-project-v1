@@ -37,55 +37,51 @@ const CONFIG_RAG = {
 // =====================================
 
 /**
- * Divide el contenido en chunks inteligentes respetando contexto
+ * Divide el contenido en chunks inteligentes respetando contexto de SECCIÓN
  */
 function crearChunksInteligentes(contenido, metadatos = {}) {
-    console.log('📄 [RAG] Creando chunks inteligentes...');
-    
+    console.log('📄 [RAG] Creando chunks inteligentes (por SECCIÓN)...');
     const chunks = [];
-    const secciones = contenido.split(/(?=###|===|---|\n\d+\.|\n[A-ZÁÉÍÓÚÑ\s]{10,}\n)/);
-    
+    // Dividir por secciones usando el patrón SECCIÓN: ...
+    const secciones = contenido.split(/(?=SECCIÓN: )/g);
     secciones.forEach((seccion, indice) => {
         const seccionLimpia = seccion.trim();
         if (seccionLimpia.length < 100) return; // Descartar secciones muy pequeñas
-        
-        // Si la sección es muy grande, dividirla en subsecciones
+        // Extraer el título de la sección
+        const matchTitulo = seccionLimpia.match(/^SECCIÓN: ([^\n]*)/);
+        const titulo = matchTitulo ? matchTitulo[1].trim() : `Sección ${indice+1}`;
+        // Si la sección es muy grande, dividirla en sub-chunks
         if (seccionLimpia.length > CONFIG_RAG.CHUNK_SIZE) {
-            const subChunks = dividirSeccionGrande(seccionLimpia, metadatos, indice);
+            const subChunks = dividirSeccionGrandePorParrafos(seccionLimpia, titulo, metadatos, indice);
             chunks.push(...subChunks);
         } else {
-            chunks.push(crearChunk(seccionLimpia, extraerTitulo(seccionLimpia), metadatos, indice));
+            chunks.push(crearChunk(seccionLimpia, titulo, metadatos, indice));
         }
     });
-    
-    console.log(`📄 [RAG] Creados ${chunks.length} chunks inteligentes`);
+    console.log(`📄 [RAG] Creados ${chunks.length} chunks inteligentes (por SECCIÓN)`);
     return chunks;
 }
 
 /**
- * Divide secciones grandes manteniendo coherencia
+ * Divide secciones grandes en sub-chunks por párrafos, manteniendo el título
  */
-function dividirSeccionGrande(contenido, metadatos, indiceBase) {
-    const parrafos = contenido.split('\n\n');
+function dividirSeccionGrandePorParrafos(contenido, titulo, metadatos, indiceBase) {
+    const parrafos = contenido.split(/\n\n+/);
     const chunks = [];
     let chunkActual = '';
-    let tituloSeccion = extraerTitulo(contenido);
-    
     parrafos.forEach(parrafo => {
         if (chunkActual.length + parrafo.length > CONFIG_RAG.CHUNK_SIZE) {
             if (chunkActual.length > 100) {
-                chunks.push(crearChunk(chunkActual, tituloSeccion, metadatos, `${indiceBase}_${chunks.length}`));
+                chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_${chunks.length}`));
             }
             chunkActual = parrafo;
         } else {
             chunkActual += (chunkActual ? '\n\n' : '') + parrafo;
         }
     });
-    
     if (chunkActual.length > 100) {
-        chunks.push(crearChunk(chunkActual, tituloSeccion, metadatos, `${indiceBase}_${chunks.length}`));
+        chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_${chunks.length}`));
     }
-    
     return chunks;
 }
 
@@ -262,7 +258,55 @@ INSTRUCCIÓN: Continúa explicando o detallando el tema anterior basándote en e
             }
         }
         
-        // 4. BÚSQUEDA ESPECÍFICA DE BANDEJAS
+        // 4. BÚSQUEDA ESPECÍFICA DE ENTRADA EN CÁMARA DE GERMINACIÓN
+        if (consulta.toLowerCase().includes('entrada en cámara') || 
+            consulta.toLowerCase().includes('entrada en camara') ||
+            consulta.toLowerCase().includes('cámara de germinación') ||
+            consulta.toLowerCase().includes('camara de germinacion') ||
+            consulta.toLowerCase().includes('germinación') ||
+            consulta.toLowerCase().includes('germinacion')) {
+            console.log('🎯 [RAG] Activación directa: Información sobre entrada en cámara de germinación');
+            
+            const contextoCamara = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
+
+**ENTRADA EN CÁMARA DE GERMINACIÓN - PROCESO ESPECÍFICO**
+
+**Proceso detallado:**
+Las bandejas sembradas y etiquetadas se trasladan en carros a la cámara de germinación asignada en el ERP. Cada carro se deposita considerando:
+- Humedad/temperatura óptima
+- Tiempo estimado de germinación
+- Restricciones por tratamientos
+
+**Registro en el sistema:**
+El encargado de siembra o suministros registra en el sistema:
+- Cámara asignada
+- Número de carro/lote interno
+- Fila/posición (si aplica)
+- Fecha exacta de entrada
+- Partida asociada a cada carro
+
+**Trazabilidad completa:**
+- Se garantiza la trazabilidad completa en Ventas - Otros - Partidas
+- El ERP controla los días de germinación estándar
+- Genera aviso automático a la PDA del encargado cuando se alcanza el plazo estimado para la salida al invernadero
+
+**Control de calidad:**
+Antes de sacar las bandejas, el técnico realiza:
+- Control visual de la germinación (porcentaje, uniformidad, problemas)
+- Si es correcto, se aprueba la liberación de la partida
+- Cualquier incidencia se registra en Archivos – Generales – Acciones Comerciales - Observaciones
+- O se categoriza con Archivos - Auxiliares - Motivos
+
+**Integración con el ERP:**
+- Todo el proceso está integrado al sistema ERP de Semilleros Deitana
+- Permite seguimiento completo desde la entrada hasta la salida
+- Control automático de tiempos y alertas
+- Registro de incidencias para análisis posterior`;
+            
+            return contextoCamara;
+        }
+        
+        // 5. BÚSQUEDA ESPECÍFICA DE BANDEJAS
         if (consulta.toLowerCase().includes('bandeja') || 
             consulta.toLowerCase().includes('etiquetado') ||
             consulta.toLowerCase().includes('alvéolo') ||
