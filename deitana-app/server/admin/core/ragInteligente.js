@@ -40,16 +40,19 @@ const CONFIG_RAG = {
  * Divide el contenido en chunks inteligentes respetando contexto de SECCIÓN
  */
 function crearChunksInteligentes(contenido, metadatos = {}) {
-    console.log('📄 [RAG] Creando chunks inteligentes (por SECCIÓN)...');
+    console.log('📄 [RAG] Creando chunks inteligentes (por SECCIÓN y CONTENIDO)...');
     const chunks = [];
-    // Dividir por secciones usando el patrón SECCIÓN: ...
-    const secciones = contenido.split(/(?=SECCIÓN: )/g);
+    
+    // Dividir por secciones usando múltiples patrones
+    const secciones = contenido.split(/(?=SECCIÓN: |Sector |DOCUMENTO: |INSTRUCCIONES PARA EL |LAVADORA DE )/g);
     secciones.forEach((seccion, indice) => {
         const seccionLimpia = seccion.trim();
         if (seccionLimpia.length < 100) return; // Descartar secciones muy pequeñas
-        // Extraer el título de la sección
-        const matchTitulo = seccionLimpia.match(/^SECCIÓN: ([^\n]*)/);
+        
+        // Extraer el título de la sección usando múltiples patrones
+        const matchTitulo = seccionLimpia.match(/^(?:SECCIÓN: |Sector |DOCUMENTO: |INSTRUCCIONES PARA EL |LAVADORA DE )([^\n]*)/);
         const titulo = matchTitulo ? matchTitulo[1].trim() : `Sección ${indice+1}`;
+        
         // Si la sección es muy grande, dividirla en sub-chunks
         if (seccionLimpia.length > CONFIG_RAG.CHUNK_SIZE) {
             const subChunks = dividirSeccionGrandePorParrafos(seccionLimpia, titulo, metadatos, indice);
@@ -58,7 +61,8 @@ function crearChunksInteligentes(contenido, metadatos = {}) {
             chunks.push(crearChunk(seccionLimpia, titulo, metadatos, indice));
         }
     });
-    console.log(`📄 [RAG] Creados ${chunks.length} chunks inteligentes (por SECCIÓN)`);
+    
+    console.log(`📄 [RAG] Creados ${chunks.length} chunks inteligentes (por SECCIÓN y CONTENIDO)`);
     return chunks;
 }
 
@@ -304,69 +308,6 @@ Antes de sacar las bandejas, el técnico realiza:
 - Registro de incidencias para análisis posterior`;
             
             return contextoCamara;
-        }
-        
-        // 5. BÚSQUEDA ESPECÍFICA DE BANDEJAS
-        if (consulta.toLowerCase().includes('bandeja') || 
-            consulta.toLowerCase().includes('etiquetado') ||
-            consulta.toLowerCase().includes('alvéolo') ||
-            consulta.toLowerCase().includes('cultivo especificaciones')) {
-            console.log('🎯 [RAG] Activación directa: Información sobre bandejas');
-            
-            const contextoBandejas = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
-
-**TIPOS DE BANDEJAS SEGÚN CULTIVO Y ESPECIFICACIONES**
-
-**Tipos disponibles:**
-- 52, 54, 104, 150, 198, 260, 322, 874 alvéolos
-- 589 alvéolos (específica para cebolla)
-- 322 alvéolos de plástico (para brócoli/puerros)
-- BANDEJA FORESTAL 104 ALV (ejemplo específico)
-
-**Especificaciones de bandejas:**
-- ID: Código único que identifica cada tipo de bandeja
-- BN_DENO: Denominación o nombre de la bandeja
-- BN_ALV: Número total de alvéolos (huecos) que tiene la bandeja
-- BN_RET: Indica si la bandeja es Reutilizable (SI o NO)
-
-**Ejemplo concreto:**
-- ID: 001
-- Denominación: BANDEJA FORESTAL 104 ALV
-- Alvéolos: 104
-- Reutilizable: SI
-
-**PROTOCOLO DE ETIQUETADO DE BANDEJAS**
-
-**Etiquetas principales:**
-1. **Etiqueta grande con código de barras** que incluye:
-   - Número de partida
-   - Variedad
-   - Fechas de siembra y salida
-   - Cantidad de bandejas
-
-2. **Etiquetas individuales para cada bandeja** que incluyen:
-   - Código de barras individual
-   - Información de trazabilidad
-   - Para escaneado con PDA (dispositivos móviles)
-
-**Proceso de etiquetado:**
-- Las etiquetas se pegan antes de la entrada a la cámara de germinación
-- Son esenciales para trazabilidad y escaneado con PDA
-- Permiten validación del etiquetado y registro en el sistema
-- Se utilizan durante todo el proceso hasta la entrega final
-
-**Cálculos con bandejas:**
-- Bandeja estándar de cabezas: 198 plantas por bandeja
-- Bandeja para injertos: 185 plantas por bandeja (ajuste operativo)
-- Mínimo garantizado tras injerto: 180 plantas por bandeja
-- Se pueden perder 2-3 plantas por bandeja tras el injerto (merma normal)
-
-**Gestión en el ERP:**
-- La información se encuentra en: Archivos → Auxiliares → Bandejas
-- Vinculado con gestión de stock y partidas
-- Relacionado con Ventas → Otros → Partidas para seguimiento`;
-        
-            return contextoBandejas;
         }
         
         // 5. BÚSQUEDA VECTORIAL NORMAL

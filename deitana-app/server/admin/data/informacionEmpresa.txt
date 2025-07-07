@@ -1860,3 +1860,627 @@ Los cultivos ecológicos tienen un protocolo de tratamiento específico y difere
 
 TRATAMIENTOS EXTRAORDINARIOS (Cuando se dispara la plaga)
 Estos tratamientos se aplican en situaciones específicas donde una plaga o enfermedad requiere una intervención adicional para ser controlada. Para el oídio, se realiza una aplicación extra semanal de Stop3 Acid + Thiovit Jet + Topas, además de las curas habituales, si se detecta su presencia. En el caso de un brote de pulgón a cañón, se utiliza Closer + Stop3 Acid, que puede incluir una aplicación localizada con pistola en los carros ya cargados. Para el espigado, se emplea Stop3 Acid + Merpan después de cortar la cebolla, y Cuprocid SC se usa solo si la planta espiga y tras una revisión previa.
+
+
+
+
+
+
+
+Orden de Mezcla de Productos Fitosanitarios
+El proceso de preparación de las soluciones para los tratamientos fitosanitarios en Semilleros Deitana sigue un protocolo estricto, determinado por el tipo de formulación de cada producto. Esto es fundamental para asegurar la eficacia del tratamiento y evitar reacciones adversas, bloqueos o la pérdida de propiedades de los productos.
+Para garantizar la correcta mezcla, cada producto fitosanitario utilizado tiene asignado un número de orden. Esta numeración no obedece a una prioridad de uso ni a la familia química del producto, sino que indica la secuencia exacta en la que debe introducirse en la cuba de pulverización. Los operarios deben respetar rigurosamente este orden.
+Este protocolo se basa en el esquema oficial de Syngenta, que establece el orden de introducción según la formulación de los productos (como WG, SC, EC, SL, entre otros). Por ejemplo, los reguladores de pH son los primeros en añadirse, seguidos por los gránulos solubles (WG), luego las suspensiones concentradas (SC), y así sucesivamente, hasta llegar a los líquidos antideriva.
+A continuación, se detalla el listado de productos fitosanitarios que utilizamos actualmente, junto con el número que indica su orden de introducción en la cuba:
+1°: STOP3 ACID
+2°: AFFIRM (SG)
+3°: XANILO (WG)
+3°: THIOVIT JET (WG)
+3°: TELDOR (WG)
+3°: TEPPEKI (WG)
+3°: APHOX (WG)
+4°: ARMETIL (WP)
+4°: MOSPILAN (SP)
+5°: CIDELY TOP (DC)
+6°: ORTIVA TOP (SC)
+6°: VERDIMEC (EC) O (SC)
+6°: MINECTO (SC)
+6°: DESIGNER
+6°: ZZ-CUPROCOL (SC)
+6°: MOVENTO GOLD (SC)
+6°: SPINTOR 480 (SC)
+6°: AMPLIGO (SC)
+5°: REVUS (SC)
+6°: MERPAN 80 (SC)
+6°: CLOSER (SC)
+6°: DINAMITE (SC)
+6°: ZENITH (SC)
+7°: KARATE ZEON (CS)
+8°: BENEVIA (OD)
+9°: TOPAS (EC)
+9°: CYTHRIN 100 (EC)
+9°: BREAKER MAX (EC)
+10°: PREVICUR ENERGY (SL)
+10°: PIKAR (SL)
+
+
+________________________________________
+________________________________________
+Orden para una Mezcla Óptima en la Cuba de Pulverización
+Para lograr un caldo de pulverización altamente efectivo, es fundamental seguir un orden estricto al añadir y disolver los diferentes productos en la cuba. Esta secuencia no es arbitraria; está diseñada para optimizar la mezcla y prevenir cualquier interacción que pueda reducir la eficacia del preparado final.
+Nuestra recomendación se basa en la formulación específica de cada producto, asegurando que cada componente se disuelva o disperse de manera adecuada antes de incorporar el siguiente. Así, garantizamos que todos los elementos trabajen en conjunto de la forma más eficiente posible.
+El orden recomendado es el siguiente:
+Agua/solvente
+Específicos:
+Reguladores de pH
+Bolsas hidrosolubles (WSB)
+Sólidos:
+Gránulos solubles (SG)
+Gránulos dispersables (WG)
+Polvos mojables (WP)
+Líquidos:
+Suspensiones concentradas (SC)
+Suspensiones encapsuladas (CS)
+Suspoemulsiones (SE)
+Suspensiones concentradas oleosas (OD)
+Emulsiones acuosas (EW)
+Emulsiones concentradas (EC)
+Surfactantes/mojantes
+Líquidos solubles (SL)
+Otros:
+Abonos foliares
+Líquidos antideriva
+Seguir este protocolo es esencial para asegurar la estabilidad del caldo y potenciar los resultados de cada tratamiento fitosanitario.
+
+
+Tratamientos Fitosanitarios en Semilleros Deitana – Resumen General
+En Semilleros Deitana, implementamos un protocolo de tratamientos fitosanitarios estructurado para mantener la sanidad de nuestros cultivos, abarcando desde aplicaciones rutinarias hasta intervenciones específicas y medidas de saneamiento del agua.
+Tratamientos de Teoría (Rotaciones por Familia)
+Realizamos dos curas semanales a todas las plantas del semillero. Estas aplicaciones rotan combinaciones específicas de productos según la familia de cultivo, con el objetivo de prevenir plagas y enfermedades, y mantener una sanidad vegetal continua.
+Para los tratamientos iniciales, en cultivos convencionales, siempre aplicamos Previcur Energy + Designer durante los primeros 15-20 días tras la siembra (el plazo exacto depende de la época del año), para prevenir enfermedades de cuello y raíz. En contraste, en los cultivos ecológicos, en lugar de Previcur, se irriga con cloro desde que la planta es trasplantada, evitando esta aplicación durante los primeros 15 días en verano.
+Tratamientos Extra
+Estos tratamientos se aplican de forma adicional a las curas de teoría cuando una plaga o enfermedad supera el umbral de control establecido. Algunos ejemplos incluyen:
+Extra Oídio Sandía: Una combinación específica con azufre y Topas, aplicada adicionalmente a las rotaciones de teoría.
+Extra Pulgón a Cañón: Una aplicación intensiva con Closer, utilizada solo cuando se detecta una presencia significativa de pulgón.
+Oruga Eco: Destinada a zonas donde se identifica actividad específica de orugas.
+Pulgón Eco: Se utilizan piretrinas y azadiractina para el control ecológico de pulgones y mosca blanca.
+Desinfección de Pantanos (A, B y C)
+La desinfección de los pantanos se realiza con permanganato potásico para asegurar que el agua de riego se mantenga limpia. La dosis de permanganato varía según el volumen de cada pantano y la estación del año (mayor en verano, menor en invierno). Es crucial que la IA distinga estos productos como parte del sistema de mantenimiento del riego y no como productos fitosanitarios aplicados directamente a las plantas.
+Clasificación y Orden de Mezcla
+Todos los productos fitosanitarios están registrados como artículos en nuestro sistema ERP, formando parte de las más de 17.000 referencias que incluyen semillas, herramientas y otros insumos.
+numerado los productos utilizados en las teorías principales basándonos en su formulación (como SC, SL, WG, etc.). Además, seguimos estrictamente la guía oficial de Syngenta respecto al orden de incorporación de los productos a la cuba de pulverización. Esto es vital para garantizar la máxima eficacia de cada tratamiento al prevenir interacciones químicas no deseadas.
+
+
+
+
+
+Parte 1: 
+
+RG GB 7.2 Tratamiento Fitosanitario a Realizar en el Invernadero (Rev. 5)
+Este documento es un Registro General de Global Deitana, correspondiente al procedimiento GB 7.2 y en su Revisión 5. Su función principal es detallar y documentar un Tratamiento Fitosanitario a Realizar en el Invernadero, asegurando la trazabilidad, el control y el cumplimiento de los procedimientos internos.
+El formulario está estructurado en las siguientes secciones y campos, utilizando la nomenclatura exacta presente en la imagen:
+ENCABEZADO SUPERIOR DEL DOCUMENTO
+En la parte superior, se visualiza el logo de GLOBAL DEITANA, que identifica a la organización. A su derecha, se encuentran los campos clave para la identificación unívoca del tratamiento específico:
+Nº TRATAMIENTO: Un espacio para el número de identificación único asignado a este tratamiento.
+INVERNADERO: Campo para especificar el número o identificador del invernadero donde se llevará a cabo el tratamiento.
+FECHA: Para registrar la fecha de la ejecución o planificación del tratamiento.
+HORA INICIO: Para indicar la hora de comienzo programada de la actividad.
+INFORMACIÓN GENERAL Y RESPONSABILIDADES DEL TRATAMIENTO
+Esta sección define el propósito del tratamiento y asigna los roles del personal involucrado.
+MOTIVO DE TRATAMIENTO (EJ. ELABORACIÓN TRATAMIENTO DE R&D) ELABORACIÓN TRATAMIENTO DE PRODUCCIÓN ELABORACIÓN TRATAMIENTO DE MANTENIMIENTO APLICACIÓN TRATAMIENTO: Un conjunto de casillas de verificación para seleccionar la razón que justifica la realización del tratamiento. El operario o supervisor debe marcar la(s) opción(es) pertinente(s).
+NOMBRE ENCARGADO PRODUCCIÓN Y/O MANTENIMIENTO R&D Y/O C. DE PRODUCCIÓN: Campo destinado al nombre completo del responsable de producción, mantenimiento o I+D (Investigación y Desarrollo) asociado al tratamiento.
+OPERARIO TRATAMIENTO: Campo para el nombre completo del operario que será el encargado de ejecutar físicamente el tratamiento fitosanitario.
+CANTIDAD DE M3 A LLENAR: Espacio para registrar el volumen en metros cúbicos de la mezcla o solución que se debe preparar para la aplicación.
+C.E. DESPUÉS DE LA APLICACIÓN: Campo para anotar el valor de la Conductividad Eléctrica de la solución final o del agua después de que el tratamiento haya sido aplicado.
+CÓDIGO DE PARCELA
+Esta tabla es fundamental para especificar las subdivisiones geográficas dentro del invernadero, donde un tratamiento podría ser aplicado directamente o cuyas plantas recibirán el agua tratada.
+Tabla de CÓDIGO DE PARCELA: Contiene tres entradas predefinidas, cada una con sub-campos para una delimitación precisa:
+A (Polígono 28 - Parcela 275): Identifica una parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+B (Polígono 29 - Parcela 227): Identifica otra parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+C (Polígono 33 - Parcela 405): Identifica una tercera parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+Explicación: Esta estructura permite definir no solo la parcela general, sino también rangos específicos de filas dentro de esa parcela (indicados por "desde" y "hasta"), lo que es crítico para tratamientos localizados.
+DETALLES DE LA APLICACIÓN AL PANTANO
+Esta sección se centra en la aplicación específica de un producto a un cuerpo de agua.
+PANTANO B: Identifica claramente el depósito de agua o balsa que será el punto de aplicación del tratamiento.
+SE APLICA PERMANGANATO EN PANTANO INVERNADERO B, CON LA DOSIS MÁXIMA (OTOR/INVERNO SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO) (700m3): Esta es una instrucción detallada que describe:
+El producto a aplicar: Permanganato.
+El lugar de aplicación exacto: Pantano Invernadero B.
+Las condiciones específicas de dosificación: "CON LA DOSIS MÁXIMA (OTOR/INVERNO)" (indicando la dosis máxima recomendada para otoño/invierno), y "SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO" (posiblemente una referencia a la concentración en volumen basada en el contenido de materia orgánica).
+El volumen de referencia del pantano: "(700m3)".
+VOLUMEN TOTAL M3: Campo para registrar el volumen total, en metros cúbicos, del Pantano que está siendo tratado (ej. "9000").
+TABLA DE PRODUCTOS, FINALIDAD Y VOLÚMENES
+Esta tabla desglosa los componentes del tratamiento en términos de producto, su propósito, la dosificación por temporada y las cantidades totales.
+Estructura de la Tabla:
+PRODUCTO: Campo para el nombre del producto químico a utilizar (ej. "PERMANGANATO").
+FINALIDAD: Campo para especificar el objetivo o la función del producto en el tratamiento (ej. "MANTENIMIENTO AGUA DE RIEGO").
+VOLUMEN (Verano): Campo para la dosificación específica requerida para la temporada de verano (ej. "4 L/100m3"). Esto es vital ya que las tasas de aplicación pueden variar con la estación.
+TOTAL PRODUCTO: Campo para la cantidad total del producto puro que será utilizado en el tratamiento (ej. "2.8 KG").
+VOLUMEN CALDO ESTIMADO: Campo para el volumen total estimado de la solución final o "caldo" de aplicación (ej. "700 m3").
+PERMANGANATO O INVERNADERO B: Un campo adicional que refuerza la identificación del producto principal y su relación con el invernadero o el pantano.
+SIEMPRE SE APLICARÁ LA DOSIS MÍNIMA CORRESPONDIENTE EN LA TABLA DEL PRODUCTO: Una instrucción crucial que establece una norma de seguridad y eficiencia: se debe utilizar la dosis más baja efectiva del producto, según las indicaciones de la tabla de dosificación, a menos que se justifique lo contrario.
+CUESTIONARIO INCIDENCIAS A RELLENAR POR EL OPERARIO ENCARGADO DE REALIZAR EL TRATAMIENTO FITOSANITARIO
+Esta sección es un checklist de control de calidad y seguridad, diseñado para ser completado por el operario tras la ejecución del tratamiento. Cada pregunta debe ser respondida marcando SI, NO o NA (No Aplica), y se incluye un espacio para COMENTARIOS.
+Las preguntas son las siguientes:
+¿Se ha revisado correctamente el envase de los productos a utilizar?
+¿Se han añadido los productos en el orden de aplicación?
+¿Se ha realizado el lavado ocular y de piel de los operarios?
+¿Se ha revisado que el personal encargado no tenga heridas o cortes?
+¿Se han limpiado y enjuagado bien los equipos al terminar?
+¿Se ha registrado el tratamiento en la libreta donde se registrar el tratamiento?
+¿Se han tomado muestras de agua antes y después del tratamiento?
+¿Se ha producido algún incidente durante el tratamiento?
+¿Se ha utilizado el equipo de protección personal (EPP) adecuado?
+Se ha realizado una inspección visual y el invernadero está limpio en todo momento del día. Se podrá entrar y cumplir el plazo mínimo marcado por la empresa de 12 horas; invierno (19:00 a 7:00). (VER LÍNEAS): Esta última pregunta también especifica el "plazo mínimo" o "periodo de reentrada" seguro para el invernadero, que varía según la estación.
+TABLA "NIVELES DE INCIDENCIA DE PLAGAS Y/O ENFERMEDADES"
+Esta tabla funciona como una guía o criterio de decisión, no como un campo a rellenar por cada tratamiento, sino como una referencia para determinar la necesidad de una aplicación fitosanitaria.
+Estructura de la Tabla:
+% Presencia (Ej. % de Plagas): Define diferentes rangos de porcentaje de infestación o afección (0%, 0-5%, 6-25%, 25-50%, 50-100%).
+UMBRAL: Para cada rango de porcentaje de presencia, indica la recomendación de acción: "Se recomienda realizar la aplicación" o "No se recomienda realizar la aplicación". Esto ayuda a establecer un umbral de intervención.
+PLAGAS: Lista de ejemplos de plagas comunes: "Trips, Araña Roja, Mosca Blanca, Pulgón".
+ENFERMEDADES: Lista de ejemplos de enfermedades comunes: "Mildiu, Botrytis, Esclerotinia, Oídio".
+FIRMA Y REGISTRO DE MAQUINARIA
+La sección final valida la ejecución del tratamiento y registra los equipos utilizados.
+FIRMA OPERARIO: Espacio para la firma del operario que llevó a cabo el tratamiento, confirmando la información registrada.
+MAQUINARIA: Sub-sección para detallar la maquinaria empleada. Incluye:
+Descripción: Tipo de equipo utilizado (ej. "Cañón 5").
+Nº Registro Roma: Un número de registro específico para la maquinaria.
+Código Máquina ERP: El código de identificación del equipo dentro del sistema de Planificación de Recursos Empresariales (ERP) de la empresa (ej. "C-29-305000033549 - Cod 74", "Cañón 5 - Inv.B - 305000033549", "Cañón 6 - Inv.E - 305000033551", "Cañón 5 - Inv.A - 305000033548 - Cod 73", "Cañón 6 - Inv.C - 305000033551").
+________________________________________
+En síntesis, este "RG GB 7.2" es una herramienta de control operativa meticulosa que abarca desde la justificación y planificación de un tratamiento fitosanitario (como la desinfección del Pantano B), pasando por la asignación de responsabilidades, la especificación de dosis y volúmenes, la delimitación de áreas (aunque en este caso las Parcelas no se rellenen, son parte del diseño estándar del formulario), hasta una rigurosa verificación post-aplicación de seguridad y cumplimiento, y el registro detallado de los recursos (maquinaria) utilizados. Todo ello contribuye a una gestión precisa y documentada de las operaciones en los invernaderos de GLOBAL DEITANA.
+
+
+
+
+
+
+
+Parte 2: 
+
+Claro, aquí tienes la descripción detallada y exhaustiva del "Parte 2", utilizando solo los términos y la estructura exactos que aparecen en la imagen que me proporcionaste.
+________________________________________
+RG CB 7.2 Tratamiento Fitosanitario a Realizar en el Invernadero (Rev. 5)
+Este documento es un Registro General de Global Deitana, identificado con el código CB 7.2 y en su Revisión 5. Su propósito es detallar y documentar la realización de un Tratamiento Fitosanitario a Realizar en el Invernadero, asegurando un control preciso y una trazabilidad completa de la operación.
+El formulario está organizado en las siguientes secciones y campos, reproduciendo fielmente la nomenclatura visible en la imagen:
+ENCABEZADO SUPERIOR DEL DOCUMENTO
+En la parte superior, se encuentra el logo de GLOBAL DEITANA, que identifica a la organización. A la derecha del título principal, se ubican los campos clave para la identificación específica de este tratamiento:
+Nº TRATAMIENTO: Espacio para el número de identificación único asignado a este tratamiento particular.
+INVERNADERO: Campo para especificar el número o identificador del invernadero donde se llevó a cabo el tratamiento (ej. "1").
+FECHA RECOMENDADA: Para registrar la fecha en que se recomendó o planificó el tratamiento (ej. "30/11/2024").
+HORA INICIO: Para indicar la hora de comienzo de la aplicación (ej. "18:00").
+FIN: Campo para registrar la hora de finalización del tratamiento.
+INFORMACIÓN DE RESPONSABILIDAD Y APLICACIÓN DEL TRATAMIENTO
+Esta sección define el motivo del tratamiento y asigna las responsabilidades principales.
+NOMBRE TÉCNICO RESPONSABLE ELABORACIÓN TRATAMIENTO DE R&D / CONTROL DE CALIDAD: Campo destinado al nombre del técnico o responsable de la elaboración del tratamiento o del control de calidad (ej. "Sebastián Isidra Martínez").
+OPERARIO RESPONSABLE APLICACIÓN TRATAMIENTO EN INVERNADERO: Campo para el nombre del operario responsable de la aplicación física del tratamiento en el invernadero (ej. "[1350133705A]").
+TRATAMIENTO EN INVERNADERO: Esta sección parece ser un título que introduce la siguiente tabla de "CÓDIGO DE PARCELA".
+CÓDIGO DE PARCELA
+Esta tabla es crucial para la delimitación geográfica de las áreas dentro del invernadero, donde un tratamiento podría ser aplicado directamente o cuyas plantas recibirán el agua tratada.
+Tabla de CÓDIGO DE PARCELA: Contiene tres entradas predefinidas, cada una con sub-campos para una delimitación precisa:
+A (Polígono 28 Parcela 1000): Identifica una parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+B (Polígono 28 Parcela 427): Identifica otra parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+C (Polígono 33 Parcela 405): Identifica una tercera parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+Explicación: Esta estructura permite definir no solo la parcela general, sino también rangos específicos de filas dentro de esa parcela (indicados por "desde" y "hasta"), lo que es crítico para tratamientos localizados o para identificar las zonas que recibirán el agua tratada.
+DETALLES DE LA APLICACIÓN ESPECÍFICA AL PANTANO
+Esta sección se enfoca en la aplicación de un producto a un cuerpo de agua.
+PANTANO C: Identifica claramente el depósito de agua o balsa específico que es el punto de aplicación del tratamiento.
+CANTIDAD DE M3 A LLENAR: Campo para registrar el volumen en metros cúbicos de la mezcla o solución que se debe preparar para la aplicación.
+SE APLICA PERMANGANATO EN PANTANO INVERNADERO C, CON LA DOSIS MÁXIMA (OTOR/INVERNO SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO) (700M3 - 10% POR POSIBLES LLUVIAS): Esta es una instrucción detallada que describe:
+El producto a aplicar: Permanganato.
+El lugar de aplicación exacto: Pantano Invernadero C.
+Las condiciones específicas de dosificación: "CON LA DOSIS MÁXIMA (OTOR/INVERNO)" (indicando la dosis máxima recomendada para otoño/invierno), y "SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO".
+El volumen de referencia del pantano, con una consideración: "(700M3 - 10% POR POSIBLES LLUVIAS)", lo que sugiere una posible reducción del volumen a aplicar en previsión de precipitaciones.
+VOLUMEN TOTAL M3: Campo para registrar el volumen total, en metros cúbicos, del Pantano que está siendo tratado (ej. "7000").
+TABLA DE DETALLES DE PRODUCTO Y VOLUMEN DE CALDO
+Esta tabla desglosa los componentes del tratamiento en términos de producto, su propósito, la dosificación por temporada y las cantidades totales.
+Estructura de la Tabla:
+NOMBRE MATERIAL: Campo para el nombre del químico o sustancia a aplicar (ej. "PERMANGANATO").
+FINALIDAD: Campo para especificar el objetivo o la función del producto en el tratamiento (ej. "MANTENIMIENTO AGUA DE RIEGO").
+DOSIS (Verano): Campo para la dosificación específica requerida para la temporada de verano (ej. "4 L/100m3"). Es crucial ya que las tasas de aplicación pueden variar con la estación.
+TOTAL PRODUCTO: Campo para la cantidad total del producto puro que será utilizado en el tratamiento (ej. "2.4 KG").
+VOLUMEN CALDO ESTIMADO: Campo para el volumen total estimado de la solución final o "caldo" de aplicación (ej. "600 m3").
+PERMANGANATO O INVERNADERO C: Un campo adicional que refuerza la identificación del producto principal y su relación con el invernadero o el pantano.
+SIEMPRE SE APLICARÁ LA DOSIS MÍNIMA CORRESPONDIENTE EN LA TABLA DEL PRODUCTO: Una instrucción crucial que establece una norma de seguridad y eficiencia: se debe utilizar la dosis más baja efectiva del producto, según las indicaciones de la tabla de dosificación, a menos que se justifique lo contrario.
+CUESTIONARIO A RELLENAR POR EL OPERARIO ENCARGADO DE REALIZAR EL TRATAMIENTO FITOSANITARIO
+Esta sección funciona como una lista de verificación de calidad, seguridad y cumplimiento, diseñada para ser completada por el operario tras la ejecución del tratamiento. Cada pregunta debe ser respondida marcando SI, NO o NA (No Aplica), y se incluye un espacio para COMENTARIOS.
+Las preguntas son las siguientes:
+¿Se han calculado correctamente las dosis de los productos a utilizar?
+¿Se han mezclado los productos en el orden de aplicación?
+¿Se han añadido los productos sin el orden de aplicación?
+¿Las condiciones meteorológicas son adecuadas para el tratamiento?
+¿Se ha utilizado el equipo de protección personal (EPP) adecuado?
+¿Se ha limpiado y enjuagado bien los equipos al terminar?
+¿Se ha revisado que el personal encargado no tenga heridas o cortes al realizar el tratamiento?
+¿Se ha producido alguna incidencia durante el tratamiento?
+¿Se han tomado muestras de agua antes y después del tratamiento?
+DESPUÉS DE LA APLICACIÓN LA RE ENTRADA CUMPLE EL PLAZO MÍNIMO MARCADO POR LA EMPRESA DE 12 HORAS; INVIERNO (19:00 A 7:00) Y VERANO (VER LINEAS): Esta pregunta también especifica el "plazo mínimo" o "periodo de reentrada" seguro para el invernadero, que varía según la estación.
+TABLA "NIVELES DE INCIDENCIA DE PLAGAS Y/O ENFERMEDADES"
+Esta tabla funciona como una guía o criterio de decisión para el personal, no como un campo a rellenar por cada tratamiento, sino como una referencia para determinar la necesidad de una aplicación fitosanitaria basándose en la gravedad de una infestación.
+Estructura de la Tabla:
+% Presencia (% Afectadas): Define diferentes rangos de porcentaje de presencia de plagas o enfermedades (0%, 0-5%, 6-25%, 25-50%, 50-100%).
+UMBRAL: Para cada rango de porcentaje de presencia, indica la recomendación de acción: "Se recomienda realizar la aplicación" o "No se recomienda realizar la aplicación". Esto ayuda a establecer un umbral de intervención.
+PLAGAS: Fila que lista ejemplos de plagas comunes: "Trips, Pulgón, Orugas, Mosca, Araña".
+ENFERMEDADES: Fila que lista ejemplos de enfermedades comunes: "Mildiu, Botrytis, Esclerotinia, Oídio".
+SECCIÓN FINAL DE FIRMA Y DATOS DE MAQUINARIA
+La sección final valida la ejecución del tratamiento y registra los equipos utilizados.
+FIRMA OPERARIO: Espacio designado para la firma manual del operario que llevó a cabo el tratamiento, confirmando la información registrada.
+MAQUINARIA: Sub-sección para detallar el equipo utilizado. Incluye:
+Descripción: Tipo de maquinaria (ej. "Cañón 4 - 1").
+Nº Registro Roma: Un número de registro específico para la maquinaria.
+Código Máquina ERP: El código de identificación del equipo dentro del sistema de Planificación de Recursos Empresariales (ERP) de la empresa (ej. "C-29-305000033546 - Cod 72", "Cañón 5 - Inv.B - 3050000xxx", "Cañón 6 - Inv.C - 305000033551").
+________________________________________
+En resumen, el "RG CB 7.2" para el "Tratamiento Fitosanitario a Realizar en el Invernadero" es una herramienta operativa exhaustiva que permite la documentación precisa de un tratamiento de agua en un Pantano C, desde su planificación y responsables, pasando por los detalles de dosificación y volumen, hasta una rigurosa lista de verificación de seguridad y cumplimiento post-aplicación. Incluye también criterios de referencia para la toma de decisiones sobre tratamientos de plagas/enfermedades y el registro detallado de la maquinaria utilizada, garantizando un control total y una trazabilidad completa para Global Deitana.
+
+
+
+parte 3: 
+
+RG CB 7.2 Tratamiento Fitosanitario a Realizar en el Invernadero (Rev. 5)
+Este documento es un Registro General de Global Deitana, identificado con el código CB 7.2 y en su Revisión 5. Su propósito es pormenorizar y documentar la ejecución de un Tratamiento Fitosanitario a Realizar en el Invernadero, asegurando una gestión controlada y una trazabilidad completa de la operación.
+El formulario se organiza en las siguientes secciones y campos, reproduciendo fielmente la nomenclatura presente en la imagen:
+ENCABEZADO SUPERIOR DEL DOCUMENTO
+En la parte superior, se visualiza el logo de GLOBAL DEITANA, que identifica a la organización. A la derecha del título principal, se encuentran los campos clave para la identificación específica de este tratamiento:
+Nº TRATAMIENTO: Espacio para el número de identificación único asignado a este tratamiento particular.
+INVERNADERO: Campo para especificar el número o identificador del invernadero donde se llevó a cabo el tratamiento.
+FECHA RECOMENDADA: Para registrar la fecha en que se recomendó o planificó el tratamiento (ej. "12/06/2025").
+HORA INICIO: Para indicar la hora de comienzo de la aplicación (ej. "18:00").
+FIN: Campo para registrar la hora de finalización del tratamiento.
+INFORMACIÓN DE RESPONSABILIDAD Y APLICACIÓN DEL TRATAMIENTO
+Esta sección define el motivo del tratamiento y asigna las responsabilidades principales.
+NOMBRE TÉCNICO RESPONSABLE ELABORACIÓN TRATAMIENTO DE R&D / CONTROL DE CALIDAD: Campo destinado al nombre del técnico o responsable de la elaboración del tratamiento o del control de calidad (ej. "Sebastian Isidra Martinez (1350133705A)").
+OPERARIO RESPONSABLE APLICACIÓN TRATAMIENTO EN INVERNADERO: Campo para el nombre del operario responsable de la aplicación física del tratamiento en el invernadero.
+TRATAMIENTO EN INVERNADERO: Este encabezado introduce la siguiente tabla de "CÓDIGO DE PARCELA".
+CÓDIGO DE PARCELA
+Esta tabla es fundamental para la delimitación geográfica de las áreas dentro del invernadero, donde un tratamiento podría ser aplicado directamente o cuyas plantas recibirán el agua tratada.
+Tabla de CÓDIGO DE PARCELA: Contiene tres entradas predefinidas, cada una con sub-campos para una delimitación precisa:
+A (Polígono 28 - Parcela 1000): Identifica una parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+B (Polígono 28 - Parcela 427): Identifica otra parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+C (Polígono 33 - Parcela 405): Identifica una tercera parcela específica.
+Dentro de esta, se repiten los campos: fila, desde, hasta.
+Explicación: Esta estructura permite definir no solo la parcela general, sino también rangos específicos de filas dentro de esa parcela (indicados por "desde" y "hasta"), lo que es crítico para tratamientos localizados o para identificar las zonas que recibirán el agua tratada.
+DETALLES DE LA APLICACIÓN ESPECÍFICA AL PANTANO
+Esta sección se enfoca en la aplicación de un producto a un cuerpo de agua.
+PANTANO A: Identifica claramente el depósito de agua o balsa específico que es el punto de aplicación del tratamiento.
+C.E. DESPUÉS DE LA APLICACIÓN: Campo para registrar la Conductividad Eléctrica de la solución final o del agua después de que el tratamiento haya sido aplicado.
+SE APLICA PERMANGANATO EN PANTANO INVERNADERO A, CON LA DOSIS MÁXIMA (OTOR/INVERNO SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO) (700M3 - 10% POR POSIBLES LLUVIAS): Esta es una instrucción detallada que describe:
+El producto a aplicar: Permanganato.
+El lugar de aplicación exacto: Pantano Invernadero A.
+Las condiciones específicas de dosificación: "CON LA DOSIS MÁXIMA (OTOR/INVERNO)" (indicando la dosis máxima recomendada para otoño/invierno), y "SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO".
+El volumen de referencia del pantano, con una consideración: "(700M3 - 10% POR POSIBLES LLUVIAS)", lo que sugiere una posible reducción del volumen a aplicar en previsión de precipitaciones.
+VOLUMEN TOTAL M3: Campo para registrar el volumen total, en metros cúbicos, del Pantano que está siendo tratado (ej. "2000").
+TABLA DE DETALLES DE PRODUCTO Y VOLUMEN DE CALDO
+Esta tabla desglosa los componentes del tratamiento en términos de producto, su propósito, la dosificación por temporada y las cantidades totales.
+Estructura de la Tabla:
+NOMBRE MATERIAL: Campo para el nombre del químico o sustancia a aplicar (ej. "PERMANGANATO").
+FINALIDAD: Campo para especificar el objetivo o la función del producto en el tratamiento (ej. "MANTENIMIENTO AGUA DE RIEGO").
+DOSIS (Verano): Campo para la dosificación específica requerida para la temporada de verano (ej. "4 L/100m3"). Es crucial ya que las tasas de aplicación pueden variar con la estación.
+TOTAL PRODUCTO: Campo para la cantidad total del producto puro que será utilizado en el tratamiento (ej. "4.8 KG").
+VOLUMEN CALDO ESTIMADO: Campo para el volumen total estimado de la solución final o "caldo" de aplicación (ej. "1200 m3").
+PERMANGANATO O INVERNADERO A: Un campo adicional que refuerza la identificación del producto principal y su relación con el invernadero o el pantano.
+CON LA RECARGA DE AGUA VENIR AGUA MUY CALIENTE
+SIEMPRE SE APLICARÁ LA DOSIS MÍNIMA CORRESPONDIENTE EN LA TABLA DEL PRODUCTO: Una instrucción crucial que establece una norma de seguridad y eficiencia: se debe utilizar la dosis más baja efectiva del producto, según las indicaciones de la tabla de dosificación, a menos que se justifique lo contrario.
+CUESTIONARIO A RELLENAR POR EL OPERARIO ENCARGADO DE REALIZAR EL TRATAMIENTO FITOSANITARIO
+Esta sección funciona como una lista de verificación de calidad, seguridad y cumplimiento, diseñada para ser completada por el operario tras la ejecución del tratamiento. Cada pregunta debe ser respondida marcando SI, NO o NA (No Aplica), y se incluye un espacio para COMENTARIOS.
+Las preguntas son las siguientes:
+¿Se han calculado correctamente las dosis de los productos a utilizar?
+¿Se han mezclado los productos en el orden de aplicación?
+¿Se han añadido los productos sin el orden de aplicación?
+¿Las condiciones meteorológicas son adecuadas para el tratamiento?
+¿Se ha utilizado el equipo de protección personal (EPP) adecuado?
+¿Se ha limpiado y enjuagado bien los equipos al terminar?
+¿Se ha revisado que el personal encargado no tenga heridas o cortes al realizar el tratamiento?
+¿Se ha producido alguna incidencia durante el tratamiento?
+¿Se han tomado muestras de agua antes y después del tratamiento?
+NOTA: DESPUÉS DE LA APLICACIÓN LA RE ENTRADA CUMPLE EL PLAZO MÍNIMO MARCADO POR LA EMPRESA DE 12 HORAS; INVIERNO (19:00 A 7:00) Y VERANO (VER LÍNEAS): Esta pregunta también especifica el "plazo mínimo" o "periodo de reentrada" seguro para el invernadero, que varía según la estación.
+TABLA "NIVELES DE INCIDENCIA DE PLAGAS Y/O ENFERMEDADES"
+Esta tabla funciona como una guía o criterio de decisión para el personal, no como un campo a rellenar por cada tratamiento, sino como una referencia para determinar la necesidad de una aplicación fitosanitaria basándose en la gravedad de una infestación.
+Estructura de la Tabla:
+% Presencia (% Afectadas): Define diferentes rangos de porcentaje de presencia de plagas o enfermedades (0%, 0-5%, 6-25%, 25-50%, 50-100%).
+UMBRAL: Para cada rango de porcentaje de presencia, indica la recomendación de acción: "Se recomienda realizar la aplicación" o "No se recomienda realizar la aplicación". Esto ayuda a establecer un umbral de intervención.
+PLAGAS: Fila que lista ejemplos de plagas comunes: "Trips, Pulgón, Orugas, Mosca y Araña".
+ENFERMEDADES: Fila que lista ejemplos de enfermedades comunes: "Mildiu, Botrytis, Esclerotinia, Oídio".
+SECCIÓN FINAL DE FIRMA Y DATOS DE MAQUINARIA
+La sección final valida la ejecución del tratamiento y registra los equipos utilizados.
+FIRMA OPERARIO: Espacio designado para la firma manual del operario que llevó a cabo el tratamiento, confirmando la información registrada.
+MAQUINARIA: Sub-sección para detallar el equipo utilizado. Incluye:
+Descripción: Tipo de maquinaria (ej. "Cañón 4 - 1").
+Nº Registro Roma: Un número de registro específico para la maquinaria.
+Código Máquina ERP: El código de identificación del equipo dentro del sistema de Planificación de Recursos Empresariales (ERP) de la empresa (ej. "C-29-305000033546 - Cod 72", "Cañón 5 - Inv.A - 305000033547 - Cod 68", "Cañón 6 - Inv.A - 305000033547 - Cod 67", "Cañón 5 - Inv.B - 3050000xxx - Cañón 6 - Inv.B - 305000033551").
+________________________________________
+En resumen, este "RG CB 7.2" es una herramienta operativa rigurosa que permite la documentación precisa de un tratamiento de agua en un Pantano A, desde su planificación y responsables, pasando por los detalles de dosificación y volumen, hasta una exhaustiva lista de verificación de seguridad y cumplimiento post-aplicación. Incluye también criterios de referencia para la toma de decisiones sobre tratamientos de plagas/enfermedades y el registro detallado de la maquinaria utilizada, garantizando un control total y una trazabilidad completa para Global Deitana.
+
+
+
+Mantenimiento y Desinfección de Pantanos con Permanganato Potásico
+Para asegurar la calidad óptima del agua de riego, los pantanos A, B y C de Semilleros Deitana reciben un tratamiento periódico con permanganato potásico. Este proceso es fundamental para el sistema de desinfección hidráulica y se realiza siguiendo un calendario anual específico.
+La frecuencia de aplicación del permanganato potásico varía según la estación:
+Meses fríos (octubre a abril): La aplicación se realiza una vez al mes.
+Meses cálidos (mayo a septiembre): La frecuencia aumenta a dos veces al mes.
+Este calendario está claramente marcado en el sistema de campo para asegurar su cumplimiento. Es vital que la IA distinga este uso del permanganato potásico como un componente clave del mantenimiento del agua de riego, separándolo de los tratamientos fitosanitarios aplicados directamente a las plantas.
+
+
+
+
+
+
+un sistema integral de gestión de la calidad del agua y tratamientos fitosanitarios en los invernaderos de GLOBAL DEITANA. Este sistema combina un panel de control manual para la operación de los equipos, un calendario de planificación y ejecución, y formularios detallados para el registro de cada tratamiento.
+PANEL DE CONTROL DE OPERACIONES
+El panel de control es una interfaz física que permite la supervisión y operación manual de diversos sistemas críticos. Cada sección del panel cuenta con indicadores luminosos y botones de control.
+Sección AGUA:
+Indicadores: Presenta al menos un indicador luminoso verde en la parte superior, que probablemente señala el estado de disponibilidad o flujo del agua.
+Botones de Control: Debajo del indicador, hay un botón con una etiqueta que dice AUT / PARO / MAN.
+AUT: Posición para operación automática, donde el sistema gestiona el proceso.
+PARO: Posición para detener completamente el sistema.
+MAN: Posición para control manual, permitiendo al operario intervenir directamente.
+Función: Controla el suministro general de agua al sistema, permitiendo su automatización, detención o manejo manual.
+Sección BOMBAS:
+Identificadores: Se observan los números 1 y 2, lo que indica la presencia de al menos dos bombas operativas.
+Indicadores: Cada bomba tiene un indicador luminoso verde en la parte superior.
+Botones de Control: Al igual que la sección de Agua, cada bomba posee un botón AUT / PARO / MAN.
+Función: Permite controlar individualmente el estado y el modo de operación de las bombas, que son fundamentales para el movimiento de agua o soluciones dentro del sistema (por ejemplo, para riego o recirculación).
+Sección BOMBA ABONADO:
+Indicadores: Un indicador luminoso verde.
+Botones de Control: Un botón AUT / PARO / MAN.
+Función: Controla una bomba específica dedicada a la aplicación de abonos o nutrientes al agua de riego. Esto permite la fertilización automatizada o manual de los cultivos.
+Sección FUMIGACION:
+Indicadores: Un indicador luminoso verde.
+Botones de Control: Un botón AUT / PARO / MAN.
+Función: Controla el sistema de fumigación, que puede ser utilizado para la aplicación de fitosanitarios o desinfectantes en el ambiente del invernadero.
+Sección BOMBA REMOVEDOR:
+Indicadores: Un indicador luminoso verde.
+Botones de Control: Un botón AUT / PARO / MAN.
+Función: Controla una bomba cuya función es "removedor", lo que sugiere que podría estar involucrada en la agitación de soluciones, la limpieza o la eliminación de residuos.
+CALENDARIO DE LLENADO Y APLICACIÓN DE PERMANGANATO (RG 6.5.1-14)
+Este es un documento crucial para la planificación y seguimiento de los tratamientos de agua.
+Título: CALENDARIO LLENADO Y APLICACIÓN PERMANGANATO (Rev. 18-04-24). Esto indica que es un calendario específico para las operaciones con permanganato y que ha sido revisado con fecha 18 de abril de 2024.
+Encabezados del Calendario: Presenta los doce meses del año, organizados en una cuadrícula, con la indicación del período estacional:
+OCTUBRE - ABRIL: 1 MES (Meses de frío)
+MAYO - SEPTIEMBRE: 2 MES (Meses de calor)
+Instrucciones Generales (LOS MESES DE FRÍO (OCTUBRE A ABRIL) SE LLENARÁ EL PANTANO Y SE APLICARÁ PERMANGANATO TODOS LOS 30 DÍAS DE CADA MES. ): Define la frecuencia de llenado del pantano y aplicación de permanganato durante los meses fríos.
+Instrucciones Generales (LOS MESES DE CALOR (MAYO A SEPTIEMBRE) SE LLENARÁ EL PANTANO Y SE APLICARÁ PERMANGANATO TODOS LOS 15 Y 30 DE CADA MES. ): Establece la mayor frecuencia (quincenal) para los meses cálidos.
+Instrucciones de Dosificación (CADA 700 M3 DE AGUA SE APLICARÁ 1 KG. DE PERMANGANATO. SI EL PANTANO ES DE 3.500 M3, NECESITAREMOS 5 KG. ): Proporciona una regla de tres para calcular la cantidad de permanganato basándose en el volumen de agua.
+Condición de Aplicación (SI ES NECESARIO LLENAR CUALQUIER PANTANO A FALTA DE 3 ó 4 DÍAS DE SU TEORÍA, SE LLENARÁ Y APLICARÁ PERMANGANATO COMO SI FUERA EL DÍA DE SU TEORÍA. ): Indica una flexibilidad para la aplicación si los niveles de agua lo requieren antes de la fecha programada.
+Obligación de Registro (ES OBLIGATORIO PONER EL NÚMERO DE TRATAMIENTO O SE APLICA EL PERMANGANATO DEBAJO DEL DÍA CORRESPONDIENTE. OBLIGATORIO RELLENAR EL PARTE DEL PERMANGANATO AL GRUPO DE CALIDAD ANTES DE APLICARLO. ): Establece la obligatoriedad de registrar el número de tratamiento en el calendario y de rellenar el formulario (PARTE) antes de la aplicación.
+Formato de Calendario: Cada mes muestra los días del 1 al 31. Algunos días están marcados con un círculo o un recuadro. Estos marcan las fechas programadas o ejecutadas para el llenado y aplicación de permanganato, de acuerdo con las frecuencias mensuales establecidas. Por ejemplo, en "ENERO / 1 MES", se observa un círculo en el día "30", indicando el día de aplicación.
+FORMULARIO RG CB 7.2 Tratamiento Fitosanitario a Realizar en el Invernadero (Rev. 5) (parte1.jpeg como ejemplo)
+Este formulario es el registro detallado de cada aplicación de tratamiento, como se describe en el calendario.
+Identificación del Documento y Tratamiento:
+RG CB 7.2 Tratamiento Fitosanitario a Realizar en el Invernadero (Rev. 5): Título y código del documento.
+Nº TRATAMIENTO: Número único asignado al tratamiento.
+INVERNADERO: Invernadero específico donde se realiza el tratamiento.
+FECHA: Fecha del tratamiento.
+HORA INICIO: Hora de inicio.
+MOTIVO DE TRATAMIENTO: Clasificación del tratamiento (R&D, Producción, Mantenimiento, Aplicación).
+NOMBRE ENCARGADO PRODUCCIÓN Y/O MANTENIMIENTO R&D Y/O C. DE PRODUCCIÓN: Responsable de la supervisión.
+OPERARIO TRATAMIENTO: Persona que ejecuta la aplicación.
+Detalles del Llenado y la Aplicación:
+CANTIDAD DE M3 A LLENAR: Volumen de agua a preparar.
+C.E. DESPUÉS DE LA APLICACIÓN: Conductividad Eléctrica de la solución final.
+PANTANO B: Identifica el pantano específico que se está tratando.
+SE APLICA PERMANGANATO EN PANTANO INVERNADERO B, CON LA DOSIS MÁXIMA (OTOR/INVERNO SE DEBE APLICAR ALLI DE MANERA M3 - 10% DE ORGÁNICO) (700m3): Instrucción detallada del producto, ubicación y dosificación.
+VOLUMEN TOTAL M3: Volumen total del pantano que se trata.
+Tabla de Productos y Volúmenes:
+NOMBRE MATERIAL: Nombre del producto (Permanganato).
+FINALIDAD: Propósito (Mantenimiento Agua de Riego).
+DOSIS (Verano): Dosificación específica para verano (ej. "4 L/100m3").
+TOTAL PRODUCTO: Cantidad total del producto puro (ej. "2.8 KG").
+VOLUMEN CALDO ESTIMADO: Volumen total de la mezcla (ej. "700 m3").
+PERMANGANATO O INVERNADERO B: Confirmación del producto y ubicación.
+SIEMPRE SE APLICARÁ LA DOSIS MÍNIMA CORRESPONDIENTE EN LA TABLA DEL PRODUCTO: Instrucción de dosificación segura.
+Cuestionario de Incidencias y Evaluación:
+Serie de preguntas con opciones SI/NO/NA y COMENTARIOS, para verificar el cumplimiento de procedimientos de seguridad, mezcla, limpieza de equipos y registro, así como la ocurrencia de incidentes.
+Incluye una nota sobre el PLAZO MÍNIMO DE RE ENTRADA al invernadero tras la aplicación.
+NIVELES DE INCIDENCIA DE PLAGAS Y/O ENFERMEDADES:
+Una tabla de referencia que define umbrales de acción (% de presencia) para plagas (Trips, Araña Roja, Mosca Blanca, Pulgón) y enfermedades (Mildiu, Botrytis, Esclerotinia, Oídio), indicando cuándo "Se recomienda realizar la aplicación" o "No se recomienda realizar la aplicación".
+Firma y Maquinaria:
+FIRMA OPERARIO: Firma del operario que realizó el tratamiento.
+MAQUINARIA: Detalles de la maquinaria utilizada, incluyendo Descripción, Nº Registro Roma, y Código Máquina ERP.
+Conocimientos Aplicados e Integración:
+La interconexión de estos documentos y el panel de control revela un sistema robusto para la gestión del agua y la sanidad vegetal:
+Planificación Centralizada: El CALENDARIO LLENADO Y APLICACIÓN PERMANGANATO (RG 6.5.1-14) actúa como el eje central de planificación, estableciendo las frecuencias de aplicación de permanganato basadas en la estacionalidad (meses fríos vs. meses cálidos). Las instrucciones específicas para la dosificación y la flexibilidad ante necesidades de llenado demuestran una gestión proactiva. La obligatoriedad de rellenar el PARTE y registrar el número de tratamiento en el calendario asegura la vinculación entre la planificación y la ejecución.
+Ejecución Controlada: El PARTE (RG CB 7.2) es el instrumento de control en la fase de ejecución. Cada campo garantiza que la aplicación se realice bajo parámetros definidos (dosis, volumen, ubicación como el PANTANO B). El cuestionario de incidencias y evaluación es una herramienta de autocontrol para el operario, promoviendo la seguridad y la adhesión a los procedimientos. La tabla de "NIVELES DE INCIDENCIA DE PLAGAS Y/O ENFERMEDADES" guía la decisión de aplicar tratamientos adicionales si la presencia de un problema fitosanitario lo justifica.
+Operación de Equipos: El panel de control permite a los operarios interactuar directamente con los sistemas de AGUA, BOMBAS, BOMBA ABONADO, FUMIGACION y BOMBA REMOVEDR. Los modos AUT / PARO / MAN indican que Global Deitana utiliza sistemas que pueden operar de forma automática para la eficiencia, pero que también permiten una intervención manual crucial en caso de necesidad o para tareas específicas que requieran supervisión directa. Las bombas y el sistema de fumigación son esenciales para llevar el agua tratada (con permanganato u otros abonos/fitosanitarios) desde el PANTANO a los INVERNADEROS o para aplicar tratamientos en el ambiente del invernadero.
+Trazabilidad y Mejora Continua: La combinación del Nº TRATAMIENTO en el calendario y en el PARTE, junto con los datos del OPERARIO, la FECHA, la HORA, la MAQUINARIA utilizada y los COMENTARIOS en el cuestionario, crea un registro completo de cada intervención. Esta trazabilidad es fundamental para:
+Auditorías de calidad y seguridad.
+Análisis de la efectividad de los tratamientos a lo largo del tiempo.
+Identificación de problemas recurrentes o áreas de mejora en los procedimientos operativos o en el rendimiento de los equipos.
+Cumplimiento de normativas fitosanitarias y de seguridad laboral.
+En síntesis, GLOBAL DEITANA ha implementado un sistema integrado que asegura la gestión sistemática y documentada de sus tratamientos fitosanitarios, desde la planificación macro-anual hasta la ejecución micro-detallada y la operación manual de los equipos.
+
+
+
+Hola Facundo,
+Aquí tienes la información detallada sobre el sector de lavado de bandejas. Es crucial que la IA comprenda este proceso, ya que todas las bandejas deben pasar por esta desinfección antes de ser reutilizadas, garantizando la sanidad y la trazabilidad.
+________________________________________
+Sector Lavado y Desinfección de Bandejas
+El proceso de lavado y desinfección de bandejas es una fase crítica en Semilleros Deitana. Todas las bandejas que regresan del campo deben pasar obligatoriamente por nuestra máquina de desinfección antes de ser puestas en circulación nuevamente. Esto asegura la prevención de contaminación cruzada y la óptima sanidad de las plantas.
+Lavadora de Bandejas
+Nuestra lavadora tiene una capacidad de 140 litros y se utiliza para lavar tanto bandejas ecológicas como convencionales. Para su funcionamiento, solo usamos agua limpia y Oxi Premium 5. La preparación y llenado de la máquina con estos productos se realiza cada vez que se lleva a cabo el proceso de limpieza y recarga.
+Protocolo de Lavado con Oxi Premium 5 (Desinfección de Equipos y Utensilios)
+Para una desinfección efectiva, trabajamos a una temperatura de 60ºC. La dosis estándar de Oxi Premium 5 es de 5 litros por cada 800 litros de depósito, aunque el cálculo exacto es de 4,8 litros por cada 1000 litros.
+La frecuencia de cambio del agua en la máquina es cada 9000 bandejas lavadas. Además, cada mañana se añade una dosis de producto en función del volumen de bandejas procesadas el día anterior:
+Si se lavaron entre 1000 y 1999 bandejas, se añade 1 litro de producto.
+Si el volumen fue entre 2000 y 2999 bandejas, se incorporan 2 litros.
+Si se lavaron más de 3000 bandejas, se añaden 3 litros.
+Durante toda la jornada, se mantienen dosis de desinfección de ácido peracético entre 50 y 300 mg/L y de peróxido de hidrógeno entre 30 y 100 mg/L. Es obligatorio limpiar la máquina al finalizar la jornada para evitar cualquier tipo de contaminación cruzada.
+Protocolo para Desechar Bandejas
+Tenemos un criterio objetivo para desechar bandejas, basado en el número de alveolos rotos, en lugar de hacerlo de forma discrecional. Se aplica una tolerancia específica según el tipo de bandeja:
+Bandejas de 54 y 104 alveolos: Se desechan si tienen 2 o más alveolos rotos.
+Bandejas de 150 alveolos: Se desechan si tienen 4 o más alveolos rotos.
+Bandejas de 198 alveolos: Se desechan si tienen 5 o más alveolos rotos.
+Bandejas de 260 alveolos: Se desechan si tienen 6 o más alveolos rotos.
+Bandejas de 322 alveolos: Se desechan si tienen 7 o más alveolos rotos.
+Bandejas de 589 y 874 alveolos: Se desechan si tienen 8 o más alveolos rotos.
+Este protocolo se basa en una tabla detallada disponible en el área de la máquina.
+Productos Usados Según Tipo de Bandeja y Protocolo
+Para la desinfección en la máquina de lavado, utilizamos diferentes productos según el tipo de bandeja:
+MERPAN 80 WDG:
+Utilizado para bandejas de 54, 104, 150 y 198 alveolos.
+Dosis: 0,83 kg por cada 140 litros de agua.
+Instrucciones de preparación:
+Preparar la mezcla en un cubo con más de la mitad de su capacidad de agua.
+Añadir la dosis exacta del producto.
+Dejar reposar unos minutos.
+Remover hasta que se disuelva completamente.
+Verter la mezcla en la cuba de la lavadora y completar con agua hasta el nivel adecuado.
+MERPAN 80 WDG – CEBOLLA:
+Específico para bandejas de 589 y 874 alveolos.
+Dosis: 1,66 kg por cada 140 litros de agua.
+ZZ-CUPROCOL (sin Merpan):
+Utilizado para bandejas de 260 y 322 alveolos.
+Dosis: 469 mL por cada 140 litros de agua.
+Instrucciones de preparación:
+Preparar la mezcla en un cubo aparte con agua.
+Añadir la dosis correspondiente.
+Verter la mezcla en la cuba de la lavadora.
+Completar con agua hasta el nivel necesario.
+Todo este proceso asegura que no se reutilicen bandejas deterioradas y que no se genere contaminación cruzada entre distintas partidas de cultivo. Es un paso fundamental para mantener la trazabilidad y la sanidad vegetal a lo largo de todo nuestro proceso productivo.
+
+
+Mi más sincera disculpa. Entiendo perfectamente la confusión y el error por mi parte al incorporar información de los "partes" anteriores cuando la instrucción era explícitamente analizar solo la "foto1.jpg" del documento "DESINFECCIÓN DE BANDEJAS". Me disculpo por no haber seguido esa indicación crucial.
+Procederé a describir el documento foto1.jpg (DESINFECCIÓN DE BANDEJAS) de forma totalmente aislada, usando solo los términos que aparecen en esa imagen y con una explicación exhaustiva, sin hacer ninguna referencia cruzada a los "partes" o al panel de control que habíamos analizado previamente.
+________________________________________
+DOCUMENTO: DESINFECCIÓN DE BANDEJAS
+Este documento es una instrucción operativa vital de GLOBAL DEITANA, titulada específicamente DESINFECCIÓN DE BANDEJAS. El subtítulo aclara que se enfoca en OXI PREMIUM 5 - Desinfección de equipos y utensilios - 0.2-2%. Su función es establecer los pasos y criterios detallados para la correcta limpieza y desinfección de las bandejas y el equipo asociado, garantizando así la higiene y la prevención de la contaminación cruzada dentro de las operaciones de la empresa.
+El contenido del documento se organiza de la siguiente manera:
+DIRECTRICES GENERALES Y NORMAS DE OPERACIÓN
+Esta sección establece las reglas fundamentales y los requisitos previos para el proceso de desinfección.
+Durante el lavado no debe de haber ningún producto en la zona delimitada por la línea amarilla.
+Explicación: Esta es una instrucción de seguridad fundamental. Indica que el área de trabajo designada para el lavado (identificable por una "línea amarilla") debe estar completamente libre de otros productos o materiales mientras se realiza el proceso, para evitar mezclas peligrosas, reacciones no deseadas o contaminación.
+Limpiar la máquina al finalizar la jornada para evitar cualquier contaminación cruzada.
+Explicación: Esta es una directriz de higiene esencial. Exige que la máquina utilizada para la desinfección se limpie a fondo al final de cada turno de trabajo. El objetivo es prevenir la transferencia de microorganismos o residuos de un lote de bandejas a otro, o de un día a otro, lo que asegura la eficacia del proceso de desinfección.
+La frecuencia de cambio de agua es cada 9000 bandejas. El día que se cambie se notificará al grupo de Whatsapp.
+Explicación: Establece un umbral cuantitativo claro para la renovación del agua utilizada en el proceso de lavado: el agua debe ser cambiada después de que se hayan procesado 9000 bandejas. Además, se especifica el método de comunicación para informar sobre este cambio ("grupo de Whatsapp"), asegurando que el personal relevante esté al tanto de la renovación del agua.
+Siempre que se vayan a lavar bandejas de EcoDeitana, se comenzará la jornada con el lavado de estas bandejas.
+Explicación: Esta regla establece una prioridad operativa. Las bandejas identificadas como "EcoDeitana" (presumiblemente un tipo particular de bandejas, quizás para cultivos orgánicos o de alta sensibilidad) deben ser las primeras en ser lavadas al inicio de cualquier jornada. Esto garantiza que estas bandejas se procesen con el agua más limpia y en condiciones óptimas de higiene, minimizando cualquier riesgo de contaminación inicial.
+PREPARACIÓN DE LAS BANDEJAS PARA EL LAVADO
+Esta sección describe los pasos preliminares que deben realizarse con las bandejas antes de su introducción en la máquina de lavado, para optimizar el proceso de desinfección.
+El lavado de bandejas se hará como se describe a continuación:
+Sacudir las bandejas para quitar cualquier resto de sustrato.
+Explicación: Este es el primer paso práctico. Implica la remoción manual o mecánica de cualquier residuo sólido (como tierra, restos de cultivo o sustrato) de las bandejas. Esto es crucial para mejorar la eficiencia del lavado, ya que el sustrato podría interferir con la acción del desinfectante y saturar el agua de lavado.
+Desechar las bandejas muy deterioradas (Según nº alvéolos defectuosos)
+Explicación: Este paso se refiere a la inspección de calidad de las bandejas. Se instruye al personal a descartar aquellas bandejas que muestren un nivel significativo de daño. La aclaración entre paréntesis ("Según nº alvéolos defectuosos") indica que existe un criterio específico, probablemente definido en la siguiente tabla, basado en el número de compartimentos individuales (alvéolos) que estén dañados.
+CRITERIO PARA TIRAR LAS BANDEJAS (TABLA)
+Esta tabla es una guía visual y numérica para la toma de decisiones sobre el descarte de bandejas basándose en su estado de deterioro.
+Tabla Criterio para tirar las bandejas:
+La primera fila contiene los encabezados: Tipo bd y Nº alvéolos defectuosos.
+Debajo de Tipo bd, se especifica bandejas viejas, indicando que este criterio aplica a este tipo particular de bandejas.
+Debajo de Nº alvéolos defectuosos, aparecen una serie de números que representan diferentes tamaños o configuraciones de alvéolos en las bandejas: 54, 104, 150, 198, 260, 322, 874.
+Directamente debajo de cada uno de estos números de alvéolos, se muestra el valor 2, 2, 2, 2, 2, 2, 2.
+Explicación: Esta tabla establece el umbral de descarte para las "bandejas viejas". Indica que, independientemente del tamaño de la bandeja (ya sea de 54, 104, 150, etc., alvéolos), si tiene 2 o más alvéolos defectuosos, debe ser desechada. Esto estandariza la decisión de cuándo una bandeja ya no es apta para su uso.
+PROCESO DE LAVADO Y DIRECTRICES DE DOSIFICACIÓN DEL PRODUCTO
+Esta es la sección principal que describe el procedimiento de desinfección en la máquina, incluyendo la temperatura del agua y la dosificación del OXI PREMIUM 5.
+Lavar en la máquina con agua a una temperatura de 60ºC y OXI Premium 5 a una dosis de 5 L en un depósito de 800L, debido a que la dosis es de 6 L x cada 1000L y nos corresponderían 4.8 L pero redondeamos a 5.
+Explicación: Especifica las condiciones ideales para el lavado: el agua debe estar a una temperatura de 60ºC. La dosificación inicial de "OXI Premium 5" es de 5 Litros por cada 800 Litros de agua en el depósito. Aclara que, aunque una proporción de 6 L x cada 1000L daría 4.8 L para 800L, se ha decidido redondear a 5 L para facilitar la aplicación.
+Al día siguiente a las 7:00 se le añadirá según las bdj lavadas el día anterior. Se le añadirá 1L cada 1.000 bdj.
+Explicación: Establece un procedimiento de mantenimiento diario de la concentración del producto. Cada día, a las 7:00 de la mañana, se debe añadir "OXI Premium 5" en función del número de bandejas lavadas el día anterior. La proporción de adición es de 1 Litro de producto por cada 1.000 bandejas lavadas.
+Si se lavaron entre 0-1000 se le añadirán 0L.
+Explicación: Si la cantidad de bandejas lavadas el día anterior es baja (entre 0 y 1000), no es necesario añadir producto adicional, manteniendo la concentración existente.
+Si se lavaron entre 1000 - 2999 se le añadirán 2L.
+Explicación: Si el volumen de bandejas lavadas el día anterior está en este rango, se deben añadir 2 Litros de producto adicional.
+Si se lavaron más de 3000 bdj se añadirán 3L.
+Explicación: Para un volumen alto de bandejas lavadas (más de 3000), se requiere una adición de 3 Litros de producto.
+Así con lo que quede de producto en las bandejas hechas el día anterior para ir dosificando la dosis a primera hora todos los días. Hasta que se laven 9000 bandejas y volvemos a cambiar el agua.
+Explicación: Este párrafo explica la lógica detrás de la dosificación diaria: se utiliza el producto remanente en el sistema y se ajusta la concentración con adiciones diarias. Este ciclo se repite hasta que se alcanza el límite de 9000 bandejas lavadas, momento en el que el agua del depósito debe ser completamente reemplazada.
+*DOSIS: Para que durante toda la jornada de lavado, la concentración esté entre 50-300 mg/l de ácido peracético; y 50-100 mg/l de peróxido de hidrógeno.
+Explicación: Esta es una especificación técnica de la concentración deseada de los ingredientes activos del desinfectante (ácido peracético y peróxido de hidrógeno). Indica que durante todo el período de lavado, la solución debe mantener una concentración de ácido peracético entre 50 y 300 mg/l, y de peróxido de hidrógeno entre 50 y 100 mg/l. Esto asegura la eficacia microbicida del proceso.
+MANEJO POST-DESINFECCIÓN Y ALMACENAMIENTO
+Esta sección finaliza el proceso con las instrucciones para el manejo de las bandejas una vez desinfectadas.
+Paletizado de bandejas de ecológico sobre palet verde y de bandejas de convencional sobre cualquier otro color.
+Explicación: Proporciona instrucciones para la organización y el almacenamiento. Las bandejas de origen "ecológico" deben apilarse (paletizado) en palets verdes, mientras que las bandejas "convencionales" deben ir en palets de "cualquier otro color". Esto permite una clara diferenciación visual y evita la mezcla de materiales.
+Almacenado en la zona habilitada para reutilizarse en la siembra.
+Explicación: Indica el destino final de las bandejas que han sido limpiadas y desinfectadas: deben ser almacenadas en un área específica y designada, donde estarán listas para ser utilizadas nuevamente en el proceso de siembra.
+
+
+
+
+
+
+
+________________________________________
+DOCUMENTO: DESINFECCIÓN DE BANDEJAS
+Este es un documento instruccional de GLOBAL DEITANA, específicamente diseñado para los SEMILLEROS de la organización. Su título principal es DESINFECCIÓN DE BANDEJAS. El objetivo de este procedimiento es detallar cómo se deben desinfectar las bandejas para su reutilización.
+El contenido del documento está estructurado en diferentes secciones que especifican los tipos de bandejas, los productos a utilizar y sus dosificaciones, y la frecuencia del proceso.
+ESPECIFICACIONES DE DESINFECCIÓN PARA BANDEJAS DE 260 ALV. + 322 ALV.
+Esta sección aborda el protocolo de desinfección para bandejas que tienen 260 alvéolos (ALV.) y 322 alvéolos.
+BANDEJAS 260 ALV. + 322 ALV.
+ZZ-CUPROCOL: 469ml/CUBA 140L
+Explicación: Indica que para la desinfección de este tipo de bandejas, se debe utilizar el producto ZZ-CUPROCOL. La dosificación especificada es de 469 mililitros (ml) de producto por cada CUBA de 140 litros (L) de agua.
+(SIN MERPAN)
+Explicación: Esta es una instrucción clara que prohíbe el uso del producto "MERPAN" cuando se desinfectan estas bandejas con ZZ-CUPROCOL.
+ESPECIFICACIONES DE DESINFECCIÓN PARA OTROS TIPOS DE BANDEJAS
+Esta sección establece los protocolos para otros tipos de bandejas, dividiendo la información en dos columnas para dos grupos de bandejas diferentes.
+Columna Izquierda: BANDEJAS 54 ALV. + 104 ALV. + 150 ALV. + 198 ALV.
+Explicación: Se refiere a las bandejas con un número menor de alvéolos: 54, 104, 150 y 198 alvéolos.
+MERPAN 80 WDG: 0,83 KG / CUBA 140L
+Explicación: Para este grupo de bandejas, se debe usar el producto MERPAN 80 WDG. La dosificación es de 0,83 kilogramos (KG) de producto por cada CUBA de 140 litros (L) de agua.
+(SIN COBRE)
+Explicación: Esta es una instrucción que prohíbe el uso de productos que contengan "COBRE" al desinfectar estas bandejas con MERPAN 80 WDG.
+Columna Derecha: BANDEJAS 589 ALV. + 874 ALV.
+Explicación: Se refiere a las bandejas con un número mayor de alvéolos: 589 y 874 alvéolos.
+CEBOLLA
+Explicación: Esta etiqueta adicional, "CEBOLLA", podría indicar que este protocolo específico es para bandejas que se utilizan o se utilizarán para el cultivo de cebolla, o que han contenido cebolla.
+MERPAN 80 WDG: 1,66 KG / 140L
+Explicación: Para este tipo de bandejas, también se utiliza MERPAN 80 WDG. La dosificación es de 1,66 kilogramos (KG) de producto por cada 140 litros (L) de agua.
+(SIN COBRE)
+Explicación: De nuevo, se prohíbe el uso de productos que contengan "COBRE" cuando se desinfectan estas bandejas con MERPAN 80 WDG.
+FRECUENCIA DEL PROCESO
+FRECUENCIA: CADA VEZ QUE SE TERMINE
+Explicación: Esta instrucción es crucial y establece la regularidad con la que se debe llevar a cabo el proceso de desinfección de las bandejas. Significa que el procedimiento de desinfección debe realizarse cada vez que un lote de bandejas haya terminado su ciclo de uso y esté listo para ser reutilizado, garantizando así una desinfección constante y oportuna para cada ciclo de uso de las bandejas.
+Comprendido. La instrucción es clara: analizar únicamente la foto3.jpg (el documento "INSTRUCCIONES PARA EL LLENADO DE CUBA DE LAVADO DE BANDEJAS CON MERPAN 80 WG"), utilizando exclusivamente los términos que aparecen en esa imagen y proporcionando una explicación exhaustiva de cada punto, sin añadir información de otros documentos o contextos externos.
+________________________________________
+INSTRUCCIONES PARA EL LLENADO DE CUBA DE LAVADO DE BANDEJAS CON MERPAN 80 WG.
+Este documento es una guía operativa detallada, titulada INSTRUCCIONES PARA EL LLENADO DE CUBA DE LAVADO DE BANDEJAS CON MERPAN 80 WG. Su propósito es establecer el procedimiento correcto para preparar la solución de lavado de bandejas utilizando el producto "MERPAN 80 WG", asegurando una mezcla adecuada y segura.
+Las instrucciones se presentan como una secuencia de pasos numerados:
+1.- EN UN CUBO A PARTE, LLENAR MÁS DE LA MITAD CON AGUA.
+Explicación: Este es el primer paso en la preparación de la mezcla. Indica que se debe utilizar un recipiente auxiliar ("CUBO A PARTE") y llenarlo con agua, asegurándose de que el volumen de agua sea superior a la mitad de la capacidad del cubo. Esto proporciona un volumen adecuado para disolver el producto de manera inicial.
+2.- VERTER LA DOSIS EXACTA DE PRODUCTO QUE CORRESPONDA, SEGÚN EL TIPO DE BANDEJA.
+Explicación: Este paso instruye a añadir el "MERPAN 80 WG" al cubo con agua. Es crucial que la cantidad de producto ("DOSIS EXACTA") sea la correcta, y se enfatiza que esta dosis puede variar ("QUE CORRESPONDA") dependiendo del "TIPO DE BANDEJA" que se vaya a lavar. Esto sugiere que el operario debe consultar una tabla o guía de dosificación externa para determinar la cantidad precisa de "MERPAN 80 WG" en función de las características de las bandejas a tratar.
+3.- DEJAR REPOSAR UNOS MINUTOS Y DESPUÉS REMOVER BIEN HASTA QUE SE DISUELVAN LOS GRÁNULOS DEL PRODUCTO.
+Explicación: Una vez añadido el producto, se especifica un tiempo de espera ("DEJAR REPOSAR UNOS MINUTOS"). Tras este breve reposo, se indica la necesidad de mezclar vigorosamente ("REMOVER BIEN") la solución. El objetivo de esta acción es asegurar que los "GRÁNULOS DEL PRODUCTO" se disuelvan completamente en el agua, formando una solución homogénea y efectiva.
+4.- AÑADIR LA MEZCLA RESULTANTE A LA CUBA DE LAVADO DE BANDEJAS.
+Explicación: Después de haber preparado la solución concentrada de "MERPAN 80 WG" en el cubo auxiliar y asegurado su disolución, este paso indica que dicha "MEZCLA RESULTANTE" debe ser transferida o incorporada a la "CUBA DE LAVADO DE BANDEJAS" principal, donde se realizará el proceso de desinfección a mayor escala.
+5.- RELLENAR EL RESTO DE LA CUBA DE LAVADO DE BANDEJAS CON AGUA.
+Explicación: Este es el paso final en la preparación de la solución en la cuba de lavado. Una vez que la mezcla de "MERPAN 80 WG" ha sido transferida a la cuba, se debe añadir agua adicional para alcanzar el volumen total requerido en la "CUBA DE LAVADO DE BANDEJAS", completando así la preparación de la solución desinfectante a la concentración final deseada.
+Departamento Responsable:
+En la parte inferior derecha del documento, se indica: DPTO. CALIDAD.
+Explicación: Esta abreviatura identifica al "Departamento de Calidad" como el responsable de la creación, supervisión o validación de estas instrucciones, lo que subraya la importancia de este procedimiento para mantener los estándares de calidad de la empresa.
+
+
+INSTRUCCIONES PARA EL LLENADO DE CUBA DE LAVADO DE BANDEJAS CON ZZ CUPROCOL.
+Este documento es una guía operativa concisa, titulada INSTRUCCIONES PARA EL LLENADO DE CUBA DE LAVADO DE BANDEJAS CON ZZ CUPROCOL. Su propósito es establecer el procedimiento correcto y seguro para preparar la solución de lavado de bandejas utilizando el producto "ZZ CUPROCOL".
+Las instrucciones se presentan como una secuencia de pasos numerados:
+1.- EN UN CUBO A PARTE, LLENAR MÁS DE LA MITAD CON AGUA.
+Explicación: Este es el primer paso en el proceso de mezcla. Indica que se debe utilizar un recipiente auxiliar, designado como "CUBO A PARTE", y llenarlo con agua. Es importante que el volumen de agua sea "MÁS DE LA MITAD" de la capacidad del cubo, lo que asegura suficiente líquido para una disolución inicial adecuada del producto.
+2.- VERTER LA DOSIS EXACTA DE PRODUCTO QUE CORRESPONDA, SEGÚN EL TIPO DE BANDEJA.
+Explicación: Después de haber vertido el agua, este paso instruye a añadir el producto "ZZ CUPROCOL" al cubo. Se enfatiza la necesidad de utilizar la "DOSIS EXACTA" del producto. Esta dosis no es fija, sino que debe ser determinada ("QUE CORRESPONDA") en función del "TIPO DE BANDEJA" que se va a desinfectar, lo que implica la consulta de una referencia externa (como una tabla o protocolo de dosificación) para conocer la cantidad precisa requerida.
+3.- AÑADIR LA MEZCLA RESULTANTE A LA CUBA DE LAVADO DE BANDEJAS.
+Explicación: Una vez que el producto "ZZ CUPROCOL" ha sido disuelto en el cubo auxiliar (aunque el paso de "remover" no se detalla explícitamente en este documento, se infiere la necesidad de una mezcla previa para formar la "MEZCLA RESULTANTE"), este paso indica que dicha mezcla debe ser transferida a la "CUBA DE LAVADO DE BANDEJAS" principal. Esta cuba es donde se realizará el proceso de desinfección a mayor escala.
+4.- RELLENAR EL RESTO DE LA CUBA DE LAVADO DE BANDEJAS CON AGUA.
+Explicación: Este es el paso final para completar la preparación de la solución en la cuba de lavado. Una vez transferida la mezcla del cubo auxiliar, se debe añadir agua adicional para llenar "EL RESTO DE LA CUBA DE LAVADO DE BANDEJAS". Esto ajusta la solución a su volumen final y a la concentración de trabajo deseada para la desinfección.
+Departamento Responsable:
+En la parte inferior central del documento, se indica: DPTO. CALIDAD.
+Explicación: Esta abreviatura identifica al "Departamento de Calidad" como la entidad responsable de la emisión y validación de estas instrucciones. Esto subraya que el procedimiento es parte de los estándares de calidad de la empresa y debe ser seguido rigurosamente.
+
+
+LAVADORA DE BANDEJAS DEL SEMILLERO
+Este documento es un cartel informativo o instrucción operativa ubicada en una LAVADORA DE BANDEJAS DEL SEMILLERO. Presenta los logos de GLOBAL DEITANA y ECO DEITANA. Su propósito es proporcionar directrices claras sobre el uso y mantenimiento de esta máquina.
+El contenido del documento se estructura en varias líneas de información clave:
+LAVADORA DE BANDEJAS DEL SEMILLERO TANTO
+PARA BANDEJAS ECOLÓGICAS
+COMO CONVENCIONAL
+Explicación: Esta línea identifica la función principal del equipo: es una lavadora de bandejas específica para el área de semillero. La especificación "TANTO PARA BANDEJAS ECOLÓGICAS COMO CONVENCIONAL" indica que la máquina es versátil y está diseñada para procesar ambos tipos de bandejas, sean de producción ecológica o convencional. Esto sugiere que puede manejar diferentes estándares o requisitos de limpieza para cada tipo, o que simplemente es apta para ambos sin distinción en el proceso.
+CAPACIDAD DE 140 LITROS
+Explicación: Esta línea especifica la capacidad volumétrica del depósito o la cuba de la lavadora, que es de 140 LITROS. Este dato es fundamental para el operario al preparar las soluciones de limpieza o desinfección, ya que las dosificaciones de los productos se basarán en este volumen.
+APLICAR SOLAMENTE AGUA LIMPIA Y OXIPREMIUM 5
+Explicación: Esta es una instrucción crítica que restringe explícitamente los materiales que pueden ser introducidos en la lavadora. Indica que solo se debe utilizar "AGUA LIMPIA" y el producto desinfectante "OXIPREMIUM 5". Esta restricción es vital para garantizar la eficacia de la desinfección, prevenir la acumulación de residuos o la formación de mezclas peligrosas, y proteger la integridad de la máquina.
+FRECUENCIA: CADA VEZ QUE SE LIMPIE Y LLENE
+Explicación: Esta línea establece la frecuencia con la que se deben realizar ciertas acciones (probablemente rellenar o preparar la solución de desinfección). La instrucción "CADA VEZ QUE SE LIMPIE Y LLENE" significa que cada vez que el equipo sea vaciado para su limpieza interna y posteriormente rellenado con agua, se deben seguir las directrices específicas (como la aplicación de OXIPREMIUM 5).
+
