@@ -40,9 +40,29 @@ const Home = () => {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
+  const [activeHeaderOption, setActiveHeaderOption] = useState("chat")
 
   // Obtener la función de logout del contexto de autenticación
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+
+  // Función para obtener las iniciales del usuario
+  const getUserInitials = () => {
+    if (!user?.displayName) return "U"
+    
+    const names = user.displayName.split(" ")
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase()
+    }
+    return names[0][0].toUpperCase()
+  }
+
+  // Función para obtener solo el primer nombre del usuario
+  const getUserFirstName = () => {
+    if (!user?.displayName) return "Usuario"
+    
+    const names = user.displayName.split(" ")
+    return names[0]
+  }
 
   // Datos de ejemplo para el historial de chats
   const [chatHistory, setChatHistory] = useState([])
@@ -412,8 +432,10 @@ const Home = () => {
 
   const getScrollButtonStyle = () => {
     if (!mainContentRef.current) return {}
+
     const mainContentRect = mainContentRef.current.getBoundingClientRect()
     const centerX = mainContentRect.left + mainContentRect.width / 2
+
     return {
       left: `${centerX}px`,
       transform: "translateX(-50%)",
@@ -551,13 +573,13 @@ const Home = () => {
   // Función para filtrar chats por término de búsqueda
   const filterChatsBySearch = (chats, query) => {
     if (!query.trim()) return chats
-    
+
     const searchTerm = query.toLowerCase().trim()
-    
-    return chats.filter(chat => {
+
+    return chats.filter((chat) => {
       const title = chat.title === "NUEVA_CONEXION" ? "Nueva conversación" : chat.title
       const titleLower = title.toLowerCase()
-      
+
       // Búsqueda simple: si el título contiene el término de búsqueda
       return titleLower.includes(searchTerm)
     })
@@ -585,8 +607,8 @@ const Home = () => {
         groupKey = "Hace un mes"
       } else {
         // Para fechas más antiguas, mostrar la fecha absoluta
-        const options = { day: 'numeric', month: 'long' }
-        groupKey = chatDate.toLocaleDateString('es-ES', options)
+        const options = { day: "numeric", month: "long" }
+        groupKey = chatDate.toLocaleDateString("es-ES", options)
       }
 
       if (!groups[groupKey]) {
@@ -686,6 +708,7 @@ const Home = () => {
                   <Search size={16} />
                   <span>Buscar</span>
                 </button>
+
                 <button className="ds-nav-item ds-close-sidebar-btn" onClick={toggleSidebar}>
                   <svg
                     width="16"
@@ -704,6 +727,7 @@ const Home = () => {
                   </svg>
                   <span>Cerrar </span>
                 </button>
+
                 <button className={`ds-nav-item ${activeSection === "chat" ? "active" : ""}`} onClick={handleNewChat}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                     <path
@@ -714,6 +738,7 @@ const Home = () => {
                   </svg>
                   <span>Chat</span>
                 </button>
+
                 <button
                   className={`ds-nav-item ${activeSection === "tareas" ? "active" : ""}`}
                   onClick={() => setActiveSection("tareas")}
@@ -724,6 +749,7 @@ const Home = () => {
                   </svg>
                   <span>Tareas</span>
                 </button>
+
                 <button
                   className={`ds-nav-item${historialExpanded ? " active" : ""}`}
                   onClick={() => {
@@ -792,7 +818,7 @@ const Home = () => {
               <div className="ds-user-section">
                 <div className="ds-user-info">
                   <button className="ds-user-circle" onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                    <span>F</span>
+                    <span>{getUserInitials()}</span>
                   </button>
                 </div>
               </div>
@@ -814,6 +840,7 @@ const Home = () => {
                 <button className="ds-nav-item" onClick={() => setSearchModalOpen(true)}>
                   <Search size={16} />
                 </button>
+
                 <button className="ds-nav-item ds-close-sidebar-btn" onClick={toggleSidebar}>
                   <svg
                     width="16"
@@ -831,6 +858,7 @@ const Home = () => {
                     <path d="M18 15l3 3l-3 3" />
                   </svg>
                 </button>
+
                 <button
                   className={`ds-nav-item ${activeSection === "chat" ? "active" : ""}`}
                   onClick={() => {
@@ -846,6 +874,7 @@ const Home = () => {
                     />
                   </svg>
                 </button>
+
                 <button
                   className={`ds-nav-item ${activeSection === "tareas" ? "active" : ""}`}
                   onClick={() => {
@@ -858,6 +887,7 @@ const Home = () => {
                     <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.51 0 2.93.37 4.18 1.03" />
                   </svg>
                 </button>
+
                 <button
                   className={`ds-nav-item ${activeSection === "historial" ? "active" : ""}`}
                   onClick={() => {
@@ -890,7 +920,7 @@ const Home = () => {
               <div className="ds-user-section">
                 <div className="ds-user-info">
                   <button className="ds-user-circle" onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                    <span>F</span>
+                    <span>{getUserInitials()}</span>
                   </button>
                 </div>
               </div>
@@ -904,19 +934,33 @@ const Home = () => {
         <div className="ds-chat-header">
           {isMobile && (
             <button className="ds-mobile-menu-button" onClick={toggleSidebar}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
               </svg>
             </button>
           )}
-          <h1>Nuevo chat</h1>
+          <div className="ds-chat-header-title">
+            <button 
+              className={`ds-header-option ${activeHeaderOption === "chat" ? "active" : ""}`}
+              onClick={() => setActiveHeaderOption("chat")}
+            >
+              Chat
+            </button>
+            <div className="ds-header-separator"></div>
+            <button 
+              className={`ds-header-option ${activeHeaderOption === "voz" ? "active" : ""}`}
+              onClick={() => setActiveHeaderOption("voz")}
+            >
+              Voz
+            </button>
+          </div>
           {isMobile && (
             <button className="ds-mobile-new-chat-button" onClick={handleNewChat}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v8M8 12h8" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12.007 19.98a9.869 9.869 0 0 1 -4.307 -.98l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c1.992 1.7 2.93 4.04 2.747 6.34" />
+                <path d="M16 19h6" />
+                <path d="M19 16v6" />
               </svg>
             </button>
           )}
@@ -929,7 +973,7 @@ const Home = () => {
                 <div className="ds-welcome-logo">
                   <img src="/logo-crop2.png" alt="Logo" />
                 </div>
-                <h2>Hola, soy Deitana IA.</h2>
+                <h2>Hola {getUserFirstName()}</h2>
                 <p>¿En qué puedo ayudarte hoy?</p>
               </div>
             </div>
@@ -941,7 +985,7 @@ const Home = () => {
                     <img src="/logo-crop2.png" alt="Logo" className="ds-avatar-image" />
                   </div>
                   <div className="ds-message-content">
-                    <h2>Hola, soy Deitana IA.</h2>
+                    <h2>Hola {getUserFirstName()}</h2>
                     <p>¿En qué puedo ayudarte hoy?</p>
                   </div>
                 </div>
@@ -1058,6 +1102,9 @@ const Home = () => {
                                     e.target.style.color = "#2964aa"
                                     e.target.style.borderBottomColor = "#2964aa"
                                   }}
+
+
+
                                 >
                                   {children}
                                 </a>
@@ -1157,6 +1204,7 @@ const Home = () => {
                   </svg>
                   <span>Cuenta</span>
                 </button>
+
                 <button
                   className={`ds-modal-nav-item ${modalView === "appearance" ? "active" : ""}`}
                   onClick={() => setModalView("appearance")}
@@ -1175,6 +1223,7 @@ const Home = () => {
                   </svg>
                   <span>Configuración</span>
                 </button>
+
                 <button
                   className={`ds-modal-nav-item ${modalView === "behavior" ? "active" : ""}`}
                   onClick={() => setModalView("behavior")}
@@ -1185,6 +1234,7 @@ const Home = () => {
                   </svg>
                   <span>Comportamiento</span>
                 </button>
+
                 <button
                   className={`ds-modal-nav-item ${modalView === "personalize" ? "active" : ""}`}
                   onClick={() => setModalView("personalize")}
@@ -1195,6 +1245,7 @@ const Home = () => {
                   </svg>
                   <span>Personalizar</span>
                 </button>
+
                 <button
                   className={`ds-modal-nav-item ${modalView === "data" ? "active" : ""}`}
                   onClick={() => setModalView("data")}
@@ -1206,6 +1257,7 @@ const Home = () => {
                   </svg>
                   <span>Controles de datos</span>
                 </button>
+
                 <button
                   className={`ds-modal-nav-item ${modalView === "apps" ? "active" : ""}`}
                   onClick={() => setModalView("apps")}
@@ -1224,23 +1276,25 @@ const Home = () => {
                   <>
                     <div className="ds-user-profile-card">
                       <div className="ds-user-avatar-large">
-                        <span>F</span>
+                        <span>{getUserInitials()}</span>
                       </div>
                       <div className="ds-user-info-large">
-                        <div className="ds-user-name-large">Facundo Paredes</div>
-                        <div className="ds-user-email-large">facuslice@gmail.com</div>
+                        <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
+                        <div className="ds-user-email-large">{user?.email || ""}</div>
                       </div>
                       <button className="ds-admin-btn" onClick={() => setModalView("admin")}>
                         Administrar
                       </button>
                     </div>
+
                     <div className="ds-language-section">
                       <span className="ds-language-text">Cerrar sesión</span>
                       <button className="ds-admin-btn" onClick={handleLogout}>
                         Cerrar sesión
                       </button>
                     </div>
-                    <div className="ds-id-section">6498fd0f-2312-4ab1-bef3-0b8b68eba4dc</div>
+
+                    <div className="ds-id-section">{user?.uid || ""}</div>
                   </>
                 )}
 
@@ -1282,8 +1336,69 @@ const Home = () => {
                 )}
 
                 {modalView === "appearance" && (
-                  <div>
-                    <p>Configuración de apariencia próximamente...</p>
+                  <div className="ds-config-section">
+                    {/* Sección de imagen de perfil */}
+                    <div className="ds-config-item">
+                      <label className="ds-config-label">Imagen</label>
+                      <div className="ds-profile-image-section">
+                        <div className="ds-user-avatar-config">
+                          <span>{getUserInitials()}</span>
+                        </div>
+                        <button className="ds-edit-image-btn">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                          Editar imagen
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sección de nombre */}
+                    <div className="ds-config-item">
+                      <label className="ds-config-label">Nombre</label>
+                      <div className="ds-input-with-button">
+                        <input
+                          type="text"
+                          className="ds-config-input"
+                          defaultValue={user?.displayName || ""}
+                          placeholder="Ingresa tu nombre"
+                        />
+                        <button className="ds-input-button">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sección de contraseña */}
+                    <div className="ds-config-item">
+                      <label className="ds-config-label">Contraseña</label>
+                      <div className="ds-password-section">
+                        <div className="ds-input-with-button">
+                          <input
+                            type="password"
+                            className="ds-config-input"
+                            defaultValue="password123"
+                            placeholder="Ingresa tu contraseña"
+                          />
+                          <button className="ds-input-button ds-toggle-password-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </div>
+                        <button className="ds-change-password-btn">Ver contraseña</button>
+                      </div>
+                    </div>
+
+                    {/* Botón de guardar */}
+                    <div className="ds-config-actions">
+                      <button className="ds-save-config-btn">Guardar cambios</button>
+                    </div>
                   </div>
                 )}
 
@@ -1316,20 +1431,23 @@ const Home = () => {
         </div>
       )}
 
-            {searchModalOpen && (
-        <div className="ds-search-modal-overlay" onClick={() => {
-          setSearchModalOpen(false)
-          setSearchQuery("")
-          setDebouncedSearchQuery("")
-        }}>
+      {searchModalOpen && (
+        <div
+          className="ds-search-modal-overlay"
+          onClick={() => {
+            setSearchModalOpen(false)
+            setSearchQuery("")
+            setDebouncedSearchQuery("")
+          }}
+        >
           <div className="ds-search-modal" onClick={(e) => e.stopPropagation()}>
             {/* Campo de búsqueda fijo */}
             <div className="ds-search-field-container">
               <div className="ds-search-field-wrapper">
-                <input 
-                  type="text" 
-                  placeholder="Buscar..." 
-                  className="ds-search-field-input" 
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  className="ds-search-field-input"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -1344,19 +1462,21 @@ const Home = () => {
               {(() => {
                 const filteredChats = filterChatsBySearch(chatHistory, debouncedSearchQuery)
                 const groupedChats = groupChatsByDate(filteredChats)
-                
+
                 if (debouncedSearchQuery.trim() && filteredChats.length === 0) {
                   return (
                     <div className="ds-search-section">
                       <div className="ds-search-results">
-                        <div className="ds-search-result-item" style={{ cursor: 'default', opacity: 0.6 }}>
-                          <span className="ds-search-result-title">No se encontraron resultados para "{debouncedSearchQuery}"</span>
+                        <div className="ds-search-result-item" style={{ cursor: "default", opacity: 0.6 }}>
+                          <span className="ds-search-result-title">
+                            No se encontraron resultados para "{debouncedSearchQuery}"
+                          </span>
                         </div>
                       </div>
                     </div>
                   )
                 }
-                
+
                 return Object.entries(groupedChats).map(([dateGroup, chats]) => (
                   <div key={dateGroup} className="ds-search-section">
                     <div className="ds-search-section-header">
@@ -1364,8 +1484,8 @@ const Home = () => {
                     </div>
                     <div className="ds-search-results">
                       {chats.map((chat) => (
-                        <div 
-                          key={chat.id} 
+                        <div
+                          key={chat.id}
                           className="ds-search-result-item"
                           onClick={() => {
                             handleConversationClick(chat.id)
@@ -1395,6 +1515,9 @@ const Home = () => {
 }
 
 export default Home
+
+
+
 
 
 
@@ -2055,7 +2178,27 @@ input:focus {
   align-items: center;
   font-weight: bold;
   font-size: 14px;
+  border: none;
+  outline: none;
+  cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.ds-user-circle:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.ds-user-circle:active {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.ds-user-circle:hover {
+  background-color: #00796b;
 }
 
 /* Asegurar que los iconos mantengan el mismo tamaño */
@@ -2084,6 +2227,7 @@ input:focus {
   transition: opacity 0.2s ease;
   z-index: 1000;
 }
+
 
 .ds-collapsed-item:hover::after {
   opacity: 1;
@@ -2348,10 +2492,15 @@ input:focus {
 }
 
 .ds-welcome-message h2 {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #333;
+  font-size: 22px;
+  font-weight: bold;
+  background: linear-gradient(
+    to right,
+    #019C28,
+    #3BBF57,
+    #79D9A0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent
 }
 
 .ds-welcome-message p {
@@ -2766,7 +2915,7 @@ input:focus {
   }
 
   .ds-chat-input-container {
-    padding: 12px 16px;
+    border-top: none;
     max-width: 100%;
   }
 
@@ -2795,6 +2944,55 @@ input:focus {
     left: 12px;
   }
 
+  /* Estilo del contenedor de opciones del header en móvil */
+  .ds-chat-header-title {
+    border: 1px solid #e9ecef;
+    border-radius: 31px;
+    background-color: transparent;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    height: 40px;
+  }
+
+  .ds-header-option {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    text-align: center;
+  }
+
+  .ds-header-option:first-child {
+    border-radius: 27px 0 0 27px;
+  }
+
+  .ds-header-option:last-child {
+    border-radius: 0 27px 27px 0;
+  }
+
+  .ds-header-option:hover {
+    background-color: #e5e7eb;
+    color: #333;
+  }
+
+  .ds-header-option.active {
+    background-color: #eeeced;
+    color: #6b7280;
+  }
+
+  .ds-header-separator {
+    width: 1px;
+    background-color: #e5e7eb;
+    margin: 0;
+    align-self: stretch;
+  }
+
   /* Ajustar sidebar móvil */
   .ds-sidebar-mobile-open,
   .ds-sidebar-mobile-closed {
@@ -2812,6 +3010,7 @@ input:focus {
 
   /* Prevenir zoom en inputs en iOS */
   .ds-chat-input {
+    padding: 22px 14px;
     font-size: 16px;
   }
 
@@ -2907,6 +3106,15 @@ input:focus {
 
   .ds-welcome-message h2 {
     font-size: 20px;
+    font-weight: bold;
+  background: linear-gradient(
+    to right,
+    #019C28,
+    #3BBF57,
+    #79D9A0
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent
   }
 
   .ds-welcome-message p {
@@ -3421,8 +3629,6 @@ input:focus {
   padding: 0;
 }
 
-
-
 .ds-search-field-wrapper {
   position: relative;
   display: flex;
@@ -3432,7 +3638,7 @@ input:focus {
 .ds-search-field-input {
   width: 100%;
   padding: 12px 48px 12px 33px;
-border: none;
+  border: none;
   font-size: 16px;
   background-color: #ffff;
   transition: all 0.2s ease;
@@ -3441,9 +3647,7 @@ border: none;
 
 .ds-search-field-input:focus {
   outline: none;
-
   background-color: white;
-
 }
 
 .ds-search-field-input::placeholder {
@@ -3602,5 +3806,182 @@ border: none;
     padding: 0 20px 12px 20px;
   }
 }
+
+/* Estilos para la sección de configuración */
+.ds-config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 400px;
+}
+
+.ds-config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-config-label {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin: 0 !important;
+}
+
+/* Sección de imagen de perfil */
+.ds-profile-image-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ds-user-avatar-config {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 50% !important;
+  background-color: #009688 !important;
+  color: white !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  font-weight: bold !important;
+  font-size: 24px !important;
+  flex-shrink: 0 !important;
+}
+
+.ds-edit-image-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none !important;
+  border: 1px solid #05050514;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-weight: 500 !important;
+}
+
+.ds-edit-image-btn:hover {
+  background-color: #e5e7eb !important;
+  border-color: 1px solid #05050514;
+  
+}
+
+.ds-edit-image-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Inputs con botones */
+.ds-input-with-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ds-config-input {
+  width: 100% !important;
+  padding: 12px 16px !important;
+  padding-right: 48px !important;
+  background-color: white !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  transition: border-color 0.2s ease !important;
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+}
+
+.ds-config-input:focus {
+  outline: none !important;
+  border-color: #0066ff !important;
+}
+
+.ds-input-button {
+  position: absolute;
+  right: 12px;
+  background: none !important;
+  border: none !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.ds-input-button:hover {
+  color: #374151 !important;
+  background-color: #f3f4f6 !important;
+}
+
+.ds-input-button svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Sección de contraseña */
+.ds-password-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-change-password-btn {
+  align-self: flex-start;
+  background: none !important;
+  border: none !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 4px 0 !important;
+  transition: color 0.2s ease !important;
+}
+
+.ds-change-password-btn:hover {
+  color: #374151 !important;
+  text-decoration: underline !important;
+}
+
+/* Botón de guardar */
+.ds-config-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+
+.ds-save-config-btn {
+  background: none !important;
+  color: #374151 !important;
+  border: 1px solid #05050514;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
+  
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.ds-save-config-btn:hover {
+  background-color: #e5e7eb !important;
+  border-color: 1px solid #05050514;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 

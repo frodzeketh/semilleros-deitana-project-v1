@@ -40,6 +40,7 @@ const Home = () => {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
+  const [activeHeaderOption, setActiveHeaderOption] = useState("chat")
 
   // Obtener la función de logout del contexto de autenticación
   const { logout, user } = useAuth()
@@ -53,6 +54,14 @@ const Home = () => {
       return (names[0][0] + names[1][0]).toUpperCase()
     }
     return names[0][0].toUpperCase()
+  }
+
+  // Función para obtener solo el primer nombre del usuario
+  const getUserFirstName = () => {
+    if (!user?.displayName) return "Usuario"
+    
+    const names = user.displayName.split(" ")
+    return names[0]
   }
 
   // Datos de ejemplo para el historial de chats
@@ -925,19 +934,33 @@ const Home = () => {
         <div className="ds-chat-header">
           {isMobile && (
             <button className="ds-mobile-menu-button" onClick={toggleSidebar}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="24" height="24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
               </svg>
             </button>
           )}
-          <h1>Nuevo chat</h1>
+          <div className="ds-chat-header-title">
+            <button 
+              className={`ds-header-option ${activeHeaderOption === "chat" ? "active" : ""}`}
+              onClick={() => setActiveHeaderOption("chat")}
+            >
+              Chat
+            </button>
+            <div className="ds-header-separator"></div>
+            <button 
+              className={`ds-header-option ${activeHeaderOption === "voz" ? "active" : ""}`}
+              onClick={() => setActiveHeaderOption("voz")}
+            >
+              Voz
+            </button>
+          </div>
           {isMobile && (
             <button className="ds-mobile-new-chat-button" onClick={handleNewChat}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v8M8 12h8" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M12.007 19.98a9.869 9.869 0 0 1 -4.307 -.98l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c1.992 1.7 2.93 4.04 2.747 6.34" />
+                <path d="M16 19h6" />
+                <path d="M19 16v6" />
               </svg>
             </button>
           )}
@@ -950,7 +973,7 @@ const Home = () => {
                 <div className="ds-welcome-logo">
                   <img src="/logo-crop2.png" alt="Logo" />
                 </div>
-                <h2>Hola, soy Deitana IA.</h2>
+                <h2>Hola {getUserFirstName()}</h2>
                 <p>¿En qué puedo ayudarte hoy?</p>
               </div>
             </div>
@@ -962,7 +985,7 @@ const Home = () => {
                     <img src="/logo-crop2.png" alt="Logo" className="ds-avatar-image" />
                   </div>
                   <div className="ds-message-content">
-                    <h2>Hola, soy Deitana IA.</h2>
+                    <h2>Hola {getUserFirstName()}</h2>
                     <p>¿En qué puedo ayudarte hoy?</p>
                   </div>
                 </div>

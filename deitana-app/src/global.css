@@ -642,7 +642,27 @@ input:focus {
   align-items: center;
   font-weight: bold;
   font-size: 14px;
+  border: none;
+  outline: none;
+  cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.ds-user-circle:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+.ds-user-circle:active {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.ds-user-circle:hover {
+  background-color: #00796b;
 }
 
 /* Asegurar que los iconos mantengan el mismo tamaño */
@@ -671,6 +691,7 @@ input:focus {
   transition: opacity 0.2s ease;
   z-index: 1000;
 }
+
 
 .ds-collapsed-item:hover::after {
   opacity: 1;
@@ -835,9 +856,9 @@ input:focus {
 
 /* Header responsive */
 .ds-chat-header {
+  font-family: "Plus Jakarta Sans", sans-serif;
   padding: 16px 24px;
   text-align: center;
-  border-bottom: 1px solid #e9ecef;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -935,10 +956,15 @@ input:focus {
 }
 
 .ds-welcome-message h2 {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #333;
+  font-size: 22px;
+  font-weight: bold;
+  background: linear-gradient(
+    to right,
+    #019C28,
+    #3BBF57,
+    #79D9A0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent
 }
 
 .ds-welcome-message p {
@@ -1353,7 +1379,7 @@ input:focus {
   }
 
   .ds-chat-input-container {
-    padding: 12px 16px;
+    border-top: none;
     max-width: 100%;
   }
 
@@ -1382,6 +1408,56 @@ input:focus {
     left: 12px;
   }
 
+  /* Estilo del contenedor de opciones del header en móvil */
+  .ds-chat-header-title {
+    border: 1px solid #e9ecef;
+    border-radius: 31px;
+    background-color: transparent;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    height: 40px;
+  }
+
+  .ds-header-option {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    text-align: center;
+  }
+
+  .ds-header-option:first-child {
+    border-radius: 27px 0 0 27px;
+  }
+
+  .ds-header-option:last-child {
+    border-radius: 0 27px 27px 0;
+  }
+
+  .ds-header-option:hover {
+    background-color: #e5e7eb;
+    color: #333;
+  }
+
+  .ds-header-option.active {
+    background-color: #eeeced;
+    color: #6b7280;
+  }
+
+  .ds-header-separator {
+    width: 1px;
+    background-color: #e5e7eb;
+    margin: 0;
+    align-self: stretch;
+  }
+
   /* Ajustar sidebar móvil */
   .ds-sidebar-mobile-open,
   .ds-sidebar-mobile-closed {
@@ -1399,6 +1475,7 @@ input:focus {
 
   /* Prevenir zoom en inputs en iOS */
   .ds-chat-input {
+    padding: 22px 14px;
     font-size: 16px;
   }
 
@@ -1481,6 +1558,7 @@ input:focus {
 
   .ds-chat-header {
     padding: 12px 20px;
+    display: none;
   }
 
   .ds-chat-header h1 {
@@ -1494,6 +1572,15 @@ input:focus {
 
   .ds-welcome-message h2 {
     font-size: 20px;
+    font-weight: bold;
+  background: linear-gradient(
+    to right,
+    #019C28,
+    #3BBF57,
+    #79D9A0
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent
   }
 
   .ds-welcome-message p {
