@@ -42,7 +42,18 @@ const Home = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
 
   // Obtener la función de logout del contexto de autenticación
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+
+  // Función para obtener las iniciales del usuario
+  const getUserInitials = () => {
+    if (!user?.displayName) return "U"
+    
+    const names = user.displayName.split(" ")
+    if (names.length >= 2) {
+      return (names[0][0] + names[1][0]).toUpperCase()
+    }
+    return names[0][0].toUpperCase()
+  }
 
   // Datos de ejemplo para el historial de chats
   const [chatHistory, setChatHistory] = useState([])
@@ -798,7 +809,7 @@ const Home = () => {
               <div className="ds-user-section">
                 <div className="ds-user-info">
                   <button className="ds-user-circle" onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                    <span>F</span>
+                    <span>{getUserInitials()}</span>
                   </button>
                 </div>
               </div>
@@ -900,7 +911,7 @@ const Home = () => {
               <div className="ds-user-section">
                 <div className="ds-user-info">
                   <button className="ds-user-circle" onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                    <span>F</span>
+                    <span>{getUserInitials()}</span>
                   </button>
                 </div>
               </div>
@@ -1068,6 +1079,9 @@ const Home = () => {
                                     e.target.style.color = "#2964aa"
                                     e.target.style.borderBottomColor = "#2964aa"
                                   }}
+
+
+
                                 >
                                   {children}
                                 </a>
@@ -1239,11 +1253,11 @@ const Home = () => {
                   <>
                     <div className="ds-user-profile-card">
                       <div className="ds-user-avatar-large">
-                        <span>F</span>
+                        <span>{getUserInitials()}</span>
                       </div>
                       <div className="ds-user-info-large">
-                        <div className="ds-user-name-large">Facundo Paredes</div>
-                        <div className="ds-user-email-large">facuslice@gmail.com</div>
+                        <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
+                        <div className="ds-user-email-large">{user?.email || ""}</div>
                       </div>
                       <button className="ds-admin-btn" onClick={() => setModalView("admin")}>
                         Administrar
@@ -1257,7 +1271,7 @@ const Home = () => {
                       </button>
                     </div>
 
-                    <div className="ds-id-section">6498fd0f-2312-4ab1-bef3-0b8b68eba4dc</div>
+                    <div className="ds-id-section">{user?.uid || ""}</div>
                   </>
                 )}
 
@@ -1305,7 +1319,7 @@ const Home = () => {
                       <label className="ds-config-label">Imagen</label>
                       <div className="ds-profile-image-section">
                         <div className="ds-user-avatar-config">
-                          <span>F</span>
+                          <span>{getUserInitials()}</span>
                         </div>
                         <button className="ds-edit-image-btn">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1324,7 +1338,7 @@ const Home = () => {
                         <input
                           type="text"
                           className="ds-config-input"
-                          defaultValue="Facundo Paredes"
+                          defaultValue={user?.displayName || ""}
                           placeholder="Ingresa tu nombre"
                         />
                         <button className="ds-input-button">

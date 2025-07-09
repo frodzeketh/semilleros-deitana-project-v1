@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { updatePassword, updateProfile } from 'firebase/auth'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { auth } from '../Authenticator/firebase'
 import '../../global.css'
 
 const SetDisplayName = () => {
