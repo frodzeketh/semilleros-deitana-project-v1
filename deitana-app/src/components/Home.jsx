@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Send, ChevronDown, Search, Trash2 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
@@ -483,7 +483,7 @@ const Home = () => {
     setStartY(e.clientY)
   }
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = useCallback((e) => {
     if (!isDragging) return
 
     const currentY = e.clientY
@@ -492,9 +492,9 @@ const Home = () => {
     if (deltaY > 0) {
       setDragY(deltaY)
     }
-  }
+  }, [isDragging, startY])
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false)
 
     if (dragY > 100) {
@@ -504,7 +504,7 @@ const Home = () => {
     }
 
     setDragY(0)
-  }
+  }, [dragY])
 
   useEffect(() => {
     if (isDragging) {
@@ -516,7 +516,7 @@ const Home = () => {
         document.removeEventListener("mouseup", handleMouseUp)
       }
     }
-  }, [isDragging, startY, dragY])
+  }, [isDragging, handleMouseMove, handleMouseUp])
 
   // Añadir estilos CSS para el indicador de escritura en línea
   useEffect(() => {
