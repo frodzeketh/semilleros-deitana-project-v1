@@ -412,10 +412,8 @@ const Home = () => {
 
   const getScrollButtonStyle = () => {
     if (!mainContentRef.current) return {}
-
     const mainContentRect = mainContentRef.current.getBoundingClientRect()
     const centerX = mainContentRect.left + mainContentRect.width / 2
-
     return {
       left: `${centerX}px`,
       transform: "translateX(-50%)",
@@ -553,13 +551,13 @@ const Home = () => {
   // Función para filtrar chats por término de búsqueda
   const filterChatsBySearch = (chats, query) => {
     if (!query.trim()) return chats
-
+    
     const searchTerm = query.toLowerCase().trim()
-
-    return chats.filter((chat) => {
+    
+    return chats.filter(chat => {
       const title = chat.title === "NUEVA_CONEXION" ? "Nueva conversación" : chat.title
       const titleLower = title.toLowerCase()
-
+      
       // Búsqueda simple: si el título contiene el término de búsqueda
       return titleLower.includes(searchTerm)
     })
@@ -587,8 +585,8 @@ const Home = () => {
         groupKey = "Hace un mes"
       } else {
         // Para fechas más antiguas, mostrar la fecha absoluta
-        const options = { day: "numeric", month: "long" }
-        groupKey = chatDate.toLocaleDateString("es-ES", options)
+        const options = { day: 'numeric', month: 'long' }
+        groupKey = chatDate.toLocaleDateString('es-ES', options)
       }
 
       if (!groups[groupKey]) {
@@ -688,7 +686,6 @@ const Home = () => {
                   <Search size={16} />
                   <span>Buscar</span>
                 </button>
-
                 <button className="ds-nav-item ds-close-sidebar-btn" onClick={toggleSidebar}>
                   <svg
                     width="16"
@@ -707,7 +704,6 @@ const Home = () => {
                   </svg>
                   <span>Cerrar </span>
                 </button>
-
                 <button className={`ds-nav-item ${activeSection === "chat" ? "active" : ""}`} onClick={handleNewChat}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                     <path
@@ -718,7 +714,6 @@ const Home = () => {
                   </svg>
                   <span>Chat</span>
                 </button>
-
                 <button
                   className={`ds-nav-item ${activeSection === "tareas" ? "active" : ""}`}
                   onClick={() => setActiveSection("tareas")}
@@ -729,7 +724,6 @@ const Home = () => {
                   </svg>
                   <span>Tareas</span>
                 </button>
-
                 <button
                   className={`ds-nav-item${historialExpanded ? " active" : ""}`}
                   onClick={() => {
@@ -820,7 +814,6 @@ const Home = () => {
                 <button className="ds-nav-item" onClick={() => setSearchModalOpen(true)}>
                   <Search size={16} />
                 </button>
-
                 <button className="ds-nav-item ds-close-sidebar-btn" onClick={toggleSidebar}>
                   <svg
                     width="16"
@@ -838,7 +831,6 @@ const Home = () => {
                     <path d="M18 15l3 3l-3 3" />
                   </svg>
                 </button>
-
                 <button
                   className={`ds-nav-item ${activeSection === "chat" ? "active" : ""}`}
                   onClick={() => {
@@ -854,7 +846,6 @@ const Home = () => {
                     />
                   </svg>
                 </button>
-
                 <button
                   className={`ds-nav-item ${activeSection === "tareas" ? "active" : ""}`}
                   onClick={() => {
@@ -867,7 +858,6 @@ const Home = () => {
                     <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.51 0 2.93.37 4.18 1.03" />
                   </svg>
                 </button>
-
                 <button
                   className={`ds-nav-item ${activeSection === "historial" ? "active" : ""}`}
                   onClick={() => {
@@ -1167,7 +1157,6 @@ const Home = () => {
                   </svg>
                   <span>Cuenta</span>
                 </button>
-
                 <button
                   className={`ds-modal-nav-item ${modalView === "appearance" ? "active" : ""}`}
                   onClick={() => setModalView("appearance")}
@@ -1186,7 +1175,6 @@ const Home = () => {
                   </svg>
                   <span>Configuración</span>
                 </button>
-
                 <button
                   className={`ds-modal-nav-item ${modalView === "behavior" ? "active" : ""}`}
                   onClick={() => setModalView("behavior")}
@@ -1197,7 +1185,6 @@ const Home = () => {
                   </svg>
                   <span>Comportamiento</span>
                 </button>
-
                 <button
                   className={`ds-modal-nav-item ${modalView === "personalize" ? "active" : ""}`}
                   onClick={() => setModalView("personalize")}
@@ -1208,7 +1195,6 @@ const Home = () => {
                   </svg>
                   <span>Personalizar</span>
                 </button>
-
                 <button
                   className={`ds-modal-nav-item ${modalView === "data" ? "active" : ""}`}
                   onClick={() => setModalView("data")}
@@ -1220,7 +1206,6 @@ const Home = () => {
                   </svg>
                   <span>Controles de datos</span>
                 </button>
-
                 <button
                   className={`ds-modal-nav-item ${modalView === "apps" ? "active" : ""}`}
                   onClick={() => setModalView("apps")}
@@ -1249,14 +1234,12 @@ const Home = () => {
                         Administrar
                       </button>
                     </div>
-
                     <div className="ds-language-section">
                       <span className="ds-language-text">Cerrar sesión</span>
                       <button className="ds-admin-btn" onClick={handleLogout}>
                         Cerrar sesión
                       </button>
                     </div>
-
                     <div className="ds-id-section">6498fd0f-2312-4ab1-bef3-0b8b68eba4dc</div>
                   </>
                 )}
@@ -1299,69 +1282,8 @@ const Home = () => {
                 )}
 
                 {modalView === "appearance" && (
-                  <div className="ds-config-section">
-                    {/* Sección de imagen de perfil */}
-                    <div className="ds-config-item">
-                      <label className="ds-config-label">Imagen</label>
-                      <div className="ds-profile-image-section">
-                        <div className="ds-user-avatar-config">
-                          <span>F</span>
-                        </div>
-                        <button className="ds-edit-image-btn">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                          Editar imagen
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Sección de nombre */}
-                    <div className="ds-config-item">
-                      <label className="ds-config-label">Nombre</label>
-                      <div className="ds-input-with-button">
-                        <input
-                          type="text"
-                          className="ds-config-input"
-                          defaultValue="Facundo Paredes"
-                          placeholder="Ingresa tu nombre"
-                        />
-                        <button className="ds-input-button">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Sección de contraseña */}
-                    <div className="ds-config-item">
-                      <label className="ds-config-label">Contraseña</label>
-                      <div className="ds-password-section">
-                        <div className="ds-input-with-button">
-                          <input
-                            type="password"
-                            className="ds-config-input"
-                            defaultValue="password123"
-                            placeholder="Ingresa tu contraseña"
-                          />
-                          <button className="ds-input-button ds-toggle-password-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </button>
-                        </div>
-                        <button className="ds-change-password-btn">Ver contraseña</button>
-                      </div>
-                    </div>
-
-                    {/* Botón de guardar */}
-                    <div className="ds-config-actions">
-                      <button className="ds-save-config-btn">Guardar cambios</button>
-                    </div>
+                  <div>
+                    <p>Configuración de apariencia próximamente...</p>
                   </div>
                 )}
 
@@ -1394,23 +1316,20 @@ const Home = () => {
         </div>
       )}
 
-      {searchModalOpen && (
-        <div
-          className="ds-search-modal-overlay"
-          onClick={() => {
-            setSearchModalOpen(false)
-            setSearchQuery("")
-            setDebouncedSearchQuery("")
-          }}
-        >
+            {searchModalOpen && (
+        <div className="ds-search-modal-overlay" onClick={() => {
+          setSearchModalOpen(false)
+          setSearchQuery("")
+          setDebouncedSearchQuery("")
+        }}>
           <div className="ds-search-modal" onClick={(e) => e.stopPropagation()}>
             {/* Campo de búsqueda fijo */}
             <div className="ds-search-field-container">
               <div className="ds-search-field-wrapper">
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  className="ds-search-field-input"
+                <input 
+                  type="text" 
+                  placeholder="Buscar..." 
+                  className="ds-search-field-input" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -1425,21 +1344,19 @@ const Home = () => {
               {(() => {
                 const filteredChats = filterChatsBySearch(chatHistory, debouncedSearchQuery)
                 const groupedChats = groupChatsByDate(filteredChats)
-
+                
                 if (debouncedSearchQuery.trim() && filteredChats.length === 0) {
                   return (
                     <div className="ds-search-section">
                       <div className="ds-search-results">
-                        <div className="ds-search-result-item" style={{ cursor: "default", opacity: 0.6 }}>
-                          <span className="ds-search-result-title">
-                            No se encontraron resultados para "{debouncedSearchQuery}"
-                          </span>
+                        <div className="ds-search-result-item" style={{ cursor: 'default', opacity: 0.6 }}>
+                          <span className="ds-search-result-title">No se encontraron resultados para "{debouncedSearchQuery}"</span>
                         </div>
                       </div>
                     </div>
                   )
                 }
-
+                
                 return Object.entries(groupedChats).map(([dateGroup, chats]) => (
                   <div key={dateGroup} className="ds-search-section">
                     <div className="ds-search-section-header">
@@ -1447,8 +1364,8 @@ const Home = () => {
                     </div>
                     <div className="ds-search-results">
                       {chats.map((chat) => (
-                        <div
-                          key={chat.id}
+                        <div 
+                          key={chat.id} 
                           className="ds-search-result-item"
                           onClick={() => {
                             handleConversationClick(chat.id)
@@ -1478,3 +1395,2212 @@ const Home = () => {
 }
 
 export default Home
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+
+.login-page {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding: 20px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 450px;
+  padding: 40px 20px;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  height: 70px;
+}
+
+.divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 20px 0 40px 0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+input {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.password-input-container {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-password:hover {
+  color: #333;
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: white;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+  margin-top: 10px;
+}
+
+.login-button:hover {
+  background-color: #f5f5f5;
+}
+
+.login-button:active {
+  background-color: #e0e0e0;
+}
+
+.ds-home-container {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Sidebar Styles */
+.ds-sidebar {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  background-color: #f8f6f7;
+  border-right: 1px solid #05050514;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  z-index: 10;
+  width: 260px;
+}
+
+.ds-sidebar-expanded {
+  width: 260px;
+}
+
+.ds-sidebar-collapsed {
+  width: 64px;
+}
+
+.ds-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  flex-shrink: 0;
+  min-height: 64px;
+}
+
+.ds-logo-sidebar-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.ds-logo-sidebar-container:hover {
+  opacity: 0.8;
+}
+
+.ds-mobile-close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.ds-mobile-close-button:hover {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+/* Barra de búsqueda */
+.ds-search-container {
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+
+.ds-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ds-search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 14px;
+  background-color: #ffff;
+  transition: all 0.2s ease;
+}
+
+.ds-search-input:focus {
+  outline: none;
+  border-color: #0066ff;
+  background-color: white;
+}
+
+.ds-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #666;
+  pointer-events: none;
+}
+
+.ds-sidebar-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Navegación principal */
+.ds-navigation-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ds-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.25rem;
+  font-weight: 700;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.ds-nav-item:hover {
+  background-color: #eeeced;
+  color: black;
+}
+
+.ds-nav-item.active {
+  background-color: #e5e7eb;
+  color: #111827;
+  font-weight: 700;
+}
+
+.ds-nav-item svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  transition: all 0.3s ease;
+}
+
+.ds-nav-item span {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+/* Estilos para el botón de toggle del historial */
+.ds-historial-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 12px;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.ds-historial-toggle:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.ds-historial-toggle svg {
+  flex-shrink: 0;
+}
+
+/* Estilos para el historial expandido */
+.ds-historial-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.ds-historial-header svg {
+  flex-shrink: 0;
+}
+
+.ds-historial-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.ds-historial-content::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent 0%, #d1d5db 10%, #d1d5db 90%, transparent 100%);
+  z-index: 1;
+}
+
+.ds-historial-content::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent 0%, #f8f6f7 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ds-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 3;
+}
+
+.ds-date-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  padding: 4px 12px 4px 24px;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.ds-historial-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 8px 30px;
+  line-height: 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  position: relative;
+  width: 100%;
+  margin-left: 0;
+}
+
+.ds-historial-item::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  border-radius: 0.75rem;
+}
+
+.ds-historial-item:hover::before {
+  opacity: 1;
+}
+
+.ds-historial-item:hover .ds-historial-title,
+.ds-historial-item:hover .ds-historial-delete-button {
+  position: relative;
+  z-index: 1;
+}
+
+.ds-historial-title {
+  font-size: 13px;
+  color: #6b7280;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+.ds-historial-item.active .ds-historial-title {
+  color: #111827;
+  font-weight: 500;
+}
+
+.ds-historial-delete-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 20px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.ds-historial-item:hover .ds-historial-delete-button {
+  opacity: 1;
+}
+
+.ds-historial-delete-button:hover {
+  color: #dc2626;
+}
+
+.ds-historial-delete-button:active {
+  transform: scale(0.9);
+}
+
+/* Secciones del chat */
+.ds-chat-section {
+  margin-bottom: 24px;
+}
+
+.ds-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+  padding: 0 8px;
+}
+
+.ds-chat-item {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  padding-right: 40px; /* Espacio para el botón de eliminar */
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.ds-chat-item-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.ds-chat-item-container .ds-chat-item {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.ds-chat-delete-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s ease;
+  opacity: 0;
+  z-index: 1;
+}
+
+.ds-chat-item:hover .ds-chat-delete-button {
+  opacity: 1;
+}
+
+.ds-chat-delete-button:hover {
+  background-color: #dc2626;
+  color: white;
+}
+
+.ds-chat-delete-button:active {
+  background-color: #b91c1c;
+  transform: translateY(-50%) scale(0.9);
+}
+
+.ds-chat-item:hover {
+  background-color: #e9ecef;
+}
+
+.ds-gem-item {
+  background-color: #f0f7ff;
+  border: 1px solid #e6f0ff;
+}
+
+.ds-gem-item:hover {
+  background-color: #e6f0ff;
+}
+
+.ds-gem-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.ds-chat-icon {
+  color: #666;
+  flex-shrink: 0;
+}
+
+.ds-chat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ds-chat-title {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-chat-timestamp {
+  font-size: 12px;
+  color: #666;
+}
+
+.ds-show-more-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: background-color 0.2s ease;
+  margin-top: 8px;
+}
+
+.ds-show-more-button:hover {
+  background-color: #e9ecef;
+}
+
+/* Estilos para el sidebar colapsado */
+.ds-collapsed-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.ds-collapsed-item:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.ds-collapsed-item.ds-collapsed-active {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.ds-collapsed-logo {
+  margin-bottom: 24px;
+  border-radius: 12px;
+}
+
+.ds-collapsed-logo:hover {
+  background-color: #f3f4f6;
+}
+
+.ds-collapsed-logo-img {
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s ease;
+}
+
+.ds-collapsed-expand {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.ds-user-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #009688;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+/* Asegurar que los iconos mantengan el mismo tamaño */
+.ds-collapsed-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+/* Tooltip para el sidebar colapsado */
+.ds-collapsed-item::after {
+  content: attr(title);
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #1f2937;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.ds-collapsed-item:hover::after {
+  opacity: 1;
+}
+
+.ds-sidebar-collapsed-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ds-sidebar-collapsed-content .ds-sidebar-header {
+  padding: 16px 8px;
+  justify-content: center;
+}
+
+.ds-sidebar-collapsed-content .ds-search-container {
+  padding: 12px 8px;
+}
+
+.ds-sidebar-collapsed-content .ds-search-wrapper {
+  justify-content: center;
+}
+
+.ds-sidebar-collapsed-content .ds-search-placeholder {
+  display: none;
+}
+
+.ds-sidebar-collapsed-content .ds-sidebar-content {
+  flex: none !important;
+  padding: 0 8px !important;
+  align-items: center;
+  min-height: 0 !important;
+  background: transparent !important;
+  overflow-y: visible !important;
+}
+
+.ds-sidebar-collapsed-content .ds-nav-item {
+  justify-content: center;
+  padding: 10px 12px;
+  width: 100%;
+  height: auto;
+}
+
+.ds-sidebar-collapsed-content .ds-nav-item svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.ds-sidebar-collapsed-content .ds-nav-item span {
+  display: none;
+}
+
+.ds-sidebar-collapsed-content .ds-sidebar-footer {
+  padding: 16px 8px;
+  align-items: center;
+  margin-top: auto;
+}
+
+.ds-sidebar-collapsed-content .ds-user-section {
+  justify-content: center;
+  gap: 8px;
+}
+
+.ds-sidebar-collapsed-content .ds-user-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.options-sidebar {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+}
+
+.ds-collapsed-spacer {
+  flex-grow: 1;
+}
+
+.ds-collapsed-user {
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+.ds-new-chat-highlight {
+  background-color: #e6f0ff !important;
+  color: #0066ff !important;
+  margin-bottom: 16px;
+}
+
+.ds-new-chat-highlight:hover {
+  background-color: #d9e8ff !important;
+  color: #0066ff !important;
+}
+
+.ds-video-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0f0f0;
+  color: #6c757d;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.ds-video-button:hover {
+  background-color: #e5e5e5;
+}
+
+/* Footer del sidebar */
+.ds-sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-footer-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: background-color 0.2s ease;
+}
+
+.ds-footer-button:hover {
+  background-color: #e9ecef;
+}
+
+.ds-logout-button {
+  color: #dc3545;
+}
+
+.ds-logout-button:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Main Content Styles */
+.ds-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f6f7;
+  overflow: hidden;
+}
+
+/* Header responsive */
+.ds-chat-header {
+  padding: 16px 24px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ds-mobile-menu-button {
+  position: absolute;
+  left: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-mobile-menu-button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Botón circular de nuevo chat en móvil */
+.ds-mobile-new-chat-button {
+  position: absolute;
+  right: 16px;
+  background-color: transparent;
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.ds-mobile-new-chat-button:hover {
+  background-color: #f5f5f5;
+  transform: scale(1.05);
+}
+
+.ds-mobile-new-chat-button:active {
+  transform: scale(0.95);
+  background-color: #e9ecef;
+}
+
+.ds-header-spacer {
+  width: 40px;
+}
+
+.ds-chat-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+/* Nueva estructura de layout para el chat */
+.ds-chat-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Estilo para chat vacío (centrado) */
+.ds-initial-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 0 24px;
+}
+
+.ds-welcome-message {
+  text-align: center;
+  max-width: 600px;
+}
+
+.ds-welcome-logo {
+  margin-bottom: 16px;
+}
+
+.ds-welcome-logo img {
+  width: 60px;
+  height: 60px;
+}
+
+.ds-welcome-message h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.ds-welcome-message p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+/* Contenedor de mensajes con scroll */
+.ds-chat-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Mensajes del chat */
+.ds-chat-messages {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ds-message {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.ds-bot-message {
+  align-self: flex-start;
+  max-width: 80%;
+}
+
+.ds-user-message {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+  background-color: #ffff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-left: auto;
+  max-width: 80%;
+  width: auto;
+  display: inline-flex;
+}
+
+.ds-message-avatar {
+  flex-shrink: 0;
+}
+
+.ds-avatar-image {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+
+.logo-sidebar-open,
+.ds-collapsed-logo-img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: contain;
+}
+
+.ds-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-wrap;
+}
+
+.ds-message-content h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ds-message-content p {
+  font-size: 15px;
+  margin: 0;
+  color: #333;
+  word-break: break-word;
+  overflow-wrap: break-wrap;
+}
+
+/* Indicador de escritura mejorado */
+.ds-typing-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ds-typing-indicator-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 16px;
+  width: fit-content;
+  position: relative;
+}
+
+.ds-typing-indicator-inline span {
+  height: 8px;
+  width: 8px;
+  background-color: #666;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 3px;
+  opacity: 0.4;
+  animation: ds-typing 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.ds-typing-indicator-inline span:nth-child(1) {
+  animation-delay: 0s;
+  background-color: #333;
+}
+
+.ds-typing-indicator-inline span:nth-child(2) {
+  animation-delay: 0.2s;
+  background-color: #666;
+}
+
+.ds-typing-indicator-inline span:nth-child(3) {
+  animation-delay: 0.4s;
+  background-color: #999;
+}
+
+@keyframes ds-typing {
+  0% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translateY(-6px) scale(1.1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(3px) scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.4;
+  }
+}
+
+/* Botón de Scroll to Bottom */
+.ds-scroll-button-container {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.ds-scroll-to-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ds-scroll-to-bottom:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-2px);
+}
+
+/* Input de mensaje - Fijo en la parte inferior */
+.ds-chat-input-container {
+  padding: 16px 24px;
+  border-top: 1px solid #e9ecef;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 800px;
+  background-color: #f8f6f7;
+  flex-shrink: 0;
+}
+
+.ds-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ds-chat-input {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 48px;
+  border: 1px solid #05050514;
+  border-radius: 24px;
+  font-size: 16px;
+  background-color: #ffffff;
+}
+
+.ds-chat-input:focus {
+  outline: none;
+  border-color: #0066ff;
+  background-color: white;
+}
+
+.ds-send-button {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.ds-send-button:hover:not(:disabled) {
+  color: #0066ff;
+  background-color: #e5e7eb;
+}
+
+.ds-send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-disclaimer {
+  text-align: center;
+  color: #6c757d;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* Personalización de la barra de desplazamiento */
+.ds-chat-messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ds-chat-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ds-chat-messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.ds-chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Sidebar móvil como overlay */
+.ds-sidebar-mobile-closed {
+  transform: translateX(-100%);
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 70vw;
+  z-index: 1001;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ds-sidebar-mobile-open {
+  transform: translateX(0);
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 70vw;
+  z-index: 1001;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ds-mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Prevenir overflow horizontal */
+* {
+  box-sizing: border-box;
+}
+
+.ds-home-container {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.ds-main-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.ds-chat-messages-container {
+  min-width: 0;
+}
+
+/* Contenido de secciones */
+.ds-section-content {
+  flex: 1;
+  overflow-y: visible;
+}
+
+/* Footer del usuario mejorado */
+.ds-user-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 8px;
+  background-color: #f9fafb;
+}
+
+.ds-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ds-collapse-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 30px;
+  font-size: 12px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+}
+
+.ds-collapse-button svg {
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.ds-collapse-button:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ds-home-container {
+    overflow-x: hidden;
+    /* Fixes específicos para Safari móvil */
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* En móvil, el main content siempre ocupa 100% */
+  .ds-main-content {
+    width: 100vw;
+    margin-left: 0;
+  }
+
+  .ds-chat-messages {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .ds-message {
+    max-width: 100%;
+  }
+
+  .ds-bot-message {
+    max-width: 95%;
+  }
+
+  .ds-user-message {
+    max-width: 85%;
+  }
+
+  .ds-chat-input-container {
+    padding: 12px 16px;
+    max-width: 100%;
+  }
+
+  .ds-message-content {
+    word-break: break-word;
+    overflow-wrap: break-wrap;
+    max-width: 100%;
+  }
+
+  .ds-message-content p {
+    word-break: break-word;
+    overflow-wrap: break-wrap;
+  }
+
+  /* Ocultar elementos del sidebar colapsado en móvil */
+  .ds-sidebar-collapsed-content {
+    display: none;
+  }
+
+  /* Ajustar header en móvil */
+  .ds-chat-header {
+    padding: 12px 16px;
+  }
+
+  .ds-mobile-menu-button {
+    left: 12px;
+  }
+
+  /* Ajustar sidebar móvil */
+  .ds-sidebar-mobile-open,
+  .ds-sidebar-mobile-closed {
+    width: 75vw;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+
+  /* Asegurar que el sidebar content sea scrolleable en móvil */
+  .ds-sidebar-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevenir zoom en inputs en iOS */
+  .ds-chat-input {
+    font-size: 16px;
+  }
+
+  /* Fixes para Safari móvil - prevenir movimiento de página */
+  body {
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+}
+
+/* Desktop optimizations - more compact design */
+@media (min-width: 769px) {
+  /* Ocultar el botón de nuevo chat en desktop */
+  .ds-mobile-new-chat-button {
+    display: none;
+  }
+
+  .ds-sidebar-header {
+    padding: 12px;
+  }
+
+  .logo-sidebar-open {
+    height: 39px;
+  }
+
+  .ds-search-container {
+    padding: 8px 12px;
+  }
+
+  .ds-search-input {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    padding: 6px 10px 6px 28px;
+    font-size: 13px;
+    border-radius: 0.75rem !important;
+  }
+
+  .ds-search-icon {
+    left: 10px;
+  }
+
+  .ds-sidebar-content {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .ds-section-title {
+    font-size: 10px;
+    margin: 0 0 8px 0;
+    padding: 0 6px;
+  }
+
+  .ds-chat-item {
+    padding: 6px 10px;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+
+  .ds-chat-title {
+    font-size: 13px;
+  }
+
+  .ds-chat-timestamp {
+    font-size: 11px;
+  }
+
+  .ds-footer-button {
+    padding: 6px 10px;
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .ds-sidebar-footer {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .ds-chat-header {
+    padding: 12px 20px;
+  }
+
+  .ds-chat-header h1 {
+    font-size: 18px;
+  }
+
+  .ds-welcome-logo img {
+    width: 45px;
+    height: 45px;
+  }
+
+  .ds-welcome-message h2 {
+    font-size: 20px;
+  }
+
+  .ds-welcome-message p {
+    font-size: 14px;
+  }
+
+  .ds-chat-messages {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .ds-avatar-image {
+    height: 32px;
+    width: 32px;
+  }
+
+  .ds-message-content h2 {
+    font-size: 16px;
+  }
+
+  .ds-message-content p {
+    font-size: 14px;
+  }
+
+  .ds-chat-input-container {
+    padding: 12px 20px;
+  }
+
+  .ds-chat-input {
+    padding: 22px 14px;
+    padding-right: 44px;
+    font-size: 14px;
+    border-radius: 0.75rem;
+  }
+
+  .ds-disclaimer {
+    font-size: 11px;
+  }
+
+  .options-sidebar {
+    font-size: 13px;
+  }
+
+  .ds-show-more-button {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .ds-chat-section {
+    margin-bottom: 20px;
+  }
+
+  .ds-new-chat-highlight {
+    margin-bottom: 12px;
+  }
+
+  /* Restaurar body en desktop */
+  body {
+    position: static;
+    overflow: auto;
+    height: auto;
+  }
+
+  .ds-chat-delete-button {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Fixes específicos para Safari móvil */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .ds-home-container {
+      height: -webkit-fill-available;
+    }
+
+    .ds-sidebar-mobile-open,
+    .ds-sidebar-mobile-closed {
+      height: -webkit-fill-available;
+    }
+
+    body {
+      height: -webkit-fill-available;
+    }
+
+    /* Prevenir el rubber band scrolling */
+    body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: auto;
+    }
+  }
+}
+
+.ds-search-input::placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.ds-user-modal-sidebar {
+  padding: 12px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modal del usuario - Ventana centrada */
+.ds-user-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+}
+
+.ds-user-modal {
+  background: #f8f6f7;
+  border-radius: 16px !important;
+  width: 100% !important;
+  max-width: 700px !important;
+  height: 500px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ds-user-modal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 20px 24px !important;
+  flex-shrink: 0 !important;
+}
+
+.ds-user-modal-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+  margin: 0 !important;
+}
+
+.ds-user-modal-close {
+  background: none !important;
+  border: none !important;
+  font-size: 20px !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.ds-user-modal-close:hover {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+.ds-user-modal-content {
+  display: flex !important;
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+
+.ds-user-modal-main {
+  flex: 1 !important;
+  padding: 24px !important;
+  overflow-y: auto !important;
+}
+
+.ds-modal-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 4px;
+  border: none;
+  background: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.25rem;
+  font-weight: 700;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.ds-modal-nav-item:hover {
+  background-color: #eeeced !important;
+  color: #374151 !important;
+}
+
+.ds-modal-nav-item.active {
+  background-color: #e5e7eb;
+  color: #111827;
+  font-weight: 700;
+}
+
+.ds-modal-nav-item svg {
+  flex-shrink: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.ds-user-profile-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  border-radius: 8px !important;
+}
+
+.ds-user-avatar-large {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  background-color: #009688 !important;
+  color: white !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  font-weight: bold !important;
+  font-size: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+.ds-user-info-large {
+  flex: 1 !important;
+}
+
+.ds-user-name-large {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+  margin-bottom: 2px !important;
+}
+
+.ds-user-email-large {
+  font-size: 14px !important;
+  color: #6b7280 !important;
+}
+
+.ds-admin-btn {
+  background: none !important;
+  border: 1px solid #05050514;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 14px !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-weight: 500 !important;
+}
+
+.ds-admin-btn:hover {
+  background-color: #e5e7eb !important;
+  border-color: 1px solid #05050514;
+}
+
+.ds-connect-section {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 0 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin-bottom: 16px !important;
+}
+
+.ds-connect-text {
+  font-size: 14px !important;
+  color: #374151 !important;
+}
+
+.ds-connect-btn {
+  background-color: #1976d2 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  font-weight: 500 !important;
+}
+
+.ds-connect-btn:hover {
+  background-color: #1565c0 !important;
+}
+
+.ds-language-section {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 0 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin-bottom: 16px !important;
+}
+
+.ds-language-text {
+  font-size: 14px !important;
+  color: #374151 !important;
+}
+
+.ds-logout-btn {
+  background-color: #dc2626 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  font-weight: 500 !important;
+}
+
+.ds-logout-btn:hover {
+  background-color: #b91c1c !important;
+}
+
+.ds-id-section {
+  font-size: 12px !important;
+  color: #9ca3af !important;
+  margin-bottom: 16px !important;
+}
+
+.ds-promo-section {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  color: white !important;
+}
+
+.ds-promo-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.ds-promo-logo {
+  width: 20px !important;
+  height: 20px !important;
+  background-color: #4ade80 !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: bold !important;
+  font-size: 10px !important;
+  color: #000 !important;
+}
+
+.ds-promo-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+.ds-promo-text {
+  font-size: 12px !important;
+  color: #d1d5db !important;
+  margin-bottom: 12px !important;
+}
+
+.ds-promo-btn {
+  background-color: white !important;
+  color: #1a1a1a !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.ds-promo-btn:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.ds-sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ds-sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ds-sidebar-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.ds-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.ds-chat-messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ds-chat-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ds-chat-messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.ds-chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.ds-admin-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ds-admin-options h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ds-admin-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.ds-admin-option-btn:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.ds-admin-option-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.ds-admin-option-btn.ds-admin-danger {
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.ds-admin-option-btn.ds-admin-danger:hover {
+  background-color: #fef2f2;
+  border-color: #f87171;
+}
+
+/* Modal de búsqueda - Exactamente como buscarB.png */
+.ds-search-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+}
+
+.ds-search-modal {
+  background: #ffff;
+  border-radius: 16px !important;
+  width: 100% !important;
+  max-width: 700px !important;
+  height: 500px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden;
+}
+
+.ds-search-field-container {
+  flex-shrink: 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ds-search-results-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+
+
+.ds-search-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ds-search-field-input {
+  width: 100%;
+  padding: 12px 48px 12px 33px;
+border: none;
+  font-size: 16px;
+  background-color: #ffff;
+  transition: all 0.2s ease;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.ds-search-field-input:focus {
+  outline: none;
+
+  background-color: white;
+
+}
+
+.ds-search-field-input::placeholder {
+  color: #9ca3af;
+}
+
+.ds-search-field-icon {
+  position: absolute;
+  right: 16px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Secciones */
+.ds-search-section {
+  margin-bottom: 8px;
+}
+
+.ds-search-section:last-child {
+  margin-bottom: 0;
+}
+
+.ds-search-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 33px;
+  margin-bottom: 4px;
+  border-top: 1px solid #05050514;
+}
+
+.ds-search-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ds-search-section-action {
+  font-size: 14px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.ds-search-section-action:hover {
+  color: #6b7280;
+}
+
+/* Acciones */
+.ds-search-actions {
+  padding: 0 24px 16px 24px;
+}
+
+.ds-search-action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.ds-search-action-item:hover {
+  background-color: #f9fafb;
+}
+
+.ds-search-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+}
+
+/* Resultados de búsqueda */
+.ds-search-results {
+  padding: 0 24px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ds-search-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ds-search-result-item:hover {
+  background-color: #f9fafb;
+}
+
+.ds-search-result-title {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 400;
+  flex: 1;
+  margin-right: 16px;
+}
+
+.ds-search-result-time {
+  font-size: 14px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* Scrollbar para el modal de búsqueda */
+.ds-search-results-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ds-search-results-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ds-search-results-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.ds-search-results-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive para el modal de búsqueda */
+@media (max-width: 768px) {
+  .ds-search-modal {
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    margin: 20px;
+  }
+
+  .ds-search-section-header {
+    padding: 8px 20px;
+  }
+
+  .ds-search-actions {
+    padding: 0 20px 12px 20px;
+  }
+
+  .ds-search-results {
+    padding: 0 20px 12px 20px;
+  }
+}
+
+

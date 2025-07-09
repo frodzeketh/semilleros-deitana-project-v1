@@ -17,10 +17,19 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [needsSetup, setNeedsSetup] = useState(false)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
+      // Verificar si el usuario necesita configuración inicial
+      if (user) {
+        // Si no tiene displayName o es muy corto, necesita configuración
+        const needsConfig = !user.displayName || user.displayName.trim().length < 2
+        setNeedsSetup(needsConfig)
+      } else {
+        setNeedsSetup(false)
+      }
       setLoading(false)
     })
 
@@ -36,10 +45,17 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Función para marcar que el usuario completó la configuración
+  const completeSetup = () => {
+    setNeedsSetup(false)
+  }
+
   const value = {
     user,
     loading,
+    needsSetup,
     logout,
+    completeSetup,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -14,14 +14,18 @@ const Login = () => {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
-  const { user, loading } = useAuth()
+  const { user, loading, needsSetup } = useAuth()
 
-  // Si el usuario ya está autenticado y el contexto terminó de cargar, redirigir al home
+  // Si el usuario ya está autenticado, redirigir según su estado
   useEffect(() => {
     if (!loading && user && user.uid) {
-      navigate("/home", { replace: true })
+      if (needsSetup) {
+        navigate("/configuser", { replace: true })
+      } else {
+        navigate("/home", { replace: true })
+      }
     }
-  }, [user, loading, navigate])
+  }, [user, loading, needsSetup, navigate])
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {

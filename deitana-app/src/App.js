@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Home from "../src/components/Home"
 import Login from "../src/components/Login"
+import SetDisplayName from "../src/components/DisplayName/SetDisplayName"
 import ProtectedRoute from "../src/components/ProtectedRoute"
+import SetupRoute from "../src/components/SetupRoute"
 import { AuthProvider } from "../src/context/AuthContext"
 
 export default function App() {
@@ -10,12 +12,22 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route 
+            path="/configuser" 
+            element={
+              <ProtectedRoute>
+                <SetDisplayName />
+              </ProtectedRoute>
+            } 
+          />
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
+              <SetupRoute>
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              </SetupRoute>
             }
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
