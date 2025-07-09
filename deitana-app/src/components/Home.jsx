@@ -42,6 +42,11 @@ const Home = () => {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeHeaderOption, setActiveHeaderOption] = useState("chat")
 
+  // Estados para el drag del bottom sheet en móvil
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragY, setDragY] = useState(0)
+  const [startY, setStartY] = useState(0)
+
   // Obtener la función de logout del contexto de autenticación
   const { logout, user } = useAuth()
 
@@ -443,6 +448,75 @@ const Home = () => {
   }
 
   const isChatEmpty = chatMessages.length === 0 && !isTyping
+
+  // Funciones para drag del bottom sheet iOS
+  const handleTouchStart = (e) => {
+    setIsDragging(true)
+    setStartY(e.touches[0].clientY)
+  }
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return
+
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - startY
+
+    if (deltaY > 0) {
+      setDragY(deltaY)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+
+    if (dragY > 100) {
+      setUserMenuOpen(false)
+      // Resetear al menú principal cuando se cierra
+      setTimeout(() => setModalView("main"), 300)
+    }
+
+    setDragY(0)
+  }
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true)
+    setStartY(e.clientY)
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return
+
+    const currentY = e.clientY
+    const deltaY = currentY - startY
+
+    if (deltaY > 0) {
+      setDragY(deltaY)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+
+    if (dragY > 100) {
+      setUserMenuOpen(false)
+      // Resetear al menú principal cuando se cierra
+      setTimeout(() => setModalView("main"), 300)
+    }
+
+    setDragY(0)
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove)
+        document.removeEventListener("mouseup", handleMouseUp)
+      }
+    }
+  }, [isDragging, startY, dragY])
 
   // Añadir estilos CSS para el indicador de escritura en línea
   useEffect(() => {
@@ -1162,7 +1236,260 @@ const Home = () => {
         </div>
       </div>
 
-      {userMenuOpen && (
+      {/* Backdrop */}
+      {userMenuOpen && <div className="modal-backdrop" onClick={() => {
+          setUserMenuOpen(false)
+          // Resetear al menú principal cuando se cierra
+          setTimeout(() => setModalView("main"), 300)
+        }} />}
+
+      {/* Bottom Sheet para móvil */}
+      {isMobile && userMenuOpen && (
+        <div
+          className={`modal-sheet ${userMenuOpen ? "modal-open" : ""}`}
+          style={{
+            transform: `translateY(${dragY}px)`,
+            transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="modal-handle" />
+
+          <div className="modal-content">
+            {/* Header con botón de volver atrás si no estamos en el menú principal */}
+            {modalView !== "main" && modalView !== "" && modalView ? (
+              <div className="modal-header-with-back">
+                <button className="back-button" onClick={() => setModalView("main")}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5m7-7l-7 7 7 7" />
+                  </svg>
+                </button>
+                <h2 className="modal-title">
+                  {modalView === "account" ? "Cuenta" :
+                   modalView === "appearance" ? "Configuración" :
+                   modalView === "behavior" ? "Comportamiento" :
+                   modalView === "personalize" ? "Personalizar" :
+                   modalView === "data" ? "Controles de datos" :
+                   modalView === "apps" ? "Apps conectadas" : "Configuración"}
+                </h2>
+                <div className="back-button-spacer"></div>
+              </div>
+            ) : (
+              <h2 className="modal-title">Configuración</h2>
+            )}
+
+            {/* Menú principal */}
+            {(modalView === "main" || modalView === "" || !modalView) && (
+              <div className="menu-list">
+              <div className="menu-item" onClick={() => setModalView("account")}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </span>
+                <span className="menu-title">Cuenta</span>
+                <span className="menu-arrow">›</span>
+              </div>
+              <div className="menu-item" onClick={() => setModalView("appearance")}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+                    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                  </svg>
+                </span>
+                <span className="menu-title">Configuración</span>
+                <span className="menu-arrow">›</span>
+              </div>
+              <div className="menu-item" onClick={() => setModalView("behavior")}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                </span>
+                <span className="menu-title">Comportamiento</span>
+                <span className="menu-arrow">›</span>
+              </div>
+              <div className="menu-item" onClick={() => setModalView("personalize")}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 0 1-1.73V4a2 2 0 0 0-2-2z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </span>
+                <span className="menu-title">Personalizar</span>
+                <span className="menu-arrow">›</span>
+              </div>
+              <div className="menu-item" onClick={() => setModalView("data")}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <rect x="9" y="9" width="6" height="6" />
+                    <path d="M9 1v6M15 1v6M9 21v-6M15 21v-6M1 9h6M1 15h6M21 9h-6M21 15h-6" />
+                  </svg>
+                </span>
+                <span className="menu-title">Controles de datos</span>
+                <span className="menu-arrow">›</span>
+              </div>
+              <div className="menu-item" onClick={() => setModalView("apps")}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <rect x="9" y="9" width="6" height="6" />
+                    <path d="M9 1v6M15 1v6M9 21v-6M15 21v-6M1 9h6M1 15h6M21 9h-6M21 15h-6" />
+                  </svg>
+                </span>
+                <span className="menu-title">Apps conectadas</span>
+                <span className="menu-arrow">›</span>
+              </div>
+              <div className="menu-item" onClick={handleLogout}>
+                <span className="menu-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m0 14l6-6-6-6m6 6H9" />
+                  </svg>
+                </span>
+                <span className="menu-title">Cerrar sesión</span>
+                <span className="menu-arrow">›</span>
+              </div>
+            </div>
+            )}
+
+            {/* Contenido específico de cada sección */}
+            {modalView === "account" && (
+              <div className="section-content">
+                <div className="ds-user-profile-card">
+                  <div className="ds-user-avatar-large">
+                    <span>{getUserInitials()}</span>
+                  </div>
+                  <div className="ds-user-info-large">
+                    <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
+                    <div className="ds-user-email-large">{user?.email || ""}</div>
+                  </div>
+                  <button className="ds-admin-btn" onClick={() => setModalView("admin")}>
+                    Administrar
+                  </button>
+                </div>
+                <div className="ds-id-section">{user?.uid || ""}</div>
+              </div>
+            )}
+
+            {modalView === "appearance" && (
+              <div className="section-content">
+                <div className="ds-config-section">
+                  <div className="ds-config-item">
+                    <label className="ds-config-label">Imagen</label>
+                    <div className="ds-profile-image-section">
+                      <div className="ds-user-avatar-config">
+                        <span>{getUserInitials()}</span>
+                      </div>
+                      <button className="ds-edit-image-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                        Editar imagen
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="ds-config-item">
+                    <label className="ds-config-label">Nombre</label>
+                    <div className="ds-input-with-button">
+                      <input
+                        type="text"
+                        className="ds-config-input"
+                        defaultValue={user?.displayName || ""}
+                        placeholder="Ingresa tu nombre"
+                      />
+                      <button className="ds-input-button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="ds-config-actions">
+                    <button className="ds-save-config-btn">Guardar cambios</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {modalView === "behavior" && (
+              <div className="section-content">
+                <p>Configuración de comportamiento próximamente...</p>
+              </div>
+            )}
+
+            {modalView === "personalize" && (
+              <div className="section-content">
+                <p>Opciones de personalización próximamente...</p>
+              </div>
+            )}
+
+            {modalView === "data" && (
+              <div className="section-content">
+                <p>Controles de datos próximamente...</p>
+              </div>
+            )}
+
+            {modalView === "apps" && (
+              <div className="section-content">
+                <p>Apps conectadas próximamente...</p>
+              </div>
+            )}
+
+            {modalView === "admin" && (
+              <div className="section-content">
+                <div className="ds-admin-options">
+                  <h3>Administrar cuenta</h3>
+                  <button className="ds-admin-option-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span>Cambiar Nombre</span>
+                  </button>
+                  <button className="ds-admin-option-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <circle cx="12" cy="16" r="1" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>Cambiar contraseña</span>
+                  </button>
+                  <button className="ds-admin-option-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    <span>Cambiar email</span>
+                  </button>
+                  <button className="ds-admin-option-btn ds-admin-danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3,6 5,6 21,6" />
+                      <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    <span>Eliminar cuenta</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Desktop */}
+      {!isMobile && userMenuOpen && (
         <div className="ds-user-modal-overlay" onClick={() => setUserMenuOpen(false)}>
           <div className="ds-user-modal" onClick={(e) => e.stopPropagation()}>
             <div className="ds-user-modal-header">
