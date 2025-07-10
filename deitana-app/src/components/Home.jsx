@@ -343,12 +343,16 @@ const Home = () => {
         if (buffer.trim()) {
           fullResponse += buffer
           
+          // Capturar variables para evitar problemas de closure
+          const messageId = botMessage.id
+          const currentResponse = fullResponse
+          
           setChatMessages((prev) =>
             prev.map((msg) =>
-              msg.id === botMessage.id
+              msg.id === messageId
                 ? {
                     ...msg,
-                    text: fullResponse,
+                    text: currentResponse,
                     isStreaming: true,
                   }
                 : msg,
@@ -413,13 +417,17 @@ const Home = () => {
                   flushBuffer() // Mostrar lo que quede en el buffer
                 }
                 
+                // Capturar variables en el scope para evitar problemas de closure
+                const messageId = botMessage.id
+                const finalResponse = data.fullResponse || fullResponse
+                
                 // Finalizar el streaming
                 setChatMessages((prev) =>
                   prev.map((msg) =>
-                    msg.id === botMessage.id
+                    msg.id === messageId
                       ? {
                           ...msg,
-                          text: data.fullResponse || fullResponse,
+                          text: finalResponse,
                           isStreaming: false, // Finalizar streaming
                         }
                       : msg,
@@ -447,10 +455,13 @@ const Home = () => {
     } catch (error) {
       console.error("❌ [FRONTEND] Error en streaming:", error)
       
+      // Capturar variable para evitar problemas de closure
+      const messageId = botMessage.id
+      
       // Actualizar el mensaje del bot con el error
       setChatMessages((prev) =>
         prev.map((msg) =>
-          msg.id === botMessage.id
+          msg.id === messageId
             ? {
                 ...msg,
                 text: "Hubo un error al conectarse con el servidor. Por favor, intenta de nuevo.",
