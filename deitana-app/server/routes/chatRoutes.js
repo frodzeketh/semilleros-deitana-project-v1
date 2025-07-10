@@ -3,9 +3,43 @@ const router = express.Router();
 const { verifyToken, isAdmin, isEmployee } = require('../middleware/authMiddleware');
 const chatManager = require('../utils/chatManager');
 const { adminEmails } = require('../adminEmails');
+const { processQueryStream } = require('../admin/core/openAI');
 
 // Middleware para todas las rutas
 router.use(verifyToken);
+
+// =====================================
+// RUTA PARA STREAMING EN TIEMPO REAL
+// =====================================
+router.post('/stream', async (req, res) => {
+    try {
+        const { message } = req.body;
+        const userId = req.user.uid;
+        
+        console.log('🚀 [STREAM-ROUTE] Iniciando streaming para usuario:', userId);
+        console.log('🚀 [STREAM-ROUTE] Mensaje:', message);
+        
+        // Llamar a la función de streaming que maneja la respuesta
+        await processQueryStream({ 
+            message, 
+            userId, 
+            response: res 
+        });
+        
+        // La respuesta ya fue enviada por processQueryStream
+        console.log('✅ [STREAM-ROUTE] Stream completado exitosamente');
+        
+    } catch (error) {
+        console.error('❌ [STREAM-ROUTE] Error en streaming:', error);
+        
+        if (!res.headersSent) {
+            res.status(500).json({ 
+                success: false, 
+                error: 'Error interno del servidor en streaming' 
+            });
+        }
+    }
+});
 
 // Rutas para empleados
 router.post('/employee/chat', isEmployee, async (req, res) => {

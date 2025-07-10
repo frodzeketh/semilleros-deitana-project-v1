@@ -727,19 +727,31 @@ async function processQuery({ message, userId }) {
     // const trace = langfuseUtils.iniciarTrace('consulta-optimizada', userId, message);
     
     try {
-        await saveMessageToFirestore(userId, message);
-        console.log('💾 [FIRESTORE] Guardando mensaje del usuario...');
+        // No esperar a que termine de guardar - hacer async
+        saveMessageToFirestore(userId, message).catch(err => 
+            console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
+        );
+        console.log('💾 [FIRESTORE] Guardando mensaje del usuario (async)...');
 
         // =====================================
-        // OBTENER CONTEXTO DE MEMORIA
+        // OBTENER CONTEXTO DE MEMORIA (SOLO CUANDO ES NECESARIO)
         // =====================================
         
-        console.log('🧠 [MEMORIA] Recuperando contexto conversacional...');
+        console.log('🧠 [MEMORIA] Analizando si necesita contexto conversacional...');
         let contextoPinecone = '';
-        try {
-            contextoPinecone = await pineconeMemoria.agregarContextoMemoria(userId, message);
-        } catch (error) {
-            console.error('❌ [PINECONE] Error buscando recuerdos:', error.message);
+        
+        // Solo buscar memoria para consultas que realmente la necesiten
+        const consultasQueNecesitanMemoria = /\b(anterior|antes|mencionaste|dijiste|conversación|conversacion|hablamos|recordar|recuerdas|me|mi)\b/i;
+        
+        if (consultasQueNecesitanMemoria.test(message)) {
+            console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
+            try {
+                contextoPinecone = await pineconeMemoria.agregarContextoMemoria(userId, message);
+            } catch (error) {
+                console.error('❌ [PINECONE] Error buscando recuerdos:', error.message);
+            }
+        } else {
+            console.log('⚡ [OPTIMIZACIÓN] Consulta simple - saltando búsqueda de memoria');
         }
 
         // =====================================
@@ -862,17 +874,24 @@ async function processQuery({ message, userId }) {
                     console.log('📋 [RAG-SQL] Respuesta combinada:', finalMessage.substring(0, 200) + '...');
                     console.log('📋 [RAG-SQL] Longitud:', finalMessage.length, 'caracteres');
                     
-                    await saveAssistantMessageToFirestore(userId, finalMessage);
-                    console.log('✅ [SISTEMA] Respuesta RAG+SQL enviada correctamente');
+                    // Guardar async para no bloquear la respuesta
+                    saveAssistantMessageToFirestore(userId, finalMessage).catch(err =>
+                        console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
+                    );
+                    console.log('✅ [SISTEMA] Respuesta RAG+SQL enviada correctamente (async)');
                     console.log('🎯 [RESUMEN] RAG+SQL EXITOSO: Información contextual + ejemplos concretos');
                     
-                    // Guardado en memoria para RAG+SQL
-                    try {
-                        console.log('💾 [PINECONE] Guardando conversación RAG+SQL en memoria semántica...');
-                        await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
-                        console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-                                        } catch (error) {
-                        console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                    // Guardado en memoria para RAG+SQL (solo si es importante)
+                    if (finalMessage.length > 200 || message.includes('proceso') || message.includes('procedimiento')) {
+                        try {
+                            console.log('💾 [PINECONE] Guardando conversación RAG+SQL importante en memoria...');
+                            await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
+                            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+                        } catch (error) {
+                            console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                        }
+                    } else {
+                        console.log('⚡ [OPTIMIZACIÓN] Respuesta simple - saltando guardado en memoria');
                     }
                     
                     const tiempoTotal = Date.now() - tiempoInicio;
@@ -899,18 +918,25 @@ async function processQuery({ message, userId }) {
                         console.log('📋 [RESPUESTA-FINAL] Respuesta optimizada:', finalMessage.substring(0, 200) + '...');
                 console.log('📋 [RESPUESTA-FINAL] Longitud:', finalMessage.length, 'caracteres');
                 
-                await saveAssistantMessageToFirestore(userId, finalMessage);
-                console.log('✅ [SISTEMA] Respuesta final enviada correctamente');
+                                        // Guardar async para no bloquear la respuesta
+                        saveAssistantMessageToFirestore(userId, finalMessage).catch(err =>
+                            console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
+                        );
+                        console.log('✅ [SISTEMA] Respuesta final enviada correctamente (async)');
                         console.log('🎯 [RESUMEN] OPTIMIZACIÓN EXITOSA: Una sola llamada GPT generó respuesta completa');
                 
-                        // Continuar con el guardado en memoria
-                try {
-                    console.log('💾 [PINECONE] Guardando conversación en memoria semántica...');
-                    await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
-                    console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-                } catch (error) {
-                    console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
-                }
+                        // Guardado en memoria (solo si es importante)
+                        if (finalMessage.length > 200 || message.includes('total') || message.includes('reporte')) {
+                            try {
+                                console.log('💾 [PINECONE] Guardando resultado importante en memoria...');
+                                await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
+                                console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+                            } catch (error) {
+                                console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                            }
+                        } else {
+                            console.log('⚡ [OPTIMIZACIÓN] Resultado simple - saltando guardado en memoria');
+                        }
                 
                 const tiempoTotal = Date.now() - tiempoInicio;
                         console.log('📊 [MÉTRICAS] Tiempo total:', tiempoTotal, 'ms');
@@ -923,15 +949,23 @@ async function processQuery({ message, userId }) {
                         // No hay SQL, puede ser respuesta conversacional
                         console.log('ℹ️ [CONVERSACION] No se detectó SQL, procesando como conversación');
                         
-                        await saveAssistantMessageToFirestore(userId, respuestaIA);
-                        console.log('✅ [SISTEMA] Respuesta conversacional enviada');
+                        // Guardar async para no bloquear la respuesta
+                        saveAssistantMessageToFirestore(userId, respuestaIA).catch(err =>
+                            console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
+                        );
+                        console.log('✅ [SISTEMA] Respuesta conversacional enviada (async)');
                         
-                        // Guardado en memoria
-                        try {
-                            await pineconeMemoria.guardarAutomatico(userId, message, respuestaIA);
-                            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-            } catch (error) {
-                            console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                        // Guardado en memoria (solo si es importante)
+                        if (respuestaIA.length > 400 || message.includes('importante') || message.includes('recuerda') || message.includes('proceso') || message.includes('procedimiento')) {
+                            try {
+                                console.log('💾 [PINECONE] Guardando conversación importante en memoria...');
+                                await pineconeMemoria.guardarAutomatico(userId, message, respuestaIA);
+                                console.log('✅ [PINECONE] Memoria actualizada exitosamente');
+                            } catch (error) {
+                                console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                            }
+                        } else {
+                            console.log('⚡ [OPTIMIZACIÓN] Conversación simple - saltando guardado en memoria');
                         }
                         
                         const tiempoTotal = Date.now() - tiempoInicio;
@@ -973,13 +1007,8 @@ async function processQuery({ message, userId }) {
         await saveAssistantMessageToFirestore(userId, fallbackResponse.data.message);
         console.log('✅ [FALLBACK] Respuesta de fallback enviada');
         
-        // Guardado en memoria
-        try {
-            await pineconeMemoria.guardarAutomatico(userId, message, fallbackResponse.data.message);
-            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-        } catch (error) {
-            console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
-        }
+        // No guardar fallbacks en memoria - no aportan valor
+        console.log('⚡ [OPTIMIZACIÓN] Fallback - no guardando en memoria');
         
         const tiempoTotal = Date.now() - tiempoInicio;
         console.log('📊 [MÉTRICAS] Tiempo total:', tiempoTotal, 'ms');
@@ -998,13 +1027,8 @@ async function processQuery({ message, userId }) {
         
         console.log('🚨 [SISTEMA-ERROR] Respuesta de error enviada al usuario');
         
-        // Guardado en memoria
-        try {
-            await pineconeMemoria.guardarAutomatico(userId, message, errorMessage);
-            console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-        } catch (memoryError) {
-            console.error('❌ [PINECONE] Error guardando en memoria:', memoryError.message);
-        }
+        // No guardar errores en memoria - no aportan valor
+        console.log('⚡ [OPTIMIZACIÓN] Error - no guardando en memoria');
         
         const tiempoTotal = Date.now() - tiempoInicio;
         console.log('📊 [MÉTRICAS] Tiempo total:', tiempoTotal, 'ms');
@@ -1018,6 +1042,197 @@ async function processQuery({ message, userId }) {
 }
 
 // =====================================
+// FUNCIÓN STREAMING PARA TIEMPO REAL
+// =====================================
+
+async function processQueryStream({ message, userId, response }) {
+    const tiempoInicio = Date.now();
+    console.log('🚀 [STREAMING] ===== INICIANDO PROCESO DE CONSULTA CON STREAMING =====');
+    console.log('🚀 [STREAMING] Procesando consulta:', message);
+    console.log('🚀 [STREAMING] Usuario ID:', userId);
+
+    try {
+        // No esperar a que termine de guardar - hacer async
+        saveMessageToFirestore(userId, message).catch(err => 
+            console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
+        );
+        console.log('💾 [FIRESTORE] Guardando mensaje del usuario (async)...');
+
+        // =====================================
+        // OBTENER CONTEXTO DE MEMORIA (SOLO CUANDO ES NECESARIO)
+        // =====================================
+        
+        console.log('🧠 [MEMORIA] Analizando si necesita contexto conversacional...');
+        let contextoPinecone = '';
+        
+        // Solo buscar memoria para consultas que realmente la necesiten
+        const consultasQueNecesitanMemoria = /\b(anterior|antes|mencionaste|dijiste|conversación|conversacion|hablamos|recordar|recuerdas|me|mi)\b/i;
+        
+        if (consultasQueNecesitanMemoria.test(message)) {
+            console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
+            try {
+                contextoPinecone = await pineconeMemoria.agregarContextoMemoria(userId, message);
+            } catch (error) {
+                console.error('❌ [PINECONE] Error buscando recuerdos:', error.message);
+            }
+        } else {
+            console.log('⚡ [OPTIMIZACIÓN] Consulta simple - saltando búsqueda de memoria');
+        }
+
+        // =====================================
+        // CONSTRUIR PROMPT OPTIMIZADO (SIN LLAMADAS IA)
+        // =====================================
+        
+        console.log('🧠 [IA-INTELIGENTE] Construyendo prompt OPTIMIZADO...');
+        const promptBuilder = await construirPromptInteligente(
+            message, 
+            mapaERP,
+            openai,
+            contextoPinecone, 
+            lastRealData || '',
+            false
+        );
+        
+        console.log('🧠 [IA-INTELIGENTE] Métricas de construcción:');
+        console.log('🧠 [IA-INTELIGENTE] Intención detectada:', promptBuilder.intencion);
+        console.log('🧠 [IA-INTELIGENTE] Modelo seleccionado:', promptBuilder.configModelo.modelo);
+
+        // =====================================
+        // CONFIGURAR MENSAJES PARA STREAMING
+        // =====================================
+
+        const mensajesLlamada = [
+            {
+                role: 'system',
+                content: promptBuilder.prompt
+            },
+            {
+                role: 'user', 
+                content: message
+            }
+        ];
+
+        console.log('📊 [STREAMING] Iniciando llamada con stream a OpenAI...');
+        console.log('🤖 [MODELO-DINÁMICO] Usando modelo:', promptBuilder.configModelo.modelo);
+
+        // =====================================
+        // LLAMADA CON STREAMING
+        // =====================================
+
+        // Configurar headers para streaming
+        response.writeHead(200, {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Transfer-Encoding': 'chunked',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+        });
+
+        let fullResponse = '';
+        let tokenCount = 0;
+
+        try {
+            const stream = await openai.chat.completions.create({
+                model: promptBuilder.configModelo.modelo,
+                messages: mensajesLlamada,
+                max_tokens: promptBuilder.configModelo.maxTokens,
+                temperature: promptBuilder.configModelo.temperature,
+                stream: true  // ¡AQUÍ ESTÁ LA MAGIA!
+            });
+
+            console.log('✅ [STREAMING] Stream iniciado correctamente');
+
+            // Procesar cada chunk del stream
+            for await (const chunk of stream) {
+                const content = chunk.choices[0]?.delta?.content;
+                
+                if (content) {
+                    fullResponse += content;
+                    tokenCount++;
+                    
+                    // Enviar chunk al frontend
+                    response.write(JSON.stringify({
+                        type: 'chunk',
+                        content: content,
+                        timestamp: Date.now()
+                    }) + '\n');
+                }
+                
+                // Si el stream terminó
+                if (chunk.choices[0]?.finish_reason) {
+                    console.log('✅ [STREAMING] Stream completado');
+                    break;
+                }
+            }
+
+            // Enviar señal de finalización
+            response.write(JSON.stringify({
+                type: 'end',
+                fullResponse: fullResponse,
+                tokenCount: tokenCount,
+                timestamp: Date.now()
+            }) + '\n');
+
+            response.end();
+
+            // =====================================
+            // POST-PROCESAMIENTO (ASYNC)
+            // =====================================
+
+            // Guardar respuesta completa en Firestore (async)
+            saveAssistantMessageToFirestore(userId, fullResponse).catch(err =>
+                console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
+            );
+
+            // Guardar en memoria solo si es importante (async)
+            if (fullResponse.length > 400 || message.includes('importante') || message.includes('recuerda')) {
+                try {
+                    pineconeMemoria.guardarAutomatico(userId, message, fullResponse).catch(err =>
+                        console.error('❌ [PINECONE] Error guardando en memoria:', err.message)
+                    );
+                } catch (error) {
+                    console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
+                }
+            }
+
+            const tiempoTotal = Date.now() - tiempoInicio;
+            console.log('📊 [STREAMING] Tiempo total:', tiempoTotal, 'ms');
+            console.log('📊 [STREAMING] Tokens generados:', tokenCount);
+            console.log('📊 [STREAMING] Respuesta completa enviada exitosamente');
+
+            return { success: true, streamed: true };
+
+        } catch (streamError) {
+            console.error('❌ [STREAMING] Error en stream:', streamError);
+            
+            // Enviar error al frontend
+            response.write(JSON.stringify({
+                type: 'error',
+                message: 'Error en el streaming',
+                timestamp: Date.now()
+            }) + '\n');
+            
+            response.end();
+            return { success: false, error: streamError.message };
+        }
+
+    } catch (error) {
+        console.error('❌ [STREAMING] Error crítico:', error);
+        
+        if (!response.headersSent) {
+            response.writeHead(500, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({ 
+                success: false, 
+                error: 'Error interno del servidor' 
+            }));
+        }
+        
+        return { success: false, error: error.message };
+    }
+}
+
+// =====================================
 // MÓDULO DE EXPORTACIÓN
 // =====================================
 
@@ -1025,5 +1240,6 @@ async function processQuery({ message, userId }) {
  * Exportar la función principal para su uso en otros archivos
  */
 module.exports = {
-    processQuery
+    processQuery,
+    processQueryStream
 };

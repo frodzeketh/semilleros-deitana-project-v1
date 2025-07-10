@@ -24,7 +24,13 @@
     "firebase-admin": "^13.4.0",
     "langfuse": "^3.37.6",
     "mysql2": "^3.14.0",
-    "openai": "^4.98.0"
+    "openai": "^4.98.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-emoji": "^5.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"

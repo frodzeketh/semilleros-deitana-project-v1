@@ -7,6 +7,7 @@ const { sqlRules } = require('./sqlRules');
 const { formatoRespuesta } = require('./formatoRespuesta');
 const { ejemplosSQL, ejemplosConversacion } = require('./ejemplos');
 const { comportamiento, comportamientoAsistente } = require('./comportamiento');
+const { comportamientoChatGPT } = require('./comportamientoChatGPT');
 const ragInteligente = require('../core/ragInteligente');
 
 /**
@@ -158,7 +159,7 @@ function construirContextoMapaERP(tablasRelevantes, mapaERP) {
 function seleccionarModeloInteligente(intencion, tablasRelevantes) {
     // SIEMPRE usar GPT-4-turbo-preview como en la versión original que funcionaba
     const config = {
-        modelo: 'gpt-4-turbo-preview',
+        modelo: 'gpt-4o',
         maxTokens: 2000,
         temperature: 0.3,
         razon: 'Usar el modelo original que ya funcionaba correctamente para SQL'
@@ -175,74 +176,97 @@ function seleccionarModeloInteligente(intencion, tablasRelevantes) {
  * Construye instrucciones optimizadas para respuestas más naturales
  */
 function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
-    let instrucciones = `Eres el asistente de Semilleros Deitana, una empresa agrícola especializada en semillas y tomates.
+    // USAR EL NUEVO COMPORTAMIENTO CHATGPT COMPLETO
+    let instrucciones = comportamientoChatGPT + '\n\n';
+    
+    // Agregar contexto específico de la empresa
+    instrucciones += `
+## 🏢 CONTEXTO EMPRESARIAL
 
-IMPORTANTE: Responde de forma NATURAL y CONVERSACIONAL, como si fueras un empleado amigable de la empresa.
+Trabajas para **Semilleros Deitana**, empresa agrícola especializada en:
+- 🌱 Producción de semillas de tomate
+- 🍅 Cultivo y distribución de tomates
+- 🔬 Investigación y desarrollo de variedades
+- 🌿 Servicios de injertos y plántulas
+
+Los usuarios son **empleados de la empresa** que necesitan información para su trabajo diario.
 
 `;
 
-    // Instrucciones específicas según el tipo
+    // Instrucciones específicas según el tipo de consulta
     if (intencion.tipo === 'rag_sql') {
-        instrucciones += `PROCESO PARA CONSULTAS RAG + SQL COMBINADO:
-1. PRIMERO: Usa la información del conocimiento empresarial como GUÍA para explicar el contexto, procedimientos y tipos
-2. SEGUNDO: Si es apropiado, genera una consulta SQL para dar ejemplos concretos: <sql>SELECT...</sql>
-3. TERCERO: Combina la información del RAG con ejemplos de la base de datos
-4. Responde de forma NATURAL y CONVERSACIONAL
-5. Usa EXACTAMENTE las columnas que aparecen en la estructura de datos proporcionada
+        instrucciones += `
+## 🎯 PROCESO PARA CONSULTAS TÉCNICAS (RAG + SQL):
 
-IMPORTANTE: 
-- El conocimiento empresarial es una GUÍA, no la única fuente
-- SIEMPRE responde, incluso si no encuentras información específica
-- Si hay información en el RAG, úsala como base pero puedes complementar
-- Si no hay información específica, explica el concepto general
-- Prioriza ser útil y completo sobre ser restrictivo
+### 📚 **1. Usa el conocimiento empresarial como base**
+- El contexto de Pinecone contiene manuales y procedimientos
+- Úsalo como GUÍA principal para explicar procesos y conceptos
+- Siempre proporciona contexto antes de datos específicos
 
-EJEMPLOS:
-- Para bandejas: Explica tipos según cultivo (usando info del RAG), luego muestra ejemplos de la BD
-- Para procedimientos: Explica el proceso (usando info del RAG), luego busca ejemplos relevantes
-- Para cámaras: Explica el proceso (usando info del RAG), complementa con información general si es necesario
+### 📊 **2. Complementa con datos SQL cuando sea útil**
+- Si es apropiado, genera consulta SQL: \`<sql>SELECT...</sql>\`
+- Usa EXACTAMENTE las columnas de la estructura de datos
+- Explica qué muestra la consulta antes de generarla
+
+### 🤝 **3. Combina ambas fuentes inteligentemente**
+- Información de manuales + ejemplos reales de la base de datos
+- Explica el "por qué" usando manuales
+- Muestra el "qué" usando datos SQL
+
+### ✅ **4. IMPORTANTE:**
+- **SIEMPRE responde**, incluso sin información específica
+- Si no hay datos exactos, explica el concepto general
+- Ofrece alternativas y siguientes pasos
+- Sé útil y completo, no restrictivo
 
 `;
     } else if (intencion.tipo === 'sql') {
-        instrucciones += `PROCESO PARA CONSULTAS DE DATOS:
-1. Genera ÚNICAMENTE la consulta SQL en formato: <sql>SELECT...</sql>
-2. NO generes texto adicional antes o después del SQL
-3. Usa LIMIT para respetar cantidades específicas solicitadas
-4. IMPORTANTE: Usa EXACTAMENTE las columnas que aparecen en la estructura de datos proporcionada
-5. Para nombres/denominaciones, busca columnas que contengan "DENO" en su nombre
+        instrucciones += `
+## 📊 PROCESO PARA CONSULTAS DE DATOS:
 
-EJEMPLOS CORRECTOS:
-- "2 clientes" → <sql>SELECT CL_DENO FROM clientes LIMIT 2</sql>
-- "3 artículos" → <sql>SELECT AR_DENO FROM articulos LIMIT 3</sql>
-- "5 técnicos" → <sql>SELECT TN_DENO FROM tecnicos LIMIT 5</sql>
-- "4 almacenes" → <sql>SELECT AM_DENO FROM almacenes LIMIT 4</sql>
-- "10 bandejas" → <sql>SELECT BN_DENO FROM bandejas LIMIT 10</sql>
+### 🎯 **1. Genera consulta SQL apropiada**
+- Usa estructura de datos proporcionada exactamente
+- Formato: \`<sql>SELECT...</sql>\`
+- Explica qué hace la consulta antes de generarla
 
-IMPORTANTE: 
-- Revisa la estructura de datos proporcionada para usar las columnas correctas
-- SIEMPRE genera SQL válido, no te quedes sin responder
-- Si no encuentras la tabla exacta, usa la más similar disponible
+### 📝 **2. Interpreta resultados de forma natural**
+- No solo muestres datos, explica qué significan
+- Proporciona contexto y análisis
+- Sugiere acciones basadas en los resultados
 
 `;
-    } else if (intencion.tipo === 'conversacion') {
-        instrucciones += `RESPUESTAS CONVERSACIONALES:
-- Habla como empleado conocedor de la empresa
-- Usa información del archivo de conocimiento empresarial como GUÍA
-- Sé específico sobre Semilleros Deitana cuando sea posible
-- SIEMPRE responde de forma útil y completa
-- Si no tienes información específica, explica el concepto general
-- Pregunta qué más puede ayudar
+    } else {
+        instrucciones += `
+## 💬 PROCESO PARA CONVERSACIÓN GENERAL:
+
+### 🧠 **1. Respuesta inteligente y completa**
+- Usa tu conocimiento general sobre agricultura y semillas
+- Relaciona con el contexto de Semilleros Deitana cuando sea relevante
+- Proporciona ejemplos prácticos y actionables
+
+### 🔄 **2. Mantén la conversación fluida**
+- Ofrece seguir explorando temas relacionados
+- Proporciona sugerencias útiles para el trabajo del usuario
 
 `;
     }
 
-    // Añadir contexto de memoria si existe
-    if (contextoPinecone) {
-        instrucciones += `CONTEXTO DE CONVERSACIONES PREVIAS:
-${contextoPinecone}
+    // Recordatorio final sobre formato
+    instrucciones += `
+## 🎨 RECORDATORIO FINAL DE FORMATO:
 
+**OBLIGATORIO en cada respuesta:**
+- 🏷️ **Título con emoji** relevante
+- 📋 **Estructura organizada** con encabezados
+- ✅ **Listas con emojis** para puntos clave
+- 💡 **Blockquotes** para tips importantes
+- 🔧 **Código formateado** cuando corresponda
+- 📊 **Tablas** para comparaciones/datos
+- 😊 **Emojis apropiados** al contexto
+- 🤔 **Preguntas de seguimiento** útiles
+
+**¡Sé exactamente como ChatGPT: útil, inteligente y visualmente atractivo!** 🚀
 `;
-    }
 
     return instrucciones;
 }
@@ -277,9 +301,14 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 5. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone);
     
-    // 6. OBTENER CONOCIMIENTO RAG (solo para conversaciones y RAG+SQL)
+    // 6. OBTENER CONOCIMIENTO RAG (solo cuando realmente se necesita)
     let contextoRAG = '';
-    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') {
+    
+    // Skip RAG para consultas conversacionales simples
+    const consultasSimples = /(^hola|^hi|^buenos|^buenas|dime algo|cuéntame|cuentame|quién eres|quien eres|qué eres|que eres|sobre ti|acerca de ti|algo de ti|acerca tuyo|quien soy|quines eres)/i;
+    const esConsultaSimple = consultasSimples.test(mensaje.trim());
+    
+    if ((intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') && !esConsultaSimple) {
         try {
             console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
             contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
@@ -287,6 +316,8 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         } catch (error) {
             console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
         }
+    } else if (esConsultaSimple) {
+        console.log('⚡ [OPTIMIZACIÓN] Consulta simple detectada - saltando RAG');
     }
     
     // 7. Ensamblar prompt final

@@ -5,6 +5,14 @@ import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
 import { useSearchParams } from "react-router-dom"
+import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+import remarkEmoji from "remark-emoji"
+import rehypeKatex from "rehype-katex"
+import rehypeHighlight from "rehype-highlight"
+import rehypeRaw from "rehype-raw"
+import "katex/dist/katex.min.css"
+import "highlight.js/styles/github.css"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -269,9 +277,9 @@ const Home = () => {
     e.preventDefault()
     if (!message.trim()) return
 
-    console.log("=== INICIO ENVÍO DE MENSAJE ===")
-    console.log("Mensaje a enviar:", message)
-    console.log("Conversation ID actual:", currentConversationId)
+    console.log("🚀 [FRONTEND] === INICIO ENVÍO DE MENSAJE CON STREAMING ===")
+    console.log("🚀 [FRONTEND] Mensaje a enviar:", message)
+    console.log("🚀 [FRONTEND] Conversation ID actual:", currentConversationId)
 
     const userMessage = {
       id: Date.now(),
@@ -283,7 +291,7 @@ const Home = () => {
     setMessage("")
     setIsTyping(true)
 
-    // Crear mensaje del bot con estado de carga
+    // Crear mensaje del bot con estado de streaming
     const botMessage = {
       id: Date.now() + 1,
       text: "",
@@ -292,7 +300,7 @@ const Home = () => {
     }
 
     setChatMessages((prev) => {
-      console.log("Creando nuevo mensaje del bot:", botMessage)
+      console.log("🤖 [FRONTEND] Creando nuevo mensaje del bot:", botMessage)
       return [...prev, botMessage]
     })
 
@@ -302,105 +310,150 @@ const Home = () => {
         throw new Error("No hay usuario autenticado")
       }
 
-      console.log("Token obtenido, realizando petición al servidor...")
+      console.log("🔑 [FRONTEND] Token obtenido, iniciando streaming...")
 
-      // Si no hay conversación actual o es temporal, crear una nueva
-      if (!currentConversationId || currentConversationId.startsWith("temp_")) {
-        console.log("Creando nueva conversación...")
-        const response = await fetch(`${API_URL}/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ message }),
-        })
+      // =====================================
+      // NUEVA IMPLEMENTACIÓN CON STREAMING NATURAL
+      // =====================================
+      
+      const response = await fetch(`${API_URL}/api/chat/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message }),
+      })
 
-        if (!response.ok) {
-          throw new Error("Error al procesar el mensaje")
-        }
-
-        const data = await response.json()
-        if (!data.success) {
-          throw new Error(data.error || "Error al procesar el mensaje")
-        }
-
-        setCurrentConversationId(data.data.conversationId)
-
-        // Actualizar el mensaje del bot con la respuesta
-        setChatMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessage.id
-              ? {
-                  ...msg,
-                  text: data.data.message,
-                  isStreaming: false,
-                }
-              : msg,
-          ),
-        )
-
-        // Recargar el historial de chats
-        const historyResponse = await fetch(`${API_URL}/conversations`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!historyResponse.ok) {
-          throw new Error("Error al cargar el historial")
-        }
-
-        const historyData = await historyResponse.json()
-        if (historyData.success) {
-          setChatHistory(historyData.data)
-        }
-      } else {
-        // Si ya existe una conversación, enviar el mensaje
-        const response = await fetch(`${API_URL}/chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "Conversation-Id": currentConversationId,
-          },
-          body: JSON.stringify({
-            message,
-            conversationId: currentConversationId,
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error("Error al procesar el mensaje")
-        }
-
-        const data = await response.json()
-        if (!data.success) {
-          throw new Error(data.error || "Error al procesar el mensaje")
-        }
-
-        // Actualizar el mensaje del bot con la respuesta
-        setChatMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessage.id
-              ? {
-                  ...msg,
-                  text: data.data.message,
-                  isStreaming: false,
-                }
-              : msg,
-          ),
-        )
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`)
       }
+
+      console.log("✅ [FRONTEND] Conexión de streaming establecida")
+
+      // Variables para streaming natural
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let fullResponse = ""
+      let buffer = ""
+      let streamingInterval = null
+
+      // Función para mostrar el buffer acumulado de forma suave
+      const flushBuffer = () => {
+        if (buffer.trim()) {
+          fullResponse += buffer
+          
+          setChatMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMessage.id
+                ? {
+                    ...msg,
+                    text: fullResponse,
+                    isStreaming: true,
+                  }
+                : msg,
+            ),
+          )
+          
+          console.log("📝 [FRONTEND] Mostrando buffer:", buffer.trim())
+          buffer = ""
+        }
+      }
+
+      // Función para mostrar contenido de forma más natural
+      const naturalFlush = () => {
+        // Mostrar contenido cuando tengamos al menos 1-2 caracteres
+        if (buffer.length >= 1) {
+          flushBuffer()
+        }
+      }
+
+      // Intervalo para mostrar contenido de forma muy fluida (cada 30ms)
+      streamingInterval = setInterval(() => {
+        flushBuffer() // Mostrar cualquier contenido pendiente cada 30ms
+      }, 30)
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          
+          if (done) {
+            console.log("🏁 [FRONTEND] Stream completado")
+            break
+          }
+
+          // Decodificar el chunk
+          const chunk = decoder.decode(value, { stream: true })
+          const lines = chunk.split('\n').filter(line => line.trim())
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line)
+              
+              if (data.type === 'chunk' && data.content) {
+                // Filtrar contenido válido y agregarlo al buffer
+                const content = data.content
+                
+                // Solo agregar contenido que no sea vacío o caracteres extraños
+                if (content && content.trim()) {
+                  buffer += content
+                  naturalFlush() // Mostrar cuando tengamos suficientes caracteres
+                } else if (content === ' ' || content === '\n') {
+                  // Preservar espacios y saltos de línea
+                  buffer += content
+                  naturalFlush() // Mostrar el contenido acumulado
+                }
+                
+              } else if (data.type === 'end') {
+                console.log("✅ [FRONTEND] Stream finalizado exitosamente")
+                
+                // Limpiar el intervalo y mostrar cualquier contenido restante
+                if (streamingInterval) {
+                  clearInterval(streamingInterval)
+                  flushBuffer() // Mostrar lo que quede en el buffer
+                }
+                
+                // Finalizar el streaming
+                setChatMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessage.id
+                      ? {
+                          ...msg,
+                          text: data.fullResponse || fullResponse,
+                          isStreaming: false, // Finalizar streaming
+                        }
+                      : msg,
+                  ),
+                )
+                break
+              } else if (data.type === 'error') {
+                console.error("❌ [FRONTEND] Error en stream:", data.message)
+                throw new Error(data.message || "Error en el streaming")
+              }
+            } catch (parseError) {
+              console.warn("⚠️ [FRONTEND] Error parseando línea:", line, parseError)
+              // Continuar con el siguiente chunk
+            }
+          }
+        }
+      } finally {
+        // Limpiar recursos
+        if (streamingInterval) {
+          clearInterval(streamingInterval)
+        }
+        reader.releaseLock()
+      }
+
     } catch (error) {
-      console.error("Error al enviar mensaje:", error)
+      console.error("❌ [FRONTEND] Error en streaming:", error)
+      
       // Actualizar el mensaje del bot con el error
       setChatMessages((prev) =>
         prev.map((msg) =>
           msg.id === botMessage.id
             ? {
                 ...msg,
-                text: "Hubo un error al conectarse con el servidor.",
+                text: "Hubo un error al conectarse con el servidor. Por favor, intenta de nuevo.",
                 isStreaming: false,
                 isError: true,
               }
@@ -409,7 +462,7 @@ const Home = () => {
       )
     } finally {
       setIsTyping(false)
-      console.log("=== FIN ENVÍO DE MENSAJE ===")
+      console.log("🏁 [FRONTEND] === FIN ENVÍO DE MENSAJE ===")
     }
   }
 
@@ -1150,113 +1203,275 @@ const Home = () => {
                     )}
                     <div className="ds-message-content">
                       {msg.sender === "bot" ? (
-                        <>
-                          {console.log("Renderizando mensaje del bot:", msg)}
+                        <div className="markdown-content">
                           <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
+                            rehypePlugins={[
+                              rehypeKatex,
+                              [rehypeHighlight, { detect: true, ignoreMissing: true }],
+                              rehypeRaw
+                            ]}
                             components={{
-                              p: ({ children }) => {
-                                console.log("Renderizando párrafo con children:", children)
-                                return (
-                                  <p
-                                    style={{
-                                      whiteSpace: "pre-line",
-                                      color: "#333",
-                                      fontSize: "15px",
-                                      lineHeight: "1.6",
-                                      marginBottom: "12px",
-                                    }}
-                                  >
-                                    {children}
-                                  </p>
-                                )
-                              },
+                              // Párrafos
+                              p: ({ children }) => (
+                                <p style={{
+                                  whiteSpace: "pre-line",
+                                  margin: "12px 0",
+                                  lineHeight: "1.6",
+                                  color: "#333",
+                                  fontSize: "15px"
+                                }}>
+                                  {children}
+                                </p>
+                              ),
+                              
+                              // Encabezados
+                              h1: ({ children }) => (
+                                <h1 style={{
+                                  fontSize: "1.4em",
+                                  fontWeight: "600",
+                                  margin: "16px 0 12px 0",
+                                  color: "#333",
+                                  borderBottom: "2px solid #eee",
+                                  paddingBottom: "6px",
+                                  lineHeight: "1.3"
+                                }}>
+                                  {children}
+                                </h1>
+                              ),
+                              h2: ({ children }) => (
+                                <h2 style={{
+                                  fontSize: "1.25em",
+                                  fontWeight: "600", 
+                                  margin: "16px 0 10px 0",
+                                  color: "#333",
+                                  borderBottom: "1px solid #f0f0f0",
+                                  paddingBottom: "4px",
+                                  lineHeight: "1.3"
+                                }}>
+                                  {children}
+                                </h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 style={{
+                                  fontSize: "1.15em",
+                                  fontWeight: "600",
+                                  margin: "16px 0 8px 0",
+                                  color: "#333",
+                                  lineHeight: "1.3"
+                                }}>
+                                  {children}
+                                </h3>
+                              ),
+                              h4: ({ children }) => (
+                                <h4 style={{
+                                  fontSize: "1.05em",
+                                  fontWeight: "600",
+                                  margin: "14px 0 6px 0",
+                                  color: "#333",
+                                  lineHeight: "1.3"
+                                }}>
+                                  {children}
+                                </h4>
+                              ),
+                              
+                              // Texto con formato
                               strong: ({ children }) => (
-                                <strong
-                                  style={{
-                                    fontWeight: 600,
-                                    fontSize: "15px",
-                                    color: "#333",
-                                    display: "inline",
-                                    marginRight: "4px",
-                                  }}
-                                >
+                                <strong style={{
+                                  fontWeight: "600",
+                                  color: "#333"
+                                }}>
                                   {children}
                                 </strong>
                               ),
                               em: ({ children }) => (
-                                <em
-                                  style={{
-                                    fontStyle: "italic",
-                                    color: "#333",
-                                    fontSize: "15px",
-                                  }}
-                                >
+                                <em style={{
+                                  fontStyle: "italic",
+                                  color: "#555"
+                                }}>
                                   {children}
                                 </em>
                               ),
+                              del: ({ children }) => (
+                                <del style={{
+                                  textDecoration: "line-through",
+                                  color: "#888"
+                                }}>
+                                  {children}
+                                </del>
+                              ),
+                              
+                              // Listas
                               ul: ({ children }) => (
-                                <ul
-                                  style={{
-                                    margin: "8px 0",
-                                    paddingLeft: "20px",
-                                    color: "#333",
-                                    fontSize: "15px",
-                                  }}
-                                >
+                                <ul style={{
+                                  margin: "12px 0",
+                                  paddingLeft: "24px",
+                                  fontSize: "15px"
+                                }}>
                                   {children}
                                 </ul>
                               ),
                               ol: ({ children }) => (
-                                <ol
-                                  style={{
-                                    margin: "8px 0",
-                                    paddingLeft: "20px",
-                                    color: "#333",
-                                    fontSize: "15px",
-                                  }}
-                                >
+                                <ol style={{
+                                  margin: "12px 0",
+                                  paddingLeft: "24px",
+                                  fontSize: "15px"
+                                }}>
                                   {children}
                                 </ol>
                               ),
                               li: ({ children }) => (
-                                <li
-                                  style={{
-                                    margin: "5px 0",
-                                    color: "#333",
-                                    fontSize: "15px",
-                                  }}
-                                >
+                                <li style={{
+                                  margin: "6px 0",
+                                  lineHeight: "1.6",
+                                  color: "#333"
+                                }}>
                                   {children}
                                 </li>
                               ),
+                              
+                              // Enlaces
                               a: ({ href, children }) => (
                                 <a
                                   href={href}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
-                                    color: "#2964aa",
+                                    color: "#0066cc",
                                     textDecoration: "none",
-                                    fontWeight: 500,
-                                    borderBottom: "1px solid #2964aa",
-                                    paddingBottom: "1px",
-                                    transition: "all 0.2s ease",
+                                    borderBottom: "1px solid transparent",
+                                    transition: "all 0.2s ease"
                                   }}
                                   onMouseEnter={(e) => {
-                                    e.target.style.color = "#1a4b8c"
-                                    e.target.style.borderBottomColor = "#1a4b8c"
+                                    e.target.style.color = "#004499"
+                                    e.target.style.borderBottomColor = "#004499"
                                   }}
                                   onMouseLeave={(e) => {
-                                    e.target.style.color = "#2964aa"
-                                    e.target.style.borderBottomColor = "#2964aa"
+                                    e.target.style.color = "#0066cc"
+                                    e.target.style.borderBottomColor = "transparent"
                                   }}
-
-
-
                                 >
                                   {children}
                                 </a>
                               ),
+                              
+                              // Código inline
+                              code: ({ inline, className, children, ...props }) => {
+                                if (inline) {
+                                  return (
+                                    <code
+                                      style={{
+                                        background: "#f4f4f4",
+                                        border: "1px solid #e1e1e1",
+                                        borderRadius: "4px",
+                                        padding: "2px 6px",
+                                        fontFamily: "'Courier New', Consolas, monospace",
+                                        fontSize: "0.9em",
+                                        color: "#d63384"
+                                      }}
+                                      {...props}
+                                    >
+                                      {children}
+                                    </code>
+                                  )
+                                }
+                                return (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                )
+                              },
+                              
+                              // Bloques de código
+                              pre: ({ children }) => (
+                                <pre style={{
+                                  background: "#f8f8f8",
+                                  border: "1px solid #e1e1e1",
+                                  borderRadius: "8px",
+                                  padding: "16px",
+                                  overflowX: "auto",
+                                  margin: "12px 0",
+                                  fontFamily: "'Courier New', Consolas, monospace",
+                                  fontSize: "14px",
+                                  lineHeight: "1.4"
+                                }}>
+                                  {children}
+                                </pre>
+                              ),
+                              
+                              // Blockquotes
+                              blockquote: ({ children }) => (
+                                <blockquote style={{
+                                  borderLeft: "4px solid #ddd",
+                                  margin: "16px 0",
+                                  padding: "8px 16px",
+                                  background: "#fafafa",
+                                  fontStyle: "italic",
+                                  color: "#555"
+                                }}>
+                                  {children}
+                                </blockquote>
+                              ),
+                              
+                              // Tablas
+                              table: ({ children }) => (
+                                <div style={{ overflowX: "auto", margin: "16px 0" }}>
+                                  <table style={{
+                                    width: "100%",
+                                    borderCollapse: "collapse",
+                                    border: "1px solid #ddd",
+                                    borderRadius: "8px",
+                                    overflow: "hidden"
+                                  }}>
+                                    {children}
+                                  </table>
+                                </div>
+                              ),
+                              th: ({ children }) => (
+                                <th style={{
+                                  padding: "12px 16px",
+                                  textAlign: "left",
+                                  borderBottom: "1px solid #ddd",
+                                  background: "#f5f5f5",
+                                  fontWeight: "600",
+                                  color: "#333"
+                                }}>
+                                  {children}
+                                </th>
+                              ),
+                              td: ({ children }) => (
+                                <td style={{
+                                  padding: "12px 16px",
+                                  textAlign: "left",
+                                  borderBottom: "1px solid #ddd"
+                                }}>
+                                  {children}
+                                </td>
+                              ),
+                              
+                              // Líneas horizontales
+                              hr: () => (
+                                <hr style={{
+                                  border: "none",
+                                  borderTop: "2px solid #eee",
+                                  margin: "24px 0"
+                                }} />
+                              ),
+                              
+                              // Imágenes
+                              img: ({ src, alt }) => (
+                                <img 
+                                  src={src} 
+                                  alt={alt}
+                                  style={{
+                                    maxWidth: "100%",
+                                    height: "auto",
+                                    borderRadius: "8px",
+                                    margin: "12px 0",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                                  }}
+                                />
+                              )
                             }}
                           >
                             {msg.text || ""}
@@ -1270,7 +1485,7 @@ const Home = () => {
                               </div>
                             </div>
                           )}
-                        </>
+                        </div>
                       ) : (
                         <p style={{ whiteSpace: "pre-line" }}>{msg.text}</p>
                       )}
