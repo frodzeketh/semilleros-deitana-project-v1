@@ -47,6 +47,11 @@ const Home = () => {
   const [dragY, setDragY] = useState(0)
   const [startY, setStartY] = useState(0)
 
+  // Estados para el drag del search bottom sheet
+  const [isSearchDragging, setIsSearchDragging] = useState(false)
+  const [searchDragY, setSearchDragY] = useState(0)
+  const [searchStartY, setSearchStartY] = useState(0)
+
   // Obtener la función de logout del contexto de autenticación
   const { logout, user } = useAuth()
 
@@ -517,6 +522,75 @@ const Home = () => {
       }
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
+
+  // Funciones para drag del search bottom sheet
+  const handleSearchTouchStart = (e) => {
+    setIsSearchDragging(true)
+    setSearchStartY(e.touches[0].clientY)
+  }
+
+  const handleSearchTouchMove = (e) => {
+    if (!isSearchDragging) return
+
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - searchStartY
+
+    if (deltaY > 0) {
+      setSearchDragY(deltaY)
+    }
+  }
+
+  const handleSearchTouchEnd = () => {
+    setIsSearchDragging(false)
+
+    if (searchDragY > 100) {
+      setSearchModalOpen(false)
+      setSearchQuery("")
+      setDebouncedSearchQuery("")
+    }
+
+    setSearchDragY(0)
+  }
+
+  const handleSearchMouseDown = (e) => {
+    setIsSearchDragging(true)
+    setSearchStartY(e.clientY)
+  }
+
+  const handleSearchMouseMove = useCallback((e) => {
+    if (!isSearchDragging) return
+
+    const currentY = e.clientY
+    const deltaY = currentY - searchStartY
+
+    if (deltaY > 0) {
+      setSearchDragY(deltaY)
+    }
+  }, [isSearchDragging, searchStartY])
+
+  const handleSearchMouseUp = useCallback(() => {
+    setIsSearchDragging(false)
+
+    if (searchDragY > 100) {
+      setSearchModalOpen(false)
+      setSearchQuery("")
+      setDebouncedSearchQuery("")
+    }
+
+    setSearchDragY(0)
+  }, [searchDragY])
+
+  useEffect(() => {
+    if (isSearchDragging) {
+      document.addEventListener("mousemove", handleSearchMouseMove)
+      document.addEventListener("mouseup", handleSearchMouseUp)
+
+      return () => {
+        document.removeEventListener("mousemove", handleSearchMouseMove)
+        document.removeEventListener("mouseup", handleSearchMouseUp)
+      }
+    }
+  }, [isSearchDragging, handleSearchMouseMove, handleSearchMouseUp])
 
   // Añadir estilos CSS para el indicador de escritura en línea
   useEffect(() => {
@@ -1415,6 +1489,28 @@ const Home = () => {
                     </div>
                   </div>
 
+                  {/* Sección de contraseña */}
+                  <div className="ds-config-item">
+                    <label className="ds-config-label">Contraseña</label>
+                    <div className="ds-password-section">
+                      <div className="ds-input-with-button">
+                        <input
+                          type="password"
+                          className="ds-config-input"
+                          defaultValue="password123"
+                          placeholder="Ingresa tu contraseña"
+                        />
+                        <button className="ds-input-button ds-toggle-password-btn">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        </button>
+                      </div>
+                      <button className="ds-change-password-btn">Ver contraseña</button>
+                    </div>
+                  </div>
+
                   <div className="ds-config-actions">
                     <button className="ds-save-config-btn">Guardar cambios</button>
                   </div>
@@ -1758,8 +1854,9 @@ const Home = () => {
         </div>
       )}
 
-      {searchModalOpen && (
-        <div
+      {/* Desktop Search Modal */}
+      {!isMobile && searchModalOpen && (
+        <div 
           className="ds-search-modal-overlay"
           onClick={() => {
             setSearchModalOpen(false)
@@ -1825,6 +1922,97 @@ const Home = () => {
                             {chat.title === "NUEVA_CONEXION" ? "Nueva conversación" : chat.title}
                           </span>
                           <span className="ds-search-result-time">
+                            {formatTimeAgo(chat.updatedAt || chat.created_at)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Search Bottom Sheet */}
+      {isMobile && searchModalOpen && <div className="modal-backdrop" onClick={() => {
+          setSearchModalOpen(false)
+          setSearchQuery("")
+          setDebouncedSearchQuery("")
+        }} />}
+
+      {isMobile && searchModalOpen && (
+        <div
+          className={`modal-sheet ${searchModalOpen ? "modal-open" : ""}`}
+          style={{
+            transform: `translateY(${searchDragY}px)`,
+            transition: isSearchDragging ? "none" : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+          }}
+          onTouchStart={handleSearchTouchStart}
+          onTouchMove={handleSearchTouchMove}
+          onTouchEnd={handleSearchTouchEnd}
+          onMouseDown={handleSearchMouseDown}
+        >
+          <div className="modal-handle" />
+
+          <div className="modal-content">
+            <h2 className="modal-title">Buscar</h2>
+
+            {/* Campo de búsqueda */}
+            <div className="search-input-container">
+              <div className="search-input-wrapper">
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  className="search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                <Search className="search-input-icon" size={20} />
+              </div>
+            </div>
+
+            {/* Resultados scrollables */}
+            <div className="search-results-scrollable">
+              {(() => {
+                const filteredChats = filterChatsBySearch(chatHistory, debouncedSearchQuery)
+                const groupedChats = groupChatsByDate(filteredChats)
+
+                if (debouncedSearchQuery.trim() && filteredChats.length === 0) {
+                  return (
+                    <div className="search-section">
+                      <div className="search-no-results">
+                        <span className="search-no-results-text">
+                          No se encontraron resultados para "{debouncedSearchQuery}"
+                        </span>
+                      </div>
+                    </div>
+                  )
+                }
+
+                return Object.entries(groupedChats).map(([dateGroup, chats]) => (
+                  <div key={dateGroup} className="search-section">
+                    <div className="search-section-header">
+                      <span className="search-section-title">{dateGroup}</span>
+                    </div>
+                    <div className="search-results">
+                      {chats.map((chat) => (
+                        <div
+                          key={chat.id}
+                          className="search-result-item"
+                          onClick={() => {
+                            handleConversationClick(chat.id)
+                            setSearchModalOpen(false)
+                            setSearchQuery("")
+                            setDebouncedSearchQuery("")
+                          }}
+                        >
+                          <span className="search-result-title">
+                            {chat.title === "NUEVA_CONEXION" ? "Nueva conversación" : chat.title}
+                          </span>
+                          <span className="search-result-time">
                             {formatTimeAgo(chat.updatedAt || chat.created_at)}
                           </span>
                         </div>
