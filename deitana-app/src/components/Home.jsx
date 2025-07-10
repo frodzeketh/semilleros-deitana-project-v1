@@ -1334,25 +1334,16 @@ const Home = () => {
 
           <div className="modal-content">
             {/* Header con botón de volver atrás si no estamos en el menú principal */}
-            {modalView !== "main" && modalView !== "" && modalView ? (
+            {modalView !== "main" && modalView !== "" && modalView && (
               <div className="modal-header-with-back">
                 <button className="back-button" onClick={() => setModalView("main")}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M19 12H5m7-7l-7 7 7 7" />
                   </svg>
                 </button>
-                <h2 className="modal-title">
-                  {modalView === "account" ? "Cuenta" :
-                   modalView === "appearance" ? "Configuración" :
-                   modalView === "behavior" ? "Comportamiento" :
-                   modalView === "personalize" ? "Personalizar" :
-                   modalView === "data" ? "Controles de datos" :
-                   modalView === "apps" ? "Apps conectadas" : "Configuración"}
-                </h2>
+                <div className="back-button-spacer"></div>
                 <div className="back-button-spacer"></div>
               </div>
-            ) : (
-              <h2 className="modal-title">Configuración</h2>
             )}
 
             {/* Menú principal */}
@@ -1957,8 +1948,6 @@ const Home = () => {
           <div className="modal-handle" />
 
           <div className="modal-content">
-            <h2 className="modal-title">Buscar</h2>
-
             {/* Campo de búsqueda */}
             <div className="search-input-container">
               <div className="search-input-wrapper">
