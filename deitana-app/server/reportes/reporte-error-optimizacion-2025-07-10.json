@@ -1,0 +1,20 @@
+{
+  "error": {
+    "fecha": "2025-07-10T16:49:46.169Z",
+    "faseError": 1,
+    "mensaje": "Cannot read properties of undefined (reading 'resumenEjecutivo')",
+    "stack": "TypeError: Cannot read properties of undefined (reading 'resumenEjecutivo')\n    at MaestroOptimizacionConocimiento.ejecutarFase1TestingInicial (C:\\Users\\anabe\\OneDrive\\Documentos\\semilleros-deitana-project\\deitana-app\\server\\maestro-optimizacion-conocimiento.js:77:96)\n    at async MaestroOptimizacionConocimiento.ejecutarProcesoCompleto (C:\\Users\\anabe\\OneDrive\\Documentos\\semilleros-deitana-project\\deitana-app\\server\\maestro-optimizacion-conocimiento.js:44:13)\n    at async main (C:\\Users\\anabe\\OneDrive\\Documentos\\semilleros-deitana-project\\deitana-app\\server\\maestro-optimizacion-conocimiento.js:405:9)"
+  },
+  "resultadosParciales": {
+    "diagnostico": null,
+    "optimizacion": null,
+    "testingFinal": null,
+    "comparacion": null
+  },
+  "recomendaciones": [
+    "Revisar logs específicos de la fase que falló",
+    "Verificar configuración de Pinecone y OpenAI",
+    "Comprobar conectividad y permisos",
+    "Ejecutar diagnóstico individual de la fase fallida"
+  ]
+}

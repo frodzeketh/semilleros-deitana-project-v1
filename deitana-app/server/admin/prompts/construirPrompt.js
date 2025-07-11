@@ -183,13 +183,20 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
     instrucciones += `
 ## 🏢 CONTEXTO EMPRESARIAL
 
-Trabajas para **Semilleros Deitana**, empresa agrícola especializada en:
-- 🌱 Producción de semillas de tomate
-- 🍅 Cultivo y distribución de tomates
-- 🔬 Investigación y desarrollo de variedades
-- 🌿 Servicios de injertos y plántulas
+Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
 
-Los usuarios son **empleados de la empresa** que necesitan información para su trabajo diario.
+**TU IDENTIDAD:**
+- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
+- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
+- 🍅 Sabes cómo funcionan NUESTROS sistemas de cultivo e injertos  
+- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
+- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
+
+**FORMA DE HABLAR:**
+- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
+- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
+- Habla como empleado que conoce los detalles internos
+- Sé específico sobre NUESTROS procesos reales
 
 `;
 
@@ -251,6 +258,42 @@ Los usuarios son **empleados de la empresa** que necesitan información para su 
 `;
     }
 
+    // INSTRUCCIONES CRÍTICAS PARA USO DE CONOCIMIENTO EMPRESARIAL
+    instrucciones += `
+## 🚨 **REGLAS CRÍTICAS SOBRE CONOCIMIENTO EMPRESARIAL**
+
+### ⭐ **PRIORIDAD ABSOLUTA:**
+- Si recibes "CONOCIMIENTO EMPRESARIAL RELEVANTE", **ÚSALO COMO FUENTE PRINCIPAL**
+- **NUNCA inventes información** que no esté en el conocimiento empresarial
+- **SIEMPRE di "según nuestros documentos"** cuando uses información específica de empresa
+- **RECONOCE cuando NO tienes información específica** en lugar de inventar
+
+### 🚨 **OBLIGATORIO PARA INFORMACIÓN DE SEMILLEROS DEITANA:**
+- **PANEL DE OPERACIONES:** Si hay información específica en CONOCIMIENTO EMPRESARIAL, úsala EXACTAMENTE
+- **PROCESOS INTERNOS:** Solo explicar según NUESTROS manuales reales
+- **SISTEMAS ESPECÍFICOS:** Solo describir según documentación oficial de la empresa
+- **CUALQUIER TÉRMINO TÉCNICO:** Verificar primero en el conocimiento empresarial
+
+### 🔍 **Para preguntas específicas de Semilleros Deitana:**
+- **Bandejas:** Solo usar información del documento oficial
+- **Fórmulas/productos:** Solo usar datos reales de la empresa  
+- **Procesos:** Solo explicar según manuales internos
+- **Frecuencias/números:** Solo citar cifras documentadas
+- **Panel de operaciones:** Usar EXACTAMENTE la descripción de NUESTROS documentos
+
+### ✅ **Ejemplos de respuestas correctas:**
+- ✅ "En NUESTRO panel de operaciones tenemos..."
+- ✅ "Según NUESTROS documentos internos, el panel de control es..."
+- ✅ "En NUESTRA empresa, utilizamos..."
+- ✅ "No encuentro información específica sobre eso en NUESTROS documentos..."
+
+### ❌ **Ejemplos de respuestas PROHIBIDAS:**
+- ❌ "El Panel de Operaciones es una interfaz centralizada que permite a los usuarios..." (genérico)
+- ❌ "en una empresa" (debe ser "en NUESTRA empresa")
+- ❌ Cualquier descripción genérica cuando hay información específica disponible
+
+`;
+
     // Recordatorio final sobre formato
     instrucciones += `
 ## 🎨 RECORDATORIO FINAL DE FORMATO:
@@ -308,9 +351,15 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     const consultasSimples = /(^hola|^hi|^buenos|^buenas|dime algo|cuéntame|cuentame|quién eres|quien eres|qué eres|que eres|sobre ti|acerca de ti|algo de ti|acerca tuyo|quien soy|quines eres)/i;
     const esConsultaSimple = consultasSimples.test(mensaje.trim());
     
-    if ((intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') && !esConsultaSimple) {
+    // NUEVO: Detectar consultas que requieren información de empresa
+    const consultasEmpresariales = /(bandejas?|previcur|formula|tipos?|que.*hay|cuales?|cuantos?|proceso|procedimiento|frecuencia|cambio.*agua|9000|semilleros deitana|cultivo|invernadero|tomate|lechuga|semilla|tratamiento|cliente|proveedor)/i;
+    const esConsultaEmpresarial = consultasEmpresariales.test(mensaje.toLowerCase());
+    
+    // USAR RAG si: no es consulta simple Y (es conversación/rag_sql O es consulta empresarial)
+    if (!esConsultaSimple && ((intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') || esConsultaEmpresarial)) {
         try {
             console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+            console.log('🎯 [RAG] Motivo: Consulta empresarial detectada -', esConsultaEmpresarial ? 'SÍ' : 'NO');
             contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
             console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
         } catch (error) {
@@ -318,6 +367,8 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         }
     } else if (esConsultaSimple) {
         console.log('⚡ [OPTIMIZACIÓN] Consulta simple detectada - saltando RAG');
+    } else {
+        console.log('⚡ [OPTIMIZACIÓN] Consulta no empresarial - saltando RAG');
     }
     
     // 7. Ensamblar prompt final

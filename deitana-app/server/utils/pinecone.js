@@ -78,30 +78,51 @@ async function guardarRecuerdo(userId, texto, tipo = 'conversacion') {
 /**
  * Busca recuerdos similares en Pinecone
  */
-async function buscarRecuerdos(userId, consulta, limite = 5) {
+async function buscarRecuerdos(userIdOrConsulta, consultaOrLimit, limite = 5) {
     try {
-        console.log('🔍 [PINECONE] Buscando recuerdos para:', userId, '-', consulta.substring(0, 50) + '...');
+        // Detectar si se llama con userId o solo consulta
+        let userId, consulta, topK;
+        
+        if (typeof consultaOrLimit === 'string') {
+            // Llamada tradicional: buscarRecuerdos(userId, consulta, limite)
+            userId = userIdOrConsulta;
+            consulta = consultaOrLimit;
+            topK = limite;
+        } else {
+            // Llamada nueva: buscarRecuerdos(consulta, limite) - sin filtro de usuario
+            consulta = userIdOrConsulta;
+            topK = consultaOrLimit || 5;
+            userId = null;
+        }
+        
+        console.log('🔍 [PINECONE] Buscando recuerdos:', consulta.substring(0, 50) + '...');
         
         const index = pinecone.Index(INDEX_NAME);
         const embedding = await generarEmbedding(consulta);
         
-        const queryResponse = await index.query({
+        let queryOptions = {
             vector: embedding,
-            filter: {
-                userId: { "$eq": userId }
-            },
-            topK: limite,
+            topK: topK,
             includeMetadata: true
-        });
+        };
+        
+        // Solo filtrar por usuario si se proporciona
+        if (userId) {
+            queryOptions.filter = {
+                userId: { "$eq": userId }
+            };
+        }
+        
+        const queryResponse = await index.query(queryOptions);
         
         const recuerdos = queryResponse.matches
-            .filter(match => match.score > 0.5) // Umbral más bajo para testing (era 0.7)
+            .filter(match => match.score > 0.3) // Umbral más bajo para testing
             .map(match => ({
                 id: match.id,
-                texto: match.metadata.texto,
+                contenido: match.metadata.texto,
                 tipo: match.metadata.tipo,
                 timestamp: match.metadata.timestamp,
-                similitud: match.score,
+                score: match.score,
                 palabrasClave: match.metadata.palabrasClave
             }));
         

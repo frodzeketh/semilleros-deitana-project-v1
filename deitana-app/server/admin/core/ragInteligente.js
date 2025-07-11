@@ -386,21 +386,44 @@ function filtrarFragmentosOptimos(resultados, consulta) {
         return [];
     }
     
-    // --- PRIORIZAR: Conocimiento empresarial sobre respuestas del asistente ---
-    const fragmentosEmpresa = ordenados.filter(f => f.tipo === 'conocimiento_empresa');
-    const fragmentosAsistente = ordenados.filter(f => f.tipo === 'asistente_importante');
-    const fragmentosOtros = ordenados.filter(f => f.tipo !== 'conocimiento_empresa' && f.tipo !== 'asistente_importante');
+    // --- NUEVA LÓGICA: SEPARAR POR TIPO DE FUENTE ---
+    const fragmentosEmpresaOficial = ordenados.filter(f => 
+        f.id && (
+            f.id.includes('informacion_empresa') || 
+            f.id.includes('conocimiento_empresa') ||
+            (f.contenido && f.contenido.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL'))
+        )
+    );
     
-    // Si hay datos de empresa, priorizarlos completamente
+    const fragmentosConversacion = ordenados.filter(f => 
+        !f.id.includes('informacion_empresa') && 
+        !f.id.includes('conocimiento_empresa') &&
+        !(f.contenido && f.contenido.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL'))
+    );
+    
+    console.log(`🏢 [RAG] Fragmentos de empresa oficial: ${fragmentosEmpresaOficial.length}`);
+    console.log(`💬 [RAG] Fragmentos de conversación: ${fragmentosConversacion.length}`);
+    
+    // --- PRIORIZACIÓN ABSOLUTA: Información oficial SIEMPRE primero ---
     let fragmentosFinales = [];
-    if (fragmentosEmpresa.length > 0) {
-        console.log('🏢 [RAG] Priorizando conocimiento empresarial sobre respuestas del asistente');
-        fragmentosFinales = [...fragmentosEmpresa, ...fragmentosOtros, ...fragmentosAsistente];
+    
+    if (fragmentosEmpresaOficial.length > 0) {
+        console.log('🏢 [RAG] PRIORIZANDO información oficial de empresa');
+        
+        // Tomar SOLO información oficial si existe
+        fragmentosFinales = fragmentosEmpresaOficial.slice(0, CONFIG_RAG.MAX_CHUNKS_PER_QUERY);
+        
+        // Solo agregar conversaciones si necesitamos más contexto Y no hay suficiente info oficial
+        if (fragmentosFinales.length < 2 && fragmentosConversacion.length > 0) {
+            console.log('🔄 [RAG] Complementando con 1 fragmento de conversación');
+            fragmentosFinales.push(fragmentosConversacion[0]);
+        }
     } else {
-        fragmentosFinales = [...fragmentosAsistente, ...fragmentosOtros];
+        console.log('💬 [RAG] Usando fragmentos de conversación (no hay info oficial)');
+        fragmentosFinales = fragmentosConversacion.slice(0, CONFIG_RAG.MAX_CHUNKS_PER_QUERY);
     }
     
-    // --- Priorizar coincidencias exactas dentro de cada grupo ---
+    // --- Priorizar coincidencias exactas dentro del grupo seleccionado ---
     const terminosClave = extraerTérminosClaveConsulta(consulta);
     const fragmentosCoincidenciaExacta = [];
     const fragmentosRestantes = [];
@@ -631,29 +654,63 @@ ${record.metadata.texto}`;
 }
 
 /**
- * Realiza búsqueda vectorial normal en Pinecone
+ * Realiza búsqueda vectorial inteligente con múltiples variaciones
  */
 async function buscarVectorial(consulta) {
     try {
-        // Generar embedding de la consulta
-        const response = await openai.embeddings.create({
-            model: "text-embedding-ada-002", // Usar mismo modelo que la carga
-            input: consulta,
-            encoding_format: "float"
-        });
+        console.log('🧠 [RAG INTELIGENTE] Iniciando búsqueda con múltiples variaciones...');
         
-        const consultaEmbedding = response.data[0].embedding;
+        // Generar variaciones de la consulta
+        const variaciones = generarVariacionesConsulta(consulta);
+        console.log(`📋 [RAG] Variaciones generadas: ${variaciones.length}`);
         
-        // Búsqueda semántica en Pinecone
-        const resultados = await buscarEnPinecone(consultaEmbedding);
+        let todosLosResultados = [];
         
-        if (!resultados || resultados.length === 0) {
-            console.log('⚠️ [RAG] No se encontraron fragmentos relevantes');
+        // Ejecutar búsquedas en paralelo para todas las variaciones
+        for (const variacion of variaciones) {
+            console.log(`🔍 [RAG] Probando: "${variacion.substring(0, 50)}..."`);
+            
+            // Generar embedding para esta variación
+            const response = await openai.embeddings.create({
+                model: "text-embedding-ada-002",
+                input: variacion,
+                encoding_format: "float"
+            });
+            
+            const consultaEmbedding = response.data[0].embedding;
+            
+            // Búsqueda en Pinecone
+            const resultados = await buscarEnPinecone(consultaEmbedding);
+            
+            if (resultados && resultados.length > 0) {
+                todosLosResultados.push(...resultados);
+            }
+            
+            // Pequeña pausa para no saturar la API
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        if (todosLosResultados.length === 0) {
+            console.log('⚠️ [RAG] No se encontraron fragmentos relevantes en ninguna variación');
             return '';
         }
         
-        // Filtrar y optimizar resultados
-        const fragmentosRelevantes = filtrarFragmentosOptimos(resultados, consulta);
+        // Eliminar duplicados por ID
+        const resultadosUnicos = [];
+        const idsVistos = new Set();
+        
+        for (const resultado of todosLosResultados) {
+            if (!idsVistos.has(resultado.id)) {
+                idsVistos.add(resultado.id);
+                resultadosUnicos.push(resultado);
+            }
+        }
+        
+        console.log(`🔄 [RAG] Resultados únicos: ${resultadosUnicos.length} de ${todosLosResultados.length} totales`);
+        
+        // Ordenar por score y aplicar filtrado optimizado
+        const resultadosOrdenados = resultadosUnicos.sort((a, b) => b.score - a.score);
+        const fragmentosRelevantes = filtrarFragmentosOptimos(resultadosOrdenados, consulta);
         
         // Construir contexto optimizado
         const contextoRAG = construirContextoOptimizado(fragmentosRelevantes);
@@ -664,9 +721,59 @@ async function buscarVectorial(consulta) {
         return contextoRAG;
         
     } catch (error) {
-        console.error('❌ [RAG] Error en búsqueda vectorial:', error.message);
+        console.error('❌ [RAG] Error en búsqueda vectorial inteligente:', error.message);
         return ''; // Fallar silenciosamente para no interrumpir consulta
     }
+}
+
+/**
+ * Genera múltiples variaciones de una consulta para mejorar la búsqueda
+ */
+function generarVariacionesConsulta(consultaOriginal) {
+    const variaciones = [consultaOriginal];
+    const consultaLower = consultaOriginal.toLowerCase();
+    
+    // Variación sin palabras de parada
+    const palabrasParada = ['que', 'es', 'el', 'la', 'de', 'del', 'en', 'para', 'con', 'por', 'como', 'cual', 'cuales', 'donde', 'cuando'];
+    const palabras = consultaOriginal.split(' ').filter(p => p.length > 2 && !palabrasParada.includes(p.toLowerCase()));
+    if (palabras.length > 0) {
+        variaciones.push(palabras.join(' '));
+    }
+    
+    // Variación con prefijo de empresa
+    variaciones.push(`SEMILLEROS DEITANA ${consultaOriginal}`);
+    variaciones.push(`informacionEmpresa.txt ${palabras.join(' ')}`);
+    
+    // Mapeos específicos para términos técnicos de la empresa
+    const mapeoTerminos = {
+        'bandejas': ['FRECUENCIA DEL PROCESO', 'cambio agua 9000', 'frecuencia cambio'],
+        'previcur': ['PREVICUR', 'fitosanitario', 'producto'],
+        'panel': ['PANEL DE CONTROL', 'OPERACIONES', 'panel control'],
+        'operaciones': ['PANEL DE CONTROL', 'control operaciones', 'interfaz'],
+        'clientes': ['Tabla Relacionada clientes', 'CL_DENO'],
+        'tomate': ['TOMATE AMARELO', 'Semilla Utilizada'],
+        'roberto': ['cliente Roberto', 'información Roberto'],
+        'agua': ['FRECUENCIA DEL PROCESO', 'cambio agua'],
+        '9000': ['FRECUENCIA DEL PROCESO', 'cambio agua 9000'],
+        'formula': ['producto fitosanitario', 'composición']
+    };
+    
+    // Agregar variaciones específicas basadas en mapeos
+    for (const [termino, variacionesTermino] of Object.entries(mapeoTerminos)) {
+        if (consultaLower.includes(termino)) {
+            variaciones.push(...variacionesTermino);
+        }
+    }
+    
+    // Variaciones adicionales para ERP
+    if (consultaLower.includes('cl_') || consultaLower.includes('ar_') || consultaLower.includes('pr_')) {
+        variaciones.push('Tabla Relacionada');
+        variaciones.push('Columnas');
+    }
+    
+    // Eliminar duplicados y limitar número de variaciones
+    const variacionesUnicas = [...new Set(variaciones)];
+    return variacionesUnicas.slice(0, 8); // Máximo 8 variaciones para no saturar
 }
 
 module.exports = {

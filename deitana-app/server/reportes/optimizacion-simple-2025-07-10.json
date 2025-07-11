@@ -1,0 +1,20 @@
+{
+  "fecha": "2025-07-10T17:43:11.602Z",
+  "chunksCreados": 10,
+  "mejoras": [
+    "Chunk específico: ¿Qué significa CL_DENO en clientes?",
+    "Chunk específico: ¿Qué es AR_PRV en artículos?",
+    "Chunk específico: ¿Qué información hay sobre Roberto como cliente?",
+    "Chunk específico: ¿Cuál es el código del tomate amarillo?",
+    "Chunk específico: ¿Cómo funcionan los injertos?",
+    "Chunk específico: ¿Qué proceso siguen las bandejas?",
+    "Chunk específico: ¿Cómo es el proceso de germinación?"
+  ],
+  "estrategia": "Chunks específicos para preguntas frecuentes",
+  "expectativas": [
+    "Mayor precisión en info empresarial",
+    "Respuestas específicas para campos técnicos",
+    "Mejor reconocimiento de ejemplos",
+    "Comprensión mejorada de procesos"
+  ]
+}
