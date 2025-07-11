@@ -5,7 +5,9 @@ const adminEmails = [
     'administrador@gmail.com',
     'joseluisg@gmail.com',
     'facundog@gmail.com',
-    'rodrigog@gmail.com'
+    'rodrigog@gmail.com',
+    'joseluis@semillerosdeitana.com',   
+    'facundo@semillerosdeitana.com'
 
 ];
 

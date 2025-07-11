@@ -13,20 +13,60 @@ router.use(verifyToken);
 // =====================================
 router.post('/stream', async (req, res) => {
     try {
-        const { message } = req.body;
+        const { message, conversationId } = req.body;
         const userId = req.user.uid;
+        const isAdmin = req.user.isAdmin;
         
         console.log('🚀 [STREAM-ROUTE] Iniciando streaming para usuario:', userId);
         console.log('🚀 [STREAM-ROUTE] Mensaje:', message);
+        console.log('🚀 [STREAM-ROUTE] Conversación ID:', conversationId);
+        console.log('🚀 [STREAM-ROUTE] Es admin:', isAdmin);
         
-        // Llamar a la función de streaming que maneja la respuesta
-        await processQueryStream({ 
-            message, 
-            userId, 
-            response: res 
+        let currentConversationId = conversationId;
+
+        // Si no hay conversación o es temporal, crear una nueva
+        if (!currentConversationId || currentConversationId.startsWith('temp_')) {
+            currentConversationId = await chatManager.createConversation(userId, message);
+            console.log('🆕 [STREAM-ROUTE] Nueva conversación creada:', currentConversationId);
+        }
+
+        // Verificar que la conversación existe
+        try {
+            await chatManager.verifyChatOwnership(userId, currentConversationId);
+        } catch (error) {
+            console.error('❌ [STREAM-ROUTE] Error al verificar la conversación:', error);
+            return res.status(404).json({
+                success: false,
+                error: 'Conversación no encontrada'
+            });
+        }
+
+        // Agregar mensaje del usuario al historial
+        await chatManager.addMessageToConversation(userId, currentConversationId, {
+            role: 'user',
+            content: message
         });
         
-        // La respuesta ya fue enviada por processQueryStream
+        // Llamar a la función de streaming que maneja la respuesta según el rol
+        let streamResult;
+        if (isAdmin) {
+            streamResult = await processQueryStream({ 
+                message, 
+                userId, 
+                conversationId: currentConversationId,
+                response: res 
+            });
+        } else {
+            // Para empleados, usar función de streaming específica (si existe)
+            streamResult = await processQueryStream({ 
+                message, 
+                userId, 
+                conversationId: currentConversationId,
+                response: res 
+            });
+        }
+        
+        // Nota: La respuesta ya fue enviada por processQueryStream
         console.log('✅ [STREAM-ROUTE] Stream completado exitosamente');
         
     } catch (error) {

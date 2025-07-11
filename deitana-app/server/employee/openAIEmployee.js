@@ -7,16 +7,126 @@ const path = require('path');
 const { OpenAI } = require('openai');
 const pool = require('../db');
 const chatManager = require('../utils/chatManager');
+const ragInteligente = require('../admin/core/ragInteligente');
 const admin = require('../firebase-admin');
 require('dotenv').config();
 const { promptBase } = require('./promptBaseEmployee');
 const { promptComportamiento } = require('./promptComportamientoEmployee');
 const mapaERP = require('./mapaERPEmployee');
 
+console.log('🔧 [OPENAI-EMPLOYEE] Inicializando módulo openAI para empleados...');
+
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
+
+// =====================================
+// FUNCIÓN PARA OBTENER INFORMACIÓN DEL USUARIO
+// =====================================
+
+/**
+ * Obtiene la información del usuario desde Firebase incluyendo su displayName
+ */
+async function obtenerInfoUsuario(userId) {
+    try {
+        console.log('👤 [USER-INFO] Obteniendo información del usuario empleado:', userId);
+        
+        const userRecord = await admin.auth().getUser(userId);
+        
+        const infoUsuario = {
+            uid: userRecord.uid,
+            nombre: userRecord.displayName || 'Usuario',
+            email: userRecord.email,
+            esAdmin: userRecord.customClaims?.isAdmin || false
+        };
+        
+        console.log('✅ [USER-INFO] Información obtenida:', {
+            nombre: infoUsuario.nombre,
+            email: infoUsuario.email?.substring(0, 3) + '***',
+            esAdmin: infoUsuario.esAdmin
+        });
+        
+        return infoUsuario;
+    } catch (error) {
+        console.error('❌ [USER-INFO] Error obteniendo información del usuario:', error.message);
+        return {
+            uid: userId,
+            nombre: 'Usuario',
+            email: null,
+            esAdmin: false
+        };
+    }
+}
+
+// =====================================
+// FUNCIÓN PARA PERSONALIZAR RESPUESTA CON NOMBRE
+// =====================================
+
+/**
+ * Personaliza la respuesta incluyendo el nombre del usuario de forma sutil
+ */
+function personalizarRespuesta(respuesta, nombreUsuario) {
+    // No personalizar si es un nombre genérico
+    if (!nombreUsuario || nombreUsuario === 'Usuario' || nombreUsuario.length < 2) {
+        return respuesta;
+    }
+    
+    console.log(`🎨 [PERSONALIZACIÓN] Personalizando respuesta para ${nombreUsuario}`);
+    
+    // Patrones para agregar el nombre de forma sutil (no siempre, aproximadamente 30% de las veces)
+    const deberiaPersonalizar = Math.random() < 0.3;
+    
+    if (!deberiaPersonalizar) {
+        console.log('🎨 [PERSONALIZACIÓN] Saltando personalización para esta respuesta');
+        return respuesta;
+    }
+    
+    const patronesPersonalizacion = [
+        // Al inicio de la respuesta
+        {
+            patron: /^¡?Hola[!,]?\s*/i,
+            reemplazo: `¡Hola, ${nombreUsuario}! `
+        },
+        {
+            patron: /^Perfecto[!,]?\s*/i,
+            reemplazo: `Perfecto, ${nombreUsuario}. `
+        },
+        // En medio de la respuesta
+        {
+            patron: /¿Te sirve esta información\?/i,
+            reemplazo: `¿Te sirve esta información, ${nombreUsuario}?`
+        },
+        {
+            patron: /¿Necesitas algo más\?/i,
+            reemplazo: `¿Necesitas algo más, ${nombreUsuario}?`
+        },
+        // Al final de la respuesta
+        {
+            patron: /¿En qué más puedo ayudarte\?/i,
+            reemplazo: `¿En qué más puedo ayudarte, ${nombreUsuario}?`
+        }
+    ];
+    
+    // Aplicar un patrón aleatorio que coincida
+    for (const { patron, reemplazo } of patronesPersonalizacion) {
+        if (patron.test(respuesta)) {
+            const respuestaPersonalizada = respuesta.replace(patron, reemplazo);
+            console.log('✅ [PERSONALIZACIÓN] Respuesta personalizada aplicada');
+            return respuestaPersonalizada;
+        }
+    }
+    
+    // Si no coincide ningún patrón, agregar el nombre al final de forma sutil
+    if (respuesta.endsWith('?')) {
+        return respuesta.slice(0, -1) + `, ${nombreUsuario}?`;
+    } else if (respuesta.endsWith('.')) {
+        return respuesta.slice(0, -1) + `, ${nombreUsuario}.`;
+    }
+    
+    console.log('🎨 [PERSONALIZACIÓN] No se aplicó personalización específica');
+    return respuesta;
+}
 
 // =====================================
 // SISTEMA RAG (RETRIEVAL-AUGMENTED GENERATION)
@@ -142,6 +252,14 @@ async function processQuery({ message, userId, conversationId }) {
     try {
         console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA =====');
         console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
+        console.log('🚀 [SISTEMA] Usuario ID:', userId);
+        console.log('🚀 [SISTEMA] Conversación ID:', conversationId);
+
+        // =====================================
+        // OBTENER INFORMACIÓN DEL USUARIO Y CONTEXTO
+        // =====================================
+        
+        const infoUsuario = await obtenerInfoUsuario(userId);
         
         // =====================================
         // PREPARACIÓN DEL CONTEXTO Y HISTORIAL
@@ -568,10 +686,15 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
             console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
             console.log('🎉 [RESUMEN] JavaScript solo hizo trabajo mecánico (SQL + reemplazo)');
             
+            // =====================================
+            // PERSONALIZAR RESPUESTA CON NOMBRE DEL USUARIO
+            // =====================================
+            const respuestaPersonalizada = personalizarRespuesta(finalResponse, infoUsuario.nombre);
+            
             return {
                 success: true,
                 data: {
-                    message: finalResponse
+                    message: respuestaPersonalizada
                 }
             };
         }
@@ -582,6 +705,11 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
         console.log('🧠 [ETAPA-3] Estilo: Conversacional, amigable y contextual tipo ChatGPT');
         console.log('🧠 [ETAPA-3] Resultado: Respuesta completa lista para usuario');
         
+        // =====================================
+        // PERSONALIZAR RESPUESTA CONVERSACIONAL CON NOMBRE DEL USUARIO
+        // =====================================
+        const respuestaPersonalizada = personalizarRespuesta(response, infoUsuario.nombre);
+        
         console.log('🎉 [RESUMEN] ===== PROCESO COMPLETADO EXITOSAMENTE =====');
         console.log('🎉 [RESUMEN] UN SOLO MODELO GPT manejó toda la inteligencia');
         console.log('🎉 [RESUMEN] No se requirió acceso a base de datos');
@@ -589,7 +717,7 @@ Por favor, reformula tu pregunta o especifica mejor qué información necesitas.
         return {
             success: true,
             data: {
-                message: response
+                message: respuestaPersonalizada
             }
         };
     } catch (error) {

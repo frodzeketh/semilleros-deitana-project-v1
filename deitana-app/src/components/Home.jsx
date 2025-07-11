@@ -209,6 +209,39 @@ const Home = () => {
         if (historyData.success) {
           setChatHistory(historyData.data)
         }
+
+        // Actualizar conversationId si viene del servidor
+        if (data.conversationId && (!currentConversationId || currentConversationId.startsWith('temp_'))) {
+          console.log("🔄 [FRONTEND] Actualizando conversationId:", data.conversationId)
+          setCurrentConversationId(data.conversationId)
+          // Actualizar la URL para reflejar la nueva conversación
+          setSearchParams({ chat: data.conversationId })
+          
+          // Recargar el historial de conversaciones para mostrar la nueva
+          const recargarHistorial = async () => {
+            try {
+              const token = await auth.currentUser?.getIdToken()
+              if (!token) return
+
+              const historyResponse = await fetch(`${API_URL}/conversations`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+
+              if (historyResponse.ok) {
+                const historyData = await historyResponse.json()
+                if (historyData.success) {
+                  setChatHistory(historyData.data)
+                  console.log("✅ [FRONTEND] Historial de conversaciones actualizado")
+                }
+              }
+            } catch (error) {
+              console.error("❌ [FRONTEND] Error recargando historial:", error)
+            }
+          }
+          recargarHistorial()
+        }
       }
     } catch (error) {
       console.error("Error al crear nuevo chat:", error)
@@ -322,7 +355,10 @@ const Home = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ 
+          message,
+          conversationId: currentConversationId 
+        }),
       })
 
       if (!response.ok) {
@@ -410,6 +446,14 @@ const Home = () => {
                 
               } else if (data.type === 'end') {
                 console.log("✅ [FRONTEND] Stream finalizado exitosamente")
+                
+                // Actualizar conversationId si viene del servidor
+                if (data.conversationId && (!currentConversationId || currentConversationId.startsWith('temp_'))) {
+                  console.log("🔄 [FRONTEND] Actualizando conversationId:", data.conversationId)
+                  setCurrentConversationId(data.conversationId)
+                  // Actualizar la URL para reflejar la nueva conversación
+                  setSearchParams({ chat: data.conversationId })
+                }
                 
                 // Limpiar el intervalo y mostrar cualquier contenido restante
                 if (streamingInterval) {

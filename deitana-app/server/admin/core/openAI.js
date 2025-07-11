@@ -707,18 +707,171 @@ async function fuzzySearchRetry(sql, userQuery) {
 // Se encarga de coordinar todo el proceso de la consulta
 // =====================================
 
+// =====================================
+// FUNCIÓN PARA OBTENER INFORMACIÓN DEL USUARIO
+// =====================================
+
+/**
+ * Obtiene la información del usuario desde Firebase incluyendo su displayName
+ */
+async function obtenerInfoUsuario(userId) {
+    try {
+        console.log('👤 [USER-INFO] Obteniendo información del usuario:', userId);
+        
+        const userRecord = await admin.auth().getUser(userId);
+        
+        const infoUsuario = {
+            uid: userRecord.uid,
+            nombre: userRecord.displayName || 'Usuario',
+            email: userRecord.email,
+            esAdmin: userRecord.customClaims?.isAdmin || false
+        };
+        
+        console.log('✅ [USER-INFO] Información obtenida:', {
+            nombre: infoUsuario.nombre,
+            email: infoUsuario.email?.substring(0, 3) + '***',
+            esAdmin: infoUsuario.esAdmin
+        });
+        
+        return infoUsuario;
+    } catch (error) {
+        console.error('❌ [USER-INFO] Error obteniendo información del usuario:', error.message);
+        return {
+            uid: userId,
+            nombre: 'Usuario',
+            email: null,
+            esAdmin: false
+        };
+    }
+}
+
+// =====================================
+// FUNCIÓN PARA OBTENER HISTORIAL CONVERSACIONAL
+// =====================================
+
+/**
+ * Obtiene el historial completo de la conversación para contexto
+ */
+async function obtenerHistorialConversacion(userId, conversationId) {
+    try {
+        console.log('📜 [HISTORIAL] Obteniendo contexto conversacional...');
+        console.log('📜 [HISTORIAL] Usuario:', userId, 'Conversación:', conversationId);
+        
+        if (!conversationId || conversationId.startsWith('temp_')) {
+            console.log('📜 [HISTORIAL] Conversación temporal/nueva - sin historial previo');
+            return [];
+        }
+        
+        const mensajes = await chatManager.getConversationMessages(userId, conversationId);
+        
+        // Solo tomar los últimos 6 mensajes para contexto (3 intercambios)
+        const mensajesRecientes = mensajes.slice(-6);
+        
+        console.log(`📜 [HISTORIAL] Obtenidos ${mensajesRecientes.length} mensajes para contexto`);
+        
+        // Formatear para usar en el prompt
+        const contextoFormateado = mensajesRecientes.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
+        
+        return contextoFormateado;
+    } catch (error) {
+        console.error('❌ [HISTORIAL] Error obteniendo historial:', error.message);
+        return [];
+    }
+}
+
+// =====================================
+// FUNCIÓN PARA PERSONALIZAR RESPUESTA CON NOMBRE
+// =====================================
+
+/**
+ * Personaliza la respuesta incluyendo el nombre del usuario de forma sutil
+ */
+function personalizarRespuesta(respuesta, nombreUsuario) {
+    // No personalizar si es un nombre genérico
+    if (!nombreUsuario || nombreUsuario === 'Usuario' || nombreUsuario.length < 2) {
+        return respuesta;
+    }
+    
+    console.log(`🎨 [PERSONALIZACIÓN] Personalizando respuesta para ${nombreUsuario}`);
+    
+    // Patrones para agregar el nombre de forma sutil (no siempre, aproximadamente 30% de las veces)
+    const deberiaPersonalizar = Math.random() < 0.3;
+    
+    if (!deberiaPersonalizar) {
+        console.log('🎨 [PERSONALIZACIÓN] Saltando personalización para esta respuesta');
+        return respuesta;
+    }
+    
+    const patronesPersonalizacion = [
+        // Al inicio de la respuesta
+        {
+            patron: /^¡?Hola[!,]?\s*/i,
+            reemplazo: `¡Hola, ${nombreUsuario}! `
+        },
+        {
+            patron: /^Perfecto[!,]?\s*/i,
+            reemplazo: `Perfecto, ${nombreUsuario}. `
+        },
+        // En medio de la respuesta
+        {
+            patron: /¿Te sirve esta información\?/i,
+            reemplazo: `¿Te sirve esta información, ${nombreUsuario}?`
+        },
+        {
+            patron: /¿Necesitas algo más\?/i,
+            reemplazo: `¿Necesitas algo más, ${nombreUsuario}?`
+        },
+        // Al final de la respuesta
+        {
+            patron: /¿En qué más puedo ayudarte\?/i,
+            reemplazo: `¿En qué más puedo ayudarte, ${nombreUsuario}?`
+        }
+    ];
+    
+    // Aplicar un patrón aleatorio que coincida
+    for (const { patron, reemplazo } of patronesPersonalizacion) {
+        if (patron.test(respuesta)) {
+            const respuestaPersonalizada = respuesta.replace(patron, reemplazo);
+            console.log('✅ [PERSONALIZACIÓN] Respuesta personalizada aplicada');
+            return respuestaPersonalizada;
+        }
+    }
+    
+    // Si no coincide ningún patrón, agregar el nombre al final de forma sutil
+    if (respuesta.endsWith('?')) {
+        return respuesta.slice(0, -1) + `, ${nombreUsuario}?`;
+    } else if (respuesta.endsWith('.')) {
+        return respuesta.slice(0, -1) + `, ${nombreUsuario}.`;
+    }
+    
+    console.log('🎨 [PERSONALIZACIÓN] No se aplicó personalización específica');
+    return respuesta;
+}
+
 /**
  * Función principal para procesar consultas de administrador
  * @param {Object} params - Parámetros de la consulta
  * @param {string} params.message - Mensaje del usuario
  * @param {string} params.userId - ID del usuario
+ * @param {string} params.conversationId - ID de la conversación (opcional)
  * @returns {Object} Respuesta procesada
  */
-async function processQuery({ message, userId }) {
+async function processQuery({ message, userId, conversationId }) {
     const tiempoInicio = Date.now();
     console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA OPTIMIZADO =====');
     console.log('🚀 [SISTEMA] Procesando consulta:', message);
-        console.log('🚀 [SISTEMA] Usuario ID:', userId);
+    console.log('🚀 [SISTEMA] Usuario ID:', userId);
+    console.log('🚀 [SISTEMA] Conversación ID:', conversationId);
+
+    // =====================================
+    // OBTENER INFORMACIÓN DEL USUARIO Y CONTEXTO
+    // =====================================
+    
+    const infoUsuario = await obtenerInfoUsuario(userId);
+    const historialConversacion = await obtenerHistorialConversacion(userId, conversationId);
 
         // =====================================
     // INICIALIZACIÓN DE LANGFUSE (temporalmente deshabilitado)
@@ -740,13 +893,29 @@ async function processQuery({ message, userId }) {
         console.log('🧠 [MEMORIA] Analizando si necesita contexto conversacional...');
         let contextoPinecone = '';
         
-        // Solo buscar memoria para consultas que realmente la necesiten
-        const consultasQueNecesitanMemoria = /\b(anterior|antes|mencionaste|dijiste|conversación|conversacion|hablamos|recordar|recuerdas|me|mi)\b/i;
+        // Detección mejorada para consultas que necesitan memoria o contexto
+        const consultasQueNecesitanMemoria = /\b(anterior|antes|mencionaste|dijiste|conversación|conversacion|hablamos|recordar|recuerdas|me|mi|entonces|y|bueno|ok|si|sí|continúa|continua|más|mas|otros|otra|que|qué)\b/i;
+        const esRespuestaCorta = message.trim().length < 15;
+        const necesitaContexto = consultasQueNecesitanMemoria.test(message) || esRespuestaCorta || historialConversacion.length > 0;
         
-        if (consultasQueNecesitanMemoria.test(message)) {
+        if (necesitaContexto) {
             console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
+            
+            // Agregar contexto conversacional al contexto de memoria
+            if (historialConversacion.length > 0) {
+                const ultimosMensajes = historialConversacion.slice(-2); // Solo los 2 últimos
+                const contextoConversacional = ultimosMensajes.map(msg => 
+                    `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
+                ).join('\n');
+                
+                contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
+            }
+            
             try {
-                contextoPinecone = await pineconeMemoria.agregarContextoMemoria(userId, message);
+                const memoriaAdicional = await pineconeMemoria.agregarContextoMemoria(userId, message);
+                if (memoriaAdicional) {
+                    contextoPinecone += `\n${memoriaAdicional}`;
+                }
             } catch (error) {
                 console.error('❌ [PINECONE] Error buscando recuerdos:', error.message);
             }
@@ -879,7 +1048,6 @@ async function processQuery({ message, userId }) {
                         console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
                     );
                     console.log('✅ [SISTEMA] Respuesta RAG+SQL enviada correctamente (async)');
-                    console.log('🎯 [RESUMEN] RAG+SQL EXITOSO: Información contextual + ejemplos concretos');
                     
                     // Guardado en memoria para RAG+SQL (solo si es importante)
                     if (finalMessage.length > 200 || message.includes('proceso') || message.includes('procedimiento')) {
@@ -915,51 +1083,53 @@ async function processQuery({ message, userId }) {
                         // Formatear respuesta final de forma natural
                         const finalMessage = await formatFinalResponse(results, message);
                         
-                        console.log('📋 [RESPUESTA-FINAL] Respuesta optimizada:', finalMessage.substring(0, 200) + '...');
-                console.log('📋 [RESPUESTA-FINAL] Longitud:', finalMessage.length, 'caracteres');
+                        // =====================================
+                        // PERSONALIZAR RESPUESTA CON NOMBRE DEL USUARIO
+                        // =====================================
+                        const respuestaPersonalizada = personalizarRespuesta(finalMessage, infoUsuario.nombre);
+                        
+                        console.log('📋 [RESPUESTA-FINAL] Respuesta optimizada:', respuestaPersonalizada.substring(0, 200) + '...');
+                        console.log('📋 [RESPUESTA-FINAL] Longitud:', respuestaPersonalizada.length, 'caracteres');
                 
                                         // Guardar async para no bloquear la respuesta
-                        saveAssistantMessageToFirestore(userId, finalMessage).catch(err =>
+                        saveAssistantMessageToFirestore(userId, respuestaPersonalizada).catch(err =>
                             console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
                         );
                         console.log('✅ [SISTEMA] Respuesta final enviada correctamente (async)');
                         console.log('🎯 [RESUMEN] OPTIMIZACIÓN EXITOSA: Una sola llamada GPT generó respuesta completa');
-                
-                        // Guardado en memoria (solo si es importante)
-                        if (finalMessage.length > 200 || message.includes('total') || message.includes('reporte')) {
-                            try {
-                                console.log('💾 [PINECONE] Guardando resultado importante en memoria...');
-                                await pineconeMemoria.guardarAutomatico(userId, message, finalMessage);
-                                console.log('✅ [PINECONE] Memoria actualizada exitosamente');
-                            } catch (error) {
-                                console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
-                            }
-                        } else {
-                            console.log('⚡ [OPTIMIZACIÓN] Resultado simple - saltando guardado en memoria');
-                        }
-                
-                const tiempoTotal = Date.now() - tiempoInicio;
+                        
+                        const tiempoTotal = Date.now() - tiempoInicio;
                         console.log('📊 [MÉTRICAS] Tiempo total:', tiempoTotal, 'ms');
                         console.log('📊 [MÉTRICAS] Tokens totales:', tokensLlamada.total_tokens);
                         console.log('📊 [MÉTRICAS] Costo estimado: $', costoEstimado.toFixed(6));
-                        console.log('📊 [MÉTRICAS] Optimizado: true, Llamadas IA: 1');
-                
-                return { success: true, data: { message: finalMessage } };
+                        console.log('📊 [MÉTRICAS] Consulta SQL exitosa - Optimizado: true, Llamadas IA: 1');
+                        
+                        return {
+                            success: true,
+                            data: {
+                                message: respuestaPersonalizada
+                            }
+                        };
                     } else {
                         // No hay SQL, puede ser respuesta conversacional
                         console.log('ℹ️ [CONVERSACION] No se detectó SQL, procesando como conversación');
                         
+                        // =====================================
+                        // PERSONALIZAR RESPUESTA CONVERSACIONAL CON NOMBRE DEL USUARIO
+                        // =====================================
+                        const respuestaPersonalizada = personalizarRespuesta(respuestaIA, infoUsuario.nombre);
+                        
                         // Guardar async para no bloquear la respuesta
-                        saveAssistantMessageToFirestore(userId, respuestaIA).catch(err =>
+                        saveAssistantMessageToFirestore(userId, respuestaPersonalizada).catch(err =>
                             console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
                         );
                         console.log('✅ [SISTEMA] Respuesta conversacional enviada (async)');
                         
                         // Guardado en memoria (solo si es importante)
-                        if (respuestaIA.length > 400 || message.includes('importante') || message.includes('recuerda') || message.includes('proceso') || message.includes('procedimiento')) {
+                        if (respuestaPersonalizada.length > 400 || message.includes('importante') || message.includes('recuerda') || message.includes('proceso') || message.includes('procedimiento')) {
                             try {
                                 console.log('💾 [PINECONE] Guardando conversación importante en memoria...');
-                                await pineconeMemoria.guardarAutomatico(userId, message, respuestaIA);
+                                await pineconeMemoria.guardarAutomatico(userId, message, respuestaPersonalizada);
                                 console.log('✅ [PINECONE] Memoria actualizada exitosamente');
                             } catch (error) {
                                 console.error('❌ [PINECONE] Error guardando en memoria:', error.message);
@@ -972,9 +1142,13 @@ async function processQuery({ message, userId }) {
                         console.log('📊 [MÉTRICAS] Tiempo total:', tiempoTotal, 'ms');
                         console.log('📊 [MÉTRICAS] Tokens totales:', tokensLlamada.total_tokens);
                         console.log('📊 [MÉTRICAS] Costo estimado: $', costoEstimado.toFixed(6));
-                        console.log('📊 [MÉTRICAS] Optimizado: true, Llamadas IA: 1');
                         
-                        return { success: true, data: { message: respuestaIA } };
+                        return {
+                            success: true,
+                            data: {
+                                message: respuestaPersonalizada
+                            }
+                        };
                     }
                 }
                 
@@ -1045,11 +1219,19 @@ async function processQuery({ message, userId }) {
 // FUNCIÓN STREAMING PARA TIEMPO REAL
 // =====================================
 
-async function processQueryStream({ message, userId, response }) {
+async function processQueryStream({ message, userId, conversationId, response }) {
     const tiempoInicio = Date.now();
     console.log('🚀 [STREAMING] ===== INICIANDO PROCESO DE CONSULTA CON STREAMING =====');
     console.log('🚀 [STREAMING] Procesando consulta:', message);
     console.log('🚀 [STREAMING] Usuario ID:', userId);
+    console.log('🚀 [STREAMING] Conversación ID:', conversationId);
+
+    // =====================================
+    // OBTENER INFORMACIÓN DEL USUARIO Y CONTEXTO
+    // =====================================
+    
+    const infoUsuario = await obtenerInfoUsuario(userId);
+    const historialConversacion = await obtenerHistorialConversacion(userId, conversationId);
 
     try {
         // No esperar a que termine de guardar - hacer async
@@ -1065,13 +1247,29 @@ async function processQueryStream({ message, userId, response }) {
         console.log('🧠 [MEMORIA] Analizando si necesita contexto conversacional...');
         let contextoPinecone = '';
         
-        // Solo buscar memoria para consultas que realmente la necesiten
-        const consultasQueNecesitanMemoria = /\b(anterior|antes|mencionaste|dijiste|conversación|conversacion|hablamos|recordar|recuerdas|me|mi)\b/i;
+        // Detección mejorada para consultas que necesitan memoria o contexto
+        const consultasQueNecesitanMemoria = /\b(anterior|antes|mencionaste|dijiste|conversación|conversacion|hablamos|recordar|recuerdas|me|mi|entonces|y|bueno|ok|si|sí|continúa|continua|más|mas|otros|otra|que|qué)\b/i;
+        const esRespuestaCorta = message.trim().length < 15;
+        const necesitaContexto = consultasQueNecesitanMemoria.test(message) || esRespuestaCorta || historialConversacion.length > 0;
         
-        if (consultasQueNecesitanMemoria.test(message)) {
+        if (necesitaContexto) {
             console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
+            
+            // Agregar contexto conversacional al contexto de memoria
+            if (historialConversacion.length > 0) {
+                const ultimosMensajes = historialConversacion.slice(-2); // Solo los 2 últimos
+                const contextoConversacional = ultimosMensajes.map(msg => 
+                    `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
+                ).join('\n');
+                
+                contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
+            }
+            
             try {
-                contextoPinecone = await pineconeMemoria.agregarContextoMemoria(userId, message);
+                const memoriaAdicional = await pineconeMemoria.agregarContextoMemoria(userId, message);
+                if (memoriaAdicional) {
+                    contextoPinecone += `\n${memoriaAdicional}`;
+                }
             } catch (error) {
                 console.error('❌ [PINECONE] Error buscando recuerdos:', error.message);
             }
@@ -1166,10 +1364,14 @@ async function processQueryStream({ message, userId, response }) {
                 }
             }
 
-            // Enviar señal de finalización
+            // Personalizar respuesta con nombre del usuario
+            const respuestaPersonalizada = personalizarRespuesta(fullResponse, infoUsuario.nombre);
+
+            // Enviar señal de finalización con conversationId
             response.write(JSON.stringify({
                 type: 'end',
-                fullResponse: fullResponse,
+                fullResponse: respuestaPersonalizada,
+                conversationId: conversationId,
                 tokenCount: tokenCount,
                 timestamp: Date.now()
             }) + '\n');
@@ -1180,15 +1382,25 @@ async function processQueryStream({ message, userId, response }) {
             // POST-PROCESAMIENTO (ASYNC)
             // =====================================
 
+            // Guardar respuesta completa en el historial de chat
+            if (conversationId) {
+                chatManager.addMessageToConversation(userId, conversationId, {
+                    role: 'assistant',
+                    content: respuestaPersonalizada
+                }).catch(err =>
+                    console.error('❌ [CHAT-HISTORY] Error guardando respuesta:', err.message)
+                );
+            }
+
             // Guardar respuesta completa en Firestore (async)
-            saveAssistantMessageToFirestore(userId, fullResponse).catch(err =>
+            saveAssistantMessageToFirestore(userId, respuestaPersonalizada).catch(err =>
                 console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
             );
 
             // Guardar en memoria solo si es importante (async)
-            if (fullResponse.length > 400 || message.includes('importante') || message.includes('recuerda')) {
+            if (respuestaPersonalizada.length > 400 || message.includes('importante') || message.includes('recuerda')) {
                 try {
-                    pineconeMemoria.guardarAutomatico(userId, message, fullResponse).catch(err =>
+                    pineconeMemoria.guardarAutomatico(userId, message, respuestaPersonalizada).catch(err =>
                         console.error('❌ [PINECONE] Error guardando en memoria:', err.message)
                     );
                 } catch (error) {
@@ -1200,8 +1412,9 @@ async function processQueryStream({ message, userId, response }) {
             console.log('📊 [STREAMING] Tiempo total:', tiempoTotal, 'ms');
             console.log('📊 [STREAMING] Tokens generados:', tokenCount);
             console.log('📊 [STREAMING] Respuesta completa enviada exitosamente');
+            console.log('🔄 [STREAMING] Conversación guardada en historial:', conversationId);
 
-            return { success: true, streamed: true };
+            return { success: true, streamed: true, conversationId };
 
         } catch (streamError) {
             console.error('❌ [STREAMING] Error en stream:', streamError);

@@ -161,6 +161,20 @@ Gestión familiar que continúa el legado del fundador Felipe Galera.`;
         chunksCriticos.push(crearChunk(contextoFundacion, 'Propietarios y Fundación', metadatos, `critico_fundacion_${contador++}`));
     }
     
+    // CHUNK CRÍTICO 6: Pedro Muñoz y responsabilidades específicas
+    const infoPedroMunoz = contenido.match(/Pedro Muñoz/g);
+    if (infoPedroMunoz) {
+        const contextoPedro = `INFORMACIÓN ESPECÍFICA - PERSONAL RESPONSABILIDADES
+Pedro Muñoz: Responsable de que todos los encargos salgan con la fórmula aplicada
+Función: Supervisar que los clientes sepan exactamente la planta que van a tener
+Control: Garantizar que no se siembren ni más ni menos pies de lo que corresponde
+Gestión: Controlar el excedente del semillero
+Área: Gestión de encargos y fórmulas de siembra
+Ubicación sistema: Ventas – Gestión – Encargos de siembra`;
+        
+        chunksCriticos.push(crearChunk(contextoPedro, 'Personal - Pedro Muñoz', metadatos, `critico_pedro_munoz_${contador++}`));
+    }
+    
     console.log(`📄 [RAG ULTRA] Creados ${chunksCriticos.length} chunks críticos para información específica`);
     return chunksCriticos;
 }
@@ -410,6 +424,27 @@ function esConsultaSeguimiento(consulta) {
     );
 }
 
+// =====================================
+// FUNCIONES AUXILIARES PARA BÚSQUEDA ESPECÍFICA
+// =====================================
+
+/**
+ * Genera embedding para una consulta específica
+ */
+async function generarEmbedding(texto) {
+    try {
+        const response = await openai.embeddings.create({
+            model: "text-embedding-ada-002",
+            input: texto,
+            encoding_format: "float"
+        });
+        return response.data[0].embedding;
+    } catch (error) {
+        console.error('❌ [RAG] Error generando embedding:', error.message);
+        return null;
+    }
+}
+
 /**
  * Función principal para recuperar conocimiento empresarial con contexto conversacional
  */
@@ -438,9 +473,45 @@ INSTRUCCIÓN: Continúa explicando o detallando el tema anterior basándote en e
             }
         }
         
-        // 2. BUSQUEDA ESPECÍFICA DE PEDRO MUÑOZ
+        // 2. BUSQUEDA ESPECÍFICA DE PEDRO MUÑOZ (MEJORADA)
         if (consulta.toLowerCase().includes('pedro') && consulta.toLowerCase().includes('muñoz')) {
             console.log('🎯 [RAG] Activación directa: Pedro Muñoz');
+            
+            // Buscar directamente por contenido con Pedro Muñoz
+            const { Pinecone } = require('@pinecone-database/pinecone');
+            const pinecone = new Pinecone({
+                apiKey: process.env.PINECONE_API_KEY
+            });
+            const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
+            
+            try {
+                const embedding = await generarEmbedding('Pedro Muñoz responsable encargos fórmula aplicada');
+                if (embedding) {
+                    const queryResponse = await index.query({
+                        vector: embedding,
+                        topK: 15,
+                        includeMetadata: true,
+                        filter: {
+                            tipo: 'informacion_empresa_oficial'
+                        }
+                    });
+                    
+                    const fragmentosPedro = queryResponse.matches.filter(match => 
+                        match.metadata.texto && match.metadata.texto.toLowerCase().includes('pedro muñoz')
+                    );
+                    
+                    if (fragmentosPedro.length > 0) {
+                        console.log('✅ [RAG] Pedro Muñoz encontrado en chunks actualizados');
+                        return `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
+
+${fragmentosPedro[0].metadata.texto}`;
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ [RAG] Error buscando Pedro Muñoz:', error.message);
+            }
+            
+            // Fallback: buscar con el método anterior
             const contextoDirecto = await buscarPorIdEspecifico('chunk_1751473627724_22_2');
             if (contextoDirecto) {
                 return contextoDirecto;
