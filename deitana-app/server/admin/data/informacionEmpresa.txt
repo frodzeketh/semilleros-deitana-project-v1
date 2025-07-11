@@ -2483,3 +2483,333 @@ Explicación: Esta es una instrucción crítica que restringe explícitamente lo
 FRECUENCIA: CADA VEZ QUE SE LIMPIE Y LLENE
 Explicación: Esta línea establece la frecuencia con la que se deben realizar ciertas acciones (probablemente rellenar o preparar la solución de desinfección). La instrucción "CADA VEZ QUE SE LIMPIE Y LLENE" significa que cada vez que el equipo sea vaciado para su limpieza interna y posteriormente rellenado con agua, se deben seguir las directrices específicas (como la aplicación de OXIPREMIUM 5).
 
+
+
+
+
+
+La jerarquía de responsabilidades por sección se organiza de la siguiente manera: En la sección de Injertos Hacer, la Responsable es ANA BELÉN SÁNCHEZ, los Encargados son ANTONIO MIRAS MOYA y MARCIA PADILLA, y los Sustitutos son VICTOR MANUEL CELA y LIVIA CARMITA SERRANO, con Tareas Auxiliares en la Sala Injertos. Para Siembra, ANA BELÉN SÁNCHEZ es la Responsable, los Encargados son 1º ALEX LLUMITAXIG PASOCHOA y 2º FREDDY GUASCO LOJA, y el Sustituto es JULIO CÉSAR TITO CERVANTES. En Lavado, CARLOS ENRIQUE ALCÍVAR es el Encargado y JULIO CÉSAR TITO CERVANTES es su Sustituto. En Riegos, el Encargado de Riegos es 1º JUAN MARTÍNEZ RUIZ, los Supervisores son 2º ÁNGEL MIÑARRO GÓMEZ y 2º LUIS ALCÍVAR TURÓN CHADÁN, y el Sustituto es ÁNGEL MIÑARRO. Para Reparto, MARCELO FUENTES es el Encargado y DMYTRO KACHKA es el Auxiliar y también el Sustituto. En Garden, los Encargados son 1º ÁNGEL SARELA, 2º ANTONIO MUÑOZ MARTÍNEZ y 3º PATRICIA ORDOÑEZ TUDELA, con ANTONIO MUÑOZ MARTÍNEZ y PATRICIA ORDOÑEZ TUDELA como Sustitutos. En T Invernadero, los Encargados son 1º YORANA ALBA y 2º RAQUEL ELISABETH SIGÜENCIA PEÑAFIEL, siendo RAQUEL SIGÜENCIA PEÑAFIEL la Sustituta. Para Injertos Trabajo, los Encargados son YORANA ALBA y 2º RAQUEL ELISABETH SIGÜENCIA. En Suministros, los Encargados son 1º FREDDY ROLANDO ANDA SÁNCHEZ y 2º ROMEL MANUEL ALVARADO ZAPATA. Los Responsables de Cuadrilla son VICTOR MANUEL CELA UZHA, WALLINGTON ZAMBRANO PROANO, MERARI ADIVAN ESPINOZA OSORIO y HENRY GARCIA VELAZQUEZ, y el Sustituto es ROMEL MANUEL. Para Mantenimiento Empresa (MTO EMPRESA), los Encargados son 1º ELIO SOTO y 2º JULIAN ALVAREZ. En Mantenimiento Casas Particulares (MTO. CASAS PART.), los Encargados son MARÍA PIEDAD BELTRÁN y VICTOR CELA, y las Áreas de Trabajo son Oficinas y Casas, y Jardines Casas. Finalmente, en Logística, FREDDY ROLANDO es el Encargado y ROMEL MANUEL es el Sustituto.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+la organización por secciones de una empresa, desglosando las tareas específicas y el personal asignado a cada una de ellas. Se observa una estructura clara que abarca desde áreas operativas clave como Injertos Hacer, Siembra, Lavado, Riego y Reparto, hasta secciones de apoyo como Oficinas, Mantenimiento (tanto de la empresa como de casas particulares), Suministros y Logística. Cada sección tiene un código de identificación único y una lista exhaustiva de tareas, también con sus respectivos códigos.
+
+El personal se asigna a estas secciones con diferentes tipos de contratos, predominando los contratos fijos y fijo-discontinuos. Por ejemplo, en la sección de Injertos, que es una de las más grandes, se encuentran tareas como "Z-INJERTAR PΕPINO" y "Z-PREP.BAND.PARA INJERTOS", y cuenta con un número significativo de trabajadores. La sección de Siembra gestiona actividades como "SEMBRAR EN 104 ALV" y "Z-SEMBRAR AROMATICA A MANO (260)". Otras secciones como Lavado de Bandejas, Riego y Reparto también tienen definidas sus tareas y el personal responsable.
+
+
+
+Las secciones de soporte incluyen Oficinas, con tareas de administración, recursos humanos y tecnología de la información. Mantenimiento se divide en Mantenimiento Empresa y Mantenimiento Casas Particulares, abordando reparaciones, limpieza y gestión de instalaciones. Suministros se encarga del manejo de materiales y logística interna, con tareas como "Z-LLENAR SACOS TURBA" y "MOVER CARROS EN SEMILLERO". Finalmente, Logística maneja la movilización de palets y formación de carretilleros, entre otras funciones. El documento también menciona secciones generales como "ALMUERZO" y "CALEFACCION", así como archivos para "LAVADO" y "REPARTO", lo que sugiere una organización integral de las operaciones y el personal.
+
+
+En la sección INJERTOS HACER (Cod. Secc. 1), las tareas incluyen H. CARRETILLERO INJERTOS (Cod. Tarea 259), MOVER BANDEJAS INJERTOS (260), SACUDIR BANDEJAS INJERTOS (261), Z-CARGAR PARA INJERTAR (65), Z-DEVOLVER PLANTA SOBRANTE (66), Z-ENTERRAR (63), Z-ENTERRAR PUA (300), Z-HORAS FORMACION INJERTOS (276), Z-INJERTAR PΕPINO (237), Z-INJERTAR SANDIA (62), Z-INJERTAR SANDIA PUA (299), Z-INJERTAR TOMATE (104) (179), Z-LIMPIAR ALMACEN DE INJERTOS (183), Z-MOVER INJERTOS EN CAMARA (67), Z-PREP.BAND.PARA INJERTOS (185) y Z-REPICAR EN ALMACEN INJ. (64). El personal de Injertos incluye: MIRAS MOYA, ANTONIO (Fijo, Cod. Tr. 0002), CALLE CAMPOVERDE, ELVIA BEATRIZ (Fijo-Discont., 0047), SERRANO CHAVEZ, LIVIA CARMITA (Fijo-Discont., 0070), IANCU RAMONA (Fijo-Discont., 0109), JAMI TOAQUIZA, LUZ MARIA (Fijo-Discont., 0113), VARGAS ORELLANA, BERTHA (Fijo-Discont., 0116), PADILLA LOPEZ, MARCIA MARGARITA (Fijo-Discont., 0123), CALLE ROMERO, NELLY CARMITA (Fijo-Discont., 0125), ROMERO FAJARDO, BLANCA LEONOR (Fijo-Discont., 0219), NEIRA MOROCHO, NELVA BEATRIZ (Fijo-Discont., 0242), ROCHA CHUQUILLA, XIMENA ALEXANDRA (Fijo-Discont., 0389), CONDORI CAPELI, GLADYS (Fijo-Discont., 0448), MARCUS, EMIGDIA (Fijo-Discont., 0450), CONDORI MOLLO, ADELA STEFANY (Fijo-Discont., 0610), REVILLA ORTIZ, LUPE MERCEDES (Fijo-Discont., 0753), MOPOSITA MENDOZA, JENNIFER ARACELY (Fijo-Discont., 0809), CASTRO DELGADILLO, JEHIDY (Fijo-Discont., 0874), LOPEZ MENDOZA, MARICELA SOLEDAD (Fijo-Discont., 0884), FLORES CHOQUE, ROMINA MIRIAM (Fijo-Discont., 0886) y CARDONA JAIMES, JULIETH PAOLA (Fijo-Discont., 0888). 
+
+En la sección SIEMBRA (Cod. Secc. 2), las tareas son CAMBIAR FUNDAS (221), CAMBIAR MAQUINA (91), H.SIEMBRA (8), LIMPIAR MAQUINA (94), PONER ETIQUETAS (37), SEMBRAR EN 104 ALV (48), SEMBRAR EN 150 ALV (49), SEMBRAR EN 198 ALV (50), SEMBRAR EN 260 ALV (51), SEMBRAR EN 322 ALV (52), SEMBRAR EN 54 ALV (47), SEMBRAR EN 589 ALV (280), SEMBRAR EN 874 ALV (53), Z-SEMBRAR AROMATICA A MANO (260) (89), Z-SEMBRAR AROMATICA A MANO (322) (88) y Z-SEMBRAR AROMATICA A MANO (874) (87).  El personal de Siembra incluye: LLUMITAXIG PASOCHOA, ALEX LEONIDAS (Fijo, Cod. Tr. 0529), PUCHAYCELA PRADO, HECTOR CECILIO (Fijo-Discont., 0569) y GUASCO LOJA, FREDDY MAURICIO (Fijo, 0618).
+
+La sección LAVADO BANDEJAS (Cod. Secc. 3) abarca H.SACAR BANDEJAS DE LOS CARROS (205), LAVAR BANDEJAS (290), SACUDIR BANDEJAS (292), Z-SACUDIR BANDEJAS (104) (107), Z-SACUDIR BANDEJAS (198) (108), Z-SACUDIR BANDEJAS (260) (109), Z-SACUDIR BANDEJAS (322) (110), Z-SACUDIR BANDEJAS (54) (106) y Z-SACUDIR BANDEJAS (874) (111).  El personal de Lavado es ALCIVAR GONZALEZ, CARLOS ENRIQUE (Fijo-Discont., Cod. Tr. 0155).
+
+Para la sección RIEGO (Cod. Secc. 5), las tareas son APRENDIZAJE RIEGOS (282), GUARDIA DE RIEGO (226), H.ENCARGADO RIEGO (239), H.RIEGO (18), SUPERVISION TECNICOS (ALP), Z-ABONADO (144), Z-FUMIGACION (145), Z-MANTENIMIENTO RIEGO (142) y Z-RIEGO CON MANGUERA (143).  El personal de Riegos incluye: CHOQUETCILLA MARTINEZ, CARLOS (Fijo-Discont., Cod. Tr. 0601), BALTAZAR ENCINAS, EDWIN (Fijo, 0619), MIÑARRO GOMEZ, ANGEL (Fijo, 0643), PACA LOBATO, LUIS GIOVANY (Fijo-Discont., 0692), TUBON CHADAN, LUIS ALCIVAR (Fijo-Discont., 0699), MARTINEZ RUIZ, JUAN (Fijo, 0677) y DELGADO CAMPOVERDE, JUAN CARLOS (Fijo-Discont., 0844).
+
+La sección de OFICINAS (Cod. Secc. 6) incluye tareas como ADJUNTO DIRECCION (295), H.ADMINISTRACION (1), H.TECNICO (174), PRACTICAS INFORMATICA (257), REPARTO ADMIN. (258), RESP. MANTENIMIENTO (267), RR.HH. cite_start, TECNICO CALIDAD (262), TECNICO INJERTOS (203) y Z-INFORMATICA (171).  El personal de Administración es: DOMINGO FERNANDEZ (Fijo, Cod. Tr. 0023), MUÑOZ SANCHEZ, PEDRO (Fijo, 0399), GUERRERO SCHNABEL, LILIAN (Fijo, 0728), BALLESTA ORTIN, FRANCISCO JESÚS (Fijo, 0804), GOMEZ SANCHEZ, ANA MARIA (Fijo, 0820), BARRIOS CASTILLO, FRANCISCO JOSE (Fijo, 0825) y LOPEZ MARTINEZ, MARIA ALICIA (Temporal, 0834). El personal de RR.HH. es GARCIA NOGUERA, FERNANDO DANIEL (Fijo, 0773). De Calidad, el personal incluye SANCHEZ BOLARIN JOSE DAVID (Fijo, 0802) y AGUAR BARTOLOME, JOSE (Fijo, 0848). De Informática, el personal es JIMENEZ NAVARRO, ANTONIO (Fijo, 0821).
+
+En la sección REPARTO (Cod. Secc. 7), las tareas son H.RECOGER CARROS (186), H.TIRAR RECICLAJE (195), MANTENIMIENTO CAMIONES (287) y Z-REPARTIR PLANTA (125).  El personal de Reparto incluye: FUENTES BELTRAN, MARCELO XAVIER (Fijo, Cod. Tr. 0505) y KACHKA, DMYTRO (Fijo, 0830).
+
+La sección GARDEN (Cod. Secc. 9) tiene las tareas ADMINISTRACION GARDEN (266), EXTENDER MACETAS (242), GARDEN: LIMPIEZA (298), H.GARDEN (21), INVENTARIO GARDEN (265), JARDINES CLIENTES-GARDEN (ALQ), MANTENIMIENTO GARDEN (272), PODAR GARDEN (264), QUITAR HIERBA GARDEN (263), RECEPCION DE PEDIDOS (ALU), REPOSICION ARTICULOS GARDEN (271), RIEGO GARDEN (252), /PAQUETES (247), TIENDA ONLINE (247), Z-DEPENDIENTE/AT CLIENTE (169), Z-LIMPIAR MACETAS (167), -REPICAR BANDEJAS (166), Z-REPICAR MACETAS (168).  El personal de Garden es: MUÑOZ MARTINEZ, ANTONIO (Fijo, Cod. Tr. 0330), GALERA MATEO, ANGEL (Fijo, 0431), GIL DEL CASTILLO, JOSE LUIS (Fijo, 0563), SANCHEZ CRESPO, MARTA (Fijo, 0742), ORDOÑEZ TUDELA, PATRICIA (Fijo, 0750), CANOVAS COSTA, SONIA (Fijo-Discont., 0860) y STRECKY, PETER (Fijo-Discont., 0875).
+
+En TRABAJOS INVERNADERO (Cod. Secc. 11), las tareas son DESCOPAR SANDIA (54) (206), DESCOPAR TOMATE (235), H.ESCANDALLOS (13), H.PREPARADO INJ.TOMATE (104) (26), H.REPICAR (32), OTRAS LIMPIEZAS INJERTOS (240), PODAR INJERTO TOMATE (236), REPICAR PACKS GARDEN (296), Z-ESCANDALLOS (NO INJERTOS) (182), Z-QUITAR HIERBA A TOMILLO (123), Z-RECUPERAR SANDIA (54) (104) y Z-RELLENAR CON VERMICULITA (60).  El personal de Invernaderos incluye: ALBA CASTRO, YOBANA (Fijo-Discont., Cod. Tr. 0185) y PINOS MENDEZ, ZOILA YOLANDA (Fijo-Discont., 0201), ROCHA LOZA, MARIA ELENA (Fijo-Discont., 0749).
+
+La sección INJERTOS TRABAJO (Cod. Secc. 12) tiene las tareas H.PREPARADO INJ.SANDIA (54) (42), Z-CORTAR SANDIA (54) (103) y Z-LIMPIAR CALABAZA (54) (41).  El personal de Injertos Trabajo es SIGUENCIA PEÑAFIEL, RAQUEL ELIZABETH (Fijo-Discont., Cod. Tr. 0195).
+
+Para SUMINISTROS (Cod. Secc. 13), las tareas son H.LIAR Y REGAR CARROS (197), LLENADO BIDONES (297), MOVER CARROS EN SEMILLERO (126), PREPARAR EMPAQUETADO (249), Z-CARGAR BANDEJAS (118), Z-CORTAR CEBOLLA/PUERROS (24), Z-DAR VUELTA A BANDEJAS (184), Z-EXTENDER BANDEJAS (119), Z-LLENAR SACAS DE TURBA (31), Z-LLENAR SACOS TURBA (164), Z-MOVER BANDEJAS (120) y Z-TIRAR PLANTA (122).  El personal de Suministros incluye: ALVARADO ZAPATA, ROMEL MANUEL (Fijo, Cod. Tr. 0091), CELA UZHCA, VICTOR MANUEL (Fijo, 0096), GARCIA VELASQUEZ, HENRY (Fijo-Discont., 0229), AROCA SANCHEZ, FREDY ROLANDO (Fijo, 0324), ZAMBRANO PROAÑO, WALINGTON (Fijo, 0602), ESPINOZA OSORIO, MERARI AVIDAN (Fijo-Discont., 0690), ZAPATA ZAPATA, MARCO ROGELIO (Fijo-Discont., 0777), CONTRERAS TOASA, JULIO CESAR (Fijo-Discont., 0840), MOPOSITA TIXE, EDISSON PATRICIO (Fijo-Discont., 0852), NARANJO PILAMUNGA, MARIO JAVIER (Fijo-Discont., 0855) y VILLARROEL ARROYO, ALFREDO (Fijo-Discont., 0873).
+
+En MANTENIMIENTOS EMPRESA (Cod. Secc. 14), las tareas son ETIQUETADO GENERAL (216), H.LIMPIAR OFICINA (200), H.MANTENIMIENTO INVERNADEROS/MEC (175), H.MECANICA (7), H.PONER PLASTICOS (14), H.PONER VIGAS (15), H.REPARAR MAQUINA LAVADORA-BAN (192), MANTENIMIENTO BARREDORA (217), REPARACION CARROS (156), REPARACION MAQUINA SIEMBRA (154), REPARAR CAMARA INJERTOS (218), Z-ALBAÑILERIA EMPRESA (40), Z-CAMBIAR PLASTICOS (130), Z-CERRAR VENTANA MANUAL (36), Z-GARDEN MANTENIMIENTO (302), Z-JARDIN EMPRESA (23), Z-LIMPIAR EMPRESA (136), Z-PINTAR INSTALACIONES (137), Z-QUEMAR HIERBA (128) y Z-SEPARAR SECTORES INVERNADEROS (135), ZSOMBRAR (131).  El personal de Mantenimiento incluye: BELTRAN MOLINA, MARIA PIEDAD (Fijo, Cod. Tr. 0300), PARDO CHAMBA, EDGAR DARLAN (Fijo, 0591), RODAS UCELA, WALTER NOE (Fijo-Discont., 0650), VERA VELASQUEZ, VANESSA VIVIANA (Fijo-Discont., 0847) y ALVAREZ JARAMILLO, JULIAN ANDRES (Fijo-Discont., 0850).
+
+Para MANTENIMIENTOS CASAS PARTICULARES (Cod. Secc. 15), las tareas son H.ARREGLAR CASAS-ALQUILER (194), REPARACIONES CASAS PARTICULARES (39), Z-JARDIN CASAS (59) y Z-LIMPIAR CASAS (141). 
+
+En LOGISTICA (Cod. Secc. 16), las tareas son FORMACION CARRETILLEROS (229), H.CARRETILLERO (4), H.MOV.PALETS EN CAMARA (61), TALLER (148), Z-INVENTARIO INVERNADEROS (124) y Z-MOVER PALETS DE BAND.SEMBRADAS (152).  El personal de Logística incluye: ZAMORA LOPEZ, JUAN (Fijo, Cod. Tr. 0021), RUIZ CAYUELA, JOSE ANTONIO (Fijo, 0048), CANOVAS MARTINEZ, JOSE (Fijo, 0049), PEREZ IBAÑEZ, FRANCISCO JAVIER (Fijo-Discont., 0203), CORTES RODRIGUEZ, DAVID (Fijo, 0523), TIJANI, DRISS (Fijo-Discont., 0654), TERRAZAS LOZA, CHRISTIAN (Fijo-Discont., 0859), MALDONADO RAMIREZ, NESTOR HERMEL (Fijo-Discont., 0861), ALEJANDRO CHAMBI, IRINEO (Fijo-Discont., 0863) y ANDRADE ANDRADE, ALEX ALEJANDRO (Fijo-Discont., 0871).
+
+La sección GENERAL (Cod. Secc. 17) incluye FORMACION RIESGOS LABORALES/CURSOS (241) y RECONOCIMIENTO MEDICO (245). En ALMUERZO (Cod. Secc. 22), la tarea es H.ALMUERZO (201). CALEFACCION (Cod. Secc. 23) tiene las tareas TRABAJOS AUXILIARES (ALS), TRITURADO EXTERIOR (ALT) y TRITURAR PODAS (ALR). ARCHIVO LAVADO (Cod. Secc. 90) incluye Z-LAVAR BANDEJAS (104) (113), Z-SACUDIR BANDEJAS (150) (207) y Z-SACUDIR BANDEJAS (589) (275). Finalmente, ARCHIVO REPARTO (Cod. Secc. 94) incluye H.REPARTO (25) y LOGISTICA (253).
+
+
+
+
+
+
+Bandejas y su Importancia para la Empresa:
+Tipos de bandejas (por número de alvéolos):
+54 alvéolos
+104 alvéolos
+150 alvéolos
+198 alvéolos
+260 alvéolos
+322 alvéolos
+589 alvéolos
+874 alvéolos
+Relevancia de este dato: El número de alvéolos de la bandeja determina el tipo de desinfección que se debe aplicar.
+Función pilar en la empresa: Estas bandejas son los envases en los que se realiza la siembra de prácticamente todos los cultivos.
+Uso específico por hortícola: Cada tipo de bandeja está diseñada para una hortícola determinada.
+Las bandejas de 874 alvéolos y 589 alvéolos se utilizan específicamente para sembrar aliáceas, es decir, cebollas y algunos puerros.
+
+
+
+
+
+
+
+
+
+Este documento presenta un plano detallado de la "INVERNADERO B", una instalación de semilleros perteneciente a "SEMILLEROS DEITANA". El invernadero está dividido en tres secciones principales: B1, B2 y B3, cada una con sus propias especificaciones de superficie cultivable y superficie total de invernadero.
+
+La sección B1, con una "Spf. de cultivo" (superficie de cultivo) de 6.240,6m² y una "Spf. de invernad." (superficie de invernadero) de 6.803m², contiene seis áreas numeradas del 1 al 6. Cada una de estas áreas tiene una cantidad específica de "Bandejas" y su superficie asociada:
+
+Área 1: 2512 Bandejas, 756,5m² 
+Área 2: 3348 Bandejas, 1.363,5m² 
+Área 3: 4043 Bandejas, 1.267,1m² 
+Área 4: 3719 Bandejas, 1.163,9m² 
+Área 5: 3367 Bandejas, 1.052,2m² 
+Área 6: 2077 Bandejas, 637,4m² 
+
+La suma total de bandejas para B1 es de 20066.
+
+La sección B2, con una "Spf. de cultivo" de 4.653m² y una "Spf. de invernad." de 5.002m², se subdivide en áreas numeradas del 7 al 12:
+
+Área 7: 1025 Bandejas, 320m² 
+Área 8: 2919 Bandejas, 888m² 
+Área 9: 2793 Bandejas, 888m² 
+Área 10: 2792 Bandejas, 864m² 
+Área 11: 2712 Bandejas, 818m² 
+Área 12: 2828 Bandejas, 874,8m² 
+
+La suma total de bandejas para B2 es de 15069.
+
+Finalmente, la sección B3, la más grande con una "Spf. de cultivo" de 13.503m² y una "Spf. de invern." de 14.867m², incluye las áreas numeradas del 13 al 21:
+
+Área 13: 5822 Bandejas, 1.676m² 
+Área 14: 5886 Bandejas, 1.686m² 
+Área 15: 5884 Bandejas, 1.686m² 
+Área 16: 5886 Bandejas, 1.683m² 
+Área 17: 5886 Bandejas, 1.680m² 
+Área 18: 5775 Bandejas, 1.680m² 
+Área 19: 5343 Bandejas, 1.538m² 
+Área 20: 4703 Bandejas, 1.412m² 
+Área 21: 4304 Bandejas, 1.318m² 
+La suma total de bandejas para B3 es de 46318, aunque la imagen muestra "TOTAL BANDEJAS B3 - 46318" y "2715 Band." y "873,6m²" al lado de 21, lo que podría indicar un dato adicional o una sub-división final.
+
+En conjunto, la superficie total de cultivo del Invernadero B es de 24.397m² y la superficie total de invernadero es de 26.672m². Este plano es una herramienta visual que facilita la gestión y el aprovechamiento del espacio dentro de la instalación, detallando la distribución de las bandejas y las superficies correspondientes en cada una de sus secciones.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"PROGRAMA DE RIEGO INVERNADEROS A (Polígono 28 / Parcela 1000)", detallando la distribución de "INVERNADERO A" en diferentes áreas y las especificaciones de su fertilización y pauta de riego.
+
+El Invernadero A se divide en cuatro grandes secciones: A1, A2, A3 y A4, además de un área destinada a la "DESTINA".
+
+La sección A1 tiene una "Spf. de cultivo" de 1.777m² y una "Spf. de invern." de 2.005m². Contiene las áreas numeradas del 1 al 2:
+Área 1: 3318 Bandejas, 938,9m² 
+Área 2: 2981 Bandejas, 838,8m² 
+
+La sección A2 tiene una "Spf. de cultivo" de 13.637m² y una "Spf. de invern." de 14.898m². Incluye las áreas numeradas del 8 al 12:
+
+Área 8: 4522 Bandejas, 1.337m² 
+Área 9: 4209 Bandejas, 1.205m² 
+Área 10: 4522 Bandejas, 1.337m² 
+Área 11: 4522 Bandejas, 1.337m² 
+Área 12: 4209 Bandejas, 1.205m² 
+
+La sección A3 tiene una "Spf. de cultivo" de 2.249m² y una "Spf. de invern." de 2.503m². Contiene las áreas numeradas del 3 al 7 y del 13 al 18:
+
+Área 3: 3318 Bandejas, 938,9m² 
+Área 4: 2981 Bandejas, 838,8m² 
+Área 5: 3500 Bandejas, 989,5m² 
+Área 6: 2792 Bandejas, 864m² 
+Área 7: 3500 Bandejas, 989,5m² 
+Área 13: 4522 Bandejas, 1.337m² 
+Área 14: 4209 Bandejas, 1.205m² 
+Área 15: 4522 Bandejas, 1.337m² 
+Área 16: 4209 Bandejas, 1.205m² 
+Área 17: 4522 Bandejas, 1.337m² 
+Área 18: 4209 Bandejas, 1.205m² 
+
+La sección A4 tiene una "Spf. de cultivo" de 2.520m² y una "Spf. de invern." de 3.200m². Incluye las áreas numeradas del 19 al 23:
+
+Área 19: 4522 Bandejas, 1.337m² 
+Área 20: 4209 Bandejas, 1.205m² 
+Área 21: 4522 Bandejas, 1.337m² 
+Área 22: 4209 Bandejas, 1.205m² 
+23: 4522 Bandejas, 1.337m² 
+
+La "INVERNADERO A" en su totalidad tiene una "Superficie total de cultivo" de 21.688m² y una "Superficie total de invern." de 23.608m². 
+
+El "Modo de aplicación" para la fertirrigación especifica los fertilizantes y su equilibrio:
+
+Fertilizantes:
+
+15-10-31: Fosfato monopotásico 
+Ambra 48: Peróxido de hidrógeno 
+
+Ambra Hydromix: Ácido nítrico 
+
+Equilibrio:
+
+Eq1 = ECOGAT + Ambra // CE 0,4 a 0,8 
+Eq2 = Fosfato monopotásico // CE 0,4 a 0,8 
+Eq3 = ECOGAT + Ambra // CE 0,2 a 0,3 
+La "Pauta de Riego" se define por el tipo de planta y su edad:
+Planta Grande (PG>15 días): Diferencial CE = 0,4 
+Planta Pequeña (PP<15 días): Diferencial CE = 0,1 
+
+También hay una sección para "CONSUMO ABONADO" con categorías como "SUPERFICIE DE INVERNADEROS (M2)", "TIEMPO TOTAL RIEGO (HORAS)", "PH (Entrada)", "CE (Entrada)", "PH (Salida)", "CE (Salida)" y "Diferencia"
+
+
+
+
+
+"PROGRAMA DE RIEGO INVERNADEROS C (Polígono", mostrando un plano detallado del "INVERNADERO C" de "SEMILLEROS DEITANA". El invernadero se divide en dos secciones principales, C1 y C2, con sus respectivas superficies de cultivo y de invernadero.
+
+La sección 
+C1 tiene una "Spf. de cultivo" de 16.01m² y una "Spf. de invern." de 17.717m². Contiene las áreas numeradas del 1 al 12, con las siguientes superficies:
+Área 1: 960m² 
+Área 2: 1.014m² 
+Área 3: 1.020,7m² 
+Área 4: 1.325m² 
+Área 5: 1.599m² 
+Área 6: 1.449m² 
+Área 7: 1.536m² 
+Área 8: 1.336m² 
+Área 9: 1.528,5m² 
+Área 10: 1.388,16m² 
+Área 11: 1.388,16m² 
+Área 12: 1.409,29m² 
+También se indica un "CABEZAL DE RIEGO" cerca del Área 12.
+La sección 
+C2 posee una "Spf. de cultivo" de 11.931m² y una "Spf. de invern." de 13.144m². Esta sección incluye las áreas numeradas del 13 al 23, con las siguientes superficies:
+Área 13: 1.189m² 
+Área 14: 1.440m² 
+Área 15: 924m² 
+Área 16: 1.325m² 
+Área 17: 731m² 
+Área 18: 1.210m² 
+Área 19: 1.211m² 
+Área 20: 960m² 
+Área 21: 1.871m² 
+Área 22: 845m² 
+Área 23: 1.025m² 
+
+La "Superficie de cultivo" total del Invernadero C es de 27.950m² y la "Superficie de invern." total es de 31.284m². Este plano es fundamental para la gestión eficiente del riego y el espacio dentro de las instalaciones del invernadero
+
+
+
+
+
+TIPOS DE BANDEJAS Y SUS USOS Las bandejas se clasifican en ANCHAS (también llamadas “altas”) y FINAS. Las BANDEJAS ANCHAS incluyen la de 104 alveolos, que se utiliza para tomates normales (tipo siembra 001) y también para el pie del tomate injertado (tipo siembra 0018). La bandeja de 52 alveolos (a tresbolillo) es una bandeja de 104 con funda que resulta en 52 plantas útiles, y se usa para pepino y calabacín. La bandeja de 150 alveolos se utiliza para sembrar cipreses, y también para sembrar los pies y las cabezas de injertos de sandía, melón y pepino cuando se emplean técnicas de injerto por púa. La bandeja de 198 alveolos se emplea para sembrar las cabezas de tomate (parte superior del injerto). Las BANDEJAS FINAS se siembran principalmente en el cabezal C, donde no hay calefacción, y se utilizan para cultivos más densos o de ciclos más cortos. Estas incluyen la de 260 alveolos, usada para brócoli, coliflor y lechuga. La de 322 alveolos es para brócoli, coliflor, aromáticas y puerros. La de 589 alveolos se destina a cebolla, al igual que la de 874 alveolos, pero esta última con mayor densidad.
+
+ESTRUCTURA DE INVERNADEROS POR CABEZAL La estructura de los invernaderos se organiza por cabezal. El CABEZAL C es una zona sin calefacción dedicada a bandejas finas. Está dividido en C1, que comprende 12 sectores (del 1 al 12), y C2, que abarca 11 sectores (del 13 al 23). El CABEZAL B es para Producción Ecológica. Este cabezal está compuesto por tres invernaderos, cada uno con temperatura independiente, y se usa únicamente para cultivo ecológico con abono autorizado. B1 contiene 6 sectores (del 1 al 6). B2 es un invernadero de malla con 6 sectores. B3 cuenta con 9 sectores (del 13 al 21).
+
+
+ABONO ECOLÓGICO – ECOSISTEMA EQUILIBRADO En todos los invernaderos ecológicos se utiliza Ecogat, que es un abono ecológico certificado. Se manejan tres tipos de equilibrio nutricional dependiendo de la fase del cultivo. Si es necesario prolongar la vida de la planta más tiempo del habitual, debido a retrasos en el campo o condiciones climáticas, se aplica un tercer equilibrio ajustado con una fórmula más suave, para mantener la planta viva sin forzarla. Esta gestión precisa del abonado es fundamental para mantener la calidad del cultivo y cumplir con los protocolos de agricultura ecológica.
+
+
+
+
+
+
+
+
+
+VISIÓN GENERAL DE LA EMPRESA. El nombre de la empresa es Semilleros Deitana SL. Forma parte del Holding Deitana, junto con El Huerto Deitana (garden), Galera y Carmona (vivienda), Barrio del Bosque (exportación), y Xponential Capital (tecnología). Su enfoque es la producción profesional de planta hortícola e injertada, integrando inteligencia artificial y automatización. La misión de la empresa es producir planta de máxima calidad, con eficiencia y trazabilidad, y liderar la innovación agrícola.
+
+INFRAESTRUCTURA GENERAL. La infraestructura general se compone de varios cabezales. El Cabezal A está formado por cuatro invernaderos: A1, A2, A3 y A4. Todos los sectores de estos invernaderos funcionan como sectores de riego independientes. A1 tiene dos sectores (1 y 2). Esta zona está sombreada con mantas negras y dispone de calefacción. Se utiliza para inducir el espigado del pie del tomate para realizar el injerto por debajo del cotiledón. Las plantas se mantienen allí durante siete días en verano y diez en invierno, para luego ser trasladadas al sector 10 del A2. A2 consta de cuatro habitáculos. El primer habitáculo incluye los sectores 13, 10 y 8. El segundo comprende los sectores 14, 11, 12 y 9. El tercer habitáculo, sectores 18 y 16, se utiliza para sandías recién injertadas por aproximación en invierno, y sandías de púa procedentes del sector 6 (A3). El cuarto habitáculo contiene los sectores 17 y 15. El sector 17 se usa para cabezas de tomate que se sacan del sector 7 (A3) para endurecer antes de injertar. El sector 15 es para colocar sandías injertadas que ya han pasado 15 días (primavera) o 23 días (invierno) en los sectores 18-16. A3 tiene dos sectores (6 y 7). El sector 7 se usa para extender todo lo sembrado antes de su traslado a sectores del A2 o A4 (garden). El sector 6 es la zona de injertos de púa (tomate, sandía, pepino, melón). Para el tomate, el proceso es: 4 días en cámara, seguidos de 2 días tapado con manta, 1 día destapado, y finalmente el traslado al sector 11 del A2. Para las cucurbitáceas, el proceso es: 7 días en cámara, 5 días tapadas en el sector 6, y luego el traslado al sector 16 o 18 del A2. A4 tiene cuatro habitáculos. Los sectores 4 y 5 son para packs repicados y bandejas de hortícolas destinadas al garden. El sector 3 es para la extensión de hortícolas sembradas para el garden, que luego pasan a los sectores 4-5; el 50% de estas se repican en pack y el otro 50% se colocan en bandeja de corcho. Los sectores 19, 20 y 23 son una zona para macetas y artículos de venta para el garden. Además, hay dos sectores de riego exteriores, fuera del invernadero. El Cabezal B (Ecológico) incluye los invernaderos B1, B2 (de malla) y B3. Los sectores son: B1 (1 al 6), B2 (1 al 6) y B3 (13 al 21). El Cabezal C (bandejas finas, sin calefacción) comprende los invernaderos C1 y C2. C1 tiene los sectores del 1 al 12, y C2 los sectores del 13 al 23. Es importante destacar que todos los sectores en todos los cabezales (A, B, C) son también sectores de riego independientes.
+
+TIPOS DE BANDEJAS Y USOS. Las bandejas se dividen en BANDEJAS ANCHAS / ALTAS y BANDEJAS FINAS. Las BANDEJAS ANCHAS / ALTAS incluyen la de 104 alveolos, utilizada para tomate normal (tipo siembra 001) y pie de injerto (tipo 0018). La bandeja de 52 alveolos se usa para pepino y calabacín, siendo una bandeja de 104 con funda sembrada a tresbolillo. La bandeja de 54 alveolos se utiliza para injertos de aproximación y de púa de sandía, pepino y melón. La bandeja de 150 alveolos es para ciprés, y pies/cabezas de injertos de sandía, melón y pepino (injerto por púa). La bandeja de 198 alveolos se destina a la cabeza de tomate. Las BANDEJAS FINAS incluyen la de 260 alveolos, para brócoli, coliflor y lechuga. La de 322 alveolos se usa para brócoli, coliflor, aromáticas y puerros. La bandeja de 589 alveolos es para cebolla. Y la de 874 alveolos también es para cebolla, pero con mayor densidad
+
+
+
+
+
+ implementación de las normativas GLOBALG.A.P. en Semilleros Deitana, detallando los puntos clave para asegurar la trazabilidad, la gestión del cultivo, el manejo de insumos, la seguridad laboral y el control documental.
+
+En primer lugar, la Trazabilidad (Punto clave: CB 1) implica llevar un registro completo de cada lote, desde el ingreso de la semilla hasta la entrega de la planta al cliente. Para esto, se asigna un código de partida a cada lote y se mantienen etiquetas legibles, una práctica que ya se realiza con el uso de PDAs. Además, se deben archivar todos los documentos relacionados, como albaranes, registros de semillas, ubicaciones, fechas de siembra, movimientos internos de plantas y detalles de las entregas.
+
+En cuanto al Historial y gestión del cultivo (CB 2), es fundamental mantener registros históricos detallados por cada cultivo, incluyendo información como el tipo de semilla utilizada, el formato de bandeja y la fecha de siembra. También se requiere conservar las rotaciones de cultivos o asegurar una separación clara y documentada entre los cultivos convencionales y los ecológicos para evitar cualquier tipo de mezcla o confusión.
+
+Respecto al Suelo y sustrato (CB 3), se debe documentar la composición y el origen de cada sustrato utilizado, especificando si es, por ejemplo, turba o compost de palmera. En caso de que el sustrato se produzca internamente en la finca, es necesario conservar los análisis correspondientes que certifiquen su calidad y composición.
+
+El Riego (CB 4) también cuenta con directrices específicas. Se debe llevar un registro claro del origen del agua utilizada, identificando si proviene del pantano A, B o C. Es importante aplicar permanganato de acuerdo con un calendario establecido, archivando los justificantes de cada aplicación. Adicionalmente, se deben registrar las actividades de limpieza de filtros, el mantenimiento de bombas y el estado general del sistema de riego para asegurar su correcto funcionamiento y la calidad del agua.
+
+La Fertirrigación y nutrición (CB 5) exige documentar los tres equilibrios de abono, específicamente el abono Ecogat, que se aplican a cada cultivo. Es necesario mantener un registro detallado de estas aplicaciones por cabezal y con la fecha exacta en que se realizaron.
+
+En lo que concierne a la Protección vegetal (CB 6 y CB 7), se deben registrar todas las aplicaciones fitosanitarias realizadas, incluyendo la fecha y hora de la aplicación, el cultivo al que se aplicó, el producto y la dosis utilizada (indicando que las combinaciones ya están bien definidas), y el operario responsable de la aplicación. Se enfatiza el uso de productos autorizados y la rotación de los mismos para prevenir el desarrollo de resistencias en las plagas. Asimismo, es mandatorio guardar los registros de compras y las fichas de seguridad (MSDS) de todos los productos fitosanitarios.
+
+El Manejo de residuos (CB 8) es un punto importante para la sostenibilidad. Se deben separar y documentar los diferentes tipos de residuos generados, como bidones vacíos, plásticos usados (mantas, envases, fundas de bandejas) y fertilizantes caducados. Es imprescindible disponer de un lugar delimitado y seguro para el almacenamiento de los residuos considerados peligrosos.
+
+La Salud, higiene y bienestar del trabajador (CB 10) es una prioridad que implica la disponibilidad de Equipos de Protección Individual (EPIs) adecuados, como guantes, mascarillas y protección ocular. Las instalaciones deben contar con aseos y lavabos adecuados, y la señalética en las zonas comunes debe ser clara. Es crucial mantener un registro de la formación en seguridad que recibe el personal, especialmente aquellos operarios que son aplicadores de fitosanitarios. Finalmente, los botiquines de primeros auxilios deben estar visibles, accesibles y contener un listado claro de los procedimientos a seguir en caso de emergencia.
+
+El Control de auditorías y documentos (AF 1, AF 2, AF 3) requiere que toda la documentación esté ordenada y sea fácilmente accesible. Esto incluye fichas técnicas de productos, partes de tratamiento, registros de formación del personal, registros de abonos y riegos, controles de limpieza, documentos de manejo de residuos y registros de seguridad. Adicionalmente, se debe llevar un registro de las no conformidades detectadas en las auditorías, junto con las acciones correctivas implementadas para subsanarlas.
+
+Por último, los Espacios separados para ecológico (B1-B3) son fundamentales para la certificación. Se debe mantener una separación física estricta y de registros entre los cultivos ecológicos y los convencionales. Es necesario validar el uso de productos específicamente permitidos para el cultivo ecológico y, de manera crucial, evitar las contaminaciones cruzadas entre los diferentes cabezales de invernadero o durante la preparación de la cuba para el lavado de bandejas, asegurando la integridad de la producción ecológica.
+
+
+
+
+Para mantener el sello ecológico en el semillero, es fundamental cumplir con una serie de requisitos y protocolos estrictos que abarcan desde la documentación y el origen de las materias primas hasta el control de plagas, la gestión del agua y los residuos, y la formación del personal.
+
+En primer lugar, la Documentación y certificación son esenciales. El semillero debe estar registrado oficialmente en un organismo acreditado para la certificación ecológica, como SOHISCERT o CCPAE. Es indispensable mantener una documentación organizada y actualizada que incluya solicitudes de certificación, informes de inspecciones anuales, registros de compras de productos ecológicos, análisis de sustratos y agua, así como registros de fichajes del personal y de tratamientos aplicados a los cultivos.
+
+Las Materias primas y semillas utilizadas deben ser exclusivamente certificadas como ecológicas, lo que implica que no pueden contener Organismos Genéticamente Modificados (OMG) ni haber sido tratadas con químicos artificiales. Para asegurar la integridad del producto ecológico, es crucial garantizar la trazabilidad completa de estas materias primas y semillas hasta su origen, documentando el lote, el proveedor y la fecha de adquisición.
+
+El Control fitosanitario natural es un pilar de la producción ecológica. Bajo ningún concepto se permite el uso de pesticidas ni fungicidas convencionales. El empleo de productos fitosanitarios se restringe estrictamente a aquellos productos ecológicos que están autorizados para cada familia de cultivos. Se debe dar preferencia a técnicas naturales de control de plagas, como el control biológico, la rotación de cultivos y el manejo de la biodiversidad en el entorno del semillero.
+
+La Gestión del riego y del agua también está regulada. Es obligatorio registrar el origen del agua utilizada, indicando si proviene de pantanos A, B o C, y documentar cualquier tratamiento al que sea sometida. La desinfección del agua con productos aprobados, como el permanganato, debe realizarse de forma obligatoria y con la frecuencia estacional establecida. Asimismo, es vital llevar un registro detallado de la limpieza y el mantenimiento de todo el sistema de riego para asegurar su correcto funcionamiento y la calidad del agua.
+
+En cuanto a los Suelos y sustratos, se requiere registrar su composición y origen, especificando si se trata de turba, compost o cualquier otro tipo de sustrato ecológico. Si el sustrato se produce internamente en el semillero, es necesario conservar los certificados de análisis que validen su composición y aptitud para el cultivo ecológico. Es fundamental evitar la mezcla de sustratos con elementos no autorizados, como OMG, turba contaminada o residuos sintéticos, que comprometerían el sello ecológico.
+
+El Abonado ecológico se realiza siguiendo un flujo documentado con Ecogat y tres equilibrios nutricionales específicos. Estas aplicaciones deben registrarse detalladamente por cabezal de invernadero y por fecha. Es una condición indispensable garantizar que todos los fertilizantes utilizados sean aptos y estén certificados para la agricultura ecológica.
+
+La Separación entre productos ecológicos y convencionales es crítica para evitar la contaminación cruzada. Se deben mantener distancias físicas adecuadas entre los cabezales y las bandejas de cultivos ecológicos y convencionales. Además, es esencial diferenciar claramente los productos ecológicos en los sistemas de gestión (como PDA y ERP) y mediante etiquetas específicas que indiquen su carácter ecológico.
+
+Los protocolos de Limpieza de bandejas y el Manejo de residuos también son estrictos. Se debe establecer un protocolo de desinfección de bandejas específico para cada tipo, asegurando la eliminación de cualquier residuo o patógeno. La recogida y separación de residuos es obligatoria, distinguiendo entre envases, bandejas deterioradas y restos de cultivos. La disposición de los residuos peligrosos debe realizarse de acuerdo con la normativa vigente y en lugares regulados.
+
+La Formulación y etiquetado de los productos ecológicos deben cumplir con la normativa de la Unión Europea. El uso del logo ecológico de la UE solo está permitido una vez obtenida la certificación. El etiquetado de los productos debe ser obligatorio e incluir el sello ecológico, el número de registro del operador y la frase "Producto ecológico UE".
+
+Finalmente, la Formación y trazabilidad del personal son clave. Es necesario proporcionar formación continua al personal sobre los principios de la agricultura ecológica, el manejo adecuado de productos ecológicos, el uso de Equipos de Protección Individual (EPIs) y los protocolos operativos. Además, se debe mantener un registro del personal autorizado para realizar tratamientos en cultivos ecológicos, documentando sus aptitudes y las fechas de su formación. Por último, la Auditoría interna y gestión de no conformidades es un proceso continuo. Se deben realizar auditorías periódicas internas para preparar las auditorías externas, que pueden ser trimestrales o anuales. Es imprescindible registrar y documentar todas las no conformidades detectadas, las acciones correctivas implementadas para resolverlas y el seguimiento de su eficacia para asegurar la mejora continua.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
