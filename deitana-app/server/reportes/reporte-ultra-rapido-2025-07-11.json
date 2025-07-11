@@ -1,11 +1,11 @@
 {
   "resumen": {
-    "fecha": "2025-07-11T04:00:17.944Z",
+    "fecha": "2025-07-11T17:53:51.398Z",
     "totalPreguntas": 10,
     "exitosos": 0,
     "fallos": 10,
     "tasaExito": 0,
-    "tiempoTotalMs": 14,
+    "tiempoTotalMs": 12,
     "tiempoPromedioMs": 1
   },
   "problemasCriticos": [
@@ -17,7 +17,7 @@
     {
       "pregunta": "¿Dónde está ubicada la empresa?",
       "razon": "Error en consulta: Cannot read properties of undefined (reading 'procesarConsultaStream')",
-      "tiempo": 1
+      "tiempo": 0
     },
     {
       "pregunta": "¿Qué certificación tiene Semilleros Deitana?",
@@ -27,12 +27,12 @@
     {
       "pregunta": "¿Qué significa CL_DENO en clientes?",
       "razon": "Error en consulta: Cannot read properties of undefined (reading 'procesarConsultaStream')",
-      "tiempo": 3
+      "tiempo": 2
     },
     {
       "pregunta": "¿Qué es AR_PRV en artículos?",
       "razon": "Error en consulta: Cannot read properties of undefined (reading 'procesarConsultaStream')",
-      "tiempo": 1
+      "tiempo": 0
     },
     {
       "pregunta": "¿Qué información hay sobre Roberto como cliente ejemplo?",
@@ -62,7 +62,7 @@
   ],
   "estadisticas": {
     "tiempoMinimo": 0,
-    "tiempoMaximo": 3,
+    "tiempoMaximo": 2,
     "preguntasLentas": 0
   },
   "recomendaciones": [

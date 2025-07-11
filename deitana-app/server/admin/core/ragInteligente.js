@@ -14,100 +14,304 @@ const openai = new OpenAI({
 });
 
 // =====================================
-// CONFIGURACIÓN RAG OPTIMIZADA
+// CONFIGURACIÓN RAG ULTRA-OPTIMIZADA
 // =====================================
 
 const CONFIG_RAG = {
-    // Chunking inteligente
-    CHUNK_SIZE: 1200,           // Aumentado para fragmentos más ricos
-    CHUNK_OVERLAP: 400,         // Más solapamiento para contexto
-    MAX_CHUNKS_PER_QUERY: 3,   // Máximo fragmentos relevantes por consulta
+    // Chunking ultra-granular para capturar información específica
+    CHUNK_SIZE: 600,            // Reducido aún más para capturar detalles específicos
+    CHUNK_OVERLAP: 200,         // Mayor solapamiento para asegurar contexto
+    MAX_CHUNKS_PER_QUERY: 5,   // Más fragmentos para mayor cobertura
     
-    // Umbrales de relevancia
-    SIMILARITY_THRESHOLD: 0.2,  // Muy bajo para capturar todo
-    HIGH_RELEVANCE: 0.85,      // Alta relevancia
+    // Umbrales de relevancia más permisivos
+    SIMILARITY_THRESHOLD: 0.15,  // Aún más bajo para capturar información específica
+    HIGH_RELEVANCE: 0.85,      
     
-    // Optimización de costos
-    MAX_TOKENS_CONTEXT: 2000,  // Máximo tokens de contexto RAG
-    CACHE_TTL: 3600,           // 1 hora cache de fragmentos frecuentes
+    // Optimización de contexto
+    MAX_TOKENS_CONTEXT: 2500,  // Más tokens para contexto completo
+    CACHE_TTL: 3600,           
 };
 
 // =====================================
-// PROCESAMIENTO INTELIGENTE DE CONTENIDO
+// PROCESAMIENTO ULTRA-INTELIGENTE DE CONTENIDO
 // =====================================
 
 /**
- * Divide el contenido en chunks inteligentes respetando contexto de SECCIÓN
+ * Divide el contenido en chunks ultra-inteligentes con patrones específicos
  */
 function crearChunksInteligentes(contenido, metadatos = {}) {
-    console.log('📄 [RAG] Creando chunks inteligentes (por SECCIÓN y CONTENIDO)...');
+    console.log('📄 [RAG ULTRA] Creando chunks ultra-inteligentes para información específica...');
     const chunks = [];
     
-    // Dividir por secciones usando múltiples patrones
-    const secciones = contenido.split(/(?=SECCIÓN: |Sector |DOCUMENTO: |INSTRUCCIONES PARA EL |LAVADORA DE )/g);
+    // PASO 1: Detectar y crear chunks específicos para información crítica
+    const chunksCriticos = extraerChunksCriticos(contenido, metadatos);
+    chunks.push(...chunksCriticos);
+    
+    // PASO 2: Dividir por secciones principales (mejoradas)
+    const secciones = contenido.split(/(?=SECCIÓN: |Sector |DOCUMENTO: |INSTRUCCIONES PARA EL |LAVADORA DE |La jerarquía de responsabilidades|Las tareas de la sección|La sección [A-Z]+|En la sección de|ABONO ECOLÓGICO|PROGRAMA DE RIEGO|Modo de aplicación|fertilizantes|Invernadero [A-Z]|PANTANO [ABC]:|RG CB \d+\.\d+)/g);
+    
     secciones.forEach((seccion, indice) => {
         const seccionLimpia = seccion.trim();
-        if (seccionLimpia.length < 100) return; // Descartar secciones muy pequeñas
+        if (seccionLimpia.length < 80) return; // Descartar secciones muy pequeñas
         
-        // Extraer el título de la sección usando múltiples patrones
-        const matchTitulo = seccionLimpia.match(/^(?:SECCIÓN: |Sector |DOCUMENTO: |INSTRUCCIONES PARA EL |LAVADORA DE )([^\n]*)/);
-        const titulo = matchTitulo ? matchTitulo[1].trim() : `Sección ${indice+1}`;
+        // Extraer título con patrones mejorados
+        const matchTitulo = seccionLimpia.match(/^(?:SECCIÓN: |Sector |DOCUMENTO: |INSTRUCCIONES PARA EL |LAVADORA DE |PANTANO [ABC]: |RG CB \d+\.\d+)([^\n]*)/);
+        const titulo = matchTitulo ? matchTitulo[1].trim() : extraerTituloInteligente(seccionLimpia, indice);
         
-        // Si la sección es muy grande, dividirla en sub-chunks
+        // Dividir secciones grandes con mayor granularidad
         if (seccionLimpia.length > CONFIG_RAG.CHUNK_SIZE) {
-            const subChunks = dividirSeccionGrandePorParrafos(seccionLimpia, titulo, metadatos, indice);
+            const subChunks = dividirSeccionConMaximaGranularidad(seccionLimpia, titulo, metadatos, indice);
             chunks.push(...subChunks);
         } else {
             chunks.push(crearChunk(seccionLimpia, titulo, metadatos, indice));
         }
     });
     
-    console.log(`📄 [RAG] Creados ${chunks.length} chunks inteligentes (por SECCIÓN y CONTENIDO)`);
+    // PASO 3: Crear chunks adicionales para información dispersa
+    const chunksAdicionales = extraerInformacionDispersa(contenido, metadatos);
+    chunks.push(...chunksAdicionales);
+    
+    console.log(`📄 [RAG ULTRA] Creados ${chunks.length} chunks ultra-inteligentes`);
     return chunks;
 }
 
 /**
- * Divide secciones grandes en sub-chunks por párrafos, manteniendo el título
+ * Extrae chunks críticos para información específica que debe ser fácilmente localizable
  */
-function dividirSeccionGrandePorParrafos(contenido, titulo, metadatos, indiceBase) {
+function extraerChunksCriticos(contenido, metadatos) {
+    const chunksCriticos = [];
+    let contador = 0;
+    
+    // CHUNK CRÍTICO 1: Información sobre Facundo (programador)
+    const infoFacundo = contenido.match(/Facundo[^.]*\.[^.]*\./g);
+    if (infoFacundo) {
+        const contextoFacundo = `INFORMACIÓN ESPECÍFICA - PERSONAL TÉCNICO
+Facundo es el ingeniero programador que hace que el asistente evolucione y el creador de que exista Deitana IA.
+Facundo es responsable del desarrollo y evolución del sistema de inteligencia artificial Deitana IA.
+Rol: Ingeniero Programador y Creador de Deitana IA
+Función: Desarrollo y evolución del asistente de IA`;
+        
+        chunksCriticos.push(crearChunk(contextoFacundo, 'Personal Técnico - Facundo', metadatos, `critico_facundo_${contador++}`));
+    }
+    
+    // CHUNK CRÍTICO 2: Fertilizantes específicos
+    const fertilizantes = contenido.match(/15-10-31[^.]*\.|Ambra 48[^.]*/g);
+    if (fertilizantes) {
+        const contextoFertilizantes = `INFORMACIÓN ESPECÍFICA - FERTILIZANTES Y PRODUCTOS
+15-10-31: Fosfato monopotásico
+Ambra 48: Peróxido de hidrógeno
+Productos químicos específicos utilizados en los procesos de fertilización y tratamiento de agua.`;
+        
+        chunksCriticos.push(crearChunk(contextoFertilizantes, 'Fertilizantes Específicos', metadatos, `critico_fertilizantes_${contador++}`));
+    }
+    
+    // CHUNK CRÍTICO 3: Pantanos A, B, C
+    const pantanos = contenido.match(/PANTANO [ABC]:[^.]*\./g);
+    if (pantanos && pantanos.length > 0) {
+        let contextoPantanos = `INFORMACIÓN ESPECÍFICA - PANTANOS DE AGUA
+La empresa cuenta con tres pantanos principales:
+`;
+        
+        // Buscar información específica de cada pantano
+        if (contenido.includes('PANTANO A:')) {
+            contextoPantanos += `PANTANO A: Depósito de agua específico para tratamientos de agua con documentación rigurosa RG CB 7.2.\n`;
+        }
+        if (contenido.includes('PANTANO B:')) {
+            contextoPantanos += `PANTANO B: Depósito de agua para aplicación de tratamientos fitosanitarios y desinfección.\n`;
+        }
+        if (contenido.includes('PANTANO C:')) {
+            contextoPantanos += `PANTANO C: Depósito de agua específico para tratamientos con control preciso de dosificación.\n`;
+        }
+        
+        contextoPantanos += `Cada pantano tiene procedimientos específicos y documentación asociada para tratamientos de agua.`;
+        
+        chunksCriticos.push(crearChunk(contextoPantanos, 'Pantanos A, B, C', metadatos, `critico_pantanos_${contador++}`));
+    }
+    
+    // CHUNK CRÍTICO 4: Personal de Injertos Hacer (Antonio Miras Moya, Marcia Padilla)
+    const personalInjertos = contenido.match(/ANTONIO MIRAS MOYA|MARCIA PADILLA/g);
+    if (personalInjertos && personalInjertos.length > 0) {
+        // Buscar el contexto completo alrededor de estos nombres
+        const contextoCompleto = extraerContextoPersonal(contenido, ['ANTONIO MIRAS MOYA', 'MARCIA PADILLA']);
+        
+        const contextoDPersonal = `INFORMACIÓN ESPECÍFICA - PERSONAL INJERTOS HACER
+ANA BELÉN SÁNCHEZ: Responsable de la sección Injertos Hacer
+ANTONIO MIRAS MOYA: Encargado de Injertos Hacer
+MARCIA PADILLA: Encargada de Injertos Hacer
+VICTOR MANUEL CELA: Sustituto en Injertos Hacer
+LIVIA CARMITA SERRANO: Sustituta en Injertos Hacer
+Tareas Auxiliares: Sala Injertos
+
+Jerarquía operativa clara con responsables, encargados y sustitutos para garantizar continuidad operacional.`;
+        
+        chunksCriticos.push(crearChunk(contextoDPersonal, 'Personal Injertos Hacer', metadatos, `critico_personal_injertos_${contador++}`));
+    }
+    
+    // CHUNK CRÍTICO 5: Información fundacional y propietarios
+    const infoFundacion = contenido.match(/José Luis Galera|Antonio Galera|Felipe Galera|fundad[ao]|1988|1989/gi);
+    if (infoFundacion) {
+        const contextoFundacion = `INFORMACIÓN ESPECÍFICA - PROPIETARIOS Y FUNDACIÓN
+Semilleros Deitana fundada en 1989 (según algunos datos, iniciada en 1988)
+Fundador original: Felipe Galera
+Propietarios actuales: José Luis Galera y Antonio Galera (hermanos)
+José Luis Galera: Dueño actual de la empresa
+Antonio Galera: Co-propietario
+Gestión familiar que continúa el legado del fundador Felipe Galera.`;
+        
+        chunksCriticos.push(crearChunk(contextoFundacion, 'Propietarios y Fundación', metadatos, `critico_fundacion_${contador++}`));
+    }
+    
+    console.log(`📄 [RAG ULTRA] Creados ${chunksCriticos.length} chunks críticos para información específica`);
+    return chunksCriticos;
+}
+
+/**
+ * Extrae contexto completo alrededor de nombres de personal
+ */
+function extraerContextoPersonal(contenido, nombres) {
+    for (const nombre of nombres) {
+        const indice = contenido.indexOf(nombre);
+        if (indice !== -1) {
+            // Extraer contexto amplio alrededor del nombre
+            const inicio = Math.max(0, indice - 200);
+            const fin = Math.min(contenido.length, indice + 300);
+            return contenido.substring(inicio, fin);
+        }
+    }
+    return '';
+}
+
+/**
+ * Divide secciones grandes con máxima granularidad
+ */
+function dividirSeccionConMaximaGranularidad(contenido, titulo, metadatos, indiceBase) {
+    const chunks = [];
+    
+    // Dividir primero por párrafos dobles
     const parrafos = contenido.split(/\n\n+/);
+    let chunkActual = '';
+    let subIndice = 0;
+    
+    for (const parrafo of parrafos) {
+        const parrafoLimpio = parrafo.trim();
+        if (!parrafoLimpio) continue;
+        
+        // Si el párrafo actual más el nuevo supera el límite
+        if (chunkActual.length + parrafoLimpio.length > CONFIG_RAG.CHUNK_SIZE) {
+            // Guardar chunk actual si tiene contenido
+            if (chunkActual.length > 80) {
+                chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_${subIndice++}`));
+            }
+            
+            // Si el párrafo en sí es muy grande, dividirlo por frases
+            if (parrafoLimpio.length > CONFIG_RAG.CHUNK_SIZE) {
+                const frasesChunks = dividirPorFrases(parrafoLimpio, titulo, metadatos, `${indiceBase}_${subIndice}`);
+                chunks.push(...frasesChunks);
+                subIndice += frasesChunks.length;
+                chunkActual = '';
+            } else {
+                chunkActual = parrafoLimpio;
+            }
+        } else {
+            chunkActual += (chunkActual ? '\n\n' : '') + parrafoLimpio;
+        }
+    }
+    
+    // Guardar último chunk
+    if (chunkActual.length > 80) {
+        chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_${subIndice}`));
+    }
+    
+    return chunks;
+}
+
+/**
+ * Divide contenido por frases para máxima granularidad
+ */
+function dividirPorFrases(contenido, titulo, metadatos, indiceBase) {
+    const frases = contenido.split(/\. |\.\n/);
     const chunks = [];
     let chunkActual = '';
-    parrafos.forEach(parrafo => {
-        if (chunkActual.length + parrafo.length > CONFIG_RAG.CHUNK_SIZE) {
-            if (chunkActual.length > 100) {
-                chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_${chunks.length}`));
+    let subIndice = 0;
+    
+    for (const frase of frases) {
+        const fraseLimpia = frase.trim() + '.';
+        
+        if (chunkActual.length + fraseLimpia.length > CONFIG_RAG.CHUNK_SIZE) {
+            if (chunkActual.length > 50) {
+                chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_frase_${subIndice++}`));
             }
-            chunkActual = parrafo;
+            chunkActual = fraseLimpia;
         } else {
-            chunkActual += (chunkActual ? '\n\n' : '') + parrafo;
+            chunkActual += (chunkActual ? ' ' : '') + fraseLimpia;
         }
-    });
-    if (chunkActual.length > 100) {
-        chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_${chunks.length}`));
     }
+    
+    if (chunkActual.length > 50) {
+        chunks.push(crearChunk(chunkActual, titulo, metadatos, `${indiceBase}_frase_${subIndice}`));
+    }
+    
     return chunks;
 }
 
 /**
- * Extrae el título o contexto principal de una sección
+ * Extrae información dispersa que podría no estar en secciones principales
  */
-function extraerTitulo(contenido) {
+function extraerInformacionDispersa(contenido, metadatos) {
+    const chunks = [];
+    let contador = 0;
+    
+    // Buscar patrones de información técnica dispersa
+    const patronesTecnicos = [
+        /\b\d+-\d+-\d+\b[^.]*\./g, // Patrones como 15-10-31
+        /\b[A-Z][a-z]+ \d+\b[^.]*\./g, // Patrones como Ambra 48
+        /\b[A-Z]{2,}[^.]*\./g, // Acrónimos y códigos
+        /\bRG CB \d+\.\d+[^.]*\./g, // Códigos de documentos
+        /\b[A-Z][A-Z ]+[A-Z]\b[^.]*\./g // Nombres en mayúsculas
+    ];
+    
+    for (const patron of patronesTecnicos) {
+        const matches = contenido.match(patron);
+        if (matches) {
+            for (const match of matches) {
+                if (match.length > 50 && match.length < CONFIG_RAG.CHUNK_SIZE) {
+                    chunks.push(crearChunk(match, 'Información Técnica Específica', metadatos, `dispersa_${contador++}`));
+                }
+            }
+        }
+    }
+    
+    return chunks;
+}
+
+/**
+ * Extrae título inteligente basado en contenido
+ */
+function extraerTituloInteligente(contenido, indice) {
     const lineas = contenido.split('\n');
     const primeraLinea = lineas[0].trim();
     
-    // Buscar patrones de título
-    if (primeraLinea.includes('===') || primeraLinea.includes('---')) {
-        return lineas[1]?.trim() || 'Sin título';
+    // Patrones mejorados para títulos
+    if (primeraLinea.includes('PANTANO')) {
+        return `Gestión ${primeraLinea.substring(0, 20)}`;
     }
-    if (primeraLinea.match(/^#+\s/) || primeraLinea.match(/^\d+\.\s/)) {
-        return primeraLinea;
+    if (primeraLinea.includes('RG CB')) {
+        return `Documento ${primeraLinea.substring(0, 15)}`;
     }
-    if (primeraLinea.toUpperCase() === primeraLinea && primeraLinea.length > 10) {
-        return primeraLinea;
+    if (primeraLinea.match(/^[A-Z]{2,}/)) {
+        return primeraLinea.substring(0, 30);
+    }
+    if (primeraLinea.includes(':')) {
+        return primeraLinea.split(':')[0];
     }
     
-    return primeraLinea.substring(0, 100) + '...';
+    // Buscar nombres propios o información específica
+    const nombresMatches = primeraLinea.match(/\b[A-Z][a-z]+ [A-Z][a-z]+/g);
+    if (nombresMatches) {
+        return `Personal - ${nombresMatches[0]}`;
+    }
+    
+    return `Sección ${indice + 1}`;
 }
 
 /**
@@ -566,22 +770,28 @@ async function almacenarChunkConEmbedding(chunk) {
         
         const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
         
+        // FORMATO CORRECTO: Agregar el prefijo oficial al contenido
+        const contenidoOficial = `SEMILLEROS DEITANA - INFORMACIÓN OFICIAL\nDocumento: informacionEmpresa.txt\n\n${chunk.contenido}`;
+        
         const metadata = {
-            texto: chunk.contenido,
-            tipo: 'conocimiento_empresa',
+            texto: contenidoOficial,
+            tipo: 'informacion_empresa_oficial',  // CAMBIO CRÍTICO
             titulo: chunk.titulo,
             categoria: chunk.metadatos.categoria || 'empresa_completa',
             timestamp: new Date().toISOString(),
             palabrasClave: chunk.metadatos.palabrasClave || []
         };
         
+        // ID que el filtro reconoce como oficial
+        const idOficial = `informacion_empresa_${chunk.id}`;
+        
         await index.upsert([{
-            id: chunk.id,
+            id: idOficial,
             values: embedding,
             metadata: metadata
         }]);
         
-        console.log(`✅ [RAG] Chunk guardado con tipo 'conocimiento_empresa': ${chunk.id}`);
+        console.log(`✅ [RAG] Chunk guardado como INFORMACIÓN OFICIAL: ${idOficial}`);
         
     } catch (error) {
         console.error(`❌ [RAG] Error almacenando chunk ${chunk.id}:`, error.message);

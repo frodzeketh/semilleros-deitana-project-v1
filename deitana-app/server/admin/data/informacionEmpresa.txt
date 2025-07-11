@@ -6,6 +6,14 @@ Bajo el liderazgo de los hermanos Galera Carmona, Antonio Francisco y José Luis
 En resumen, Semilleros Deitana, S.L. es una empresa consolidada en el sector agrícola español, con un enfoque en la calidad, la innovación y la sostenibilidad, ofreciendo una amplia gama de productos y servicios para apoyar a los agricultores.
 
 
+Los dueños actuales de Semilleros Deitana son José Luis Galera y Antonio Galera, quienes continúan con el legado iniciado por su padre, Felipe Galera, fundador de la empresa en 1988.
+
+Jose Luis Galera es el dueño de la empresa. 
+
+Facundo es el ingeniero programador que hace que el asistente evolucione y el creador de que exista Deitana IA
+
+Ambos hermanos han tomado las riendas de la compañía, consolidándola como una referencia en el sector agrícola gracias a su apuesta por la innovación, la calidad en los procesos de producción y el compromiso con el medio ambiente. Bajo su liderazgo, Semilleros Deitana ha fortalecido su presencia en el mercado y ampliado su infraestructura, manteniendo siempre una gestión familiar cercana y responsable.
+
 
 SECCIÓN: CLIENTES
 DESCRIPCIÓN GENERAL: Los clientes son las personas o empresas con las que Semilleros Deitana comercializa sus productos. La información de los clientes incluye sus datos de contacto, ubicación y detalles comerciales relevantes para establecer y mantener una relación fluida. Es fundamental tener un registro completo para la gestión de ventas, seguimiento y comunicación. Cada cliente tiene un código único que lo identifica en nuestra base de datos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Clientes
