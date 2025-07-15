@@ -13,6 +13,8 @@ require('dotenv').config();
 const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
 const { construirPromptInteligente } = require('../prompts/construirPrompt');
+const { generarPromptSQL, generarPromptRAGSQL } = require('./promptSQL');
+const { generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador } = require('./promptFormateador');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -404,92 +406,7 @@ function validarColumnasEnMapaERP(sql, tabla) {
     }
 }
 
-// Función para obtener contenido relevante de mapaERP
-function obtenerContenidoMapaERP(consulta) {
-    try {
-        // Detectar tabla principal basada en palabras clave
-        const palabrasClave = consulta.toLowerCase().split(' ');
-        console.log('Palabras clave de la consulta:', palabrasClave);
 
-        // Mapeo directo de palabras clave a tablas
-        const mapeoTablas = {
-            'cliente': 'clientes',
-            'proveedor': 'proveedores',
-            'articulo': 'articulos',
-            'bandeja': 'bandejas',
-            'accion': 'acciones_com'
-        };
-
-        // Buscar tabla principal
-        let tablaPrincipal = null;
-        for (const palabra of palabrasClave) {
-            if (mapeoTablas[palabra]) {
-                tablaPrincipal = mapeoTablas[palabra];
-                break;
-            }
-        }
-
-        if (!tablaPrincipal || !mapaERP[tablaPrincipal]) {
-            // Si no se encuentra una tabla específica, devolver información mínima
-            return 'Tablas disponibles: ' + Object.keys(mapeoTablas).join(', ');
-        }
-
-        // Solo devolver información de la tabla relevante
-        const tabla = mapaERP[tablaPrincipal];
-        return `TABLA ${tablaPrincipal}:\n` +
-               `Descripción: ${tabla.descripcion || 'No disponible'}\n` +
-               `Columnas principales: ${Object.keys(tabla.columnas || {}).slice(0, 5).join(', ')}`;
-
-    } catch (error) {
-        console.error('Error al obtener contenido de mapaERP:', error);
-        return '';
-    }
-}
-
-// Función para obtener descripción de mapaERP
-function obtenerDescripcionMapaERP(consulta) {
-    try {
-        if (!mapaERP || typeof mapaERP !== 'object') {
-            return null;
-        }
-
-        const palabrasClave = consulta.toLowerCase().split(' ');
-        
-        // Buscar coincidencias en descripciones
-        const coincidencias = Object.entries(mapaERP).filter(([tabla, info]) => {
-            const descripcion = info.descripcion?.toLowerCase() || '';
-            return palabrasClave.some(palabra => 
-                tabla.toLowerCase().includes(palabra) || 
-                descripcion.includes(palabra)
-            );
-        });
-
-        if (coincidencias.length > 0) {
-            // Si encontramos una coincidencia exacta, usamos esa
-            const coincidenciaExacta = coincidencias.find(([tabla, _]) => 
-                palabrasClave.some(palabra => tabla.toLowerCase() === palabra)
-            );
-            
-            if (coincidenciaExacta) {
-                return {
-                    tabla: coincidenciaExacta[0],
-                    descripcion: coincidenciaExacta[1].descripcion
-                };
-            }
-
-            // Si no hay coincidencia exacta, usamos la primera coincidencia
-            return {
-                tabla: coincidencias[0][0],
-                descripcion: coincidencias[0][1].descripcion
-            };
-        }
-
-        return null;
-    } catch (error) {
-        console.error('Error al obtener descripción de mapaERP:', error);
-        return null;
-    }
-}
 
 // Función auxiliar para detectar si la pregunta es de seguimiento sobre teléfono de cliente
 function esPreguntaTelefonoCliente(userQuery, lastRealData) {
@@ -1104,60 +1021,7 @@ async function processQuery({ message, userId, conversationId }) {
                         if (results && results.length > 0) {
                             console.log('✅ [PROCESS-QUERY] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
                             
-                            const promptExplicacion = `Eres un asistente operativo de Semilleros Deitana. 
-                            
-El usuario preguntó: "${message}"
-
-La IA generó este SQL: ${sql}
-
-Y estos son los resultados reales obtenidos de la base de datos:
-${JSON.stringify(results, null, 2)}
-
-## 🏢 CONTEXTO EMPRESARIAL
-
-Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
-
-**TU IDENTIDAD:**
-- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
-- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
-- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
-- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
-
-**FORMA DE HABLAR:**
-- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
-- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
-- Habla como empleado que conoce los detalles internos
-- Sé específico sobre NUESTROS procesos reales
-
-## 🎯 TU TAREA
-
-Explica estos datos de forma natural, amigable y útil, igual que cuando explicas información del conocimiento empresarial.
-
-**REGLAS IMPORTANTES:**
-- ❌ NO menciones que es una "segunda llamada" ni que "procesaste datos"
-- ✅ Explica los resultados de forma natural y contextualizada
-- ✅ Si hay pocos resultados, explícalos uno por uno
-- ✅ Si hay muchos, haz un resumen y menciona algunos ejemplos
-- ✅ Usa un tono profesional pero amigable
-- ✅ Incluye información relevante como ubicaciones, contactos, etc. si están disponibles
-- ✅ Usa emojis y formato atractivo como ChatGPT
-
-## 🎨 FORMATO OBLIGATORIO
-
-**OBLIGATORIO en cada respuesta:**
-- 🏷️ **Título con emoji** relevante
-- 📋 **Estructura organizada** con encabezados
-- ✅ **Listas con emojis** para puntos clave
-- 💡 **Blockquotes** para tips importantes
-- 🔧 **Código formateado** cuando corresponda
-- 📊 **Tablas** para comparaciones/datos
-- 😊 **Emojis apropiados** al contexto
-- 🤔 **Preguntas de seguimiento** útiles
-
-**¡Sé exactamente como ChatGPT: útil, inteligente y visualmente atractivo!** 🚀
-
-Responde de forma natural, como si estuvieras explicando información del conocimiento empresarial:`;
+                            const promptExplicacion = generarPromptFormateador(message, sql, results);
 
                             const segundaLlamada = await openai.chat.completions.create({
                                 model: 'gpt-3.5-turbo',
@@ -1483,60 +1347,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         console.log('✅ [STREAMING] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
                         
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
-                        const promptExplicacion = `Eres un asistente operativo de Semilleros Deitana. 
-
-El usuario preguntó: "${message}"
-
-La IA generó este SQL: ${sql}
-
-Y estos son los resultados reales obtenidos de la base de datos:
-${JSON.stringify(results, null, 2)}
-
-## 🏢 CONTEXTO EMPRESARIAL
-
-Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
-
-**TU IDENTIDAD:**
-- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
-- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
-- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
-- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
-
-**FORMA DE HABLAR:**
-- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
-- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
-- Habla como empleado que conoce los detalles internos
-- Sé específico sobre NUESTROS procesos reales
-
-## 🎯 TU TAREA
-
-Explica estos datos de forma natural, amigable y útil, igual que cuando explicas información del conocimiento empresarial.
-
-**REGLAS IMPORTANTES:**
-- ❌ NO menciones que es una "segunda llamada" ni que "procesaste datos"
-- ✅ Explica los resultados de forma natural y contextualizada
-- ✅ Si hay pocos resultados, explícalos uno por uno
-- ✅ Si hay muchos, haz un resumen y menciona algunos ejemplos
-- ✅ Usa un tono profesional pero amigable
-- ✅ Incluye información relevante como ubicaciones, contactos, etc. si están disponibles
-- ✅ Usa emojis y formato atractivo como ChatGPT
-
-## 🎨 FORMATO OBLIGATORIO
-
-**OBLIGATORIO en cada respuesta:**
-- 🏷️ **Título con emoji** relevante
-- 📋 **Estructura organizada** con encabezados
-- ✅ **Listas con emojis** para puntos clave
-- 💡 **Blockquotes** para tips importantes
-- 🔧 **Código formateado** cuando corresponda
-- 📊 **Tablas** para comparaciones/datos
-- 😊 **Emojis apropiados** al contexto
-- 🤔 **Preguntas de seguimiento** útiles
-
-**¡Sé exactamente como ChatGPT: útil, inteligente y visualmente atractivo!** 🚀
-
-Responde de forma natural, como si estuvieras explicando información del conocimiento empresarial:`;
+                        const promptExplicacion = generarPromptFormateador(message, sql, results);
 
                         const segundaLlamada = await openai.chat.completions.create({
                             model: 'gpt-3.5-turbo',
