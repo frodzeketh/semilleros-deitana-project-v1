@@ -350,18 +350,18 @@ const Home = () => {
       // =====================================
       
       const response = await fetch(`${API_URL}/api/chat/stream`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         body: JSON.stringify({ 
           message,
           conversationId: currentConversationId 
         }),
-      })
+        })
 
-      if (!response.ok) {
+        if (!response.ok) {
         throw new Error(`Error del servidor: ${response.status}`)
       }
 
@@ -383,18 +383,18 @@ const Home = () => {
           const messageId = botMessage.id
           const currentResponse = fullResponse
           
-          setChatMessages((prev) =>
-            prev.map((msg) =>
+        setChatMessages((prev) =>
+          prev.map((msg) =>
               msg.id === messageId
-                ? {
-                    ...msg,
+              ? {
+                  ...msg,
                     text: currentResponse,
                     isStreaming: true,
-                  }
-                : msg,
-            ),
-          )
-          
+                }
+              : msg,
+          ),
+        )
+
           console.log("📝 [FRONTEND] Mostrando buffer:", buffer.trim())
           buffer = ""
         }
@@ -466,17 +466,17 @@ const Home = () => {
                 const finalResponse = data.fullResponse || fullResponse
                 
                 // Finalizar el streaming
-                setChatMessages((prev) =>
-                  prev.map((msg) =>
+        setChatMessages((prev) =>
+          prev.map((msg) =>
                     msg.id === messageId
-                      ? {
-                          ...msg,
+              ? {
+                  ...msg,
                           text: finalResponse,
                           isStreaming: false, // Finalizar streaming
-                        }
-                      : msg,
-                  ),
-                )
+                }
+              : msg,
+          ),
+        )
                 break
               } else if (data.type === 'error') {
                 console.error("❌ [FRONTEND] Error en stream:", data.message)
@@ -957,13 +957,13 @@ const Home = () => {
               )}
             </div>
 
-            <div className="ds-sidebar-content">
-              {/* Navegación principal */}
-              <div className="ds-navigation-menu">
+                          <div className="ds-sidebar-content">
+                {/* Navegación principal */}
+                <div className="ds-navigation-menu">
                 <button className="ds-nav-item" onClick={() => setSearchModalOpen(true)}>
-                  <Search size={16} />
-                  <span>Buscar</span>
-                </button>
+                    <Search size={16} />
+                    <span>Buscar</span>
+                  </button>
 
                 <button className="ds-nav-item ds-close-sidebar-btn" onClick={toggleSidebar}>
                   <svg
@@ -1148,8 +1148,8 @@ const Home = () => {
                   className={`ds-nav-item ${activeSection === "historial" ? "active" : ""}`}
                   onClick={() => {
                     if (activeSection !== "historial") {
-                      setActiveSection("historial")
-                      setHistorialExpanded(true)
+                    setActiveSection("historial")
+                    setHistorialExpanded(true)
                     } else {
                       setHistorialExpanded(!historialExpanded)
                     }
@@ -1270,14 +1270,14 @@ const Home = () => {
                               // Párrafos
                               p: ({ children }) => (
                                 <p style={{
-                                  whiteSpace: "pre-line",
+                                      whiteSpace: "pre-line",
                                   margin: "12px 0",
-                                  lineHeight: "1.6",
+                                      lineHeight: "1.6",
                                   color: "#333",
                                   fontSize: "15px"
                                 }}>
-                                  {children}
-                                </p>
+                                    {children}
+                                  </p>
                               ),
                               
                               // Encabezados
@@ -1286,7 +1286,7 @@ const Home = () => {
                                   fontSize: "1.4em",
                                   fontWeight: "600",
                                   margin: "16px 0 12px 0",
-                                  color: "#333",
+                                    color: "#333",
                                   borderBottom: "2px solid #eee",
                                   paddingBottom: "6px",
                                   lineHeight: "1.3"
@@ -1341,7 +1341,7 @@ const Home = () => {
                               ),
                               em: ({ children }) => (
                                 <em style={{
-                                  fontStyle: "italic",
+                                    fontStyle: "italic",
                                   color: "#555"
                                 }}>
                                   {children}
@@ -1958,25 +1958,25 @@ const Home = () => {
               <div className="ds-user-modal-main">
                 {(modalView === "account" || !modalView) && (
                   <>
-                    <div className="ds-user-profile-card">
-                      <div className="ds-user-avatar-large">
+                <div className="ds-user-profile-card">
+                  <div className="ds-user-avatar-large">
                         <span>{getUserInitials()}</span>
-                      </div>
-                      <div className="ds-user-info-large">
+                  </div>
+                  <div className="ds-user-info-large">
                         <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
                         <div className="ds-user-email-large">{user?.email || ""}</div>
-                      </div>
+                  </div>
                       <button className="ds-admin-btn" onClick={() => setModalView("admin")}>
                         Administrar
                       </button>
-                    </div>
+                </div>
 
-                    <div className="ds-language-section">
-                      <span className="ds-language-text">Cerrar sesión</span>
-                      <button className="ds-admin-btn" onClick={handleLogout}>
-                        Cerrar sesión
-                      </button>
-                    </div>
+                <div className="ds-language-section">
+                  <span className="ds-language-text">Cerrar sesión</span>
+                  <button className="ds-admin-btn" onClick={handleLogout}>
+                    Cerrar sesión
+                  </button>
+                </div>
 
                     <div className="ds-id-section">{user?.uid || ""}</div>
                   </>
@@ -2016,7 +2016,7 @@ const Home = () => {
                       </svg>
                       <span>Eliminar cuenta</span>
                     </button>
-                  </div>
+              </div>
                 )}
 
                 {modalView === "appearance" && (
@@ -2027,7 +2027,7 @@ const Home = () => {
                       <div className="ds-profile-image-section">
                         <div className="ds-user-avatar-config">
                           <span>{getUserInitials()}</span>
-                        </div>
+            </div>
                         <button className="ds-edit-image-btn">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M12 20h9" />

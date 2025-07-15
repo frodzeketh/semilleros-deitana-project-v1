@@ -11,112 +11,83 @@ const { comportamientoChatGPT } = require('./comportamientoChatGPT');
 const ragInteligente = require('../core/ragInteligente');
 
 /**
- * Analiza la intención del usuario usando patrones básicos (SIN IA)
- * Esto elimina la primera llamada costosa a OpenAI
+ * Analiza la intención del usuario usando IA (sin reglas duras)
  */
-function analizarIntencionBasica(mensaje) {
-    console.log('🧠 [INTENCION-BASICA] Analizando consulta con patrones...');
+async function analizarIntencionIA(mensaje, openaiClient) {
+    console.log('🧠 [INTENCION-IA] Analizando consulta con IA...');
     
-    const mensajeLower = mensaje.toLowerCase();
-    
-    // Patrones de saludo
-    if (/^(hola|buenos|buenas|saludos|hello|hi)\b/.test(mensajeLower)) {
-        return { tipo: 'saludo', complejidad: 'simple', requiereIA: false };
-    }
-    
-    // Patrones de comandos de memoria
-    if (/^(recuerda|guarda|anota|apunta|memoriza)\b/.test(mensajeLower)) {
-        return { tipo: 'memoria', complejidad: 'simple', requiereIA: false };
-    }
-    
-    // Patrones de consultas que requieren RAG + SQL combinado (DEBE IR ANTES DE CONVERSACION)
-    const consultasRAGSQL = /(qué tipos?|que tipos?|cuáles?|cuales?|cómo se|como se|procedimiento|proceso|función|funcion|utiliza|usa|emplea|manual|entrada|cámara|camara|germinación|germinacion)/i;
-    const entidadesERP = /(cliente|proveedor|articulo|bandeja|tecnico|accion|pedido|factura|almacen|invernadero)/i;
-    
-    // Si pregunta sobre tipos, procedimientos, funciones, manuales, etc. Y menciona entidades ERP
-    if (consultasRAGSQL.test(mensajeLower) && entidadesERP.test(mensajeLower)) {
-        return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
+    try {
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: `Analiza la intención de esta consulta y responde solo con:
+- 'sql': si requiere datos actuales de la base de datos
+- 'conversacion': si es sobre conocimiento, procesos o explicaciones
+- 'rag_sql': si combina conocimiento empresarial con datos actuales`
+                },
+                {
+                    role: 'user',
+                    content: mensaje
+                }
+            ],
+            max_tokens: 50,
+            temperature: 0.1
+        });
+        
+        const intencion = response.choices[0].message.content.trim().toLowerCase();
+        console.log('🎯 [INTENCION-IA] Intención detectada:', intencion);
+        
+        if (intencion.includes('sql')) {
+            return { tipo: 'sql', complejidad: 'simple', requiereIA: true };
+        } else if (intencion.includes('rag_sql')) {
+            return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
+        } else {
+            return { tipo: 'conversacion', complejidad: 'media', requiereIA: true };
         }
-
-    // Si pregunta sobre manuales, procesos, cámaras, etc. (sin entidades ERP específicas)
-    const consultasRAGPuro = /(manual|proceso|procedimiento|cámara|camara|germinación|germinacion|entrada|siembra|cultivo|injerto|qué se hace|que se hace|cómo es|como es)/i;
-    if (consultasRAGPuro.test(mensajeLower)) {
-        return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
-        }
-    
-    // Patrones de consultas conversacionales (DEBE IR DESPUÉS DE RAG)
-    if (/^(qué es|que es|explica|cómo|como|cuál|cual|por qué|porque|ayuda)\b/.test(mensajeLower)) {
+    } catch (error) {
+        console.error('❌ [INTENCION-IA] Error:', error.message);
         return { tipo: 'conversacion', complejidad: 'media', requiereIA: true };
     }
-    
-    // Patrones de consultas complejas SQL
-    if (/\b(análisis|análisys|compara|comparison|tendencia|trend|reporte|report|estadística|statistic)\b/.test(mensajeLower)) {
-        return { tipo: 'sql', complejidad: 'compleja', requiereIA: true };
-    }
-    
-    // Patrones de consultas SQL puras (listados, cantidades, etc.)
-    const consultasSQLPuras = /(cuántos?|cuantas?|listar|lista|mostrar|buscar|encontrar|total|suma|promedio)/i;
-    if (consultasSQLPuras.test(mensajeLower) && entidadesERP.test(mensajeLower)) {
-        return { tipo: 'sql', complejidad: 'simple', requiereIA: true };
-    }
-    
-    // Por defecto: conversación
-    console.log('🎯 [INTENCION-BASICA] Clasificación: conversacion (default)');
-    return { tipo: 'conversacion', complejidad: 'media', requiereIA: true };
 }
 
 /**
- * Detecta qué tablas del mapaERP son relevantes usando mapeo directo (SIN IA)
- * Esto elimina la segunda llamada costosa a OpenAI
+ * Detecta qué tablas del mapaERP son relevantes usando IA
  */
-function detectarTablasRelevantesBasico(mensaje, mapaERP) {
-    console.log('📊 [TABLAS-BASICAS] Detectando tablas con mapeo directo...');
+async function detectarTablasRelevantesIA(mensaje, mapaERP, openaiClient) {
+    console.log('📊 [TABLAS-IA] Detectando tablas con IA...');
     
-    const mensajeLower = mensaje.toLowerCase();
-    const tablasRelevantes = [];
-    
-    // Mapeo directo de palabras clave a tablas
-    const mapaPalabras = {
-        'cliente': ['clientes'],
-        'clientes': ['clientes'],
-        'proveedor': ['proveedores'], 
-        'proveedores': ['proveedores'],
-        'articulo': ['articulos'],
-        'articulos': ['articulos'],
-        'producto': ['articulos'],
-        'productos': ['articulos'],
-        'bandeja': ['bandejas'],
-        'bandejas': ['bandejas'],
-        'tecnico': ['tecnicos'],
-        'tecnicos': ['tecnicos'],
-        'empleado': ['tecnicos'],
-        'empleados': ['tecnicos'],
-        'accion': ['acciones_com'],
-        'acciones': ['acciones_com'],
-        'pedido': ['pedidos'],
-        'pedidos': ['pedidos'],
-        'factura': ['facturas-e', 'facturas-r'],
-        'facturas': ['facturas-e', 'facturas-r'],
-        'albaran': ['alb-venta', 'alb-compra'],
-        'albaranes': ['alb-venta', 'alb-compra'],
-        'almacen': ['almacenes'],
-        'almacenes': ['almacenes'],
-        'invernadero': ['invernaderos'],
-        'invernaderos': ['invernaderos']
-    };
-    
-    // Buscar coincidencias directas
-    for (const [palabra, tablas] of Object.entries(mapaPalabras)) {
-        if (mensajeLower.includes(palabra)) {
-            tablasRelevantes.push(...tablas);
-        }
+    try {
+        const tablasDisponibles = Object.keys(mapaERP).join(', ');
+        
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: `Basándote en esta consulta y las tablas disponibles, responde solo con los nombres de las tablas relevantes separados por comas. Si no hay tablas relevantes, responde 'ninguna'.
+
+Tablas disponibles: ${tablasDisponibles}`
+                },
+                {
+                    role: 'user',
+                    content: mensaje
+                }
+            ],
+            max_tokens: 100,
+            temperature: 0.1
+        });
+        
+        const tablas = response.choices[0].message.content.trim();
+        const tablasRelevantes = tablas === 'ninguna' ? [] : tablas.split(',').map(t => t.trim());
+        
+        console.log('📊 [TABLAS-IA] Tablas detectadas:', tablasRelevantes);
+        return tablasRelevantes;
+    } catch (error) {
+        console.error('❌ [TABLAS-IA] Error:', error.message);
+        return [];
     }
-    
-    // Eliminar duplicados
-    const tablasUnicas = [...new Set(tablasRelevantes)];
-    
-    console.log('📊 [TABLAS-BASICAS] Tablas detectadas:', tablasUnicas);
-    return tablasUnicas;
 }
 
 /**
@@ -188,7 +159,7 @@ Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de l
 **TU IDENTIDAD:**
 - 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
 - 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionan NUESTROS sistemas de cultivo e injertos  
+- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
 - 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
 - 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
 
@@ -198,65 +169,51 @@ Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de l
 - Habla como empleado que conoce los detalles internos
 - Sé específico sobre NUESTROS procesos reales
 
-`;
+## 🧠 INTELIGENCIA HÍBRIDA - CONOCIMIENTO + DATOS
 
-    // Instrucciones específicas según el tipo de consulta
-    if (intencion.tipo === 'rag_sql') {
-        instrucciones += `
-## 🎯 PROCESO PARA CONSULTAS TÉCNICAS (RAG + SQL):
+### 📚 **CONOCIMIENTO EMPRESARIAL (PRIORIDAD)**
+- Usa SIEMPRE el conocimiento empresarial como base principal
+- El contexto de Pinecone contiene información oficial de la empresa
+- Úsalo para explicar procedimientos, protocolos y conceptos
 
-### 📚 **1. Usa el conocimiento empresarial como base**
-- El contexto de Pinecone contiene manuales y procedimientos
-- Úsalo como GUÍA principal para explicar procesos y conceptos
-- Siempre proporciona contexto antes de datos específicos
-
-### 📊 **2. Complementa con datos SQL cuando sea útil**
-- Si es apropiado, genera consulta SQL: \`<sql>SELECT...</sql>\`
-- Usa EXACTAMENTE las columnas de la estructura de datos
-- Explica qué muestra la consulta antes de generarla
-
-### 🤝 **3. Combina ambas fuentes inteligentemente**
-- Información de manuales + ejemplos reales de la base de datos
-- Explica el "por qué" usando manuales
-- Muestra el "qué" usando datos SQL
-
-### ✅ **4. IMPORTANTE:**
-- SIEMPRE responde, incluso sin información específica
-- Si no hay datos exactos, explica el concepto general
-- Ofrece alternativas y siguientes pasos
-- Sé útil y completo, no restrictivo
-
-`;
-    } else if (intencion.tipo === 'sql') {
-        instrucciones += `
-## 📊 PROCESO PARA CONSULTAS DE DATOS:
-
-### 🎯 **1. Genera consulta SQL apropiada**
-- Usa estructura de datos proporcionada exactamente
+### 🗄️ **DATOS DE BASE DE DATOS (CUANDO SEA NECESARIO)**
+- Si la consulta requiere datos actuales específicos, genera SQL
 - Formato: \`<sql>SELECT...</sql>\`
-- Explica qué hace la consulta antes de generarla
+- Usa EXACTAMENTE las columnas de la estructura proporcionada
+- Combina conocimiento + datos de forma natural
+- **NUNCA inventes datos de entidades** (clientes, proveedores, almacenes, etc.)
+- **SIEMPRE genera SQL real** y deja que el sistema ejecute y muestre datos reales
+- **SI no hay datos reales**, di claramente "No se encontraron registros en la base de datos"
 
-### 📝 **2. Interpreta resultados de forma natural**
-- No solo muestres datos, explica qué significan
-- Proporciona contexto y análisis
-- Sugiere acciones basadas en los resultados
+### 🤝 **COMBINACIÓN INTELIGENTE**
+- Explica el "por qué" usando conocimiento empresarial
+- Muestra el "qué" usando datos actuales cuando sea útil
+- Mantén respuestas naturales y conversacionales
+- **NUNCA mezcles datos inventados con datos reales**
+
+## 🎯 **EJEMPLOS DE USO**
+
+**Consulta sobre conocimiento:**
+"qué significa quando el cliente dice quiero todo"
+→ Usa SOLO conocimiento empresarial
+
+**Consulta sobre datos actuales:**
+"dame 2 clientes"
+→ Combina conocimiento + datos SQL
+
+**Consulta compleja:**
+"cuántos artículos hay y qué tipos"
+→ Explica con conocimiento + muestra datos actuales
+
+## ✅ **REGLAS IMPORTANTES**
+
+1. **SIEMPRE responde** - nunca digas "no tengo información"
+2. **Usa emojis** y tono amigable
+3. **Mantén personalidad** de empleado interno
+4. **Combina fuentes** cuando sea apropiado
+5. **Sé útil y completo** - no restrictivo
 
 `;
-    } else {
-        instrucciones += `
-## 💬 PROCESO PARA CONVERSACIÓN GENERAL:
-
-### 🧠 **1. Respuesta inteligente y completa**
-- Usa tu conocimiento general sobre agricultura y semillas
-- Relaciona con el contexto de Semilleros Deitana cuando sea relevante
-- Proporciona ejemplos prácticos y actionables
-
-### 🔄 **2. Mantén la conversación fluida**
-- Ofrece seguir explorando temas relacionados
-- Proporciona sugerencias útiles para el trabajo del usuario
-
-`;
-    }
 
     // INSTRUCCIONES CRÍTICAS PARA USO DE CONOCIMIENTO EMPRESARIAL
     instrucciones += `
@@ -333,22 +290,22 @@ Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de l
 
 /**
  * Función principal: construye el prompt dinámico OPTIMIZADO
- * ELIMINA las 3 llamadas a OpenAI y las reduce a 0 para construcción
+ * Usa IA para análisis pero mantiene comportamiento apropiado
  */
 async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contextoPinecone = '', contextoDatos = '', modoDesarrollo = false) {
-    console.log('🚀 [PROMPT-BUILDER] Construyendo prompt OPTIMIZADO sin llamadas IA...');
+    console.log('🚀 [PROMPT-BUILDER] Construyendo prompt OPTIMIZADO con IA...');
     console.log('🔍 [DEBUG] mapaERP recibido:', !!mapaERP, 'tipo:', typeof mapaERP);
     if (mapaERP) {
         console.log('🔍 [DEBUG] Claves del mapaERP:', Object.keys(mapaERP).slice(0, 10));
     }
     
-    // 1. Analizar intención SIN IA (básico)
-    const intencion = analizarIntencionBasica(mensaje);
+    // 1. Analizar intención con IA (sin reglas duras)
+    const intencion = await analizarIntencionIA(mensaje, openaiClient);
     console.log('🎯 [PROMPT-BUILDER] Intención detectada:', intencion);
     
-    // 2. Detectar tablas relevantes SIN IA (básico)  
+    // 2. Detectar tablas relevantes con IA (sin mapeos manuales)
     const tablasRelevantes = (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql')
-        ? detectarTablasRelevantesBasico(mensaje, mapaERP)
+        ? await detectarTablasRelevantesIA(mensaje, mapaERP, openaiClient)
         : [];
     console.log('📊 [PROMPT-BUILDER] Tablas relevantes:', tablasRelevantes);
     
@@ -361,31 +318,14 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 5. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone);
     
-    // 6. OBTENER CONOCIMIENTO RAG (solo cuando realmente se necesita)
+    // 6. OBTENER CONOCIMIENTO RAG (siempre que sea posible)
     let contextoRAG = '';
-    
-    // Skip RAG para consultas conversacionales simples
-    const consultasSimples = /(^hola|^hi|^buenos|^buenas|dime algo|cuéntame|cuentame|quién eres|quien eres|qué eres|que eres|sobre ti|acerca de ti|algo de ti|acerca tuyo|quien soy|quines eres)/i;
-    const esConsultaSimple = consultasSimples.test(mensaje.trim());
-    
-    // NUEVO: Detectar consultas que requieren información de empresa
-    const consultasEmpresariales = /(bandejas?|previcur|formula|tipos?|que.*hay|cuales?|cuantos?|proceso|procedimiento|frecuencia|cambio.*agua|9000|semilleros deitana|cultivo|invernadero|tomate|lechuga|semilla|tratamiento|cliente|proveedor)/i;
-    const esConsultaEmpresarial = consultasEmpresariales.test(mensaje.toLowerCase());
-    
-    // USAR RAG si: no es consulta simple Y (es conversación/rag_sql O es consulta empresarial)
-    if (!esConsultaSimple && ((intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') || esConsultaEmpresarial)) {
-        try {
-            console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
-            console.log('🎯 [RAG] Motivo: Consulta empresarial detectada -', esConsultaEmpresarial ? 'SÍ' : 'NO');
-            contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
-            console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
-        } catch (error) {
-            console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
-        }
-    } else if (esConsultaSimple) {
-        console.log('⚡ [OPTIMIZACIÓN] Consulta simple detectada - saltando RAG');
-    } else {
-        console.log('⚡ [OPTIMIZACIÓN] Consulta no empresarial - saltando RAG');
+    try {
+        console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+        contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
+        console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
+    } catch (error) {
+        console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
     }
     
     // 7. Ensamblar prompt final
@@ -397,10 +337,10 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     }
     
     // Añadir estructura de datos solo si es necesario
-            if (contextoMapaERP) {
+    if (contextoMapaERP) {
         promptFinal += `${contextoMapaERP}\n\n`;
-            }
-            
+    }
+    
     // Añadir reglas SQL solo para consultas SQL
     if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
         promptFinal += `${sqlRules}\n\n`;
@@ -417,7 +357,6 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     }
     
     console.log('✅ [PROMPT-BUILDER] Prompt optimizado construido');
-    console.log('⚡ [PROMPT-BUILDER] Llamadas IA eliminadas: 3 → 0');
     console.log('🎯 [PROMPT-BUILDER] Modelo final:', configModelo.modelo);
     
     return {
@@ -426,9 +365,9 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         intencion: intencion,
         tablasRelevantes: tablasRelevantes,
         metricas: {
-            usaIA: false, // YA NO USA IA PARA CONSTRUCCIÓN
+            usaIA: true,
             tablasDetectadas: tablasRelevantes.length,
-            llamadasIA: 0, // CERO llamadas IA
+            llamadasIA: 3, // Análisis de intención + detección de tablas + respuesta final
             optimizado: true
         }
     };
@@ -436,7 +375,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
 
 module.exports = {
     construirPromptInteligente,
-    analizarIntencionBasica,
-    detectarTablasRelevantesBasico,
+    analizarIntencionIA,
+    detectarTablasRelevantesIA,
     seleccionarModeloInteligente
 };

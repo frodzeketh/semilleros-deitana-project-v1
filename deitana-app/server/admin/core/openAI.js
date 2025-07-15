@@ -1033,11 +1033,11 @@ async function processQuery({ message, userId, conversationId }) {
                         console.log('✅ [RAG-SQL] SQL encontrado, ejecutando para ejemplos');
                         const results = await executeQuery(sql);
                         
-                        // Combinar respuesta RAG con ejemplos de la BD
-                        const ejemplosSQL = await formatFinalResponse(results, message);
+                        // Guardar los resultados reales para contexto futuro
+                        lastRealData = JSON.stringify(results);
                         
-                        // Insertar ejemplos en la respuesta RAG
-                        finalMessage = respuestaIA.replace('</sql>', `</sql>\n\n**Ejemplos de la base de datos:**\n${ejemplosSQL}`);
+                        // Mantener la respuesta original de la IA - NO formatear artificialmente
+                        console.log('✅ [RAG-SQL] SQL ejecutado exitosamente - manteniendo respuesta natural de la IA');
                     }
                     
                     console.log('📋 [RAG-SQL] Respuesta combinada:', finalMessage.substring(0, 200) + '...');
@@ -1080,8 +1080,54 @@ async function processQuery({ message, userId, conversationId }) {
                         // Ejecutar SQL
                         const results = await executeQuery(sql);
                         
-                        // Formatear respuesta final de forma natural
-                        const finalMessage = await formatFinalResponse(results, message);
+                        // Guardar los resultados reales para contexto futuro
+                        lastRealData = JSON.stringify(results);
+                        
+                        // Segunda llamada a la IA para explicar los datos reales de forma natural
+                        let finalMessage = respuestaIA;
+                        
+                        if (results && results.length > 0) {
+                            console.log('✅ [PROCESS-QUERY] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
+                            
+                            const promptExplicacion = `Eres un asistente operativo de Semilleros Deitana. 
+                            
+El usuario preguntó: "${message}"
+
+La IA generó este SQL: ${sql}
+
+Y estos son los resultados reales obtenidos de la base de datos:
+${JSON.stringify(results, null, 2)}
+
+Tu tarea es explicar estos datos de forma natural, amigable y útil, igual que cuando explicas información del conocimiento empresarial. 
+
+- No menciones que es una "segunda llamada" ni que "procesaste datos"
+- Explica los resultados de forma natural y contextualizada
+- Si hay pocos resultados, explícalos uno por uno
+- Si hay muchos, haz un resumen y menciona algunos ejemplos
+- Usa un tono profesional pero amigable
+- Incluye información relevante como ubicaciones, contactos, etc. si están disponibles
+
+Responde de forma natural, como si estuvieras explicando información del conocimiento empresarial:`;
+
+                            const segundaLlamada = await openai.chat.completions.create({
+                                model: 'gpt-3.5-turbo',
+                                messages: [
+                                    {
+                                        role: 'system',
+                                        content: promptExplicacion
+                                    }
+                                ],
+                                max_tokens: 500,
+                                temperature: 0.7
+                            });
+
+                            const explicacionNatural = segundaLlamada.choices[0].message.content;
+                            
+                            // Reemplazar la respuesta técnica con la explicación natural
+                            finalMessage = explicacionNatural;
+                            
+                            console.log('✅ [PROCESS-QUERY] Segunda llamada completada - respuesta natural generada');
+                        }
                         
                         // =====================================
                         // PERSONALIZAR RESPUESTA CON NOMBRE DEL USUARIO
@@ -1091,7 +1137,7 @@ async function processQuery({ message, userId, conversationId }) {
                         console.log('📋 [RESPUESTA-FINAL] Respuesta optimizada:', respuestaPersonalizada.substring(0, 200) + '...');
                         console.log('📋 [RESPUESTA-FINAL] Longitud:', respuestaPersonalizada.length, 'caracteres');
                 
-                                        // Guardar async para no bloquear la respuesta
+                        // Guardar async para no bloquear la respuesta
                         saveAssistantMessageToFirestore(userId, respuestaPersonalizada).catch(err =>
                             console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
                         );
@@ -1364,8 +1410,82 @@ async function processQueryStream({ message, userId, conversationId, response })
                 }
             }
 
+            // =====================================
+            // PROCESAMIENTO POST-STREAMING
+            // =====================================
+
+            console.log('🔍 [STREAMING] Procesando respuesta para SQL...');
+            
+            let finalMessage = fullResponse;
+            
+            // Verificar si la IA generó SQL en la respuesta
+            const sql = validarRespuestaSQL(fullResponse);
+            
+            if (sql) {
+                console.log('✅ [STREAMING] SQL encontrado, ejecutando consulta...');
+                try {
+                    const results = await executeQuery(sql);
+                    
+                    if (results && results.length > 0) {
+                        // Guardar los resultados reales para contexto futuro
+                        lastRealData = JSON.stringify(results);
+                        
+                        console.log('✅ [STREAMING] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
+                        
+                        // Segunda llamada a la IA para explicar los datos reales de forma natural
+                        const promptExplicacion = `Eres un asistente operativo de Semilleros Deitana. 
+                        
+El usuario preguntó: "${message}"
+
+La IA generó este SQL: ${sql}
+
+Y estos son los resultados reales obtenidos de la base de datos:
+${JSON.stringify(results, null, 2)}
+
+Tu tarea es explicar estos datos de forma natural, amigable y útil, igual que cuando explicas información del conocimiento empresarial. 
+
+- No menciones que es una "segunda llamada" ni que "procesaste datos"
+- Explica los resultados de forma natural y contextualizada
+- Si hay pocos resultados, explícalos uno por uno
+- Si hay muchos, haz un resumen y menciona algunos ejemplos
+- Usa un tono profesional pero amigable
+- Incluye información relevante como ubicaciones, contactos, etc. si están disponibles
+
+Responde de forma natural, como si estuvieras explicando información del conocimiento empresarial:`;
+
+                        const segundaLlamada = await openai.chat.completions.create({
+                            model: 'gpt-3.5-turbo',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: promptExplicacion
+                                }
+                            ],
+                            max_tokens: 500,
+                            temperature: 0.7
+                        });
+
+                        const explicacionNatural = segundaLlamada.choices[0].message.content;
+                        
+                        // Reemplazar la respuesta técnica con la explicación natural
+                        finalMessage = explicacionNatural;
+                        
+                        console.log('✅ [STREAMING] Segunda llamada completada - respuesta natural generada');
+                    } else {
+                        // Si no hay resultados, mantener la respuesta original del modelo
+                        console.log('📚 [STREAMING] Sin resultados SQL - usar respuesta del modelo');
+                    }
+                } catch (error) {
+                    console.error('❌ [STREAMING-SQL] Error ejecutando consulta:', error.message);
+                    // Mantener la respuesta original del modelo si hay error
+                    console.log('📚 [STREAMING] Error en SQL - usar respuesta del modelo');
+                }
+            } else {
+                console.log('📚 [STREAMING] Sin SQL - usar respuesta del modelo tal como está');
+            }
+
             // Personalizar respuesta con nombre del usuario
-            const respuestaPersonalizada = personalizarRespuesta(fullResponse, infoUsuario.nombre);
+            const respuestaPersonalizada = personalizarRespuesta(finalMessage, infoUsuario.nombre);
 
             // Enviar señal de finalización con conversationId
             response.write(JSON.stringify({
