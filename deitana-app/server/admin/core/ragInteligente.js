@@ -1,3 +1,4 @@
+console.log('🟢 Se está usando: ragInteligente.js (admin/core)');
 // =====================================
 // SISTEMA RAG INTELIGENTE - SEMILLEROS DEITANA
 // =====================================

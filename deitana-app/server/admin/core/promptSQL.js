@@ -1,3 +1,4 @@
+console.log('🟢 Se está usando: promptSQL.js (admin/core)');
 // =====================================
 // PROMPTS PARA GENERACIÓN DE CONSULTAS SQL
 // =====================================

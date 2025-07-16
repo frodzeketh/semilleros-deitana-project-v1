@@ -1,3 +1,4 @@
+console.log('🟢 Se está usando: sqlRules.js (admin/prompts)');
 // =====================================
 // REGLAS SQL - GENERACIÓN Y VALIDACIÓN
 // =====================================

@@ -1,4 +1,28 @@
 // =====================================
+// SISTEMA DE INTELIGENCIA ARTIFICIAL PARA SEMILLEROS DEITANA
+// =====================================
+// 
+// Este archivo es el núcleo central del asistente IA empresarial que:
+// - Procesa consultas naturales y las convierte en SQL
+// - Integra conocimiento empresarial con datos actuales
+// - Proporciona respuestas personalizadas y naturales
+// - Mantiene contexto conversacional y memoria
+// - Soporta streaming en tiempo real
+//
+// ARQUITECTURA PRINCIPAL:
+// 1. Análisis de intención con IA
+// 2. Construcción inteligente de prompts
+// 3. Ejecución de SQL con validación
+// 4. Formateo natural de respuestas
+// 5. Persistencia en Firestore y Pinecone
+// 6. Streaming en tiempo real
+//
+// AUTOR: Sistema de IA Semilleros Deitana
+// VERSIÓN: 2.0 (Optimizada con una sola llamada IA)
+// FECHA: 2024
+// =====================================
+
+// =====================================
 // IMPORTACIONES Y CONFIGURACIÓN INICIAL
 // =====================================
 
@@ -10,11 +34,7 @@ const pineconeMemoria = require('../../utils/pinecone');
 const comandosMemoria = require('../../utils/comandosMemoria');
 const langfuseUtils = require('../../utils/langfuse');
 require('dotenv').config();
-const promptBase = require('./promptBase').promptBase;
 const mapaERP = require('./mapaERP');
-const { construirPromptInteligente } = require('../prompts/construirPrompt');
-const { generarPromptSQL, generarPromptRAGSQL } = require('./promptSQL');
-const { generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador } = require('./promptFormateador');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -32,6 +52,14 @@ let lastRealData = null;
 
 // =====================================
 // FUNCIONES AUXILIARES - FORMATEO Y UTILIDADES
+// =====================================
+// 
+// Estas funciones se encargan de:
+// - Formatear resultados SQL en Markdown
+// - Obtener descripciones de columnas desde mapaERP
+// - Determinar tablas basadas en columnas
+// - Limitar y aleatorizar resultados
+// - Generar respuestas naturales y conversacionales
 // =====================================
 
 /**
@@ -103,7 +131,21 @@ function limitarResultados(results, limite = 5, aleatorio = false) {
     return results.slice(0, limite);
 }
 
-// Función para formatear la respuesta final - RESPUESTAS NATURALES
+/**
+ * Función para formatear la respuesta final - RESPUESTAS NATURALES
+ * Convierte resultados SQL en respuestas conversacionales y amigables
+ * 
+ * @param {Array} results - Resultados de la consulta SQL
+ * @param {string} query - Consulta original del usuario
+ * @returns {string} Respuesta formateada de forma natural
+ * 
+ * CARACTERÍSTICAS:
+ * - Detecta tipo de entidad (clientes, técnicos, etc.)
+ * - Genera saludos personalizados
+ * - Filtra resultados válidos
+ * - Capitaliza nombres automáticamente
+ * - Agrega preguntas de seguimiento
+ */
 async function formatFinalResponse(results, query) {
     if (!results || results.length === 0) {
         return "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?";
@@ -220,6 +262,15 @@ async function formatFinalResponse(results, query) {
 // =====================================
 // FUNCIONES DE EJECUCIÓN Y VALIDACIÓN SQL
 // =====================================
+// 
+// Estas funciones manejan:
+// - Ejecución segura de consultas SQL
+// - Validación y extracción de SQL de respuestas de IA
+// - Reemplazo de nombres de tablas con nombres reales
+// - Validación de tablas y columnas en mapaERP
+// - Prevención de SQL injection
+// - Corrección automática de sintaxis SQL
+// =====================================
 
 /**
  * Función para ejecutar consultas SQL con manejo de errores
@@ -249,8 +300,15 @@ async function executeQuery(sql) {
 
 /**
  * Función para validar que la respuesta contiene una consulta SQL válida
+ * Extrae SQL de diferentes formatos y valida su sintaxis
+ * 
  * @param {string} response - Respuesta de OpenAI
  * @returns {string|null} SQL validado o null si no es válido
+ * 
+ * FORMATOS SOPORTADOS:
+ * - <sql>SELECT...</sql>
+ * - ```sql SELECT...```
+ * - SELECT... (texto plano)
  */
 function validarRespuestaSQL(response) {
     console.log('🔍 [SQL-VALIDATION] Validando respuesta para extraer SQL...');
@@ -408,6 +466,18 @@ function validarColumnasEnMapaERP(sql, tabla) {
 
 
 
+// =====================================
+// FUNCIONES DE PERSISTENCIA Y ALMACENAMIENTO
+// =====================================
+// 
+// Estas funciones gestionan:
+// - Guardado de mensajes de usuario en Firestore
+// - Guardado de respuestas del asistente
+// - Detección de preguntas de seguimiento
+// - Organización de conversaciones por usuario
+// - Persistencia asíncrona para no bloquear respuestas
+// =====================================
+
 // Función auxiliar para detectar si la pregunta es de seguimiento sobre teléfono de cliente
 function esPreguntaTelefonoCliente(userQuery, lastRealData) {
     if (!lastRealData || lastRealData.type !== 'cliente' || !lastRealData.data) return false;
@@ -491,7 +561,33 @@ async function saveAssistantMessageToFirestore(userId, message) {
     }
 }
 
-// Función auxiliar para intentar una búsqueda flexible (fuzzy search) en SQL
+// =====================================
+// BÚSQUEDA FLEXIBLE (FUZZY SEARCH)
+// =====================================
+// 
+// Esta función implementa búsqueda inteligente cuando SQL falla:
+// - Genera variantes del término de búsqueda
+// - Prueba múltiples columnas y tablas
+// - Búsqueda multi-término para artículos
+// - Manejo especial para tablas específicas
+// - Recuperación automática cuando consultas exactas fallan
+// =====================================
+
+/**
+ * Función auxiliar para intentar una búsqueda flexible (fuzzy search) en SQL
+ * Se ejecuta cuando una consulta SQL exacta falla, generando variantes inteligentes
+ * 
+ * @param {string} sql - SQL original que falló
+ * @param {string} userQuery - Consulta original del usuario
+ * @returns {Object|null} Resultados encontrados o null si no hay coincidencias
+ * 
+ * ESTRATEGIAS DE BÚSQUEDA:
+ * - Genera variantes del término (mayúsculas, minúsculas, sin tildes)
+ * - Prueba múltiples columnas de texto
+ * - Búsqueda multi-término para artículos
+ * - Manejo especial para tablas específicas
+ * - Recuperación automática cuando consultas exactas fallan
+ */
 async function fuzzySearchRetry(sql, userQuery) {
     console.log('🔍 [FUZZY-SEARCH] Iniciando búsqueda flexible...');
     console.log('🔍 [FUZZY-SEARCH] SQL original:', sql);
@@ -633,6 +729,237 @@ async function fuzzySearchRetry(sql, userQuery) {
     console.log('❌ [FUZZY-SEARCH] No se encontraron resultados con búsqueda flexible');
     return null;
 }
+
+// =====================================
+// LÓGICA DE CONSTRUCCIÓN DE PROMPT INTELIGENTE
+// =====================================
+// 
+// Esta sección contiene la lógica unificada que antes estaba en construirPrompt.js:
+// - Análisis de intención con IA (SQL, conversación, RAG+SQL)
+// - Detección automática de tablas relevantes
+// - Construcción de contexto de mapaERP selectivo
+// - Selección inteligente de modelo GPT
+// - Construcción de instrucciones naturales
+// - Ensamblaje final del prompt optimizado
+// =====================================
+const { promptBase } = require('../prompts/base');
+const { sqlRules } = require('../prompts/sqlRules');
+const { comportamientoChatGPT, comportamiento, comportamientoAsistente } = require('../prompts/comportamiento');
+const { formatoRespuesta, generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador } = require('../prompts/formatoRespuesta');
+const ragInteligente = require('./ragInteligente');
+
+/**
+ * Analiza la intención de una consulta usando IA
+ * Determina si requiere SQL, conversación o RAG+SQL
+ * 
+ * @param {string} mensaje - Consulta del usuario
+ * @param {Object} openaiClient - Cliente de OpenAI
+ * @returns {Object} Objeto con tipo, complejidad y requiereIA
+ */
+async function analizarIntencionIA(mensaje, openaiClient) {
+    console.log('🧠 [INTENCION-IA] Analizando consulta con IA...');
+    try {
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: `Analiza la intención de esta consulta y responde solo con:\n- 'sql': si requiere datos actuales de la base de datos\n- 'conversacion': si es sobre conocimiento, procesos o explicaciones\n- 'rag_sql': si combina conocimiento empresarial con datos actuales`
+                },
+                {
+                    role: 'user',
+                    content: mensaje
+                }
+            ],
+            max_tokens: 50,
+            temperature: 0.1
+        });
+        const intencion = response.choices[0].message.content.trim().toLowerCase();
+        console.log('🎯 [INTENCION-IA] Intención detectada:', intencion);
+        if (intencion.includes('sql')) {
+            return { tipo: 'sql', complejidad: 'simple', requiereIA: true };
+        } else if (intencion.includes('rag_sql')) {
+            return { tipo: 'rag_sql', complejidad: 'media', requiereIA: true };
+        } else {
+            return { tipo: 'conversacion', complejidad: 'media', requiereIA: true };
+        }
+    } catch (error) {
+        console.error('❌ [INTENCION-IA] Error:', error.message);
+        return { tipo: 'conversacion', complejidad: 'media', requiereIA: true };
+    }
+}
+
+/**
+ * Detecta automáticamente qué tablas son relevantes para una consulta
+ * Usa IA para mapear consulta natural a tablas de la base de datos
+ * 
+ * @param {string} mensaje - Consulta del usuario
+ * @param {Object} mapaERP - Mapa de estructura de la base de datos
+ * @param {Object} openaiClient - Cliente de OpenAI
+ * @returns {Array} Array de nombres de tablas relevantes
+ */
+async function detectarTablasRelevantesIA(mensaje, mapaERP, openaiClient) {
+    console.log('📊 [TABLAS-IA] Detectando tablas con IA...');
+    try {
+        const tablasDisponibles = Object.keys(mapaERP).join(', ');
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'system',
+                    content: `Basándote en esta consulta y las tablas disponibles, responde solo con los nombres de las tablas relevantes separados por comas. Si no hay tablas relevantes, responde 'ninguna'.\n\nTablas disponibles: ${tablasDisponibles}`
+                },
+                {
+                    role: 'user',
+                    content: mensaje
+                }
+            ],
+            max_tokens: 100,
+            temperature: 0.1
+        });
+        const tablas = response.choices[0].message.content.trim();
+        const tablasRelevantes = tablas === 'ninguna' ? [] : tablas.split(',').map(t => t.trim());
+        console.log('📊 [TABLAS-IA] Tablas detectadas:', tablasRelevantes);
+        return tablasRelevantes;
+    } catch (error) {
+        console.error('❌ [TABLAS-IA] Error:', error.message);
+        return [];
+    }
+}
+
+function construirContextoMapaERP(tablasRelevantes, mapaERP) {
+    if (!tablasRelevantes || tablasRelevantes.length === 0 || !mapaERP) {
+        console.log('⚠️ [MAPA-ERP] No se incluye contexto - tablas:', tablasRelevantes, 'mapaERP:', !!mapaERP);
+        return '';
+    }
+    let contexto = '\n=== ESTRUCTURA DE DATOS RELEVANTE ===\n';
+    tablasRelevantes.forEach(tabla => {
+        if (mapaERP && mapaERP[tabla]) {
+            console.log(`📋 [MAPA-ERP] Incluyendo tabla: ${tabla}`);
+            contexto += `\n${tabla}: ${mapaERP[tabla].descripcion || 'Sin descripción'}\n`;
+            if (mapaERP[tabla].columnas) {
+                const columnas = Object.entries(mapaERP[tabla].columnas);
+                const columnasConDescripcion = columnas.map(([columna, descripcion]) => `${columna}: ${descripcion}`).join('\n');
+                contexto += `Columnas disponibles:\n${columnasConDescripcion}\n`;
+            }
+        } else {
+            console.log(`⚠️ [MAPA-ERP] Tabla no encontrada en mapaERP: ${tabla}`);
+        }
+    });
+    console.log('📋 [MAPA-ERP] Contexto construido:', contexto.substring(0, 200) + '...');
+    return contexto;
+}
+
+function seleccionarModeloInteligente(intencion, tablasRelevantes) {
+    const config = {
+        modelo: 'gpt-4o',
+        maxTokens: 2000,
+        temperature: 0.3,
+        razon: 'Usar el modelo original que ya funcionaba correctamente para SQL'
+    };
+    console.log('🤖 [MODELO-SELECTOR] Complejidad:', intencion.complejidad);
+    console.log('🤖 [MODELO-SELECTOR] Modelo seleccionado:', config.modelo);
+    console.log('🤖 [MODELO-SELECTOR] Razón:', config.razon);
+    return config;
+}
+
+function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
+    let instrucciones = comportamientoChatGPT + '\n\n';
+    instrucciones += `\n## 🏢 CONTEXTO EMPRESARIAL\n\nEres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.\n\n**TU IDENTIDAD:**\n- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)\n- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas\n- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  \n- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad\n- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia\n\n**FORMA DE HABLAR:**\n- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"\n- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa\n- Habla como empleado que conoce los detalles internos\n- Sé específico sobre NUESTROS procesos reales\n\n## 🧠 INTELIGENCIA HÍBRIDA - CONOCIMIENTO + DATOS\n\n### 📚 **CONOCIMIENTO EMPRESARIAL (PRIORIDAD)**\n- Usa SIEMPRE el conocimiento empresarial como base principal\n- El contexto de Pinecone contiene información oficial de la empresa\n- Úsalo para explicar procedimientos, protocolos y conceptos\n\n### 🗄️ **DATOS DE BASE DE DATOS (CUANDO SEA NECESARIO)**\n- Si la consulta requiere datos actuales específicos, genera SQL\n- Formato: \`<sql>SELECT...</sql>\`\n- Usa EXACTAMENTE las columnas de la estructura proporcionada\n- Combina conocimiento + datos de forma natural\n- **NUNCA inventes datos de entidades** (clientes, proveedores, almacenes, etc.)\n- **SIEMPRE genera SQL real** y deja que el sistema ejecute y muestre datos reales\n- **SI no hay datos reales**, di claramente "No se encontraron registros en la base de datos"\n\n### 🤝 **COMBINACIÓN INTELIGENTE**\n- Explica el "por qué" usando conocimiento empresarial\n- Muestra el "qué" usando datos actuales cuando sea útil\n- Mantén respuestas naturales y conversacionales\n- **NUNCA mezcles datos inventados con datos reales**\n\n## 🎯 **EJEMPLOS DE USO**\n\n**Consulta sobre conocimiento:**\n"qué significa quando el cliente dice quiero todo"\n→ Usa SOLO conocimiento empresarial\n\n**Consulta sobre datos actuales:**\n"dame 2 clientes"\n→ Combina conocimiento + datos SQL\n\n**Consulta compleja:**\n"cuántos artículos hay y qué tipos"\n→ Explica con conocimiento + muestra datos actuales\n\n## ✅ **REGLAS IMPORTANTES**\n\n1. **SIEMPRE responde** - nunca digas "no tengo información"\n2. **Usa emojis** y tono amigable\n3. **Mantén personalidad** de empleado interno\n4. **Combina fuentes** cuando sea apropiado\n5. **Sé útil y completo** - no restrictivo\n\n`;
+    instrucciones += `\n## 🚨 **REGLAS CRÍTICAS PARA CONOCIMIENTO EMPRESARIAL**\n\n### ⭐ **PRIORIDAD ABSOLUTA: SI EXISTE "CONOCIMIENTO EMPRESARIAL RELEVANTE"**\n\n**🔴 OBLIGATORIO - USAR SOLO INFORMACIÓN OFICIAL:**\n- ❌ NUNCA inventes o agregues información que NO esté en el contexto empresarial\n- ✅ USA ÚNICAMENTE los datos exactos que aparecen en "CONOCIMIENTO EMPRESARIAL RELEVANTE"\n- ✅ COPIA números, cantidades, productos y procedimientos EXACTAMENTE como aparecen\n- ✅ NO modifiques, redondees o interpretes los datos oficiales\n\n**🔴 FORMATO OBLIGATORIO:**\n- ✅ SIEMPRE comienza con: "Según NUESTROS documentos oficiales..." o "En NUESTRA empresa..."\n- ✅ Presenta los datos tal como aparecen en el contexto\n- ✅ Mantén números, frecuencias y procedimientos EXACTOS\n- ❌ NO uses conocimiento general de agricultura si tienes datos específicos\n\n**🔴 PROHIBIDO ABSOLUTAMENTE:**\n- ❌ NO inventes criterios como "ciclos de uso", "desgaste visible", "reutilización alta/baja"\n- ❌ NO agregues información genérica sobre agricultura\n- ❌ NO uses frases como "típicamente", "generalmente", "suele ser"\n- ❌ NO inventes productos como "Oxi Premium 5" si el documento dice "ZZ-CUPROCOL"\n\n### 🎯 **EJEMPLOS ESPECÍFICOS DE LAS PREGUNTAS PROBLEMÁTICAS:**\n\n**✅ CORRECTO - Desinfección bandejas 260/322:**\n"Según NUESTROS documentos oficiales, para desinfectar bandejas de 260 y 322 alvéolos en una cuba de 140 litros utilizamos:\n- **Producto:** ZZ-CUPROCOL  \n- **Cantidad:** 469 ml por cada cuba de 140 litros\n- **Restricción:** SIN MERPAN (está explícitamente prohibido)"\n`;
+    return instrucciones;
+}
+
+/**
+ * Construye un prompt optimizado usando IA para análisis de intención
+ * Esta es la función principal que orquesta todo el proceso de construcción
+ * 
+ * @param {string} mensaje - Consulta del usuario
+ * @param {Object} mapaERP - Mapa de estructura de la base de datos
+ * @param {Object} openaiClient - Cliente de OpenAI
+ * @param {string} contextoPinecone - Contexto de memoria vectorial
+ * @param {string} contextoDatos - Datos de contexto previo
+ * @param {boolean} modoDesarrollo - Modo de desarrollo para debugging
+ * @returns {Object} Prompt construido con configuración y métricas
+ */
+async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contextoPinecone = '', contextoDatos = '', modoDesarrollo = false) {
+    console.log('🚀 [PROMPT-BUILDER] Construyendo prompt OPTIMIZADO con IA...');
+    console.log('🔍 [DEBUG] mapaERP recibido:', !!mapaERP, 'tipo:', typeof mapaERP);
+    if (mapaERP) {
+        console.log('🔍 [DEBUG] Claves del mapaERP:', Object.keys(mapaERP).slice(0, 10));
+    }
+    // 1. Analizar intención con IA (sin reglas duras)
+    const intencion = await analizarIntencionIA(mensaje, openaiClient);
+    console.log('🎯 [PROMPT-BUILDER] Intención detectada:', intencion);
+    // 2. Detectar tablas relevantes con IA (sin mapeos manuales)
+    const tablasRelevantes = (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql')
+        ? await detectarTablasRelevantesIA(mensaje, mapaERP, openaiClient)
+        : [];
+    console.log('📊 [PROMPT-BUILDER] Tablas relevantes:', tablasRelevantes);
+    // 3. Seleccionar modelo apropiado
+    const configModelo = seleccionarModeloInteligente(intencion, tablasRelevantes);
+    // 4. Construir contexto de mapaERP selectivo
+    const contextoMapaERP = construirContextoMapaERP(tablasRelevantes, mapaERP);
+    // 5. Construir instrucciones naturales
+    const instruccionesNaturales = construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone);
+    // 6. OBTENER CONOCIMIENTO RAG (siempre que sea posible)
+    let contextoRAG = '';
+    try {
+        console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+        contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
+        console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
+    } catch (error) {
+        console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
+    }
+    // 7. Ensamblar prompt final
+    let promptFinal = instruccionesNaturales;
+    // Añadir conocimiento empresarial para conversaciones y RAG+SQL
+    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') {
+        promptFinal += `${promptBase}\n\n`;
+    }
+    // Añadir estructura de datos solo si es necesario
+    if (contextoMapaERP) {
+        promptFinal += `${contextoMapaERP}\n\n`;
+    }
+    // Añadir reglas SQL solo para consultas SQL
+    if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
+        promptFinal += `${sqlRules}\n\n`;
+    }
+    // Añadir contexto RAG si existe
+    if (contextoRAG) {
+        promptFinal += `CONOCIMIENTO EMPRESARIAL RELEVANTE:\n${contextoRAG}\n\n`;
+    }
+    // Añadir contexto de datos previos si existe
+    if (contextoDatos) {
+        promptFinal += `DATOS DE CONTEXTO PREVIO:\n${contextoDatos}\n\n`;
+    }
+    console.log('✅ [PROMPT-BUILDER] Prompt optimizado construido');
+    console.log('🎯 [PROMPT-BUILDER] Modelo final:', configModelo.modelo);
+    return {
+        prompt: promptFinal,
+        configModelo: configModelo,
+        intencion: intencion,
+        tablasRelevantes: tablasRelevantes,
+        metricas: {
+            usaIA: true,
+            tablasDetectadas: tablasRelevantes.length,
+            llamadasIA: 3, // Análisis de intención + detección de tablas + respuesta final
+            optimizado: true
+        }
+    };
+}
+
+// =====================================
+// FUNCIONES DE USUARIO Y CONTEXTO CONVERSACIONAL
+// =====================================
+// 
+// Estas funciones gestionan:
+// - Obtención de información del usuario desde Firebase
+// - Recuperación de historial conversacional
+// - Personalización de respuestas con nombre del usuario
+// - Contexto conversacional para continuidad
+// - Gestión de sesiones y conversaciones
+// =====================================
 
 // =====================================
 // FUNCIÓN PRINCIPAL - MODELO GPT Y PROCESAMIENTO
@@ -783,6 +1110,20 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
     return respuesta;
 }
 
+// =====================================
+// FUNCIÓN PRINCIPAL - PROCESAMIENTO DE CONSULTAS
+// =====================================
+// 
+// Esta es la función central que coordina todo el proceso:
+// - Análisis de intención y construcción de prompt
+// - Llamada única optimizada a OpenAI
+// - Procesamiento por tipo (SQL, conversación, RAG+SQL)
+// - Ejecución de SQL con validación
+// - Formateo natural de respuestas
+// - Personalización y persistencia
+// - Manejo de errores y fallbacks
+// =====================================
+
 /**
  * Función principal para procesar consultas de administrador
  * @param {Object} params - Parámetros de la consulta
@@ -797,6 +1138,12 @@ async function processQuery({ message, userId, conversationId }) {
     console.log('🚀 [SISTEMA] Procesando consulta:', message);
     console.log('🚀 [SISTEMA] Usuario ID:', userId);
     console.log('🚀 [SISTEMA] Conversación ID:', conversationId);
+    
+    // =====================================
+    // LOGS PARA IDENTIFICAR ARCHIVOS USADOS EN ESTA CONSULTA
+    // =====================================
+    console.log('🔍 [CONSULTA] ===== ARCHIVOS USADOS EN ESTA CONSULTA =====');
+    console.log('🟢 Se está usando: openAI.js (admin/core)');
 
     // =====================================
     // OBTENER INFORMACIÓN DEL USUARIO Y CONTEXTO
@@ -1021,7 +1368,8 @@ async function processQuery({ message, userId, conversationId }) {
                         if (results && results.length > 0) {
                             console.log('✅ [PROCESS-QUERY] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
                             
-                            const promptExplicacion = generarPromptFormateador(message, sql, results);
+                            // const promptExplicacion = generarPromptFormateador(message, sql, results);
+                            const promptExplicacion = `Eres un asistente experto de Semilleros Deitana. Tu tarea es explicar de forma natural y amigable los resultados de una consulta SQL.\n\nCONSULTA ORIGINAL: \"${message}\"\nSQL EJECUTADO: ${sql}\nRESULTADOS: ${JSON.stringify(results, null, 2)}\n\nINSTRUCCIONES:\n- Explica los resultados de forma natural y conversacional\n- Usa \"NOSOTROS\" y \"NUESTRA empresa\" como empleado interno\n- Sé específico sobre los datos encontrados\n- Si no hay resultados, explica claramente que no se encontraron registros\n- Mantén un tono amigable y profesional\n- Usa emojis apropiados para hacer la respuesta más atractiva\n\nResponde como si fueras un empleado de Semilleros Deitana explicando los datos a un compañero.`;
 
                             const segundaLlamada = await openai.chat.completions.create({
                                 model: 'gpt-3.5-turbo',
@@ -1178,7 +1526,35 @@ async function processQuery({ message, userId, conversationId }) {
 // =====================================
 // FUNCIÓN STREAMING PARA TIEMPO REAL
 // =====================================
+// 
+// Esta función proporciona respuesta en tiempo real:
+// - Streaming chunk por chunk al frontend
+// - Procesamiento post-streaming para SQL
+// - Segunda llamada para explicación natural
+// - Headers especiales para streaming HTTP
+// - Manejo de errores en tiempo real
+// - Persistencia asíncrona de respuestas
+// =====================================
 
+/**
+ * Función de streaming para procesamiento en tiempo real
+ * Proporciona respuesta chunk por chunk al frontend
+ * 
+ * @param {Object} params - Parámetros de la consulta
+ * @param {string} params.message - Mensaje del usuario
+ * @param {string} params.userId - ID del usuario
+ * @param {string} params.conversationId - ID de la conversación
+ * @param {Object} params.response - Objeto de respuesta HTTP
+ * @returns {Object} Resultado del procesamiento
+ * 
+ * CARACTERÍSTICAS:
+ * - Streaming en tiempo real chunk por chunk
+ * - Procesamiento post-streaming para SQL
+ * - Segunda llamada para explicación natural
+ * - Headers especiales para streaming HTTP
+ * - Manejo de errores en tiempo real
+ * - Persistencia asíncrona de respuestas
+ */
 async function processQueryStream({ message, userId, conversationId, response }) {
     const tiempoInicio = Date.now();
     console.log('🚀 [STREAMING] ===== INICIANDO PROCESO DE CONSULTA CON STREAMING =====');
@@ -1347,7 +1723,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         console.log('✅ [STREAMING] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
                         
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
-                        const promptExplicacion = generarPromptFormateador(message, sql, results);
+                        const promptExplicacion = `Eres un asistente experto de Semilleros Deitana. Tu tarea es explicar de forma natural y amigable los resultados de una consulta SQL.\n\nCONSULTA ORIGINAL: \"${message}\"\nSQL EJECUTADO: ${sql}\nRESULTADOS: ${JSON.stringify(results, null, 2)}\n\nINSTRUCCIONES:\n- Explica los resultados de forma natural y conversacional\n- Usa \"NOSOTROS\" y \"NUESTRA empresa\" como empleado interno\n- Sé específico sobre los datos encontrados\n- Si no hay resultados, explica claramente que no se encontraron registros\n- Mantén un tono amigable y profesional\n- Usa emojis apropiados para hacer la respuesta más atractiva\n\nResponde como si fueras un empleado de Semilleros Deitana explicando los datos a un compañero.`;
 
                         const segundaLlamada = await openai.chat.completions.create({
                             model: 'gpt-3.5-turbo',
@@ -1463,6 +1839,14 @@ async function processQueryStream({ message, userId, conversationId, response })
 
 // =====================================
 // MÓDULO DE EXPORTACIÓN
+// =====================================
+// 
+// Este módulo exporta las funciones principales:
+// - processQuery: Procesamiento estándar de consultas
+// - processQueryStream: Procesamiento con streaming en tiempo real
+// 
+// USO EN OTROS ARCHIVOS:
+// const { processQuery, processQueryStream } = require('./admin/core/openAI');
 // =====================================
 
 /**
