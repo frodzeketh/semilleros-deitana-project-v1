@@ -738,12 +738,12 @@ async function fuzzySearchRetry(sql, userQuery) {
 // - Análisis de intención con IA (SQL, conversación, RAG+SQL)
 // - Detección automática de tablas relevantes
 // - Construcción de contexto de mapaERP selectivo
-// - Selección inteligente de modelo GPT
+// - Modelo único optimizado (gpt-4o)
 // - Construcción de instrucciones naturales
 // - Ensamblaje final del prompt optimizado
 // =====================================
 const { promptBase } = require('../prompts/base');
-const { sqlRules } = require('../prompts/sqlRules');
+const { sqlRules, generarPromptSQL, generarPromptRAGSQL } = require('../prompts/sqlRules');
 const { comportamientoChatGPT, comportamiento, comportamientoAsistente } = require('../prompts/comportamiento');
 const { formatoRespuesta, generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador } = require('../prompts/formatoRespuesta');
 const ragInteligente = require('./ragInteligente');
@@ -851,15 +851,21 @@ function construirContextoMapaERP(tablasRelevantes, mapaERP) {
 }
 
 function seleccionarModeloInteligente(intencion, tablasRelevantes) {
+    // ✅ MODELO ÚNICO OPTIMIZADO PARA TODAS LAS TAREAS
     const config = {
-        modelo: 'gpt-4o',
-        maxTokens: 2000,
-        temperature: 0.3,
-        razon: 'Usar el modelo original que ya funcionaba correctamente para SQL'
+        modelo: 'gpt-4o',           // Modelo más capaz para todas las tareas
+        maxTokens: 2000,            // Tokens suficientes para consultas complejas
+        temperature: 0.3,           // Balance entre creatividad y precisión
+        razon: 'Modelo único optimizado: gpt-4o maneja SQL, conversación y RAG+SQL con excelente rendimiento'
     };
-    console.log('🤖 [MODELO-SELECTOR] Complejidad:', intencion.complejidad);
-    console.log('🤖 [MODELO-SELECTOR] Modelo seleccionado:', config.modelo);
+    
+    console.log('🤖 [MODELO-SELECTOR] Usando modelo único optimizado:', config.modelo);
     console.log('🤖 [MODELO-SELECTOR] Razón:', config.razon);
+    console.log('🤖 [MODELO-SELECTOR] Configuración:', {
+        maxTokens: config.maxTokens,
+        temperature: config.temperature
+    });
+    
     return config;
 }
 
@@ -944,7 +950,8 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
             usaIA: true,
             tablasDetectadas: tablasRelevantes.length,
             llamadasIA: 3, // Análisis de intención + detección de tablas + respuesta final
-            optimizado: true
+            optimizado: true,
+            modeloUnico: 'gpt-4o' // Modelo único para todas las tareas
         }
     };
 }
