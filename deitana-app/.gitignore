@@ -33,3 +33,14 @@ server/login-deitana-firebase-adminsdk-fbsvc-a596a8627e.json
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Archivos de base de datos grandes
+*.sql
+*.dump
+*.backup
+*.bak
+
+# Archivos de datos grandes
+*.csv
+*.xlsx
+*.xls
