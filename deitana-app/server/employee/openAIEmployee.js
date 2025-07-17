@@ -350,7 +350,7 @@ ${promptComportamiento}`
         }
         
         const completion = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview", // ← Cambiado a modelo más económico
+            model: "gpt-4o", // ← Modelo unificado para consistencia
             messages: messages,
             temperature: 0.7,
             max_tokens: 400 // ← Reducido para ahorrar costos

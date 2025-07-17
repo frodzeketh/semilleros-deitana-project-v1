@@ -86,7 +86,7 @@ function registrarLlamadaOpenAI(trace, llamada) {
     
     const generation = trace.generation({
         name: 'openai-generation',
-        model: llamada.modelo || 'gpt-4-turbo-preview',
+        model: llamada.modelo || 'gpt-4o',
         modelParameters: {
             temperature: llamada.temperature || 0.7,
             max_tokens: llamada.maxTokens || 2000

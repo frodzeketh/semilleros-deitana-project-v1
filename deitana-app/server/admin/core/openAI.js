@@ -888,7 +888,7 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
  * @param {boolean} modoDesarrollo - Modo de desarrollo para debugging
  * @returns {Object} Prompt construido con configuración y métricas
  */
-async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contextoPinecone = '', contextoDatos = '', modoDesarrollo = false) {
+async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contextoPinecone = '', contextoDatos = '', historialConversacion = [], modoDesarrollo = false) {
     console.log('🚀 [PROMPT-BUILDER] Construyendo prompt OPTIMIZADO con IA...');
     console.log('🔍 [DEBUG] mapaERP recibido:', !!mapaERP, 'tipo:', typeof mapaERP);
     if (mapaERP) {
@@ -938,6 +938,16 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // Añadir contexto de datos previos si existe
     if (contextoDatos) {
         promptFinal += `DATOS DE CONTEXTO PREVIO:\n${contextoDatos}\n\n`;
+    }
+    
+    // Añadir contexto conversacional de forma inteligente
+    if (historialConversacion && historialConversacion.length > 0) {
+        const ultimosMensajes = historialConversacion.slice(-4); // Últimos 4 mensajes
+        const contextoConversacional = ultimosMensajes.map(msg => 
+            `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
+        ).join('\n');
+        
+        promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
     }
     console.log('✅ [PROMPT-BUILDER] Prompt optimizado construido');
     console.log('🎯 [PROMPT-BUILDER] Modelo final:', configModelo.modelo);
@@ -1248,16 +1258,31 @@ async function processQuery({ message, userId, conversationId }) {
             console.log('🧠 [ETAPA-1] Intento:', intentos + 1);
 
             try {
+                // Construir array de mensajes con historial conversacional
                 const mensajesLlamada = [
                     {
                         role: 'system',
                         content: promptBuilder.prompt
-                    },
-                    {
-                        role: 'user', 
-                        content: message
                     }
                 ];
+
+                // Agregar historial conversacional como mensajes reales
+                if (historialConversacion && historialConversacion.length > 0) {
+                    console.log('💬 [CONTEXTO] Agregando historial conversacional como mensajes reales...');
+                    historialConversacion.forEach((msg, index) => {
+                        console.log(`💬 [CONTEXTO] Mensaje ${index + 1}: ${msg.role} - "${msg.content.substring(0, 100)}..."`);
+                        mensajesLlamada.push({
+                            role: msg.role,
+                            content: msg.content
+                        });
+                    });
+                }
+
+                // Agregar el mensaje actual del usuario
+                mensajesLlamada.push({
+                    role: 'user', 
+                    content: message
+                });
 
                 if (feedback) {
                     mensajesLlamada.push({
@@ -1378,14 +1403,27 @@ async function processQuery({ message, userId, conversationId }) {
                             // const promptExplicacion = generarPromptFormateador(message, sql, results);
                             const promptExplicacion = `Eres un asistente experto de Semilleros Deitana. Tu tarea es explicar de forma natural y amigable los resultados de una consulta SQL.\n\nCONSULTA ORIGINAL: \"${message}\"\nSQL EJECUTADO: ${sql}\nRESULTADOS: ${JSON.stringify(results, null, 2)}\n\nINSTRUCCIONES:\n- Explica los resultados de forma natural y conversacional\n- Usa \"NOSOTROS\" y \"NUESTRA empresa\" como empleado interno\n- Sé específico sobre los datos encontrados\n- Si no hay resultados, explica claramente que no se encontraron registros\n- Mantén un tono amigable y profesional\n- Usa emojis apropiados para hacer la respuesta más atractiva\n\nResponde como si fueras un empleado de Semilleros Deitana explicando los datos a un compañero.`;
 
+                            // Segunda llamada con historial para mantener contexto
+                            const mensajesSegundaLlamada = [
+                                {
+                                    role: 'system',
+                                    content: promptExplicacion
+                                }
+                            ];
+
+                            // Agregar historial conversacional a la segunda llamada también
+                            if (historialConversacion && historialConversacion.length > 0) {
+                                historialConversacion.forEach((msg) => {
+                                    mensajesSegundaLlamada.push({
+                                        role: msg.role,
+                                        content: msg.content
+                                    });
+                                });
+                            }
+
                             const segundaLlamada = await openai.chat.completions.create({
-                                model: 'gpt-3.5-turbo',
-                                messages: [
-                                    {
-                                        role: 'system',
-                                        content: promptExplicacion
-                                    }
-                                ],
+                                model: 'gpt-4o',
+                                messages: mensajesSegundaLlamada,
                                 max_tokens: 500,
                                 temperature: 0.7
                             });
@@ -1642,16 +1680,31 @@ async function processQueryStream({ message, userId, conversationId, response })
         // CONFIGURAR MENSAJES PARA STREAMING
         // =====================================
 
+        // Construir array de mensajes con historial conversacional
         const mensajesLlamada = [
             {
                 role: 'system',
                 content: promptBuilder.prompt
-            },
-            {
-                role: 'user', 
-                content: message
             }
         ];
+
+        // Agregar historial conversacional como mensajes reales
+        if (historialConversacion && historialConversacion.length > 0) {
+            console.log('💬 [STREAMING-CONTEXTO] Agregando historial conversacional como mensajes reales...');
+            historialConversacion.forEach((msg, index) => {
+                console.log(`💬 [STREAMING-CONTEXTO] Mensaje ${index + 1}: ${msg.role} - "${msg.content.substring(0, 100)}..."`);
+                mensajesLlamada.push({
+                    role: msg.role,
+                    content: msg.content
+                });
+            });
+        }
+
+        // Agregar el mensaje actual del usuario
+        mensajesLlamada.push({
+            role: 'user', 
+            content: message
+        });
 
         console.log('📊 [STREAMING] Iniciando llamada con stream a OpenAI...');
         console.log('🤖 [MODELO-DINÁMICO] Usando modelo:', promptBuilder.configModelo.modelo);
@@ -1732,14 +1785,27 @@ async function processQueryStream({ message, userId, conversationId, response })
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
                         const promptExplicacion = `Eres un asistente experto de Semilleros Deitana. Tu tarea es explicar de forma natural y amigable los resultados de una consulta SQL.\n\nCONSULTA ORIGINAL: \"${message}\"\nSQL EJECUTADO: ${sql}\nRESULTADOS: ${JSON.stringify(results, null, 2)}\n\nINSTRUCCIONES:\n- Explica los resultados de forma natural y conversacional\n- Usa \"NOSOTROS\" y \"NUESTRA empresa\" como empleado interno\n- Sé específico sobre los datos encontrados\n- Si no hay resultados, explica claramente que no se encontraron registros\n- Mantén un tono amigable y profesional\n- Usa emojis apropiados para hacer la respuesta más atractiva\n\nResponde como si fueras un empleado de Semilleros Deitana explicando los datos a un compañero.`;
 
+                        // Segunda llamada con historial para mantener contexto
+                        const mensajesSegundaLlamada = [
+                            {
+                                role: 'system',
+                                content: promptExplicacion
+                            }
+                        ];
+
+                        // Agregar historial conversacional a la segunda llamada también
+                        if (historialConversacion && historialConversacion.length > 0) {
+                            historialConversacion.forEach((msg) => {
+                                mensajesSegundaLlamada.push({
+                                    role: msg.role,
+                                    content: msg.content
+                                });
+                            });
+                        }
+
                         const segundaLlamada = await openai.chat.completions.create({
-                            model: 'gpt-3.5-turbo',
-                            messages: [
-                                {
-                                    role: 'system',
-                                    content: promptExplicacion
-                                }
-                            ],
+                            model: 'gpt-4o',
+                            messages: mensajesSegundaLlamada,
                             max_tokens: 500,
                             temperature: 0.7
                         });
