@@ -65,7 +65,7 @@ INSTRUCCIONES PARA CONSULTAS INTELIGENTES:
        b.BA_DENO as nombre_bandeja,
        b.BA_ALV as alveolos
    FROM articulos a
-   LEFT JOIN proveedores p ON a.AR_CDPR = p.id
+   LEFT JOIN proveedores p ON a.AR_PRV = p.id
    LEFT JOIN bandejas b ON b.BA_ALV >= 104
    WHERE a.AR_DENO LIKE '%tomate%'
    LIMIT 1
