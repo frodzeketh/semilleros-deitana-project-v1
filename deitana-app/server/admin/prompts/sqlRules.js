@@ -11,6 +11,11 @@ const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
 - **EJEMPLO CORRECTO:**
   <sql>SELECT id, PAR_DENO, PAR_FEC FROM partidas LIMIT 2;</sql>
 
+- Debes ejecutar la consulta SQL utilizando únicamente las columnas reales y válidas según el mapaERP.
+- Nunca inventes nombres de columnas. Por ejemplo, si te piden el monto de la última factura emitida, no utilices FACTURAE_IMPO o columnas inexistentes.
+- El mapaERP indica claramente que el monto total de una factura está en la columna FE_TTT y la fecha de emisión está en FE_FEC, por lo tanto esas deben usarse.
+- Siempre valida nombres de columnas con el mapaERP antes de generar cualquier consulta.
+
 ## 📋 REGLAS DE GENERACIÓN:
 1. **Formato**: Usa <sql>...</sql> + respuesta natural
 2. **Marcadores**: SELECT CL_DENO → usar [CL_DENO] en respuesta
@@ -139,6 +144,7 @@ ${obtenerContenidoMapaERP(message)}
      * Usa 'p-siembras' (NO 'p_siembras')
      * Usa 'alb-compra' (NO 'alb_compra')
      * Usa 'facturas-r' (NO 'facturas_r')
+     * * Usa 'facturas-e' (NO 'facturas_e')
      * Usa 'devol-clientes' (NO 'devol_clientes')
 
 3. **EJEMPLOS DE CONSULTAS INTELIGENTES:**
@@ -188,6 +194,61 @@ ${obtenerContenidoMapaERP(message)}
 - NUNCA uses respuestas genéricas
 - NUNCA pidas más información si ya tienes los datos
 - NUNCA generes múltiples consultas SQL cuando puedas usar una sola
+
+7. **EJEMPLOS CORRECTOS:**
+- Debes ejecutar la consulta SQL utilizando únicamente las columnas reales y válidas según el mapaERP.
+- Nunca inventes nombres de columnas. Por ejemplo, si te piden el monto de la última factura emitida, no utilices FACTURAE_IMPO o columnas inexistentes.
+- El mapaERP indica claramente que el monto total de una factura está en la columna FE_TTT y la fecha de emisión está en FE_FEC, por lo tanto esas deben usarse.
+- Siempre valida nombres de columnas con el mapaERP antes de generar cualquier consulta.
+
+SELECT 
+    FE_FEC AS fecha_emision,
+    FE_TTT AS monto_total
+FROM 'facturas-e'
+ORDER BY FE_FEC DESC
+LIMIT 1;
+
+Ejemplo 2: Decime la última factura emitida con su monto total, forma de pago y cliente correspondiente", el SQL correcto es:
+
+SELECT 
+  f.id AS id_factura,
+  f.FE_FEC AS fecha_emision,
+  f.FE_TTT AS total_pagar,
+  f.FE_CCL AS id_cliente,
+  c.CL_DENO AS nombre_cliente,
+  c.CL_CIF AS cif_cliente,
+  f.FE_FP AS id_forma_pago,
+  p.FP_DENO AS forma_pago
+FROM 'facturas-e' f
+LEFT JOIN clientes c ON f.FE_CCL = c.id
+LEFT JOIN fpago p ON f.FE_FP = p.id
+ORDER BY f.FE_FEC DESC
+LIMIT 1;
+
+
+
+Si el usuario hace una consulta con una subconsulta que compara valores, evalúa si esa subconsulta puede devolver múltiples filas. 
+
+✔️ Si puede devolver más de una fila, utiliza 'IN (...)' en lugar de '=' para evitar errores como "Subquery returns more than 1 row".
+
+Ejemplo:
+Malo ❌
+SELECT ... WHERE campo = (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
+
+Bueno ✅
+SELECT ... WHERE campo IN (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
+
+✔️ Si la subconsulta puede devolver más de una fila, usá IN (...) en lugar de = para evitar errores como:
+"Subquery returns more than 1 row".
+
+Ejemplo malo ❌
+SELECT ... WHERE campo = (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
+
+
+Ejemplo bueno ✅
+SELECT ... WHERE campo IN (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
+
+                                                                        
 
 Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
 }
