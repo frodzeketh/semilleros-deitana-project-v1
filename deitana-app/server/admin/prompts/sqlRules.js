@@ -1,6 +1,22 @@
 console.log('🟢 Se está usando: sqlRules.js (admin/prompts)');
+
 // =====================================
 // REGLAS SQL - GENERACIÓN Y VALIDACIÓN
+// =====================================
+// 
+// Este archivo contiene las reglas base para generación de SQL y dos funciones
+// especializadas que construyen prompts específicos para diferentes tipos de consultas.
+//
+// ESTRUCTURA:
+// 1. sqlRules = Reglas base unificadas para todas las consultas SQL
+// 2. generarPromptSQL = Para consultas SQL puras (solo datos)
+// 3. generarPromptRAGSQL = Para consultas RAG + SQL (conocimiento + datos)
+// 4. Funciones auxiliares = Para obtener contexto de la base de datos
+//
+// USO EN openAI.js:
+// - sqlRules se usa directamente en prompts
+// - generarPromptSQL se usa para consultas de datos
+// - generarPromptRAGSQL se usa para consultas con contexto empresarial
 // =====================================
 
 const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
@@ -111,7 +127,10 @@ Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
 const mapaERP = require('../core/mapaERP');
 
 /**
- * Genera el prompt base para consultas SQL
+ * Genera el prompt para consultas SQL puras
+ * PROPÓSITO: Para consultas que solo necesitan datos de la base de datos
+ * EJEMPLO: "dime 3 clientes", "cuántas facturas hay"
+ * 
  * @param {string} message - Mensaje del usuario
  * @param {Object} contextoPinecone - Contexto de Pinecone
  * @param {string} lastRealData - Datos reales de la última consulta
@@ -255,6 +274,9 @@ Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
 
 /**
  * Genera el prompt para consultas RAG + SQL combinadas
+ * PROPÓSITO: Para consultas que combinan conocimiento empresarial + datos
+ * EJEMPLO: "qué significa partida en semilleros", "explícame el proceso de producción"
+ * 
  * @param {string} message - Mensaje del usuario
  * @param {Object} contextoPinecone - Contexto de Pinecone
  * @param {string} lastRealData - Datos reales de la última consulta
@@ -313,6 +335,9 @@ Responde de forma natural, combinando conocimiento empresarial con datos especí
 
 /**
  * Obtiene el contenido del mapa ERP relevante para la consulta
+ * PROPÓSITO: Busca tablas y columnas relevantes basándose en palabras clave
+ * EJEMPLO: Usuario: "dime clientes" → Busca tablas con "cliente" en nombre/descripción
+ * 
  * @param {string} consulta - Consulta del usuario
  * @returns {string} Contenido del mapa ERP
  */
@@ -343,6 +368,9 @@ function obtenerContenidoMapaERP(consulta) {
 
 /**
  * Obtiene la descripción del mapa ERP
+ * PROPÓSITO: Obtiene solo descripciones de tablas relevantes
+ * EJEMPLO: Usuario: "dime facturas" → Busca tablas con "factura" en nombre/descripción
+ * 
  * @param {string} consulta - Consulta del usuario
  * @returns {string} Descripción del mapa ERP
  */
