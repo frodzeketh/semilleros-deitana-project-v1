@@ -4,26 +4,22 @@ console.log('🟢 Se está usando: sqlRules.js (admin/prompts)');
 // REGLAS SQL - GENERACIÓN Y VALIDACIÓN
 // =====================================
 // 
-// Este archivo contiene las reglas base para generación de SQL y dos funciones
-// especializadas que construyen prompts específicos para diferentes tipos de consultas.
+// Este archivo contiene las reglas base para generación de SQL y funciones auxiliares
+// para obtener contexto relevante de la base de datos.
 //
 // ESTRUCTURA:
 // 1. sqlRules = Reglas base unificadas para todas las consultas SQL
-// 2. generarPromptSQL = Para consultas SQL puras (solo datos)
-// 3. generarPromptRAGSQL = Para consultas RAG + SQL (conocimiento + datos)
-// 4. Funciones auxiliares = Para obtener contexto de la base de datos
+// 2. Funciones auxiliares = Para obtener contexto de la base de datos
 //
 // USO EN openAI.js:
 // - sqlRules se usa directamente en prompts
-// - generarPromptSQL se usa para consultas de datos
-// - generarPromptRAGSQL se usa para consultas con contexto empresarial
 // =====================================
 
 const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
 
 ## 🚨 FORMATO OBLIGATORIO PARA SQL:
 - **SIEMPRE** usa etiquetas <sql>...</sql> para encerrar consultas SQL
-- **NUNCA** uses bloques de código markdown (\`\`\`sql)
+- **NUNCA** uses bloques de código markdown (  sql)
 - **EJEMPLO CORRECTO:**
   <sql>SELECT id, PAR_DENO, PAR_FEC FROM partidas LIMIT 2;</sql>
 
@@ -120,218 +116,7 @@ const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
 
 Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
 
-// =====================================
-// FUNCIONES PARA GENERACIÓN DE PROMPTS SQL
-// =====================================
-
 const mapaERP = require('../core/mapaERP');
-
-/**
- * Genera el prompt para consultas SQL puras
- * PROPÓSITO: Para consultas que solo necesitan datos de la base de datos
- * EJEMPLO: "dime 3 clientes", "cuántas facturas hay"
- * 
- * @param {string} message - Mensaje del usuario
- * @param {Object} contextoPinecone - Contexto de Pinecone
- * @param {string} lastRealData - Datos reales de la última consulta
- * @returns {string} Prompt para generación de SQL
- */
-function generarPromptSQL(message, contextoPinecone = '', lastRealData = '') {
-    return `Eres un asistente especializado en consultas SQL para Semilleros Deitana.
-
-## 🎯 TU TAREA
-Genera UNA consulta SQL que responda completamente la pregunta del usuario.
-
-## 📊 CONTEXTO DE LA BASE DE DATOS
-${obtenerContenidoMapaERP(message)}
-
-## 🔍 CONSULTA DEL USUARIO
-"${message}"
-
-## 📋 REGLAS OBLIGATORIAS PARA SQL
-
-1. **ESTRUCTURA DE CONSULTAS:**
-   - SIEMPRE genera UNA consulta SQL que responda TODAS las preguntas
-   - Usa subconsultas y JOINs para obtener TODA la información necesaria
-   - Incluye GROUP BY y HAVING cuando sea necesario
-   - Optimiza la consulta para obtener TODOS los datos en una sola operación
-
-2. **NOMBRES DE TABLA IMPORTANTES:**
-   - SIEMPRE usa el nombre exacto de la tabla como está definido en la propiedad 'tabla'
-   - Algunas tablas usan guiones (-) en lugar de guiones bajos (_)
-   - Ejemplos importantes:
-     * Usa 'p-siembras' (NO 'p_siembras')
-     * Usa 'alb-compra' (NO 'alb_compra')
-     * Usa 'facturas-r' (NO 'facturas_r')
-     * * Usa 'facturas-e' (NO 'facturas_e')
-     * Usa 'devol-clientes' (NO 'devol_clientes')
-
-3. **EJEMPLOS DE CONSULTAS INTELIGENTES:**
-   
-   a) Para "cuantas acciones comerciales hay, dime un cliente que haya hecho multiples acciones":
-   SELECT 
-       (SELECT COUNT(*) FROM acciones_com) as total_acciones,
-       c.CL_DENO as nombre_cliente,
-       COUNT(ac.id) as total_acciones_cliente
-   FROM acciones_com ac
-   LEFT JOIN clientes c ON ac.ACCO_CDCL = c.id
-   GROUP BY ac.ACCO_CDCL, c.CL_DENO
-   HAVING COUNT(ac.id) > 1
-   ORDER BY COUNT(ac.id) DESC
-   LIMIT 1
-   
-   b) Para "dime un tipo de tomate con su proveedor y una bandeja que podamos cultivar 104 tomates":
-   SELECT 
-       a.AR_DENO as nombre_tomate,
-       p.PR_DENO as nombre_proveedor,
-       b.BA_DENO as nombre_bandeja,
-       b.BA_ALV as alveolos
-   FROM articulos a
-   LEFT JOIN proveedores p ON a.AR_PRV = p.id
-   LEFT JOIN bandejas b ON b.BA_ALV >= 104
-   WHERE a.AR_DENO LIKE '%tomate%'
-   LIMIT 1
-
-4. **VALIDACIONES OBLIGATORIAS:**
-   - SIEMPRE especifica columnas en SELECT (NUNCA uses SELECT *)
-   - Incluye LIMIT cuando sea apropiado
-   - Usa las columnas exactas definidas en mapaERP
-   - Valida que las tablas y columnas existan en el mapa ERP
-
-5. **CONTEXTO PREVIO:**
-   ${lastRealData ? `Datos de la consulta anterior: ${lastRealData}` : 'No hay datos previos'}
-
-6. **CONTEXTO DE MEMORIA:**
-   ${contextoPinecone ? `Información relevante de conversaciones anteriores: ${contextoPinecone}` : 'No hay contexto de memoria'}
-
-## 🚀 INSTRUCCIONES FINALES
-
-- Analiza la consulta completa para identificar TODAS las preguntas
-- Genera UNA consulta SQL que responda TODO
-- Incluye TODAS las relaciones necesarias
-- Muestra TODA la información disponible
-- NUNCA uses respuestas genéricas
-- NUNCA pidas más información si ya tienes los datos
-- NUNCA generes múltiples consultas SQL cuando puedas usar una sola
-
-7. **EJEMPLOS CORRECTOS:**
-- Debes ejecutar la consulta SQL utilizando únicamente las columnas reales y válidas según el mapaERP.
-- Nunca inventes nombres de columnas. Por ejemplo, si te piden el monto de la última factura emitida, no utilices FACTURAE_IMPO o columnas inexistentes.
-- El mapaERP indica claramente que el monto total de una factura está en la columna FE_TTT y la fecha de emisión está en FE_FEC, por lo tanto esas deben usarse.
-- Siempre valida nombres de columnas con el mapaERP antes de generar cualquier consulta.
-
-SELECT 
-    FE_FEC AS fecha_emision,
-    FE_TTT AS monto_total
-FROM 'facturas-e'
-ORDER BY FE_FEC DESC
-LIMIT 1;
-
-Ejemplo 2: Decime la última factura emitida con su monto total, forma de pago y cliente correspondiente", el SQL correcto es:
-
-SELECT 
-  f.id AS id_factura,
-  f.FE_FEC AS fecha_emision,
-  f.FE_TTT AS total_pagar,
-  f.FE_CCL AS id_cliente,
-  c.CL_DENO AS nombre_cliente,
-  c.CL_CIF AS cif_cliente,
-  f.FE_FP AS id_forma_pago,
-  p.FP_DENO AS forma_pago
-FROM 'facturas-e' f
-LEFT JOIN clientes c ON f.FE_CCL = c.id
-LEFT JOIN fpago p ON f.FE_FP = p.id
-ORDER BY f.FE_FEC DESC
-LIMIT 1;
-
-
-
-Si el usuario hace una consulta con una subconsulta que compara valores, evalúa si esa subconsulta puede devolver múltiples filas. 
-
-✔️ Si puede devolver más de una fila, utiliza 'IN (...)' en lugar de '=' para evitar errores como "Subquery returns more than 1 row".
-
-Ejemplo:
-Malo ❌
-SELECT ... WHERE campo = (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
-
-Bueno ✅
-SELECT ... WHERE campo IN (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
-
-✔️ Si la subconsulta puede devolver más de una fila, usá IN (...) en lugar de = para evitar errores como:
-"Subquery returns more than 1 row".
-
-Ejemplo malo ❌
-SELECT ... WHERE campo = (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
-
-
-Ejemplo bueno ✅
-SELECT ... WHERE campo IN (SELECT id FROM tabla WHERE descripcion LIKE '%valor%');
-
-                                                                        
-
-Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
-}
-
-/**
- * Genera el prompt para consultas RAG + SQL combinadas
- * PROPÓSITO: Para consultas que combinan conocimiento empresarial + datos
- * EJEMPLO: "qué significa partida en semilleros", "explícame el proceso de producción"
- * 
- * @param {string} message - Mensaje del usuario
- * @param {Object} contextoPinecone - Contexto de Pinecone
- * @param {string} lastRealData - Datos reales de la última consulta
- * @returns {string} Prompt para RAG + SQL
- */
-function generarPromptRAGSQL(message, contextoPinecone = '', lastRealData = '') {
-    return `Eres un asistente especializado en Semilleros Deitana que combina conocimiento empresarial con consultas SQL.
-
-## 🎯 TU TAREA
-Responde la pregunta del usuario combinando:
-1. Información del conocimiento empresarial de Semilleros Deitana
-2. Una consulta SQL para obtener datos específicos de la base de datos
-
-## 📊 CONTEXTO DE LA BASE DE DATOS
-${obtenerContenidoMapaERP(message)}
-
-## 🔍 CONSULTA DEL USUARIO
-"${message}"
-
-## 📋 REGLAS PARA RAG + SQL
-
-1. **COMBINACIÓN DE FUENTES:**
-   - Proporciona información contextual del conocimiento empresarial
-   - Genera una consulta SQL para datos específicos
-   - Combina ambas fuentes en una respuesta coherente
-
-2. **ESTRUCTURA DE RESPUESTA:**
-   - Explicación contextual del tema
-   - Consulta SQL para datos específicos
-   - Integración de información en respuesta natural
-
-3. **EJEMPLO DE RESPUESTA:**
-   "En Semilleros Deitana, nuestros procesos de producción de semillas incluyen [contexto empresarial]. 
-   Para tu consulta específica, aquí están los datos actuales:
-   
-   <sql>
-   SELECT [columnas específicas] FROM [tabla] WHERE [condiciones]
-   </sql>"
-
-4. **CONTEXTO PREVIO:**
-   ${lastRealData ? `Datos de la consulta anterior: ${lastRealData}` : 'No hay datos previos'}
-
-5. **CONTEXTO DE MEMORIA:**
-   ${contextoPinecone ? `Información relevante de conversaciones anteriores: ${contextoPinecone}` : 'No hay contexto de memoria'}
-
-## 🚀 INSTRUCCIONES FINALES
-
-- Proporciona contexto empresarial relevante
-- Genera una consulta SQL válida
-- Integra ambas fuentes de información
-- Mantén un tono natural y conversacional
-- Usa el formato <sql></sql> para la consulta SQL
-
-Responde de forma natural, combinando conocimiento empresarial con datos específicos.`;
-}
 
 /**
  * Obtiene el contenido del mapa ERP relevante para la consulta
@@ -396,8 +181,6 @@ function obtenerDescripcionMapaERP(consulta) {
 
 module.exports = { 
     sqlRules, 
-    generarPromptSQL, 
-    generarPromptRAGSQL, 
     obtenerContenidoMapaERP, 
     obtenerDescripcionMapaERP 
 }; 

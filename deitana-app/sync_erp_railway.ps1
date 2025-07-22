@@ -31,7 +31,8 @@ function Read-IniFile {
                     $config[$currentSection] = @{}
                 } elseif ($line.Contains("=") -and $currentSection) {
                     $key, $value = $line.Split("=", 2)
-                    $config[$currentSection][$key.Trim()] = $value.Trim()
+                    $key = $key.Trim().ToLower() # Forzar minúsculas
+                    $config[$currentSection][$key] = $value.Trim()
                 }
             }
         }
@@ -55,7 +56,8 @@ function Write-Log {
         Write-Host $logMessage -ForegroundColor Green
     }
     
-    $logFile = "sync_log_$(Get-Date -Format 'yyyy-MM-dd').txt"
+    # Guardar el log SOLO en la carpeta temporal del sistema
+    $logFile = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "sync_log_$(Get-Date -Format 'yyyy-MM-dd').txt")
     Add-Content -Path $logFile -Value $logMessage
 }
 
@@ -69,10 +71,10 @@ function Test-RequiredTools {
     foreach ($tool in $tools) {
         try {
             $null = Get-Command $tool -ErrorAction Stop
-            Write-Log "✓ $tool encontrado"
+            Write-Log "OK $tool encontrado"
         } catch {
             $missing += $tool
-            Write-Log "✗ $tool no encontrado" "ERROR"
+            Write-Log "ERROR $tool no encontrado" "ERROR"
         }
     }
     
@@ -87,22 +89,22 @@ function Test-RequiredTools {
 
 # Función para verificar conexión VPN
 function Test-VPNConnection {
-    param([string]$Host)
+    param([string]$TargetHost)
     
     Write-Log "Verificando conexión VPN..."
     
     try {
-        $ping = Test-Connection -ComputerName $Host -Count 1 -Quiet
+        $ping = Test-Connection -ComputerName $TargetHost -Count 1 -Quiet
         if ($ping) {
-            Write-Log "✓ Conexión VPN verificada"
+            Write-Log "OK Conexión VPN verificada"
             return $true
         } else {
-            Write-Log "✗ No se puede conectar al servidor local" "ERROR"
+            Write-Log "ERROR No se puede conectar al servidor local" "ERROR"
             Write-Log "Verificar que la VPN Sophos esté conectada" "ERROR"
             return $false
         }
     } catch {
-        Write-Log "✗ Error al verificar conexión VPN" "ERROR"
+        Write-Log "ERROR al verificar conexión VPN" "ERROR"
         return $false
     }
 }
@@ -117,12 +119,16 @@ function Export-Database {
     Write-Log "Iniciando exportación de base de datos local..."
     
     $local = $Config["LOCAL_DATABASE"]
+    Write-Host "[DEBUG] LOCAL_DATABASE config:"
+    foreach ($key in $local.Keys) {
+        Write-Host ("[DEBUG] {0} = '{1}'" -f $key, $local[$key])
+    }
     $args = @(
-        "-h", $local["HOST"],
-        "-P", $local["PORT"],
-        "-u", $local["USER"],
-        "-p$($local['PASSWORD'])",
-        $local["DATABASE"],
+        "-h", $local["db_host"],
+        "-P", $local["port"],
+        "-u", $local["user"],
+        "-p$($local['password'])",
+        $local["database"],
         "--single-transaction",
         "--routines",
         "--triggers",
@@ -135,15 +141,15 @@ function Export-Database {
         
         if ($process.ExitCode -eq 0) {
             $size = (Get-Item $DumpFile).Length
-            Write-Log "✓ Exportación completada: $DumpFile ($([math]::Round($size/1MB, 2)) MB)"
+            Write-Log ("OK Exportación completada: {0} ({1} MB)" -f $DumpFile, [math]::Round($size/1MB, 2))
             return $true
         } else {
             $error = Get-Content "error.log" -ErrorAction SilentlyContinue
-            Write-Log "✗ Error en exportación: $error" "ERROR"
+            Write-Log "ERROR en exportación: $error" "ERROR"
             return $false
         }
     } catch {
-        Write-Log "✗ Error al ejecutar mysqldump" "ERROR"
+        Write-Log "ERROR al ejecutar mysqldump" "ERROR"
         return $false
     }
 }
@@ -158,28 +164,31 @@ function Import-Database {
     Write-Log "Iniciando importación a Railway..."
     
     $remote = $Config["RAILWAY_DATABASE"]
+    Write-Host "[DEBUG] RAILWAY_DATABASE config:"
+    foreach ($key in $remote.Keys) {
+        Write-Host ("[DEBUG] {0} = '{1}'" -f $key, $remote[$key])
+    }
     $args = @(
-        "-h", $remote["HOST"],
-        "-P", $remote["PORT"],
-        "-u", $remote["USER"],
-        "-p$($remote['PASSWORD'])",
-        $remote["DATABASE"]
+        "-h", $remote["db_host"],
+        "-P", $remote["port"],
+        "-u", $remote["user"],
+        "-p$($remote['password'])",
+        $remote["database"]
     )
     
     try {
-        $dumpContent = Get-Content $DumpFile -Raw
         $process = Start-Process -FilePath "mysql" -ArgumentList $args -RedirectStandardInput $DumpFile -RedirectStandardError "error_import.log" -NoNewWindow -Wait -PassThru
         
         if ($process.ExitCode -eq 0) {
-            Write-Log "✓ Importación a Railway completada"
+            Write-Log "OK Importación a Railway completada"
             return $true
         } else {
             $error = Get-Content "error_import.log" -ErrorAction SilentlyContinue
-            Write-Log "✗ Error en importación: $error" "ERROR"
+            Write-Log "ERROR en importación: $error" "ERROR"
             return $false
         }
     } catch {
-        Write-Log "✗ Error al ejecutar mysql" "ERROR"
+        Write-Log "ERROR al ejecutar mysql" "ERROR"
         return $false
     }
 }
@@ -192,7 +201,7 @@ function Cleanup-TempFiles {
     
     if (Test-Path $DumpFile) {
         Remove-Item $DumpFile -Force
-        Write-Log "✓ Archivo temporal eliminado"
+        Write-Log "OK Archivo temporal eliminado"
     }
     
     if (Test-Path "error.log") {
@@ -219,7 +228,7 @@ function Start-Sync {
     }
     
     # Verificar VPN
-    if (-not (Test-VPNConnection -Host $Config["LOCAL_DATABASE"]["HOST"])) {
+    if (-not (Test-VPNConnection -TargetHost $Config["LOCAL_DATABASE"]["db_host"])) {
         return $false
     }
     
@@ -240,8 +249,8 @@ function Start-Sync {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "    SINCRONIZACIÓN COMPLETADA" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
-    Write-Host "✓ Base de datos actualizada exitosamente" -ForegroundColor Green
-    Write-Host "✓ Fecha: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Green
+    Write-Host "OK Base de datos actualizada exitosamente" -ForegroundColor Green
+    Write-Host ("OK Fecha: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) -ForegroundColor Green
     Write-Host ""
     
     Write-Log "SINCRONIZACIÓN EXITOSA"
@@ -264,7 +273,7 @@ try {
     if ($Test) {
         Write-Log "MODO TEST - Solo verificando conexiones"
         Test-RequiredTools
-        Test-VPNConnection -Host $config["LOCAL_DATABASE"]["HOST"]
+        Test-VPNConnection -TargetHost $config["LOCAL_DATABASE"]["db_host"]
         exit 0
     }
     

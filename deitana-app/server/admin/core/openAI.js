@@ -919,7 +919,10 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
     }
     // 7. Ensamblar prompt final
-    let promptFinal = instruccionesNaturales;
+    // Inyectar la fecha y hora actual del sistema al inicio del prompt
+    const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
+    let promptFinal = `Hoy es ${fechaActual}.
+` + instruccionesNaturales;
     // Añadir conocimiento empresarial para conversaciones y RAG+SQL
     if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') {
         promptFinal += `${promptBase}\n\n`;

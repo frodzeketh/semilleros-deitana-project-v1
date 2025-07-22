@@ -1,0 +1,6 @@
+[2025-07-21 14:41:02] [INFO] Configuración cargada desde: config_sync.ini
+[2025-07-21 14:41:02] [INFO] Iniciando sincronización...
+[2025-07-21 14:41:02] [INFO] Verificando herramientas requeridas...
+[2025-07-21 14:41:02] [INFO] OK mysqldump encontrado
+[2025-07-21 14:41:02] [INFO] OK mysql encontrado
+[2025-07-21 14:41:02] [ERROR] Error inesperado: No se puede sobrescribir la variable Host porque es de solo lectura o constante.
