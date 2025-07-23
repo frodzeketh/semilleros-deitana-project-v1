@@ -769,18 +769,14 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     const intencion = await analizarIntencionInteligente(mensaje);
     console.log('🎯 [PROMPT-BUILDER] Intención detectada:', intencion);
     
-    // 2. DETECCIÓN INTELIGENTE DE TABLAS (SIN LLAMADAS IA)
-    const tablasRelevantes = await detectarTablasInteligente(mensaje, mapaERP);
-    console.log('📊 [PROMPT-BUILDER] Tablas relevantes:', tablasRelevantes);
+    // 2. Seleccionar modelo apropiado
+    const configModelo = seleccionarModeloInteligente(intencion, []);
     
-    // 3. Seleccionar modelo apropiado
-    const configModelo = seleccionarModeloInteligente(intencion, tablasRelevantes);
-    
-    // 4. Construir contexto de mapaERP selectivo
-    const contextoMapaERP = construirContextoMapaERP(tablasRelevantes, mapaERP);
+    // 3. Construir contexto de mapaERP COMPLETO para que la IA analice
+    const contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
     
     // 5. Construir instrucciones naturales
-    const instruccionesNaturales = construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone);
+    const instruccionesNaturales = construirInstruccionesNaturales(intencion, [], contextoPinecone);
     
     // 6. RAG INTELIGENTE Y SELECTIVO
     let contextoRAG = '';
@@ -843,10 +839,10 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         prompt: promptFinal,
         configModelo: configModelo,
         intencion: intencion,
-        tablasRelevantes: tablasRelevantes,
+        tablasRelevantes: [], // IA analiza todas las tablas del mapaERP
         metricas: {
-            usaIA: false, // ¡NO usa IA para análisis!
-            tablasDetectadas: tablasRelevantes.length,
+            usaIA: true, // IA analiza mapaERP completo
+            tablasDetectadas: Object.keys(mapaERP).length,
             llamadasIA: 1, // ¡Solo UNA llamada!
             optimizado: true,
             modeloUnico: 'gpt-4o'
@@ -1209,9 +1205,9 @@ async function processQuery({ message, userId, conversationId }) {
         obtenerHistorialConversacion(userId, conversationId)
     ]);
 
-    // =====================================
+        // =====================================
     // INICIALIZACIÓN DE LANGFUSE (temporalmente deshabilitado)
-    // =====================================
+        // =====================================
 
     // const trace = langfuseUtils.iniciarTrace('consulta-optimizada', userId, message);
     
@@ -1234,11 +1230,11 @@ async function processQuery({ message, userId, conversationId }) {
             console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
             
             const ultimosMensajes = historialConversacion.slice(-2);
-            const contextoConversacional = ultimosMensajes.map(msg => 
-                `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
-            ).join('\n');
-            
-            contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
+                const contextoConversacional = ultimosMensajes.map(msg => 
+                    `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
+                ).join('\n');
+                
+                contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
             
             // Memoria en background (no bloquear)
             pineconeMemoria.agregarContextoMemoria(userId, message)
@@ -1279,55 +1275,55 @@ async function processQuery({ message, userId, conversationId }) {
         console.log('🧠 [ETAPA-1] Preparando llamada a OpenAI...');
 
         // Construir mensajes
-        const mensajesLlamada = [
-            {
-                role: 'system',
-                content: promptBuilder.prompt
-            }
-        ];
+                const mensajesLlamada = [
+                    {
+                        role: 'system',
+                        content: promptBuilder.prompt
+                    }
+                ];
 
         // Agregar historial conversacional
-        if (historialConversacion && historialConversacion.length > 0) {
+                if (historialConversacion && historialConversacion.length > 0) {
             historialConversacion.forEach((msg) => {
-                mensajesLlamada.push({
-                    role: msg.role,
-                    content: msg.content
-                });
-            });
-        }
+                        mensajesLlamada.push({
+                            role: msg.role,
+                            content: msg.content
+                        });
+                    });
+                }
 
         // Agregar mensaje actual
-        mensajesLlamada.push({
-            role: 'user', 
-            content: message
-        });
+                mensajesLlamada.push({
+                    role: 'user', 
+                    content: message
+                });
 
         console.log('📊 [OPENAI] Registrando llamada a OpenAI...');
 
         // Llamada a OpenAI
-        const response = await openai.chat.completions.create({
-            model: promptBuilder.configModelo.modelo,
-            messages: mensajesLlamada,
-            max_tokens: promptBuilder.configModelo.maxTokens,
-            temperature: promptBuilder.configModelo.temperature
-        });
+                const response = await openai.chat.completions.create({
+                    model: promptBuilder.configModelo.modelo,
+                    messages: mensajesLlamada,
+                    max_tokens: promptBuilder.configModelo.maxTokens,
+                    temperature: promptBuilder.configModelo.temperature
+                });
 
-        console.log('✅ [ETAPA-1] Respuesta recibida de OpenAI');
-        const respuestaIA = response.choices[0].message.content;
-        
+                console.log('✅ [ETAPA-1] Respuesta recibida de OpenAI');
+                const respuestaIA = response.choices[0].message.content;
+                
         // Métricas
-        const tokensLlamada = response.usage;
-        const costoEstimado = (tokensLlamada.total_tokens * 0.00003);
+                const tokensLlamada = response.usage;
+                const costoEstimado = (tokensLlamada.total_tokens * 0.00003);
 
-        console.log('📊 [TOKENS] Input:', tokensLlamada.prompt_tokens);
-        console.log('📊 [TOKENS] Output:', tokensLlamada.completion_tokens);
-        console.log('📊 [TOKENS] Total:', tokensLlamada.total_tokens);
-        console.log('💰 [COSTO] Estimado: $', costoEstimado.toFixed(6));
-        
-        // =====================================
+                console.log('📊 [TOKENS] Input:', tokensLlamada.prompt_tokens);
+                console.log('📊 [TOKENS] Output:', tokensLlamada.completion_tokens);
+                console.log('📊 [TOKENS] Total:', tokensLlamada.total_tokens);
+                console.log('💰 [COSTO] Estimado: $', costoEstimado.toFixed(6));
+                
+                // =====================================
         // PROCESAMIENTO DE RESPUESTA
-        // =====================================
-        
+                // =====================================
+                
         let respuestaFinal = respuestaIA;
         let datosReales = null;
         let sqlGenerado = null;
@@ -1346,7 +1342,7 @@ async function processQuery({ message, userId, conversationId }) {
                 // Reemplazar el SQL con los resultados
                 respuestaFinal = respuestaIA.replace(/<sql>[\s\S]*?<\/sql>/, formatResultsAsMarkdown(resultados));
                 console.log('✅ [SQL] Consulta ejecutada exitosamente');
-            } catch (error) {
+                        } catch (error) {
                 console.error('❌ [SQL] Error ejecutando consulta:', error.message);
                 respuestaFinal = respuestaIA.replace(/<sql>[\s\S]*?<\/sql>/, '❌ Error ejecutando la consulta SQL.');
             }
@@ -1357,13 +1353,13 @@ async function processQuery({ message, userId, conversationId }) {
         
         // Guardar respuesta en background
         saveAssistantMessageToFirestore(userId, respuestaFinal).catch(err => 
-            console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
-        );
-        
-        const tiempoTotal = Date.now() - tiempoInicio;
+                            console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
+                        );
+                        
+                        const tiempoTotal = Date.now() - tiempoInicio;
         console.log(`✅ [SISTEMA] Proceso completado en ${tiempoTotal}ms`);
-        
-        return {
+                        
+                        return {
             response: respuestaFinal,
             tiempo: tiempoTotal,
             tipo: 'compleja',
@@ -1371,11 +1367,11 @@ async function processQuery({ message, userId, conversationId }) {
             datos: datosReales
         };
         
-    } catch (error) {
+                            } catch (error) {
         console.error('❌ [SISTEMA] Error en el proceso:', error.message);
-        const tiempoTotal = Date.now() - tiempoInicio;
-        
-        return {
+                        const tiempoTotal = Date.now() - tiempoInicio;
+                        
+                        return {
             response: '❌ Lo siento, hubo un error procesando tu consulta. Por favor, inténtalo de nuevo.',
             tiempo: tiempoTotal,
             tipo: 'error'
@@ -1748,28 +1744,60 @@ module.exports = {
 };
 
 /**
- * Construye el contexto del mapa ERP para las tablas relevantes
+ * Construye el contexto del mapa ERP COMPLETO para que la IA analice
  */
-function construirContextoMapaERP(tablasRelevantes, mapaERP) {
-    if (!tablasRelevantes || tablasRelevantes.length === 0 || !mapaERP) {
-        console.log('⚠️ [MAPA-ERP] No se incluye contexto - tablas:', tablasRelevantes, 'mapaERP:', !!mapaERP);
+function construirContextoMapaERPCompleto(mapaERP) {
+    if (!mapaERP) {
+        console.log('⚠️ [MAPA-ERP] No hay mapaERP disponible');
         return '';
     }
-    let contexto = '\n=== ESTRUCTURA DE DATOS RELEVANTE ===\n';
-    tablasRelevantes.forEach(tabla => {
-        if (mapaERP && mapaERP[tabla]) {
-            console.log(`📋 [MAPA-ERP] Incluyendo tabla: ${tabla}`);
-            contexto += `\n${tabla}: ${mapaERP[tabla].descripcion || 'Sin descripción'}\n`;
-            if (mapaERP[tabla].columnas) {
-                const columnas = Object.entries(mapaERP[tabla].columnas);
-                const columnasConDescripcion = columnas.map(([columna, descripcion]) => `${columna}: ${descripcion}`).join('\n');
-                contexto += `Columnas disponibles:\n${columnasConDescripcion}\n`;
-            }
-        } else {
-            console.log(`⚠️ [MAPA-ERP] Tabla no encontrada en mapaERP: ${tabla}`);
+    
+    console.log('📋 [MAPA-ERP] Construyendo contexto COMPLETO del mapaERP...');
+    console.log('📋 [MAPA-ERP] Total de tablas disponibles:', Object.keys(mapaERP).length);
+    
+    let contexto = '\n=== ESTRUCTURA COMPLETA DE LA BASE DE DATOS ===\n';
+    contexto += `\nTOTAL DE TABLAS DISPONIBLES: ${Object.keys(mapaERP).length}\n\n`;
+    
+    // Incluir TODAS las tablas del mapaERP para que la IA las analice
+    Object.entries(mapaERP).forEach(([nombreTabla, infoTabla]) => {
+        contexto += `\n## 📊 TABLA: ${nombreTabla}\n`;
+        contexto += `Descripción: ${infoTabla.descripcion || 'Sin descripción'}\n`;
+        
+        // Columnas disponibles
+        if (infoTabla.columnas) {
+            contexto += `\n### 📋 COLUMNAS:\n`;
+            Object.entries(infoTabla.columnas).forEach(([columna, descripcion]) => {
+                contexto += `- ${columna}: ${descripcion}\n`;
+            });
         }
+        
+        // Relaciones con otras tablas
+        if (infoTabla.tablas_relacionadas) {
+            contexto += `\n### 🔗 RELACIONES:\n`;
+            Object.entries(infoTabla.tablas_relacionadas).forEach(([tablaRelacionada, infoRelacion]) => {
+                contexto += `- ${tablaRelacionada}: ${infoRelacion.descripcion || 'Relación directa'}\n`;
+                if (infoRelacion.tipo) {
+                    contexto += `  Tipo: ${infoRelacion.tipo}\n`;
+                }
+                if (infoRelacion.campo_enlace_local && infoRelacion.campo_enlace_externo) {
+                    contexto += `  JOIN: ${nombreTabla}.${infoRelacion.campo_enlace_local} = ${tablaRelacionada}.${infoRelacion.campo_enlace_externo}\n`;
+                }
+            });
+        }
+        
+        contexto += '\n';
     });
-    console.log('📋 [MAPA-ERP] Contexto construido:', contexto.substring(0, 200) + '...');
+    
+    // Instrucciones para la IA
+    contexto += `\n### 🎯 INSTRUCCIONES PARA LA IA:\n`;
+    contexto += `- Analiza la consulta del usuario\n`;
+    contexto += `- Identifica qué tablas del mapaERP son relevantes\n`;
+    contexto += `- Usa las relaciones definidas para hacer JOINs correctos\n`;
+    contexto += `- NO inventes tablas que no estén en esta lista\n`;
+    contexto += `- Genera SQL usando EXACTAMENTE las columnas mostradas\n`;
+    contexto += `- Formato: <sql>SELECT columnas FROM tabla [JOIN otras_tablas] WHERE condiciones</sql>\n\n`;
+    
+    console.log('📋 [MAPA-ERP] Contexto completo construido con', Object.keys(mapaERP).length, 'tablas');
     return contexto;
 }
 

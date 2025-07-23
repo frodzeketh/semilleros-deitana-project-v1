@@ -1,0 +1,156 @@
+# REPORTE DE TESTING DIRECTO - CONSULTAS DEITANA IA
+Fecha: 23/7/2025, 1:21:46
+Total consultas: 20
+Consultas exitosas: 20
+Consultas con error: 0
+
+================================================================================
+
+## CONSULTA 1/20
+
+Pregunta: ¿Cuál es el ID del cliente con mayor valor total de encargos?
+
+Tiempo de respuesta: 12871ms
+================================================================================
+
+## CONSULTA 2/20
+
+Pregunta: ¿Cuál es el promedio de plantas solicitadas por cliente?
+
+Tiempo de respuesta: 7589ms
+================================================================================
+
+## CONSULTA 3/20
+
+Pregunta: ¿Qué clientes tienen facturas con forma de pago a 90 días?
+
+Tiempo de respuesta: 13490ms
+================================================================================
+
+## CONSULTA 4/20
+
+Pregunta: ¿Cuál es el ID del artículo "TOMATE RIO GRANDE" y su stock actual?
+
+Tiempo de respuesta: 5763ms
+================================================================================
+
+## CONSULTA 5/20
+
+Pregunta: ¿Qué artículos tienen stock inferior a 50 unidades?
+
+Tiempo de respuesta: 5159ms
+================================================================================
+
+## CONSULTA 6/20
+
+Pregunta: ¿Cuál es el proveedor principal de cada artículo y cuántos suministra?
+
+Tiempo de respuesta: 13993ms
+================================================================================
+
+## CONSULTA 7/20
+
+Pregunta: ¿Qué artículos pertenecen a la familia de tomates y su precio?
+
+Tiempo de respuesta: 4355ms
+================================================================================
+
+## CONSULTA 8/20
+
+Pregunta: ¿Cuál es el ID del artículo con mayor número de actualizaciones de stock?
+
+Tiempo de respuesta: 3501ms
+================================================================================
+
+## CONSULTA 9/20
+
+Pregunta: ¿Qué artículos tienen código de barras registrado?
+
+Tiempo de respuesta: 5726ms
+================================================================================
+
+## CONSULTA 10/20
+
+Pregunta: ¿Cuál es el total de stock por familia de productos?
+
+Tiempo de respuesta: 3866ms
+================================================================================
+
+## CONSULTA 11/20
+
+Pregunta: ¿Cuál es el ID del operario con mayor eficiencia de siembra?
+
+Tiempo de respuesta: 16412ms
+================================================================================
+
+## CONSULTA 12/20
+
+Pregunta: ¿Qué partidas tienen fecha de entrega próxima a vencer?
+
+Tiempo de respuesta: 14271ms
+================================================================================
+
+## CONSULTA 13/20
+
+Pregunta: ¿Cuál es el total de plantas aproximadas vs solicitadas por partida?
+
+Tiempo de respuesta: 15568ms
+================================================================================
+
+## CONSULTA 14/20
+
+Pregunta: ¿Qué tipos de siembra son los más utilizados?
+
+Tiempo de respuesta: 14935ms
+================================================================================
+
+## CONSULTA 15/20
+
+Pregunta: ¿Cuál es el ID de la partida con mayor número de alveolos?
+
+Tiempo de respuesta: 14233ms
+================================================================================
+
+## CONSULTA 16/20
+
+Pregunta: ¿Qué sustratos son los más utilizados en las partidas?
+
+Tiempo de respuesta: 14666ms
+================================================================================
+
+## CONSULTA 17/20
+
+Pregunta: ¿Cuál es el promedio de días de germinación por semilla?
+
+Tiempo de respuesta: 16815ms
+================================================================================
+
+## CONSULTA 18/20
+
+Pregunta: ¿Qué clientes tienen partidas con mayor diferencia entre plantas solicitadas y aproximadas?
+
+Tiempo de respuesta: 14279ms
+================================================================================
+
+## CONSULTA 19/20
+
+Pregunta: ¿Cuál es el ID del encargo con más partidas asociadas?
+
+Tiempo de respuesta: 14276ms
+================================================================================
+
+## CONSULTA 20/20
+
+Pregunta: ¿Qué semillas han sido sembradas en más invernaderos diferentes?
+
+Tiempo de respuesta: 16558ms
+================================================================================
+
+# ESTADÍSTICAS FINALES
+
+✅ Consultas exitosas: 20/20
+🧠 Consultas con pensamiento: 0
+📊 Consultas con SQL generado: 0
+❌ Consultas con error: 0
+⏱️ Tiempo promedio: 11416.30ms
+
