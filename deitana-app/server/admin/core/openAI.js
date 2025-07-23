@@ -772,27 +772,14 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 2. Seleccionar modelo apropiado
     const configModelo = seleccionarModeloInteligente(intencion, []);
     
-    // 3. OPTIMIZACIÓN: Construir contexto de mapaERP SOLO SI ES NECESARIO
-    let contextoMapaERP = '';
-    const necesitaMapaERP = intencion.tipo === 'sql' || intencion.tipo === 'rag_sql' || 
-                           mensaje.toLowerCase().includes('cuántos') || 
-                           mensaje.toLowerCase().includes('dame') || 
-                           mensaje.toLowerCase().includes('muestra') ||
-                           mensaje.toLowerCase().includes('clientes') ||
-                           mensaje.toLowerCase().includes('proveedores') ||
-                           mensaje.toLowerCase().includes('artículos');
+    // 3. SIEMPRE incluir mapaERP - la IA decide si lo usa
+    const contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
+    console.log('📋 [MAPA-ERP] Incluyendo mapaERP completo - IA decide si lo usa');
     
-    if (necesitaMapaERP) {
-        console.log('📋 [MAPA-ERP] Consulta requiere datos - incluyendo mapaERP completo');
-        contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
-    } else {
-        console.log('⚡ [OPTIMIZACIÓN] Consulta simple - saltando mapaERP completo');
-    }
-    
-    // 5. Construir instrucciones naturales
+    // 4. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, [], contextoPinecone);
     
-    // 6. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
+    // 5. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
     let contextoRAG = '';
     const necesitaRAG = intencion.tipo === 'rag_sql' || 
                        mensaje.toLowerCase().includes('qué significa') ||
@@ -813,7 +800,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         console.log('⚡ [OPTIMIZACIÓN] Saltando RAG - no necesario para esta consulta');
     }
     
-    // 7. Ensamblar prompt final (OPTIMIZADO)
+    // 6. Ensamblar prompt final (OPTIMIZADO)
     const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
     const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
     let promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
@@ -823,10 +810,8 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         promptFinal += `${promptBase}\n\n`;
     }
     
-    // Añadir estructura de datos SOLO si es necesario
-    if (contextoMapaERP) {
-        promptFinal += `${contextoMapaERP}\n\n`;
-    }
+    // Añadir estructura de datos SIEMPRE - la IA decide si la usa
+    promptFinal += `${contextoMapaERP}\n\n`;
     
     // Añadir reglas SQL solo para consultas SQL
     if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
@@ -853,7 +838,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
     }
     
-    console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP:', necesitaMapaERP ? 'SÍ' : 'NO', 'RAG:', necesitaRAG ? 'SÍ' : 'NO');
+    console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP: SIEMPRE, RAG:', necesitaRAG ? 'SÍ' : 'NO');
     
     return {
         prompt: promptFinal,
@@ -862,11 +847,11 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         tablasRelevantes: [], // IA analiza todas las tablas del mapaERP
         metricas: {
             usaIA: true, // IA analiza mapaERP completo
-            tablasDetectadas: necesitaMapaERP ? Object.keys(mapaERP).length : 0,
+            tablasDetectadas: Object.keys(mapaERP).length,
             llamadasIA: 1, // ¡Solo UNA llamada!
             optimizado: true,
             modeloUnico: 'gpt-4o',
-            mapaERPIncluido: necesitaMapaERP,
+            mapaERPIncluido: true, // SIEMPRE incluido
             ragIncluido: necesitaRAG
         }
     };
