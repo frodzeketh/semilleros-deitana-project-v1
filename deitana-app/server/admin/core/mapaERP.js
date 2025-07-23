@@ -2001,14 +2001,14 @@ encargos: {
         campo_enlace_externo: "PAR_ENC", // Campo en partidas que referencia el ID del encargo
         descripcion: "Vincula el encargo con las partidas de siembra asociadas.",
         estructura_relacionada_partidas: { // Detalles de la tabla 'partidas' relevantes
-          id_partida: "ID de la partida.",
+          id: "ID de la partida.",
           PAR_FEC: "Fecha de partida.",
           PAR_TIPO: "Tipo de semilla (D/N).",
           PAR_SEM: "Semilla utilizada. Clave foránea a 'articulos'.",
           PAR_LOTE: "Lote.",
           PAR_PGER: "% de germinación.",
           PAR_TSI: "Tipo de siembra. Clave foránea a 't-siembras'.",
-          
+          PAR_CCL: "Id del cliente",
           PAR_ALVS: "Semillas a sembrar.",
           PAR_PLAS: "Plantas solicitadas.",
           PAR_PLAP: "Plantas aproximadas.",
@@ -2351,7 +2351,7 @@ partidas: {
       PAR_LOTE: "Lote de la semilla.",
       PAR_PGER: "Porcentaje de germinación.",
       PAR_TSI: "Tipo de siembra. Clave foránea a la tabla 't-siembras' para obtener la denominación (TSI_DENO) y detalles.",
-      
+      PAR_CCL: "Id del cliente",
       PAR_ALVS: "Cantidad de semillas a sembrar.",
       PAR_PLAS: "Cantidad de plantas solicitadas.",
       PAR_PLAP: "Cantidad de plantas aproximadas.",

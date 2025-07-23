@@ -772,37 +772,58 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 2. Seleccionar modelo apropiado
     const configModelo = seleccionarModeloInteligente(intencion, []);
     
-    // 3. Construir contexto de mapaERP COMPLETO para que la IA analice
-    const contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
+    // 3. OPTIMIZACIÓN: Construir contexto de mapaERP SOLO SI ES NECESARIO
+    let contextoMapaERP = '';
+    const necesitaMapaERP = intencion.tipo === 'sql' || intencion.tipo === 'rag_sql' || 
+                           mensaje.toLowerCase().includes('cuántos') || 
+                           mensaje.toLowerCase().includes('dame') || 
+                           mensaje.toLowerCase().includes('muestra') ||
+                           mensaje.toLowerCase().includes('clientes') ||
+                           mensaje.toLowerCase().includes('proveedores') ||
+                           mensaje.toLowerCase().includes('artículos');
+    
+    if (necesitaMapaERP) {
+        console.log('📋 [MAPA-ERP] Consulta requiere datos - incluyendo mapaERP completo');
+        contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
+    } else {
+        console.log('⚡ [OPTIMIZACIÓN] Consulta simple - saltando mapaERP completo');
+    }
     
     // 5. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, [], contextoPinecone);
     
-    // 6. RAG INTELIGENTE Y SELECTIVO
+    // 6. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
     let contextoRAG = '';
-    if (await necesitaRAGInteligente(mensaje, intencion)) {
-    try {
-        console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
-        contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
-        console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
-    } catch (error) {
-        console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
-    }
+    const necesitaRAG = intencion.tipo === 'rag_sql' || 
+                       mensaje.toLowerCase().includes('qué significa') ||
+                       mensaje.toLowerCase().includes('como funciona') ||
+                       mensaje.toLowerCase().includes('proceso') ||
+                       mensaje.toLowerCase().includes('protocolo') ||
+                       mensaje.length > 100;
+    
+    if (necesitaRAG) {
+        try {
+            console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+            contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
+            console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
+        } catch (error) {
+            console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
+        }
     } else {
         console.log('⚡ [OPTIMIZACIÓN] Saltando RAG - no necesario para esta consulta');
     }
     
-    // 7. Ensamblar prompt final
+    // 7. Ensamblar prompt final (OPTIMIZADO)
     const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
     const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
     let promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
     
-    // Añadir conocimiento empresarial para conversaciones y RAG+SQL
-    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql') {
+    // Añadir conocimiento empresarial solo si es necesario
+    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql' || necesitaRAG) {
         promptFinal += `${promptBase}\n\n`;
     }
     
-    // Añadir estructura de datos solo si es necesario
+    // Añadir estructura de datos SOLO si es necesario
     if (contextoMapaERP) {
         promptFinal += `${contextoMapaERP}\n\n`;
     }
@@ -832,8 +853,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
     }
     
-    console.log('✅ [PROMPT-BUILDER] Prompt ultra-optimizado construido');
-    console.log('🎯 [PROMPT-BUILDER] Modelo final:', configModelo.modelo);
+    console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP:', necesitaMapaERP ? 'SÍ' : 'NO', 'RAG:', necesitaRAG ? 'SÍ' : 'NO');
     
     return {
         prompt: promptFinal,
@@ -842,46 +862,49 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         tablasRelevantes: [], // IA analiza todas las tablas del mapaERP
         metricas: {
             usaIA: true, // IA analiza mapaERP completo
-            tablasDetectadas: Object.keys(mapaERP).length,
+            tablasDetectadas: necesitaMapaERP ? Object.keys(mapaERP).length : 0,
             llamadasIA: 1, // ¡Solo UNA llamada!
             optimizado: true,
-            modeloUnico: 'gpt-4o'
+            modeloUnico: 'gpt-4o',
+            mapaERPIncluido: necesitaMapaERP,
+            ragIncluido: necesitaRAG
         }
     };
 }
 
 /**
- * Analiza la intención de forma inteligente usando embeddings y análisis semántico
+ * Analiza la intención de forma inteligente usando análisis de texto rápido
  */
 async function analizarIntencionInteligente(mensaje) {
-    console.log('🧠 [INTENCION-INTELIGENTE] Analizando consulta con inteligencia...');
+    console.log('🧠 [INTENCION-INTELIGENTE] Analizando consulta...');
     
     try {
-        // Usar embeddings para análisis semántico rápido
-        const embedding = await generarEmbedding(mensaje);
+        // Análisis de texto simple y rápido (sin embeddings costosos)
+        const mensajeLower = mensaje.toLowerCase();
         
-        // Patrones semánticos para clasificación inteligente
+        // Patrones para consultas de datos
         const patronesSQL = [
             'cuántos', 'cuantas', 'cuanto', 'cuanta', 'dame', 'muestra', 'lista',
             'clientes', 'proveedores', 'artículos', 'bandejas', 'partidas',
-            'registros', 'datos', 'información', 'tabla'
+            'registros', 'datos', 'información', 'tabla', 'cuántas', 'cuánto'
         ];
         
+        // Patrones para consultas de conocimiento
         const patronesConocimiento = [
             'qué significa', 'que significa', 'como funciona', 'cómo funciona',
             'protocolo', 'proceso', 'procedimiento', 'cuando el cliente',
             'quiero todo', 'pedro muñoz', 'germinación', 'cámara',
-            'entrada en cámara', 'desinfección', 'fertilizante'
+            'entrada en cámara', 'desinfección', 'fertilizante', 'qué es',
+            'que es', 'explica', 'describe'
         ];
         
+        // Patrones para conversación simple
         const patronesConversacion = [
             'hola', 'buenos', 'buenas', 'saludos', 'gracias', 'ok', 'okay',
-            'perfecto', 'genial', 'excelente'
+            'perfecto', 'genial', 'excelente', 'bien', 'mal', 'ayuda'
         ];
         
-        const mensajeLower = mensaje.toLowerCase();
-        
-        // Análisis semántico inteligente
+        // Análisis rápido por conteo de patrones
         const scoreSQL = patronesSQL.filter(patron => mensajeLower.includes(patron)).length;
         const scoreConocimiento = patronesConocimiento.filter(patron => mensajeLower.includes(patron)).length;
         const scoreConversacion = patronesConversacion.filter(patron => mensajeLower.includes(patron)).length;
@@ -897,12 +920,18 @@ async function analizarIntencionInteligente(mensaje) {
             return { tipo: 'conversacion', confianza: 0.9 };
         }
         
-        // Por defecto, asumir que necesita datos
-        return { tipo: 'sql', confianza: 0.7 };
+        // Por defecto, asumir que necesita datos si es una pregunta
+        if (mensajeLower.includes('?')) {
+            return { tipo: 'sql', confianza: 0.7 };
+        }
+        
+        // Si no hay patrones claros, asumir conversación
+        return { tipo: 'conversacion', confianza: 0.8 };
         
     } catch (error) {
         console.error('❌ [INTENCION-INTELIGENTE] Error:', error.message);
-        return { tipo: 'sql', confianza: 0.7 };
+        // Fallback a conversación
+        return { tipo: 'conversacion', confianza: 0.5 };
     }
 }
 
@@ -968,37 +997,7 @@ async function detectarTablasInteligente(mensaje, mapaERP) {
     }
 }
 
-/**
- * Determina si la consulta necesita RAG de forma inteligente
- */
-async function necesitaRAGInteligente(mensaje, intencion) {
-    console.log('🧠 [RAG-INTELIGENTE] Analizando necesidad de RAG...');
-    
-    try {
-        const mensajeLower = mensaje.toLowerCase();
-        
-        // Patrones que indican necesidad de conocimiento empresarial
-        const patronesRAG = [
-            'qué significa', 'que significa', 'como funciona', 'cómo funciona',
-            'protocolo', 'proceso', 'procedimiento', 'cuando el cliente',
-            'quiero todo', 'pedro muñoz', 'germinación', 'cámara',
-            'entrada en cámara', 'desinfección', 'fertilizante',
-            'permanganato', 'cuba', 'zz-cuprocol', 'merpan'
-        ];
-        
-        // Análisis semántico para RAG
-        const necesitaRAG = patronesRAG.some(patron => mensajeLower.includes(patron)) ||
-                           intencion.tipo === 'rag_sql' ||
-                           intencion.tipo === 'conversacion';
-        
-        console.log('🧠 [RAG-INTELIGENTE] Necesita RAG:', necesitaRAG);
-        return necesitaRAG;
-        
-    } catch (error) {
-        console.error('❌ [RAG-INTELIGENTE] Error:', error.message);
-        return false;
-    }
-}
+
 
 // =====================================
 // FUNCIONES DE USUARIO Y CONTEXTO CONVERSACIONAL
@@ -1205,176 +1204,230 @@ async function processQuery({ message, userId, conversationId }) {
         obtenerHistorialConversacion(userId, conversationId)
     ]);
 
-        // =====================================
-    // INICIALIZACIÓN DE LANGFUSE (temporalmente deshabilitado)
-        // =====================================
+    // =====================================
+    // OPTIMIZACIÓN: Guardar mensaje al final (no bloquea)
+    // =====================================
+    const guardarMensaje = () => saveMessageToFirestore(userId, message).catch(err => 
+        console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
+    );
 
-    // const trace = langfuseUtils.iniciarTrace('consulta-optimizada', userId, message);
+    // =====================================
+    // OPTIMIZACIÓN: Análisis rápido de tipo de consulta
+    // =====================================
+    const esConsultaSimple = message.length < 50 && !message.includes('?') && !message.includes('cuántos') && !message.includes('dame') && !message.includes('muestra');
+    const tieneHistorial = historialConversacion && historialConversacion.length > 0;
     
-    try {
-        // Guardar mensaje en background (no bloquear)
-        saveMessageToFirestore(userId, message).catch(err => 
-            console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
-        );
-        console.log('💾 [FIRESTORE] Guardando mensaje del usuario (async)...');
+    // =====================================
+    // CONTEXTO DE MEMORIA (OPTIMIZADO)
+    // =====================================
+    
+    let contextoPinecone = '';
+    
+    // Solo buscar memoria si hay historial Y no es consulta simple
+    if (tieneHistorial && !esConsultaSimple) {
+        console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
+        
+        const ultimosMensajes = historialConversacion.slice(-2);
+        const contextoConversacional = ultimosMensajes.map(msg => 
+            `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
+        ).join('\n');
+            
+        contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
+        
+        // Memoria en background (no bloquear)
+        pineconeMemoria.agregarContextoMemoria(userId, message)
+            .catch(error => console.error('❌ [PINECONE] Error:', error.message));
+    } else {
+        console.log('⚡ [OPTIMIZACIÓN] Sin historial o consulta simple - saltando búsqueda de memoria');
+    }
 
-        // =====================================
-        // CONTEXTO DE MEMORIA (OPTIMIZADO)
-        // =====================================
-        
-        console.log('🧠 [MEMORIA] Analizando si necesita contexto conversacional...');
-        let contextoPinecone = '';
-        
-        // Solo buscar memoria si hay historial
-        if (historialConversacion.length > 0) {
-            console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
-            
-            const ultimosMensajes = historialConversacion.slice(-2);
-                const contextoConversacional = ultimosMensajes.map(msg => 
-                    `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
-                ).join('\n');
-                
-                contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
-            
-            // Memoria en background (no bloquear)
-            pineconeMemoria.agregarContextoMemoria(userId, message)
-                .catch(error => console.error('❌ [PINECONE] Error:', error.message));
-        } else {
-            console.log('⚡ [OPTIMIZACIÓN] Sin historial - saltando búsqueda de memoria');
+    // =====================================
+    // CONSTRUIR PROMPT OPTIMIZADO
+    // =====================================
+    
+    console.log('🧠 [IA-INTELIGENTE] Construyendo prompt OPTIMIZADO...');
+    const promptBuilder = await construirPromptInteligente(
+        message, 
+        mapaERP,
+        openai,
+        contextoPinecone, 
+        lastRealData || '',
+        historialConversacion,
+        false
+    );
+    
+    console.log('🧠 [IA-INTELIGENTE] Intención:', promptBuilder.intencion.tipo, 'Modelo:', promptBuilder.configModelo.modelo);
+
+    // =====================================
+    // PROCESAMIENTO DE CONSULTA CON IA
+    // =====================================
+
+    console.log('🧠 [ETAPA-1] ===== GPT RECIBE LA CONSULTA =====');
+    console.log('🧠 [ETAPA-1] Preparando llamada a OpenAI...');
+
+    // Construir mensajes
+    const mensajesLlamada = [
+        {
+            role: 'system',
+            content: promptBuilder.prompt
         }
+    ];
+
+    // Agregar historial conversacional solo si existe
+    if (tieneHistorial) {
+        historialConversacion.forEach((msg) => {
+            mensajesLlamada.push({
+                role: msg.role,
+                content: msg.content
+            });
+        });
+    }
+
+    // Agregar mensaje actual
+    mensajesLlamada.push({
+        role: 'user', 
+        content: message
+    });
+
+    // =====================================
+    // LLAMADA A OPENAI (OPTIMIZADA)
+    // =====================================
+
+    console.log('🤖 [OPENAI] Llamando a', promptBuilder.configModelo.modelo);
+
+    try {
+        const response = await openai.chat.completions.create({
+            model: promptBuilder.configModelo.modelo,
+            messages: mensajesLlamada,
+            max_tokens: promptBuilder.configModelo.maxTokens,
+            temperature: promptBuilder.configModelo.temperature,
+            stream: false
+        });
+
+        const respuestaIA = response.choices[0].message.content;
+        console.log('✅ [OPENAI] Respuesta recibida de OpenAI');
+        console.log('📊 [OPENAI] Tokens usados:', response.usage?.total_tokens || 'N/A');
 
         // =====================================
-        // CONSTRUIR PROMPT OPTIMIZADO
+        // PROCESAMIENTO POST-IA (OPTIMIZADO)
         // =====================================
+
+        console.log('🔍 [POST-PROCESAMIENTO] Analizando respuesta para SQL...');
         
-        console.log('🧠 [IA-INTELIGENTE] Construyendo prompt OPTIMIZADO...');
-        const promptBuilder = await construirPromptInteligente(
-            message, 
-            mapaERP,
-            openai,
-            contextoPinecone, 
-            lastRealData || '',
-            historialConversacion,
-            false
-        );
+        // Verificar si la respuesta contiene SQL
+        const sqlMatch = respuestaIA.match(/<sql>(.*?)<\/sql>/s);
         
-        console.log('🧠 [IA-INTELIGENTE] Métricas de construcción:');
-        console.log('🧠 [IA-INTELIGENTE] Intención detectada:', promptBuilder.intencion);
-        console.log('🧠 [IA-INTELIGENTE] Modelo seleccionado:', promptBuilder.configModelo.modelo);
-        console.log('🧠 [IA-INTELIGENTE] Razón selección:', promptBuilder.configModelo.razon);
-        console.log('🧠 [IA-INTELIGENTE] Tablas relevantes:', promptBuilder.tablasRelevantes);
-        console.log('🧠 [IA-INTELIGENTE] Usa IA:', promptBuilder.metricas.usaIA);
-        console.log('🧠 [IA-INTELIGENTE] Llamadas IA:', promptBuilder.metricas.llamadasIA);
-        console.log('🧠 [IA-INTELIGENTE] Optimizado:', promptBuilder.metricas.optimizado);
-
-        // =====================================
-        // PROCESAMIENTO DE CONSULTA CON IA
-        // =====================================
-
-        console.log('🧠 [ETAPA-1] ===== GPT RECIBE LA CONSULTA =====');
-        console.log('🧠 [ETAPA-1] Preparando llamada a OpenAI...');
-
-        // Construir mensajes
-                const mensajesLlamada = [
-                    {
-                        role: 'system',
-                        content: promptBuilder.prompt
-                    }
-                ];
-
-        // Agregar historial conversacional
-                if (historialConversacion && historialConversacion.length > 0) {
-            historialConversacion.forEach((msg) => {
-                        mensajesLlamada.push({
-                            role: msg.role,
-                            content: msg.content
-                        });
-                    });
-                }
-
-        // Agregar mensaje actual
-                mensajesLlamada.push({
-                    role: 'user', 
-                    content: message
-                });
-
-        console.log('📊 [OPENAI] Registrando llamada a OpenAI...');
-
-        // Llamada a OpenAI
-                const response = await openai.chat.completions.create({
-                    model: promptBuilder.configModelo.modelo,
-                    messages: mensajesLlamada,
-                    max_tokens: promptBuilder.configModelo.maxTokens,
-                    temperature: promptBuilder.configModelo.temperature
-                });
-
-                console.log('✅ [ETAPA-1] Respuesta recibida de OpenAI');
-                const respuestaIA = response.choices[0].message.content;
-                
-        // Métricas
-                const tokensLlamada = response.usage;
-                const costoEstimado = (tokensLlamada.total_tokens * 0.00003);
-
-                console.log('📊 [TOKENS] Input:', tokensLlamada.prompt_tokens);
-                console.log('📊 [TOKENS] Output:', tokensLlamada.completion_tokens);
-                console.log('📊 [TOKENS] Total:', tokensLlamada.total_tokens);
-                console.log('💰 [COSTO] Estimado: $', costoEstimado.toFixed(6));
-                
-                // =====================================
-        // PROCESAMIENTO DE RESPUESTA
-                // =====================================
-                
-        let respuestaFinal = respuestaIA;
-        let datosReales = null;
-        let sqlGenerado = null;
-        
-        // Extraer SQL si existe
-        const sqlMatch = respuestaIA.match(/<sql>([\s\S]*?)<\/sql>/);
         if (sqlMatch) {
-            sqlGenerado = sqlMatch[1].trim();
-            console.log('🔍 [SQL] SQL detectado:', sqlGenerado);
+            console.log('🔍 [SQL] SQL detectado en respuesta');
+            const sql = sqlMatch[1].trim();
             
             try {
-                const resultados = await executeQuery(sqlGenerado);
-                datosReales = resultados;
-                lastRealData = resultados;
+                console.log('🔍 [SQL] Ejecutando SQL:', sql);
+                const resultados = await executeQuery(sql);
                 
-                // Reemplazar el SQL con los resultados
-                respuestaFinal = respuestaIA.replace(/<sql>[\s\S]*?<\/sql>/, formatResultsAsMarkdown(resultados));
-                console.log('✅ [SQL] Consulta ejecutada exitosamente');
-                        } catch (error) {
-                console.error('❌ [SQL] Error ejecutando consulta:', error.message);
-                respuestaFinal = respuestaIA.replace(/<sql>[\s\S]*?<\/sql>/, '❌ Error ejecutando la consulta SQL.');
+                if (resultados && resultados.length > 0) {
+                    console.log('✅ [SQL] Resultados obtenidos:', resultados.length, 'registros');
+                    
+                    // Formatear resultados y generar explicación
+                    const resultadosFormateados = formatResultsAsMarkdown(resultados);
+                    const respuestaFinal = await formatFinalResponse(resultados, message);
+                    
+                    // Guardar mensaje al final (no bloquea)
+                    guardarMensaje();
+                    
+                    const tiempoTotal = Date.now() - tiempoInicio;
+                    console.log('✅ [SISTEMA] Proceso completado en', tiempoTotal, 'ms');
+                    
+                    return {
+                        success: true,
+                        response: respuestaFinal,
+                        data: resultados,
+                        sql: sql,
+                        tiempo: tiempoTotal
+                    };
+                } else {
+                    console.log('⚠️ [SQL] No se encontraron resultados');
+                    const respuestaSinDatos = `No se encontraron registros en la base de datos para tu consulta.`;
+                    
+                    // Guardar mensaje al final (no bloquea)
+                    guardarMensaje();
+                    
+                    const tiempoTotal = Date.now() - tiempoInicio;
+                    console.log('✅ [SISTEMA] Proceso completado en', tiempoTotal, 'ms');
+                    
+                    return {
+                        success: true,
+                        response: respuestaSinDatos,
+                        data: [],
+                        sql: sql,
+                        tiempo: tiempoTotal
+                    };
+                }
+            } catch (error) {
+                console.error('❌ [SQL] Error ejecutando SQL:', error.message);
+                
+                // Intentar retry con fuzzy search
+                console.log('🔄 [SQL] Intentando retry con búsqueda fuzzy...');
+                const resultadoRetry = await fuzzySearchRetry(sql, message);
+                
+                if (resultadoRetry.success) {
+                    // Guardar mensaje al final (no bloquea)
+                    guardarMensaje();
+                    
+                    const tiempoTotal = Date.now() - tiempoInicio;
+                    console.log('✅ [SISTEMA] Proceso completado con retry en', tiempoTotal, 'ms');
+                    
+                    return resultadoRetry;
+                } else {
+                    const respuestaError = `Lo siento, no pude procesar tu consulta correctamente. Por favor, reformula tu pregunta de manera más específica.`;
+                    
+                    // Guardar mensaje al final (no bloquea)
+                    guardarMensaje();
+                    
+                    const tiempoTotal = Date.now() - tiempoInicio;
+                    console.log('❌ [SISTEMA] Proceso falló en', tiempoTotal, 'ms');
+                    
+                    return {
+                        success: false,
+                        response: respuestaError,
+                        error: error.message,
+                        tiempo: tiempoTotal
+                    };
+                }
             }
+        } else {
+            console.log('📚 [RESPUESTA] Sin SQL - usar respuesta del modelo tal como está');
+            
+            // Personalizar respuesta
+            const respuestaPersonalizada = personalizarRespuesta(respuestaIA, infoUsuario.nombre);
+            
+            // Guardar mensaje al final (no bloquea)
+            guardarMensaje();
+            
+            const tiempoTotal = Date.now() - tiempoInicio;
+            console.log('✅ [SISTEMA] Proceso completado en', tiempoTotal, 'ms');
+            
+            return {
+                success: true,
+                response: respuestaPersonalizada,
+                tiempo: tiempoTotal
+            };
         }
+
+    } catch (error) {
+        console.error('❌ [OPENAI] Error en llamada a OpenAI:', error.message);
         
-        // Personalizar respuesta
-        respuestaFinal = personalizarRespuesta(respuestaFinal, infoUsuario.nombre);
+        // Guardar mensaje al final (no bloquea)
+        guardarMensaje();
         
-        // Guardar respuesta en background
-        saveAssistantMessageToFirestore(userId, respuestaFinal).catch(err => 
-                            console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
-                        );
-                        
-                        const tiempoTotal = Date.now() - tiempoInicio;
-        console.log(`✅ [SISTEMA] Proceso completado en ${tiempoTotal}ms`);
-                        
-                        return {
-            response: respuestaFinal,
-            tiempo: tiempoTotal,
-            tipo: 'compleja',
-            sql: sqlGenerado,
-            datos: datosReales
-        };
+        const tiempoTotal = Date.now() - tiempoInicio;
+        console.log('❌ [SISTEMA] Proceso falló en', tiempoTotal, 'ms');
         
-                            } catch (error) {
-        console.error('❌ [SISTEMA] Error en el proceso:', error.message);
-                        const tiempoTotal = Date.now() - tiempoInicio;
-                        
-                        return {
-            response: '❌ Lo siento, hubo un error procesando tu consulta. Por favor, inténtalo de nuevo.',
-            tiempo: tiempoTotal,
-            tipo: 'error'
+        return {
+            success: false,
+            response: 'Lo siento, hubo un error procesando tu consulta. Por favor, intenta de nuevo.',
+            error: error.message,
+            tiempo: tiempoTotal
         };
     }
 }
@@ -1752,8 +1805,7 @@ function construirContextoMapaERPCompleto(mapaERP) {
         return '';
     }
     
-    console.log('📋 [MAPA-ERP] Construyendo contexto COMPLETO del mapaERP...');
-    console.log('📋 [MAPA-ERP] Total de tablas disponibles:', Object.keys(mapaERP).length);
+
     
     let contexto = '\n=== ESTRUCTURA COMPLETA DE LA BASE DE DATOS ===\n';
     contexto += `\nTOTAL DE TABLAS DISPONIBLES: ${Object.keys(mapaERP).length}\n\n`;
@@ -1797,7 +1849,7 @@ function construirContextoMapaERPCompleto(mapaERP) {
     contexto += `- Genera SQL usando EXACTAMENTE las columnas mostradas\n`;
     contexto += `- Formato: <sql>SELECT columnas FROM tabla [JOIN otras_tablas] WHERE condiciones</sql>\n\n`;
     
-    console.log('📋 [MAPA-ERP] Contexto completo construido con', Object.keys(mapaERP).length, 'tablas');
+
     return contexto;
 }
 
@@ -1813,12 +1865,7 @@ function seleccionarModeloInteligente(intencion, tablasRelevantes) {
         razon: 'Modelo único optimizado: gpt-4o maneja SQL, conversación y RAG+SQL con excelente rendimiento'
     };
     
-    console.log('🤖 [MODELO-SELECTOR] Usando modelo único optimizado:', config.modelo);
-    console.log('🤖 [MODELO-SELECTOR] Razón:', config.razon);
-    console.log('🤖 [MODELO-SELECTOR] Configuración:', {
-        maxTokens: config.maxTokens,
-        temperature: config.temperature
-    });
+
     
     return config;
 }
