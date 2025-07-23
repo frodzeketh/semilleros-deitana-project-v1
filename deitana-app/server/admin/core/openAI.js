@@ -911,97 +911,64 @@ async function analizarIntencionInteligente(mensaje) {
 }
 
 /**
- * Detecta tablas relevantes de forma inteligente usando análisis semántico
+ * Detecta tablas relevantes usando SOLO mapaERP real (sin hardcodeo)
  */
 async function detectarTablasInteligente(mensaje, mapaERP) {
-    console.log('📊 [TABLAS-INTELIGENTE] Detectando tablas con inteligencia...');
+    console.log('📊 [TABLAS-INTELIGENTE] Detectando tablas con mapaERP real...');
     
     try {
         const mensajeLower = mensaje.toLowerCase();
+        const tablasDisponibles = Object.keys(mapaERP);
+        console.log('📊 [TABLAS-INTELIGENTE] Tablas disponibles en mapaERP:', tablasDisponibles);
+        
+        // Análisis semántico usando SOLO las tablas que existen en mapaERP
         const tablasRelevantes = [];
         
-        // Mapeo semántico inteligente de palabras clave a tablas
-        const mapeoSemantico = {
-            // Bandejas
-            'bandeja': ['bandejas'],
-            'bandejas': ['bandejas'],
-            'alvéolo': ['bandejas'],
-            'alveolo': ['bandejas'],
-            'alvéolos': ['bandejas'],
-            'alveolos': ['bandejas'],
+        // Para cada tabla en mapaERP, buscar palabras clave en su descripción
+        for (const [nombreTabla, infoTabla] of Object.entries(mapaERP)) {
+            const descripcionTabla = infoTabla.descripcion?.toLowerCase() || '';
+            const columnasTabla = Object.keys(infoTabla.columnas || {}).join(' ').toLowerCase();
             
-            // Clientes
-            'cliente': ['clientes'],
-            'clientes': ['clientes'],
-            'cl_deno': ['clientes'],
-            'cl_pob': ['clientes'],
+            // Buscar palabras del mensaje en la descripción y columnas de la tabla
+            const palabrasMensaje = mensajeLower.split(/\s+/);
             
-            // Proveedores
-            'proveedor': ['proveedores'],
-            'proveedores': ['proveedores'],
-            'pr_deno': ['proveedores'],
-            
-            // Artículos
-            'artículo': ['articulos'],
-            'artículos': ['articulos'],
-            'articulo': ['articulos'],
-            'articulos': ['articulos'],
-            'ar_deno': ['articulos'],
-            'tomate': ['articulos'],
-            'semilla': ['articulos'],
-            
-            // Partidas
-            'partida': ['partidas'],
-            'partidas': ['partidas'],
-            'par_deno': ['partidas'],
-            'par_fec': ['partidas'],
-            
-            // Invernaderos
-            'invernadero': ['invernaderos'],
-            'invernaderos': ['invernaderos'],
-            
-            // Almacenes
-            'almacén': ['almacenes'],
-            'almacen': ['almacenes'],
-            'almacenes': ['almacenes'],
-            
-            // Técnicos
-            'técnico': ['tecnicos'],
-            'tecnico': ['tecnicos'],
-            'tecnicos': ['tecnicos'],
-            
-            // Sustratos
-            'sustrato': ['sustratos'],
-            'sustratos': ['sustratos'],
-            
-            // Facturas
-            'factura': ['facturas-r'],
-            'facturas': ['facturas-r'],
-            'fe_ttt': ['facturas-r'],
-            'fe_fec': ['facturas-r']
-        };
-        
-        // Búsqueda semántica inteligente
-        for (const [palabra, tablas] of Object.entries(mapeoSemantico)) {
-            if (mensajeLower.includes(palabra)) {
-                tablasRelevantes.push(...tablas);
+            for (const palabra of palabrasMensaje) {
+                if (palabra.length < 3) continue; // Ignorar palabras muy cortas
+                
+                // Buscar en descripción de tabla
+                if (descripcionTabla.includes(palabra)) {
+                    tablasRelevantes.push(nombreTabla);
+                    console.log(`📊 [TABLAS-INTELIGENTE] Coincidencia: "${palabra}" en tabla "${nombreTabla}"`);
+                    break;
+                }
+                
+                // Buscar en nombres de columnas
+                if (columnasTabla.includes(palabra)) {
+                    tablasRelevantes.push(nombreTabla);
+                    console.log(`📊 [TABLAS-INTELIGENTE] Coincidencia columna: "${palabra}" en tabla "${nombreTabla}"`);
+                    break;
+                }
             }
         }
         
-        // Si no encuentra nada específico, incluir tablas comunes
+        // Si no encuentra nada específico, incluir tablas comunes que SÍ existen
         if (tablasRelevantes.length === 0) {
-            tablasRelevantes.push('clientes', 'articulos', 'bandejas');
+            const tablasComunes = ['clientes', 'articulos', 'tecnicos'];
+            const tablasComunesExistentes = tablasComunes.filter(tabla => tablasDisponibles.includes(tabla));
+            tablasRelevantes.push(...tablasComunesExistentes);
+            console.log('📊 [TABLAS-INTELIGENTE] Usando tablas comunes:', tablasComunesExistentes);
         }
         
         // Eliminar duplicados
         const tablasUnicas = [...new Set(tablasRelevantes)];
         
-        console.log('📊 [TABLAS-INTELIGENTE] Tablas detectadas:', tablasUnicas);
+        console.log('📊 [TABLAS-INTELIGENTE] Tablas detectadas (reales):', tablasUnicas);
         return tablasUnicas;
         
     } catch (error) {
         console.error('❌ [TABLAS-INTELIGENTE] Error:', error.message);
-        return ['clientes', 'articulos', 'bandejas'];
+        // Fallback a tablas que sabemos que existen
+        return ['clientes', 'articulos', 'tecnicos'];
     }
 }
 
