@@ -383,17 +383,24 @@ const Home = () => {
           const messageId = botMessage.id
           const currentResponse = fullResponse
           
-        setChatMessages((prev) =>
-          prev.map((msg) =>
-              msg.id === messageId
-              ? {
-                  ...msg,
-                    text: currentResponse,
-                    isStreaming: true,
-                }
-              : msg,
-          ),
-        )
+          // Verificar si el mensaje actual está en modo "pensando"
+          const currentMessage = chatMessages.find(msg => msg.id === messageId)
+          const isThinking = currentMessage && currentMessage.isThinking
+          
+          // Solo actualizar si no está en modo "pensando"
+          if (!isThinking) {
+            setChatMessages((prev) =>
+              prev.map((msg) =>
+                  msg.id === messageId
+                ? {
+                    ...msg,
+                      text: currentResponse,
+                      isStreaming: true,
+                  }
+                : msg,
+              ),
+            )
+          }
 
           console.log("📝 [FRONTEND] Mostrando buffer:", buffer.trim())
           buffer = ""
@@ -465,14 +472,19 @@ const Home = () => {
                 const messageId = botMessage.id
                 const finalResponse = data.fullResponse || fullResponse
                 
+                // Si el mensaje actual es "Pensando...", reemplazarlo con la respuesta final
+                const currentMessage = chatMessages.find(msg => msg.id === messageId)
+                const shouldReplaceThinking = currentMessage && currentMessage.isThinking
+                
                 // Finalizar el streaming
         setChatMessages((prev) =>
           prev.map((msg) =>
                     msg.id === messageId
               ? {
                   ...msg,
-                          text: finalResponse,
+                          text: shouldReplaceThinking ? finalResponse : finalResponse,
                           isStreaming: false, // Finalizar streaming
+                          isThinking: false, // Ya no está pensando
                 }
               : msg,
           ),
