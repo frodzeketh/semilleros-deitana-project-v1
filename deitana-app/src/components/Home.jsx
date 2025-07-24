@@ -444,6 +444,23 @@ const Home = () => {
                   naturalFlush() // Mostrar el contenido acumulado
                 }
                 
+              } else if (data.type === 'thinking') {
+                console.log("🤔 [FRONTEND] Mensaje de pensando recibido:", data.message)
+                
+                // Mostrar mensaje de "pensando" al usuario
+                const messageId = botMessage.id
+                setChatMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === messageId
+                      ? {
+                          ...msg,
+                          text: data.message,
+                          isStreaming: true,
+                        }
+                      : msg,
+                  ),
+                )
+                
               } else if (data.type === 'end') {
                 console.log("✅ [FRONTEND] Stream finalizado exitosamente")
                 

@@ -1576,6 +1576,7 @@ async function processQueryStream({ message, userId, conversationId, response })
 
         let fullResponse = '';
         let tokenCount = 0;
+        let sqlDetected = false;
 
         try {
             const stream = await openai.chat.completions.create({
@@ -1596,12 +1597,27 @@ async function processQueryStream({ message, userId, conversationId, response })
                     fullResponse += content;
                     tokenCount++;
                     
-                    // Enviar chunk al frontend
-                    response.write(JSON.stringify({
-                        type: 'chunk',
-                        content: content,
-                        timestamp: Date.now()
-                    }) + '\n');
+                    // Detectar si hay SQL en la respuesta acumulada
+                    if (!sqlDetected && fullResponse.includes('<sql>')) {
+                        sqlDetected = true;
+                        console.log('🔍 [STREAMING] SQL detectado en respuesta');
+                        
+                        // Enviar mensaje de "pensando" en lugar del contenido con SQL
+                        response.write(JSON.stringify({
+                            type: 'thinking',
+                            message: '🔎 Consultando la base de datos...',
+                            timestamp: Date.now()
+                        }) + '\n');
+                    }
+                    
+                    // Solo enviar chunks si NO se detectó SQL
+                    if (!sqlDetected) {
+                        response.write(JSON.stringify({
+                            type: 'chunk',
+                            content: content,
+                            timestamp: Date.now()
+                        }) + '\n');
+                    }
                 }
                 
                 // Si el stream terminó
