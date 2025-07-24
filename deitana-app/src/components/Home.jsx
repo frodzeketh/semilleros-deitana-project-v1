@@ -447,7 +447,7 @@ const Home = () => {
               } else if (data.type === 'thinking') {
                 console.log("🤔 [FRONTEND] Mensaje de pensando recibido:", data.message)
                 
-                // Mostrar mensaje de "pensando" al usuario
+                // Mostrar mensaje de "pensando" al usuario con estilos especiales
                 const messageId = botMessage.id
                 setChatMessages((prev) =>
                   prev.map((msg) =>
@@ -456,6 +456,7 @@ const Home = () => {
                           ...msg,
                           text: data.message,
                           isStreaming: true,
+                          isThinking: true, // Marcar como mensaje de thinking
                         }
                       : msg,
                   ),
@@ -490,6 +491,7 @@ const Home = () => {
                   ...msg,
                           text: finalResponse,
                           isStreaming: false, // Finalizar streaming
+                          isThinking: false, // Limpiar el estado de thinking
                 }
               : msg,
           ),
@@ -945,6 +947,51 @@ const Home = () => {
 
   return (
     <div className="ds-home-container">
+      <style>
+        {`
+          @keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.thinking-message {
+    background: linear-gradient(90deg, #707070 0%, #c0c0c0 50%, #707070 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 2s ease-in-out infinite;
+    
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.thinking-message::after {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 1.1em;
+    background: linear-gradient(90deg, #707070, #c0c0c0, #707070);
+    background-size: 200% 100%;
+    animation: gradient-shift 2s ease-in-out infinite,
+               blink-cursor 0.8s step-end infinite;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+
+
+}
+        `}
+      </style>
+
       {/* Sidebar */}
       {isMobile && mobileSidebarOpen && (
         <div className="ds-mobile-overlay" onClick={() => setMobileSidebarOpen(false)}></div>
@@ -1292,7 +1339,9 @@ const Home = () => {
                                       lineHeight: "1.6",
                                   color: "#333",
                                   fontSize: "15px"
-                                }}>
+                                }}
+                                className={msg.isThinking ? "thinking-message" : ""}
+                                >
                                     {children}
                                   </p>
                               ),
@@ -1559,7 +1608,12 @@ const Home = () => {
                           )}
                         </div>
                       ) : (
-                        <p style={{ whiteSpace: "pre-line" }}>{msg.text}</p>
+                        <p 
+                          style={{ whiteSpace: "pre-line" }}
+                          className={msg.isThinking ? "thinking-message" : ""}
+                        >
+                          {msg.text}
+                        </p>
                       )}
                     </div>
                   </div>

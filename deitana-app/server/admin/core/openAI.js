@@ -1605,7 +1605,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         // Enviar mensaje de "pensando" en lugar del contenido con SQL
                         response.write(JSON.stringify({
                             type: 'thinking',
-                            message: '🔎 Consultando la base de datos...',
+                            message: 'Buscando información en el ERP',
                             timestamp: Date.now()
                         }) + '\n');
                     }
