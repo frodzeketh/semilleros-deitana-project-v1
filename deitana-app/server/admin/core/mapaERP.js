@@ -156,6 +156,7 @@ articulos: {
       CL_PAIS: "País",
       CL_ZONA: "Zona al que pertenece el cliente",
       CL_TARI: "Tarifa de precios asociada al cliente",
+      CL_FPAG: "Forma de pago asociada al cliente",
     },
     relaciones: {
       almacenes: {    
@@ -2024,7 +2025,8 @@ encargos: {
           PAR_DENO: "Denominación/Observación de la partida.",
           PAR_FECES: "Fecha solicitada/entrega/siembra.",
           PAR_PMER: "Nombre.",
-          PAR_NMCL: "Nombre de semilla.",
+          
+          PAR_NMSM: "Nombre de semilla",
         },
         relaciones_internas_de_partidas: {
           articulos: {
@@ -2346,7 +2348,8 @@ partidas: {
       id: "ID de la partida (Clave Primaria)",
       PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
       PAR_FEC: "Fecha de la partida.",
-      PAR_TIPO: "Tipo de semilla ('D': Depósito cliente, 'N': No depósito).",
+      PAR_ENCL: "Trae semilla propia o no ('D': Depósito cliente, 'N': No depósito).",
+      PAR_TIPO: "Tipo de semilla",
       PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
       PAR_LOTE: "Lote de la semilla.",
       PAR_PGER: "Porcentaje de germinación.",

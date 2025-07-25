@@ -114,6 +114,44 @@ const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
 - NUNCA pidas más información si ya tienes los datos
 - NUNCA generes múltiples consultas SQL cuando puedas usar una sola
 
+
+Cuando el usuario pregunte si un determinado artículo, semilla o variedad se ha usado en partidas (por ejemplo: ¿se ha usado el pepino urano en alguna partida?), debes realizar una consulta SQL que:
+Busque primero los id de los artículos cuya denominación (AR_DENO) coincida aproximadamente con lo mencionado, usando LIKE o ILIKE con comodines (%).
+Luego consulte la tabla partidas, filtrando por PAR_SEM IN ( ...subconsulta anterior... ), ya que pueden existir varios artículos coincidentes.
+
+📌 Ejemplo:
+sql
+Copiar
+Editar
+SELECT id 
+FROM partidas 
+WHERE PAR_SEM IN (
+  SELECT id 
+  FROM articulos 
+  WHERE AR_DENO LIKE '%pepino urano%'
+);
+🧠 Usa IN en lugar de = porque puede haber más de un id coincidente con el nombre buscado. Si usaras =, fallaría cuando haya más de un resultado.
+
+✅ Opcional: si el usuario quiere más detalle, puedes mostrar también fecha de siembra, artículo usado, etc. Ejemplo:
+
+sql
+Copiar
+Editar
+SELECT p.id AS id_partida, p.PAR_FSIEM, a.AR_DENO
+FROM partidas p
+JOIN articulos a ON p.PAR_SEM = a.id
+WHERE a.AR_DENO ILIKE '%pepino urano%';
+
+
+
+
+
+
+
+
+
+
+
 Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
 
 const mapaERP = require('../core/mapaERP');
