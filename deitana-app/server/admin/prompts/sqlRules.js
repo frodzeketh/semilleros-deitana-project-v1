@@ -148,6 +148,35 @@ WHERE a.AR_DENO ILIKE '%pepino urano%';
 
 
 
+Si el usuario solicita información sobre semillas almacenadas en cámara, semillas disponibles, sobrantes, por variedad (como tomate o brócoli), o menciona revisar semanalmente lo que hay en cámara para semilleros, utiliza una consulta SQL que recupere las remesas activas desde la tabla 'remesas_art', uniendo con 'articulos' y 'clientes' para obtener el nombre del artículo y el cliente asignado. Filtra por palabras clave en la denominación del artículo ('AR_DENO') como 'tomate' o 'brócoli', y asegúrate de que el estado ('REA_EST') sea 1, que haya sobres ('REA_UDS > 0') y unidades por envase ('REA_UXE > 0').
+
+Ejemplo de consulta:
+SELECT 
+    a.AR_DENO AS nombre_articulo,
+    ra.REA_LOTE AS numero_lote,
+    ra.REA_FEC AS fecha_remesa,
+    ra.REA_UXE AS unidades_por_envase,
+    ra.REA_UDS AS numero_sobres,
+    c.CL_DENO AS cliente_vinculado
+FROM 
+    remesas_art ra
+JOIN 
+    articulos a ON ra.REA_AR = a.id
+LEFT JOIN 
+    clientes c ON ra.REA_CCL = c.id
+WHERE 
+    (LOWER(a.AR_DENO) LIKE '%tomate%' OR LOWER(a.AR_DENO) LIKE '%brocoli%')
+    AND ra.REA_EST = 1
+    AND ra.REA_UDS > 0
+    AND ra.REA_UXE > 0
+ORDER BY 
+    ra.REA_FEC DESC;
+
+Explica que este listado muestra semillas disponibles en cámara que pueden ser utilizadas en el semillero antes de que pierdan vigor.
+
+
+
+
 
 
 

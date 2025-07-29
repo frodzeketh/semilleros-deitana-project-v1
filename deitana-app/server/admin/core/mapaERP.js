@@ -2891,23 +2891,6 @@ impagos: {
         campo_enlace_externo: "id",
         descripcion: "Vincula el albarán con la forma de pago acordada para la transacción.",
       },
-      // Relaciones potenciales inferidas:
-      pedidos_compra: {
-        tabla_relacionada: "[Tabla de Pedidos de Compra]", // Nombre de tabla no especificado
-        tipo: "Muchos a uno (un albarán puede provenir de un pedido)", // Tipo inferido
-        campo_enlace_local: "AC_NPD", // El campo que contiene el número/id del pedido
-        campo_enlace_externo: "[Campo id/número en tabla de pedidos]", // Nombre de campo no especificado
-        descripcion_inferida:
-          "Sugiere vínculo con una tabla de pedidos de compra, permitiendo trazar el albarán al pedido original.",
-      },
-      facturas_proveedor: {
-        tabla_relacionada: "[Tabla de Facturas de Proveedor]", // Nombre de tabla no especificado
-        tipo: "Uno a uno o Uno a cero-o-uno (un albarán se asocia a una factura o ninguna)", // Tipo inferido
-        campo_enlace_local: "AC_FRA", // El campo que contiene el número/id de la factura
-        campo_enlace_externo: "[Campo id/número en tabla de facturas]", // Nombre de campo no especificado
-        descripcion_inferida:
-          "Sugiere vínculo con una tabla de facturas de proveedor, permitiendo asociar el albarán a la factura emitida.",
-      },
     },
     ejemplos: {
       consulta_albaran_por_id: "Obtener los detalles de un albarán de compra específico usando su 'id'.",
@@ -3911,14 +3894,23 @@ consumo: {
   remesas_art: {
     // Clave principal (nombre de tabla)
     descripcion:
-      "Registra envíos o movimientos específicos de artículos del almacén, vinculados a lotes y clientes. Permite documentar salidas de inventario por consumo/envío no estándar y adjuntar observaciones detalladas. Crucial para trazabilidad por lote y documentación de movimientos específicos.",
+      "Registra movimientos específicos de semillas almacenadas en cámara, especialmente aquellas destinadas a semilleros propios como los de tomate o brócoli. Permite llevar el control de lotes disponibles, unidades por envase, fechas de remesa y cliente destinatario, incluyendo observaciones adicionales. Es clave para gestionar semanalmente la disponibilidad de semillas sobrantes, evaluar su ciclo biológico (corto o largo), evitar pérdidas por pérdida de vigor, y planificar su uso antes de su caducidad. También permite documentar las salidas internas hacia semilleros, facilitando trazabilidad completa por lote, variedad y cliente.",
     tabla: "remesas_art", // Nombre de tabla principal
     columnas: {
       id: "Código identificador único del registro de remesa (Clave Primaria)",
       REA_AR: "Código del artículo que se remite. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
-      REA_LOTE: "Número de lote del artículo remitido.",
+      REA_SOB: "Codigo de envases, tiene relacion con la tabla 'envases_vta', con el mismo id obtenemos la denominacion EV_DENO",
+      REA_ORI: "Tipo de origen: Si indica 'Deposito' significa que tiene relacion con la tabla 'deposito' esta tabla 'deposito' tiene relacion con la tabla 'encargos' a traves del campo 'DE_ENG', si indica 'Compra' significa que tiene relacion con la tabla 'alb-compra' a traves del campo id para obtener la informacion correspondiente de cada remesa",
+      REA_RELA: "Codigo relacionado",
+      REA_UDS: "Numero de sobres",
+      REA_LOTE: "Número de lote",
       REA_CCL: "Código del cliente asociado a la remesa. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      REA_CFRA: "",
+      REA_EST: "Estado, ejemplo: 1",
       REA_UXE: "Unidades por Envase en la remesa.",
+      REA_PVP: "PvP",
+      REA_FEC: "Fecha de la remesa",
+      REA_GTV: "GTV:",
       // Observaciones se almacenan en una tabla separada (remesas_art_rea_obs)
     },
     relaciones: {
@@ -3929,12 +3921,69 @@ consumo: {
         campo_enlace_externo: "id",
         descripcion: "Vincula la remesa con el artículo específico que se remite.",
       },
-      clientes: {
-        tabla_relacionada: "clientes",
+      articulos: {
+        tabla_relacionada: "articulos",
         tipo: "Muchos a uno",
-        campo_enlace_local: "REA_CCL",
+        campo_enlace_local: "REA_AR",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la remesa con el artículo específico que se remite.",
+      },
+      alb_compra: {
+        tabla_relacionada: "alb-compra",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "REA_RELA",
         campo_enlace_externo: "id",
         descripcion: "Vincula la remesa con el cliente o destinatario asociado.",
+        estructura_relacionada: {
+          // Estructura de la tabla relacionada
+          id: "Código único que identifica cada albarán de compra (Clave Primaria)",
+      AC_NPD: "Número del pedido de compra asociado.", // Sugiere relación con tabla de pedidos de compra
+      AC_CPR: "Número del proveedor. Clave foránea a la tabla 'proveedores' para obtener la denominación (PR_DENO).",
+      AC_ALM: "Almacén de recepción en Semilleros Deitana. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      AC_FEC: "Fecha en que se registró el albarán de compra.",
+      AC_SUA: "Número del albarán proporcionado por el proveedor.",
+      AC_FP: "Forma de pago acordada. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+      AC_FRA: "Número de la factura del proveedor asociada.", // Sugiere relación con tabla de facturas proveedor
+      AC_FFR: "Fecha de la factura del proveedor asociada.", // Sugiere relación con tabla de facturas proveedor
+      AC_BRU: "Monto bruto total del albarán.",
+      AC_NETO: "Monto neto del albarán.",
+      AC_IMPU: "Costo total de los impuestos aplicados.",
+      AC_TTT: "Monto total final del albarán.",
+        },
+      },
+      deposito: {
+        tabla_relacionada: "deposito",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "REA_RELA",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula la remesa con el cliente o destinatario asociado.",
+        estructura_relacionada: {
+          // Estructura de la tabla relacionada
+          id: "Código único que identifica a cada deposito",
+      DE_FEC: "Representa la fecha de deposito", // Sugiere relación con tabla de pedidos de compra
+      DE_AM: "Codigo del almacén, tiene relacion con la tabla 'almacenes' a traves del campo id",
+      DE_CLI: "Codigo del cliente, tiene relacion con la tabla 'clientes' a traves del campo id",
+      DE_USU: "Codigo del usuario, tiene relacion con la tabla 'usuarios' a traves del campo id",
+      DE_ENG: "Codigo del encargo, tiene relacion con la tabla 'encargos' a traves del campo id",
+
+      
+        },
+
+      },
+      remesas_sob_rso_etiq: {
+        tabla_relacionada: "remesas_sob_rso_etiq",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "id",
+        campo_enlace_externo: "id",
+        descripcion: "Almacena informacion de sobres medios",
+        estructura_relacionada: {
+          // Estructura de la tabla relacionada
+          id: "ID de la remesa asociada",
+          id2: "Identificador secundario/orden de la línea",
+          C0: "Etiq. Sobre",
+          C1: "Fecha",
+          C2: "Cantidad",
+        },
       },
       remesas_art_rea_obs: {
         tabla_relacionada: "remesas_art_rea_obs",
