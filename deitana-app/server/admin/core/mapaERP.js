@@ -3906,7 +3906,7 @@ consumo: {
       REA_LOTE: "Número de lote",
       REA_CCL: "Código del cliente asociado a la remesa. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
       REA_CFRA: "",
-      REA_EST: "Estado, ejemplo: 1",
+      REA_EST: "Las remesas tienen dos estados, 1 o nada, el estado 1 indica que la remesa esta terminada, y si nada significa que la remesa sin terminar, no es null, no contiene nada",
       REA_UXE: "Unidades por Envase en la remesa.",
       REA_PVP: "PvP",
       REA_FEC: "Fecha de la remesa",

@@ -177,6 +177,60 @@ Explica que este listado muestra semillas disponibles en cámara que pueden ser 
 
 
 
+Cuando busques campos varios o null haz esto por ejemplo: 
+
+SELECT * FROM remesas_art 
+WHERE REA_EST IS NULL OR REA_EST = ''
+LIMIT 1;
+
+O 
+
+SELECT * FROM remesas_art WHERE REA_EST = '' LIMIT 1;
+
+
+
+
+Cuando te consulten cosas como:
+“Qué semillas tengo que pedir”,
+“Qué necesito para sembrar los próximos días”,
+“Qué cultivos vienen ahora”,
+se están refiriendo a los cultivos programados para fechas futuras.
+
+Debes analizar la tabla partidas, filtrando solo aquellas cuyo campo PAR_FECS (fecha de siembra) sea mayor o igual a la fecha actual (CURDATE()).
+
+Luego, obtené:
+El tipo de semilla (PAR_SEM, unido con articulos para obtener el nombre AR_DENO),
+La suma total de unidades requeridas (PAR_ALVS) por semilla,
+Agrupá por semilla,
+Ordená por fecha de siembra para priorizar lo que viene más próximo.
+Esta información representa qué semillas hay que pedir y en qué cantidades totales, para poder sembrar lo planificado a futuro. Ejemplo:
+
+SELECT 
+  a.AR_DENO AS semilla,
+  SUM(p.PAR_ALVS) AS cantidad_total_semillas
+FROM partidas p
+JOIN articulos a ON a.id = p.PAR_SEM
+WHERE p.PAR_FECS >= CURDATE()
+GROUP BY p.PAR_SEM, a.AR_DENO
+ORDER BY p.PAR_FECS;
+
+
+
+
+
+Cuando te consulten cosas como “¿Cuánta semilla debo pedir de [código artículo]?” o “¿Cuánta semilla necesito para los próximos 30 días?” - debes analizar la tabla partidas filtrando solo aquellas partidas cuyo campo PAR_FECS (fecha de siembra) esté dentro del rango desde hoy (CURDATE()) hasta 30 días adelante (DATE_ADD(CURDATE(), INTERVAL 30 DAY)) - filtrar las partidas que utilicen la semilla específica consultada identificada por su código en el campo PAR_SEM - obtener el nombre de la semilla desde la tabla articulos en AR_DENO - sumar la cantidad total de semillas a sembrar (PAR_ALVS) para esa semilla en el periodo de 30 días - también sumar la cantidad de plantas solicitadas (PAR_PLAS) como dato adicional - contar cuántas partidas están programadas para esa semilla en ese intervalo - agrupar por el nombre de la semilla para presentar un resumen claro - esta información representa la cantidad total de semilla que se deberá pedir para cubrir la demanda prevista de siembra para esa variedad en los próximos 30 días, junto con la cantidad de plantas solicitadas y la cantidad de partidas planificadas. Ejemplo:
+
+SELECT
+  a.AR_DENO AS semilla,
+  SUM(p.PAR_ALVS) AS total_semillas_a_sembrar,
+  SUM(p.PAR_PLAS) AS total_plantas_solicitadas,
+  COUNT(*) AS partidas_programadas
+FROM partidas p
+JOIN articulos a ON a.id = p.PAR_SEM
+WHERE p.PAR_SEM = '00020545'  -- filtro por artículo
+  AND p.PAR_FECS BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) -- próximos 30 días
+GROUP BY a.AR_DENO;
+
 
 
 
