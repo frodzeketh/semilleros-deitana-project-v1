@@ -1,14 +1,10 @@
-# Sincronizador ERP -> Railway
+# Sincronizador ERP -> Railway Simple
 # Script de PowerShell para automatizar la sincronización de bases de datos
 
 param(
     [string]$ConfigFile = "config_sync.ini",
-    [switch]$Test,
-    [switch]$Verbose
+    [switch]$Test
 )
-
-# Configuración de codificación
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "    SINCRONIZADOR ERP -> RAILWAY" -ForegroundColor Cyan
@@ -31,7 +27,7 @@ function Read-IniFile {
                     $config[$currentSection] = @{}
                 } elseif ($line.Contains("=") -and $currentSection) {
                     $key, $value = $line.Split("=", 2)
-                    $key = $key.Trim() # Mantener mayúsculas/minúsculas originales
+                    $key = $key.Trim()
                     $config[$currentSection][$key] = $value.Trim()
                 }
             }
@@ -56,7 +52,7 @@ function Write-Log {
         Write-Host $logMessage -ForegroundColor Green
     }
     
-    # Guardar el log SOLO en la carpeta temporal del sistema
+    # Guardar el log en la carpeta temporal del sistema
     $logFile = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "sync_log_$(Get-Date -Format 'yyyy-MM-dd').txt")
     Add-Content -Path $logFile -Value $logMessage
 }
@@ -200,16 +196,11 @@ function Send-NotificationEmail {
         [string]$Details = ""
     )
     
-    # Configuración de email (puedes modificar estos valores)
-    $emailTo = "facuslice@gmail.com"  # Tu email configurado
-    $emailFrom = "facuslice@gmail.com"  # Usar el mismo email como remitente
+    # Configuración de email
+    $emailTo = "facuslice@gmail.com"
+    $emailFrom = "facuslice@gmail.com"
     $smtpServer = "smtp.gmail.com"
     $smtpPort = 587
-    
-    if (-not $emailTo -or $emailTo -eq "tu-email@ejemplo.com") {
-        Write-Log "Email no configurado, saltando notificación" "WARNING"
-        return
-    }
     
     $subject = "Sincronización ERP - $Status"
     $body = @"
@@ -297,13 +288,13 @@ function Start-Sync {
     
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
-    Write-Host "    SINCRONIZACIÓN COMPLETADA" -ForegroundColor Green
+    Write-Host "    SINCRONIZACION COMPLETADA" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "OK Base de datos actualizada exitosamente" -ForegroundColor Green
     Write-Host ("OK Fecha: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')) -ForegroundColor Green
     Write-Host ""
     
-    Write-Log "SINCRONIZACIÓN EXITOSA"
+    Write-Log "SINCRONIZACION EXITOSA"
     return $true
 }
 
@@ -331,7 +322,7 @@ try {
     $success = Start-Sync -Config $config
     
     if (-not $success) {
-        Write-Log "SINCRONIZACIÓN FALLÓ" "ERROR"
+        Write-Log "SINCRONIZACION FALLÓ" "ERROR"
         Send-NotificationEmail -Status "FALLÓ" -Details "Error durante la sincronización. Revisar logs para más detalles."
         exit 1
     }

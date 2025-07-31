@@ -1,65 +1,63 @@
-# Configurador Simple de Tarea Programada para Sincronización a las 2:00 AM
+# Configurador Final de Tarea Programada
+# Ejecutar como Administrador
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "    CONFIGURADOR SINCRONIZACIÓN 2:00 AM" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Verificar si se ejecuta como administrador
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "ERROR: Este script debe ejecutarse como Administrador" -ForegroundColor Red
+# Verificar administrador
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+
+if (-not $isAdmin) {
+    Write-Host "ERROR: Ejecutar como Administrador" -ForegroundColor Red
     Write-Host "1. Clic derecho en PowerShell" -ForegroundColor Yellow
-    Write-Host "2. Seleccionar 'Ejecutar como administrador'" -ForegroundColor Yellow
-    Write-Host "3. Ejecutar este script nuevamente" -ForegroundColor Yellow
-    Read-Host "Presiona Enter para salir"
+    Write-Host "2. 'Ejecutar como administrador'" -ForegroundColor Yellow
+    Read-Host "Presiona Enter"
     exit 1
 }
 
-Write-Host "Configurando tarea programada para las 2:00 AM..." -ForegroundColor Green
+Write-Host "Configurando tarea programada..." -ForegroundColor Green
 
 $taskName = "Sincronización ERP 2:00 AM"
 $scriptPath = Join-Path (Get-Location) "sync_erp_railway.ps1"
 
-# Eliminar tarea existente si existe
+# Eliminar tarea existente
 $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
 if ($existingTask) {
     Write-Host "Eliminando tarea existente..." -ForegroundColor Yellow
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
 }
 
-# Crear nueva tarea
 try {
+    # Crear acción
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File `"$scriptPath`""
     
-    # Configurar para ejecutar diariamente a las 2:00 AM
+    # Crear trigger diario a las 2:00 AM
     $trigger = New-ScheduledTaskTrigger -Daily -At "02:00"
     
+    # Configurar principal y settings
     $principal = New-ScheduledTaskPrincipal -UserId (Get-CimInstance -ClassName Win32_ComputerSystem).UserName -LogonType Interactive -RunLevel Highest
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RunOnlyIfNetworkAvailable
     
-    $task = Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "Sincronización automática diaria de base de datos ERP a Railway a las 2:00 AM"
+    # Registrar tarea
+    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "Sincronización automática diaria de base de datos ERP a Railway a las 2:00 AM"
     
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "    TAREA PROGRAMADA CONFIGURADA" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
-    Write-Host "OK Tarea programada creada exitosamente" -ForegroundColor Green
+    Write-Host "OK Tarea creada exitosamente" -ForegroundColor Green
     Write-Host "OK Se ejecutará diariamente a las 02:00 AM" -ForegroundColor Green
-    Write-Host "OK Email configurado: facuslice@gmail.com" -ForegroundColor Green
+    Write-Host "OK Email: facuslice@gmail.com" -ForegroundColor Green
     Write-Host ""
     Write-Host "PRÓXIMOS PASOS:" -ForegroundColor Cyan
-    Write-Host "1. Verificar que la PC esté encendida a las 02:00 AM" -ForegroundColor White
-    Write-Host "2. Asegurar que la VPN Sophos esté conectada" -ForegroundColor White
+    Write-Host "1. PC encendida a las 02:00 AM" -ForegroundColor White
+    Write-Host "2. VPN Sophos conectada" -ForegroundColor White
     Write-Host "3. Revisar logs en: %TEMP%\sync_log_YYYY-MM-DD.txt" -ForegroundColor White
-    Write-Host ""
-    Write-Host "Para probar manualmente:" -ForegroundColor Cyan
-    Write-Host "   powershell.exe -ExecutionPolicy Bypass -File 'sync_erp_railway.ps1'" -ForegroundColor Gray
     
 } catch {
     Write-Host ""
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host "    ERROR AL CONFIGURAR TAREA" -ForegroundColor Red
-    Write-Host "========================================" -ForegroundColor Red
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ""
     Write-Host "CONFIGURACIÓN MANUAL:" -ForegroundColor Yellow

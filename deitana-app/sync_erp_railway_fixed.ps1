@@ -31,7 +31,7 @@ function Read-IniFile {
                     $config[$currentSection] = @{}
                 } elseif ($line.Contains("=") -and $currentSection) {
                     $key, $value = $line.Split("=", 2)
-                    $key = $key.Trim() # Mantener mayúsculas/minúsculas originales
+                    $key = $key.Trim()
                     $config[$currentSection][$key] = $value.Trim()
                 }
             }
@@ -56,7 +56,7 @@ function Write-Log {
         Write-Host $logMessage -ForegroundColor Green
     }
     
-    # Guardar el log SOLO en la carpeta temporal del sistema
+    # Guardar el log en la carpeta temporal del sistema
     $logFile = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "sync_log_$(Get-Date -Format 'yyyy-MM-dd').txt")
     Add-Content -Path $logFile -Value $logMessage
 }
@@ -200,9 +200,9 @@ function Send-NotificationEmail {
         [string]$Details = ""
     )
     
-    # Configuración de email (puedes modificar estos valores)
-    $emailTo = "facuslice@gmail.com"  # Tu email configurado
-    $emailFrom = "facuslice@gmail.com"  # Usar el mismo email como remitente
+    # Configuración de email
+    $emailTo = "facuslice@gmail.com"
+    $emailFrom = "facuslice@gmail.com"
     $smtpServer = "smtp.gmail.com"
     $smtpPort = 587
     

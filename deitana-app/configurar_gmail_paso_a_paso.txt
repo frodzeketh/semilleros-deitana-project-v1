@@ -1,0 +1,44 @@
+CONFIGURACIÓN DE GMAIL PARA ENVÍO DE EMAILS
+=============================================
+
+PASO 1: ACTIVAR VERIFICACIÓN EN 2 PASOS
+----------------------------------------
+1. Ve a https://myaccount.google.com/
+2. Selecciona "Seguridad"
+3. Busca "Verificación en 2 pasos"
+4. Actívala siguiendo las instrucciones
+
+PASO 2: GENERAR CONTRASEÑA DE APLICACIÓN
+-----------------------------------------
+1. Ve a https://myaccount.google.com/
+2. Selecciona "Seguridad"
+3. Busca "Contraseñas de aplicación"
+4. Selecciona "Aplicación" → "Otra (nombre personalizado)"
+5. Escribe: "Sincronización ERP"
+6. Copia la contraseña de 16 caracteres que te genera
+
+PASO 3: PROBAR EMAIL
+---------------------
+Una vez que tengas la contraseña de aplicación, ejecuta:
+powershell.exe -ExecutionPolicy Bypass -File "probar_email.ps1"
+
+Cuando te pida credenciales:
+- Email: facuslice@gmail.com
+- Contraseña: [La contraseña de aplicación de 16 caracteres]
+
+PASO 4: CONFIGURAR TAREA PROGRAMADA
+-----------------------------------
+Como administrador, ejecuta:
+powershell.exe -ExecutionPolicy Bypass -File "configurar_tarea_2am.ps1"
+
+¿QUÉ SON LAS CREDENCIALES?
+==========================
+- Email: tu email (facuslice@gmail.com)
+- Contraseña: NO es tu contraseña normal de Gmail
+- Contraseña: Es la "contraseña de aplicación" que generas en Gmail
+
+¿POR QUÉ NO LLEGÓ EL EMAIL?
+============================
+- Gmail bloquea envíos automáticos por seguridad
+- Necesitas la configuración especial de arriba
+- Sin esto, ningún email llegará 
