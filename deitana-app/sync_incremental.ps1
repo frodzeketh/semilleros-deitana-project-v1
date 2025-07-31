@@ -32,7 +32,7 @@ function Read-IniFile {
                     $config[$currentSection] = @{}
                 } elseif ($line.Contains("=") -and $currentSection) {
                     $key, $value = $line.Split("=", 2)
-                    $key = $key.Trim().ToLower()
+                    $key = $key.Trim() # Mantener mayúsculas/minúsculas originales
                     $config[$currentSection][$key] = $value.Trim()
                 }
             }
@@ -153,8 +153,8 @@ function Sync-TableIncremental {
     $remote = $Config["RAILWAY_DATABASE"]
     
     # Construir DSN (Data Source Name) para ambas bases
-    $localDsn = "h=$($local['db_host']),P=$($local['port']),u=$($local['user']),p=$($local['password']),D=$($local['database'])"
-    $remoteDsn = "h=$($remote['db_host']),P=$($remote['port']),u=$($remote['user']),p=$($remote['password']),D=$($remote['database'])"
+    $localDsn = "h=$($local['HOST']),P=$($local['PORT']),u=$($local['USER']),p=$($local['PASSWORD']),D=$($local['DATABASE'])"
+    $remoteDsn = "h=$($remote['HOST']),P=$($remote['PORT']),u=$($remote['USER']),p=$($remote['PASSWORD']),D=$($remote['DATABASE'])"
     
     # Comando pt-table-sync para sincronización incremental
     $args = @(
@@ -192,12 +192,12 @@ function Get-TableList {
     
     $local = $Config["LOCAL_DATABASE"]
     $args = @(
-        "-h", $local["db_host"],
-        "-P", $local["port"],
-        "-u", $local["user"],
-        "-p$($local['password'])",
+        "-h", $local["HOST"],
+        "-P", $local["PORT"],
+        "-u", $local["USER"],
+        "-p$($local['PASSWORD'])",
         "-e", "SHOW TABLES;",
-        $local["database"]
+        $local["DATABASE"]
     )
     
     try {

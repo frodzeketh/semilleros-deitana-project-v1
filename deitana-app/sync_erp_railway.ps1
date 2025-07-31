@@ -31,7 +31,7 @@ function Read-IniFile {
                     $config[$currentSection] = @{}
                 } elseif ($line.Contains("=") -and $currentSection) {
                     $key, $value = $line.Split("=", 2)
-                    $key = $key.Trim().ToLower() # Forzar minúsculas
+                    $key = $key.Trim() # Mantener mayúsculas/minúsculas originales
                     $config[$currentSection][$key] = $value.Trim()
                 }
             }
@@ -99,12 +99,12 @@ function Test-VPNConnection {
             Write-Log "OK Conexión VPN verificada"
             return $true
         } else {
-            Write-Log "ERROR No se puede conectar al servidor local" "ERROR"
-            Write-Log "Verificar que la VPN Sophos esté conectada" "ERROR"
+            Write-Log "WARNING No se puede conectar al servidor local" "WARNING"
+            Write-Log "Verificar que la VPN Sophos esté conectada" "WARNING"
             return $false
         }
     } catch {
-        Write-Log "ERROR al verificar conexión VPN" "ERROR"
+        Write-Log "WARNING al verificar conexión VPN: $($_.Exception.Message)" "WARNING"
         return $false
     }
 }
@@ -124,11 +124,11 @@ function Export-Database {
         Write-Host ("[DEBUG] {0} = '{1}'" -f $key, $local[$key])
     }
     $args = @(
-        "-h", $local["db_host"],
-        "-P", $local["port"],
-        "-u", $local["user"],
-        "-p$($local['password'])",
-        $local["database"],
+        "-h", $local["HOST"],
+        "-P", $local["PORT"],
+        "-u", $local["USER"],
+        "-p$($local['PASSWORD'])",
+        $local["DATABASE"],
         "--single-transaction",
         "--routines",
         "--triggers",
@@ -169,11 +169,11 @@ function Import-Database {
         Write-Host ("[DEBUG] {0} = '{1}'" -f $key, $remote[$key])
     }
     $args = @(
-        "-h", $remote["db_host"],
-        "-P", $remote["port"],
-        "-u", $remote["user"],
-        "-p$($remote['password'])",
-        $remote["database"]
+        "-h", $remote["HOST"],
+        "-P", $remote["PORT"],
+        "-u", $remote["USER"],
+        "-p$($remote['PASSWORD'])",
+        $remote["DATABASE"]
     )
     
     try {
@@ -227,9 +227,10 @@ function Start-Sync {
         return $false
     }
     
-    # Verificar VPN
-    if (-not (Test-VPNConnection -TargetHost $Config["LOCAL_DATABASE"]["db_host"])) {
-        return $false
+    # Verificar VPN (opcional)
+    $vpnStatus = Test-VPNConnection -TargetHost $Config["LOCAL_DATABASE"]["HOST"]
+    if (-not $vpnStatus) {
+        Write-Log "ADVERTENCIA: VPN no disponible, pero continuando..." "WARNING"
     }
     
     # Exportar base local
@@ -273,7 +274,7 @@ try {
     if ($Test) {
         Write-Log "MODO TEST - Solo verificando conexiones"
         Test-RequiredTools
-        Test-VPNConnection -TargetHost $config["LOCAL_DATABASE"]["db_host"]
+        Test-VPNConnection -TargetHost $config["LOCAL_DATABASE"]["HOST"]
         exit 0
     }
     
