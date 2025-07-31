@@ -21,7 +21,7 @@ PASO 3: CONFIGURAR PROGRAMACIÓN
 PASO 4: CONFIGURAR ACCIÓN
 1. Selecciona "Iniciar un programa"
 2. Clic en "Siguiente"
-3. Programa/script: C:\Users\anabe\OneDrive\Documentos\semilleros-deitana-project\deitana-app\sync_batch.bat
+3. Programa/script: 
 4. Deja "Agregar argumentos" vacío
 5. Clic en "Siguiente"
 
