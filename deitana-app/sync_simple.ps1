@@ -259,8 +259,12 @@ function Start-Sync {
     
     Write-Log "Iniciando sincronización..."
     
+    # Enviar email de inicio
+    Send-NotificationEmail -Status "INICIADA" -Details "Proceso de sincronización iniciado. Tamaño estimado: 919.5 MB"
+    
     # Verificar herramientas
     if (-not (Test-RequiredTools)) {
+        Send-NotificationEmail -Status "FALLÓ" -Details "Error: Herramientas requeridas no encontradas"
         return $false
     }
     
@@ -272,18 +276,20 @@ function Start-Sync {
     
     # Exportar base local
     if (-not (Export-Database -Config $Config -DumpFile $dumpFile)) {
+        Send-NotificationEmail -Status "FALLÓ" -Details "Error durante la exportación de la base de datos"
         return $false
     }
     
     # Importar a Railway
     if (-not (Import-Database -Config $Config -DumpFile $dumpFile)) {
+        Send-NotificationEmail -Status "FALLÓ" -Details "Error durante la importación a Railway"
         return $false
     }
     
     # Limpiar archivos temporales
     Cleanup-TempFiles -DumpFile $dumpFile
     
-    # Enviar email de notificación
+    # Enviar email de notificación de éxito
     Send-NotificationEmail -Status "EXITOSA" -Details "Base de datos actualizada correctamente. Tamaño exportado: $([math]::Round((Get-Item $dumpFile).Length/1MB, 2)) MB"
     
     Write-Host ""
@@ -323,11 +329,11 @@ try {
     
     if (-not $success) {
         Write-Log "SINCRONIZACION FALLÓ" "ERROR"
-        Send-NotificationEmail -Status "FALLÓ" -Details "Error durante la sincronización. Revisar logs para más detalles."
         exit 1
     }
     
 } catch {
     Write-Log "Error inesperado: $($_.Exception.Message)" "ERROR"
+    Send-NotificationEmail -Status "FALLÓ" -Details "Error inesperado: $($_.Exception.Message)"
     exit 1
 } 
