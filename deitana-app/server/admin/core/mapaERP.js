@@ -84,6 +84,7 @@ articulos: {
       AR_WEB: "Información adicional para la web.",
       AR_IVAP: "IVA aplicado al precio.",
       AR_PGE: "Porcentaje de germinación.",
+      AR_DCG: "Tiempo de germinacion en dias",
       // Nota: Los campos de precio (AR_PUD, AR_POP, AR_PST, AR_PVME) y stock (AR_STOK) mencionados en la descripción general
       // y la estructura de la tabla 'articulos_ar_stok' se detallan a continuación.
     },
@@ -1902,6 +1903,8 @@ encargos: {
       ENG_VD: "Vendedor que gestionó el encargo. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
       ENG_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
       ENG_EST: "Estado del encargo ('C': Cerrado).",
+      ENG_USUG: "Usuario que gestionó el encargo.",
+
     },
     relaciones: {
       clientes: {
@@ -2348,7 +2351,7 @@ partidas: {
       id: "ID de la partida (Clave Primaria)",
       PAR_FEC: "Fecha de la partida.",
       PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
-      PAR_TIPO: "Tipo de semilla",
+      PAR_TIPO: "Tipo de partida: 'N' - Normal, sembrada sin injerto, 'C' - Componente de injerto (pie o cabeza), 'I' - Injerto completo (pie y cabeza ya unidos), 'L' - Planta libre sembrada como reserva o para venta ocasional, 'E' - Ecológica, con procesos certificados, 'D' - Descocada, planta regenerada por exceso de altura, 'R' - Planta libre reservada a nombre de un cliente, 'O' - Comprada a otro semillero en caso de emergencia, 'X' - Componente externo (pie o cabeza comprado a otro semillero para injertar).",
       PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
       PAR_CCL: "Id del cliente, tiene relacion con la tabla 'clientes'. para obtener la denominación (CL_DENO).",
       PAR_CAS: "Id de casa comercial, tiene relacion con la tabla 'casas_com'. para obtener la denominación (CC_DENO).",

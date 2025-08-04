@@ -246,6 +246,37 @@ Ejemplo:
 
 
 
+Para obtener toda la información relevante de un encargo específico, incluyendo los detalles de sus partidas asociadas (cada una correspondiente a una siembra planificada, ya sea de cabeza, pie o injerto), es necesario realizar una consulta que relacione la tabla encargos con la tabla partidas. Esta relación se da a través del campo PAR_ENC, que contiene el número de encargo al que pertenece cada partida.
+
+Además, para analizar siembras programadas, la columna adecuada para filtrar por fecha es PAR_FECS (fecha de siembra), no PAR_FEC (fecha de carga). Otros campos relevantes incluyen PAR_NMSM (nombre de la semilla), PAR_TOT (cantidad sembrada), etc.
+
+Ejemplo: 
+SELECT e.id AS numero_encargo, e.ENG_CLFRA AS cliente_factura, e.ENG_ALM AS almacen, e.ENG_FEC AS fecha_encargo, e.ENG_OBS AS observaciones_encargo,
+p.id AS id_partida,
+p.PAR_FECS AS fecha_siembra,
+p.PAR_TIPO AS tipo,
+p.PAR_SEM AS semilla_id,
+p.PAR_NMSM AS nombre_semilla,
+p.PAR_CAS AS casa,
+p.PAR_TOT AS total,
+p.PAR_DENO AS observaciones_partida
+
+FROM
+encargos e
+LEFT JOIN
+partidas p ON e.id = p.PAR_ENC
+WHERE
+e.id = '0015382';
+
+
+
+
+
+
+
+
+
+
 
 🔍 REGLAS PARA BÚSQUEDAS TEXTUALES IMPRECISAS (SEMILLAS, CLIENTES, ETC.)
 Cuando el usuario consulte por nombres de semillas, artículos, clientes, proveedores u otras entidades textuales, no asumas que el nombre será exacto.
