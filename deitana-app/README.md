@@ -1,70 +1,108 @@
-# Getting Started with Create React App
+# Deitana App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Descripción
+Aplicación web para gestión empresarial con sincronización automática de base de datos.
 
-## Available Scripts
+## Configuración de Sincronización Automática
 
-In the project directory, you can run:
+### Tarea Programada
+- **Horario:** 22:00 hs (10:00 PM) hora argentina
+- **Frecuencia:** Diaria
+- **Email:** facuslice@gmail.com
+- **VPN:** Sophos requerida
 
-### `npm start`
+### Comandos Manuales
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+#### Para Verificar Conexión y Email
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File "probar_simple.ps1"
+```
+**¿Cuándo usar?**
+- Para verificar que la VPN está conectada
+- Para verificar que el email funciona
+- Para diagnosticar problemas
+- Para enviar un email de prueba
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+**¿Qué hace?**
+- Verifica conexión VPN
+- Verifica herramientas (mysqldump, mysql)
+- Envía email de prueba
+- **NO sincroniza la base de datos**
 
-### `npm test`
+#### Para Sincronizar Manualmente
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+**Opción 1 - Progreso básico:**
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File "sincronizar_ahora.ps1"
+```
 
-### `npm run build`
+**Opción 2 - Progreso en tiempo real (recomendado):**
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File "sincronizar_con_progreso.ps1"
+```
+**¿Cuándo usar?**
+- Si la tarea automática no se ejecutó
+- Si la PC estaba apagada a las 22:00
+- Si la VPN no estaba conectada
+- Si necesitas sincronizar inmediatamente
+- Si no llegó el email de confirmación
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**¿Qué hace?**
+- Exporta la base de datos completa (950 MB)
+- Importa a Railway
+- Envía emails de inicio y fin
+- **SÍ sincroniza la base de datos**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 📊 **Indicadores de Progreso**
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+**Scripts con progreso:**
+- **`sincronizar_ahora.ps1`**: Muestra porcentajes de cada etapa
+- **`sincronizar_con_progreso.ps1`**: Muestra progreso en tiempo real con velocidad de transferencia
 
-### `npm run eject`
+**Información mostrada:**
+- 📈 Porcentaje de avance general
+- 🚀 Velocidad de exportación (MB/s)
+- 📊 Tamaño del archivo en tiempo real
+- ⏱️ Tiempo transcurrido
+- 🔄 Estado de cada operación
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 📧 **Emails de Notificación**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### Con `probar_simple.ps1`:
+- 📧 Email de prueba: "PRUEBA - Sincronización ERP"
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### Con `sincronizar_ahora.ps1` y `sincronizar_con_progreso.ps1`:
+- 📧 Email de inicio: "Sincronización ERP - INICIADA"
+- 📧 Email de éxito: "Sincronización ERP - EXITOSA"
+- 📧 Email de error: "Sincronización ERP - FALLO" (si algo falla)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Requisitos
+- PC encendida a las 22:00 hs
+- VPN Sophos conectada
+- Herramientas MySQL instaladas (mysqldump, mysql)
+- Configuración de email Gmail con App Password
 
-## Learn More
+### Archivos de Configuración
+- `config_sync.ini`: Configuración de bases de datos
+- `sync_batch.bat`: Script ejecutado por la tarea programada
+- `sync_erp_railway.ps1`: Script principal de sincronización
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Verificación de Estado
+Para verificar si la tarea programada está funcionando:
+```powershell
+Get-ScheduledTask -TaskName "Sincronizacion ERP 2AM" | Get-ScheduledTaskInfo
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Logs
+Los logs se guardan en: `%TEMP%\sync_log_YYYY-MM-DD.txt`
 
-### Code Splitting
+## Instalación
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Clonar el repositorio
+2. Configurar `config_sync.ini` con las credenciales de base de datos
+3. Configurar la tarea programada (ya configurada)
+4. Verificar conexión VPN y herramientas
 
-### Analyzing the Bundle Size
+## Uso
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+La sincronización se ejecuta automáticamente todos los días a las 22:00 hs. Si necesitas sincronizar manualmente, usa los comandos indicados arriba.

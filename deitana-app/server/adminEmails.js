@@ -7,7 +7,8 @@ const adminEmails = [
     'facundog@gmail.com',
     'rodrigog@gmail.com',
     'joseluis@semillerosdeitana.com',   
-    'facundo@semillerosdeitana.com'
+    'facundo@semillerosdeitana.com',
+    'virginia@semillerosdeitana.com',
 
 ];
 

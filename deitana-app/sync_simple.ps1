@@ -334,6 +334,6 @@ try {
     
 } catch {
     Write-Log "Error inesperado: $($_.Exception.Message)" "ERROR"
-    Send-NotificationEmail -Status "FALLÓ" -Details "Error inesperado: $($_.Exception.Message)"
+    Send-NotificationEmail -Status "FALLO" -Details "Error inesperado: $($_.Exception.Message)"
     exit 1
 } 

@@ -232,6 +232,21 @@ WHERE p.PAR_SEM = '00020545'  -- filtro por artículo
 GROUP BY a.AR_DENO;
 
 
+
+
+
+Para identificar las partidas programadas para realizarse (sembrarse) en una fecha determinada, es importante tener en cuenta que la columna correcta para filtrar no es la fecha de carga (PAR_FEC), sino la fecha de siembra, que corresponde al campo PAR_FECS.
+
+Ejemplo:
+
+ SELECT id, PAR_FECS AS fecha_siembra, PAR_DENO AS observaciones, PAR_NMCL AS cliente, PAR_NMSM AS semilla, PAR_FECE AS fecha_entrega_estimada FROM partidas WHERE PAR_FECS = '2025-08-08'; 
+
+
+
+
+
+
+
 🔍 REGLAS PARA BÚSQUEDAS TEXTUALES IMPRECISAS (SEMILLAS, CLIENTES, ETC.)
 Cuando el usuario consulte por nombres de semillas, artículos, clientes, proveedores u otras entidades textuales, no asumas que el nombre será exacto.
 
