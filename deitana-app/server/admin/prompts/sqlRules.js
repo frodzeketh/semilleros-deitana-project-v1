@@ -288,7 +288,7 @@ Movimientos: para cada remesa, se registran los movimientos posteriores, indican
 
 Cálculo final: a partir de los movimientos, se puede calcular cuántas unidades fueron consumidas y cuántas quedan disponibles.
 
-Esta estructura es esencial para comprender si la semilla utilizada en las partidas de siembra proviene de material entregado por el cliente, y para llevar un control preciso de su uso.
+Esta estructura es esencial para comprender si la semilla utilizada en las partidas de siembra proviene de material entregado por el cliente, y para llevar un control preciso de su uso, tambien es importante para identificar cuantas semillas hay en camara.
 
 EJEMPLO:
 
