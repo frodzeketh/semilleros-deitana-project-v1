@@ -2077,6 +2077,58 @@ encargos: {
 
 
 
+
+
+
+
+
+
+
+
+  remesas_mov: {
+    descripcion:
+      "Esta tabla registra todos los movimientos asociados a las remesas de semillas, articulos, semillas en camara dentro de la empresa. Refleja tanto los ingresos por depósito como los consumos realizados durante el proceso productivo. Cada movimiento incluye información del tipo de operación, fechas, sobres y unidades involucradas.",
+    tabla: "remesas_mov",
+    columnas: {
+      id: "Identificador único del movimiento de remesa",
+      REM_REA: "ID de la remesa asociada (remesas_art)",
+      REM_RELA: "Relación opcional con otros movimientos o depósitos",
+      REM_TIPO: "Tipo de movimiento (por ejemplo: 'Deposito', 'PDA')",
+      REM_FEM: "Fecha efectiva del movimiento",
+      REM_FEA: "Fecha administrativa del movimiento",
+      REM_FEU: "Fecha de última edición del movimiento",
+      REM_UDS: "Cantidad de sobres involucrados en el movimiento",
+      REM_UXE: "Unidades asociadas al movimiento (por ejemplo, semillas)",
+    },
+    relaciones: [
+      {
+        tablaDestino: "remesas_art",
+        campoOrigen: "REM_REA",
+        campoDestino: "id",
+        tipo: "muchos-a-uno",
+        uso: "Permite identificar a qué remesa pertenece este movimiento",
+      },
+      {
+        tablaDestino: "deposito",
+        campoOrigen: "REM_RELA",
+        campoDestino: "id",
+        tipo: "opcional",
+        uso: "En algunos casos, vincula el movimiento a un depósito original",
+      }
+    ],
+  },
+  
+
+
+
+
+
+
+
+
+
+
+
 /* ================================================*/
 /* Ventas – Gestion – Orden de Recogida */
 /* ================================================*/

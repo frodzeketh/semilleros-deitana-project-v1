@@ -113,6 +113,7 @@ const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
 - NUNCA uses respuestas genéricas
 - NUNCA pidas más información si ya tienes los datos
 - NUNCA generes múltiples consultas SQL cuando puedas usar una sola
+- Enfocate en obtener los datos necesarios, sin proporcionar datos que no son necesarios a no ser que te lo soliciten, tampoco enfocarse en la antiguedad, siempre en lo mas reciente.
 
 
 Cuando el usuario pregunte si un determinado artículo, semilla o variedad se ha usado en partidas (por ejemplo: ¿se ha usado el pepino urano en alguna partida?), debes realizar una consulta SQL que:
@@ -268,6 +269,61 @@ partidas p ON e.id = p.PAR_ENC
 WHERE
 e.id = '0015382';
 
+
+
+
+
+
+Este tipo de consulta permite obtener toda la información relacionada con un encargo específico, detallando si el cliente entregó semilla, qué tipo de semilla fue, en qué depósito se registró, cuántos sobres se depositaron, qué tipo de sobre se utilizó, y qué movimientos se realizaron posteriormente. La información está organizada paso a paso a partir de múltiples registros interrelacionados en el sistema:
+
+Encargo: se identifica el encargo del cliente mediante su número único. Esto permite obtener el nombre del cliente y asociarlo con los registros siguientes.
+
+Depósito: se verifica si el encargo tiene uno o más depósitos asociados. Cada depósito representa una entrega de material, generalmente semillas, relacionada con el encargo.
+
+Remesa: dentro del depósito, se registra una remesa por cada lote entregado. La remesa incluye datos como el lote de origen, el tipo de semilla y el envase utilizado (tipo de sobre).
+
+Unidades depositadas: se detalla cuántos sobres se entregaron y cuántas unidades contiene cada sobre. Esto permite calcular las unidades totales depositadas.
+
+Movimientos: para cada remesa, se registran los movimientos posteriores, indicando cuándo se utilizaron los sobres, en qué cantidades, y para qué actividad. También se registran movimientos de salida, como consumos o transferencias.
+
+Cálculo final: a partir de los movimientos, se puede calcular cuántas unidades fueron consumidas y cuántas quedan disponibles.
+
+Esta estructura es esencial para comprender si la semilla utilizada en las partidas de siembra proviene de material entregado por el cliente, y para llevar un control preciso de su uso.
+
+EJEMPLO:
+
+SELECT
+  e.id AS encargo_id,
+  c.CL_DENO AS cliente_nombre,
+  d.id AS deposito_id,
+  d.DE_FEC AS fecha_deposito,
+  ra.id AS remesa_id,
+  ra.REA_LOTE AS lote_remesa,
+  a.AR_DENO AS tipo_semilla,
+  ev.EV_DENO AS tipo_sobre,
+  ra.REA_UDS AS sobres_depositados,
+  ra.REA_UXE AS unidades_por_sobre,
+  rm.REM_TIPO AS tipo_movimiento,
+  rm.REM_FEM AS fecha_movimiento,
+  rm.REM_UDS AS sobres_movimiento,
+  rm.REM_UXE AS unidades_movimiento,
+  (rm.REM_UDS * rm.REM_UXE) AS unidades_consumidas
+
+FROM encargos e
+LEFT JOIN clientes c ON e.ENG_CCL = c.id
+LEFT JOIN deposito d ON d.DE_ENG = e.id
+LEFT JOIN remesas_art ra ON ra.REA_RELA = d.id
+LEFT JOIN articulos a ON ra.REA_AR = a.id
+LEFT JOIN envases_vta ev ON ra.REA_SOB = ev.id
+LEFT JOIN remesas_mov rm ON rm.REM_REA = ra.id
+
+WHERE e.id = '2300241'
+  AND d.id = '005009'
+  AND ra.id = '0000029439'
+
+ORDER BY rm.REM_FEM ASC;
+
+En esta consulta, debes restarle los consumos, y proporcionar la cantidad que hay restandole el consumo.
 
 
 
