@@ -248,6 +248,22 @@ async function formatFinalResponse(results, query) {
     if (resultadosValidos.length < results.length) {
         respuesta += `\n(Nota: Se filtraron algunos registros sin información válida)`;
     }
+
+    // Enriquecer con guía ERP si la consulta lo sugiere (complementar SQL + RAG)
+    const requiereGuia = /ruta|men[úu]|erp|archivos\s*[–-]\s*generales|archivos\s*[–-]/i.test(query);
+    if (requiereGuia) {
+        try {
+            const guia = await ragInteligente.recuperarConocimientoRelevante(query, 'post-format');
+            if (guia && guia.trim().length > 0) {
+                const lineaRuta = guia.split('\n').find(l => /archivos\s*[–-]\s*generales/i.test(l));
+                if (lineaRuta) {
+                    respuesta += `\n\n📂 Guía ERP: ${lineaRuta.replace(/\*\*|#/g, '').trim()}`;
+                }
+            }
+        } catch (e) {
+            // Ignorar errores de guía para no romper la respuesta
+        }
+    }
     
     // Pregunta de seguimiento natural
     if (resultadosFinales.length === 1) {
@@ -747,7 +763,7 @@ async function fuzzySearchRetry(sql, userQuery) {
 const { promptBase } = require('../prompts/base');
 const { sqlRules, generarPromptSQL, generarPromptRAGSQL } = require('../prompts/sqlRules');
 const { comportamientoChatGPT, comportamiento, comportamientoAsistente } = require('../prompts/comportamiento');
-const { formatoRespuesta, generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador } = require('../prompts/formatoRespuesta');
+const { formatoRespuesta, generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador, generarPromptCombinado } = require('../prompts/formatoRespuesta');
 const ragInteligente = require('./ragInteligente');
 
 /**
@@ -784,7 +800,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     let necesitaRAG = intencion.tipo === 'rag_sql';
     try {
         const { evaluarNecesidadRAG } = require('./ragInteligente');
-        const evaluacion = await evaluarNecesidadRAG(mensaje, { umbralCaracteres: 600 });
+        const evaluacion = await evaluarNecesidadRAG(mensaje, { umbralCaracteres: 300 });
         necesitaRAG = necesitaRAG || evaluacion.necesitaRAG;
         contextoRAG = evaluacion.contextoRAG || '';
         console.log('🧠 [RAG] Evaluación dinámica → necesitaRAG:', necesitaRAG ? 'SÍ' : 'NO', '| contexto:', contextoRAG.length);
@@ -1303,9 +1319,25 @@ async function processQuery({ message, userId, conversationId }) {
                 if (resultados && resultados.length > 0) {
                     console.log('✅ [SQL] Resultados obtenidos:', resultados.length, 'registros');
                     
-                    // Formatear resultados y generar explicación
-                    const resultadosFormateados = formatResultsAsMarkdown(resultados);
-                    const respuestaFinal = await formatFinalResponse(resultados, message);
+                    // SI HAY CONTEXTO RAG en el prompt builder, combinar RAG + SQL en una respuesta única
+                    let respuestaFinal;
+                    if (promptBuilder && promptBuilder.prompt && promptBuilder.prompt.includes('CONOCIMIENTO EMPRESARIAL RELEVANTE:')) {
+                        const contextoRAGMatch = (promptBuilder.prompt.split('CONOCIMIENTO EMPRESARIAL RELEVANTE:')[1] || '').trim();
+                        // Extraer rutas presentes en el contexto si existen
+                        const rutasERP = contextoRAGMatch.split('\n').filter(l => /archivos\s*[–-]\s*/i.test(l)).map(l => l.replace(/\*\*|#/g, '').trim());
+                        const promptCombinado = generarPromptCombinado(message, resultados, contextoRAGMatch, rutasERP);
+                        const combResponse = await openai.chat.completions.create({
+                            model: promptBuilder.configModelo.modelo,
+                            messages: [{ role: 'system', content: promptCombinado }],
+                            max_tokens: Math.min(900, promptBuilder.configModelo.maxTokens),
+                            temperature: promptBuilder.configModelo.temperature
+                        });
+                        respuestaFinal = combResponse.choices[0].message.content;
+                    } else {
+                        // Formato clásico si no hubo RAG
+                        const resultadosFormateados = formatResultsAsMarkdown(resultados);
+                        respuestaFinal = await formatFinalResponse(resultados, message);
+                    }
                     
                     // Guardar mensaje al final (no bloquea)
                     guardarMensaje();

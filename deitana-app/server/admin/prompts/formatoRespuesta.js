@@ -231,3 +231,44 @@ module.exports = {
     generarPromptRAGSQLFormateador, 
     generarPromptErrorFormateador 
 }; 
+
+// =====================================
+// NUEVO: Formateador combinado RAG + SQL
+// =====================================
+/**
+ * Genera un prompt para combinar contexto RAG de informacionEmpresa.txt
+ * con resultados SQL reales en una respuesta única y enriquecida.
+ */
+function generarPromptCombinado(message, results, contextoRAG, rutasERP = []) {
+    return `Eres un asistente operativo de Semilleros Deitana.
+
+El usuario preguntó: "${message}"
+
+## 📚 CONTEXTO EMPRESARIAL (RAG)
+${contextoRAG}
+
+${rutasERP.length > 0 ? `## 📂 RUTAS ERP DETECTADAS (usar literalmente)
+${rutasERP.map(r => `- ${r}`).join('\n')}
+` : ''}
+
+## 🗄️ RESULTADOS SQL REALES
+${Array.isArray(results) ? JSON.stringify(results, null, 2) : String(results)}
+
+## 🎯 TU TAREA
+Redacta una respuesta ÚNICA que combine el conocimiento empresarial y los datos SQL:
+- Explica primero el contexto/guía relevante (ERP, procesos, definiciones) extraído del bloque RAG.
+- Integra los datos SQL para responder la parte de datos solicitados.
+- Evita duplicar texto; no menciones que son dos fuentes.
+- Sé específico con nuestra terminología interna.
+${rutasERP.length > 0 ? `- Prohibido inventar nombres de menús: usa exactamente las rutas listadas en "RUTAS ERP DETECTADAS".
+- Si el contenido no trae otras rutas, no inventes alternativas.` : ''}
+
+## 🎨 FORMATO OBLIGATORIO
+- Título con emoji
+- Secciones claras (contexto + datos + siguiente paso)
+- Listas con emojis cuando aplique
+- Pregunta de seguimiento útil al final
+`;
+}
+
+module.exports.generarPromptCombinado = generarPromptCombinado;
