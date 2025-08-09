@@ -779,25 +779,17 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 4. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, [], contextoPinecone);
     
-    // 5. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
+    // 5. RAG INTELIGENTE Y SELECTIVO (EVALUACIÓN DINÁMICA, SIN HARDCODE)
     let contextoRAG = '';
-    const necesitaRAG = intencion.tipo === 'rag_sql' || 
-                       mensaje.toLowerCase().includes('qué significa') ||
-                       mensaje.toLowerCase().includes('como funciona') ||
-                       mensaje.toLowerCase().includes('proceso') ||
-                       mensaje.toLowerCase().includes('protocolo') ||
-                       mensaje.length > 100;
-    
-    if (necesitaRAG) {
-        try {
-            console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
-            contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
-            console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
-        } catch (error) {
-            console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
-        }
-    } else {
-        console.log('⚡ [OPTIMIZACIÓN] Saltando RAG - no necesario para esta consulta');
+    let necesitaRAG = intencion.tipo === 'rag_sql';
+    try {
+        const { evaluarNecesidadRAG } = require('./ragInteligente');
+        const evaluacion = await evaluarNecesidadRAG(mensaje, { umbralCaracteres: 600 });
+        necesitaRAG = necesitaRAG || evaluacion.necesitaRAG;
+        contextoRAG = evaluacion.contextoRAG || '';
+        console.log('🧠 [RAG] Evaluación dinámica → necesitaRAG:', necesitaRAG ? 'SÍ' : 'NO', '| contexto:', contextoRAG.length);
+    } catch (error) {
+        console.log('⚠️ [RAG] Evaluación dinámica falló, fallback a intención:', error.message);
     }
     
     // 6. Ensamblar prompt final (OPTIMIZADO)

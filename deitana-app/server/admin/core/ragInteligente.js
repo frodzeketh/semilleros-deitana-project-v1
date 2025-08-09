@@ -1068,3 +1068,23 @@ module.exports = {
     calcularCostoEstimado,
     CONFIG_RAG
 };
+
+// =====================================
+// EVALUACIÓN SEMÁNTICA DE NECESIDAD RAG
+// =====================================
+/**
+ * Evalúa si la consulta requiere RAG basándose en recuperación real
+ * Devuelve bandera + contexto ya preparado si es relevante
+ */
+async function evaluarNecesidadRAG(consulta, { umbralCaracteres = 600 } = {}) {
+    try {
+        const contexto = await buscarVectorial(consulta);
+        const necesita = typeof contexto === 'string' && contexto.length >= umbralCaracteres;
+        return { necesitaRAG: necesita, contextoRAG: necesita ? contexto : '' };
+    } catch (error) {
+        console.error('❌ [RAG] Error evaluando necesidad RAG:', error.message);
+        return { necesitaRAG: false, contextoRAG: '' };
+    }
+}
+
+module.exports.evaluarNecesidadRAG = evaluarNecesidadRAG;
