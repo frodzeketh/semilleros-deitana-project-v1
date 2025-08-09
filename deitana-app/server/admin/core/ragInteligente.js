@@ -617,6 +617,8 @@ async function buscarEnPinecone(embedding) {
         
         const resultados = queryResponse.matches
             .filter(match => match.score > CONFIG_RAG.SIMILARITY_THRESHOLD)
+            // Excluir memorias conversacionales: usuario_importante / asistente_importante
+            .filter(match => !['usuario_importante','asistente_importante','preferencia','conversacion'].includes(match.metadata?.tipo))
             .map(match => ({
                 id: match.id,
                 contenido: match.metadata.texto || match.metadata.contenido || '',
@@ -674,7 +676,8 @@ function filtrarFragmentosOptimos(resultados, consulta) {
     const fragmentosConversacion = ordenados.filter(f => 
         !f.id.includes('informacion_empresa') && 
         !f.id.includes('conocimiento_empresa') &&
-        !(f.contenido && f.contenido.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL'))
+        !(f.contenido && f.contenido.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL')) &&
+        !['usuario_importante','asistente_importante','preferencia','conversacion'].includes(f.tipo)
     );
     
     console.log(`🏢 [RAG] Fragmentos de empresa oficial: ${fragmentosEmpresaOficial.length}`);

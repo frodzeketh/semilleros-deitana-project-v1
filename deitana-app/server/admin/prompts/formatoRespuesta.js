@@ -58,31 +58,17 @@ function ejemplo() {
  * @returns {string} Prompt para formateo
  */
 function generarPromptFormateador(message, sql, results) {
-    return `Eres un asistente operativo de Semilleros Deitana. 
-            
-El usuario preguntó: "${message}"
+    return `El usuario preguntó: "${message}"
 
 La IA generó este SQL: ${sql}
 
 Y estos son los resultados reales obtenidos de la base de datos:
 ${JSON.stringify(results, null, 2)}
 
-## 🏢 CONTEXTO EMPRESARIAL
+## 🏢 CONTEXTO Y TONO
 
-Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
-
-**TU IDENTIDAD:**
-- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
-- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
-- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
-- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
-
-**FORMA DE HABLAR:**
-- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
-- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
-- Habla como empleado que conoce los detalles internos
-- Sé específico sobre NUESTROS procesos reales
+- Mantén la identidad corporativa definida en el sistema (base.js)
+- Usa el tono interno de empleado y el estilo visual indicado
 
 ## 🎯 TU TAREA
 
@@ -121,24 +107,10 @@ Responde de forma natural, como si estuvieras explicando información del conoci
  * @returns {string} Prompt para formateo conversacional
  */
 function generarPromptConversacional(message, respuestaIA) {
-    return `Eres un asistente operativo de Semilleros Deitana.
+    return `## 🏢 CONTEXTO Y TONO
 
-## 🏢 CONTEXTO EMPRESARIAL
-
-Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
-
-**TU IDENTIDAD:**
-- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
-- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
-- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
-- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
-
-**FORMA DE HABLAR:**
-- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
-- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
-- Habla como empleado que conoce los detalles internos
-- Sé específico sobre NUESTROS procesos reales
+- Mantén la identidad corporativa definida en el sistema (base.js)
+- Usa el tono interno de empleado y el estilo visual indicado
 
 ## 🎯 TU TAREA
 
@@ -174,24 +146,10 @@ Mejora la respuesta manteniendo el contenido pero haciéndola más natural y atr
  * @returns {string} Prompt para formateo RAG + SQL
  */
 function generarPromptRAGSQLFormateador(message, respuestaIA) {
-    return `Eres un asistente operativo de Semilleros Deitana.
+    return `## 🏢 CONTEXTO Y TONO
 
-## 🏢 CONTEXTO EMPRESARIAL
-
-Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
-
-**TU IDENTIDAD:**
-- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
-- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
-- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
-- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
-
-**FORMA DE HABLAR:**
-- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
-- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
-- Habla como empleado que conoce los detalles internos
-- Sé específico sobre NUESTROS procesos reales
+- Mantén la identidad corporativa definida en el sistema (base.js)
+- Usa el tono interno de empleado y el estilo visual indicado
 
 ## 🎯 TU TAREA
 
@@ -232,24 +190,10 @@ Mejora la respuesta manteniendo el contenido pero haciéndola más natural y atr
  * @returns {string} Prompt para formateo de error
  */
 function generarPromptErrorFormateador(message) {
-    return `Eres un asistente operativo de Semilleros Deitana.
+    return `## 🏢 CONTEXTO Y TONO
 
-## 🏢 CONTEXTO EMPRESARIAL
-
-Eres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.
-
-**TU IDENTIDAD:**
-- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)
-- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas
-- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  
-- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad
-- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia
-
-**FORMA DE HABLAR:**
-- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"
-- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa
-- Habla como empleado que conoce los detalles internos
-- Sé específico sobre NUESTROS procesos reales
+- Mantén la identidad corporativa definida en el sistema (base.js)
+- Usa el tono interno de empleado y el estilo visual indicado
 
 ## 🎯 TU TAREA
 

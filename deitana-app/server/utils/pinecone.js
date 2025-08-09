@@ -4,7 +4,8 @@
 
 const { Pinecone } = require('@pinecone-database/pinecone');
 const { OpenAI } = require('openai');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // Inicializar clientes
 const pinecone = new Pinecone({
@@ -117,6 +118,8 @@ async function buscarRecuerdos(userIdOrConsulta, consultaOrLimit, limite = 5) {
         
         const recuerdos = queryResponse.matches
             .filter(match => match.score > 0.3) // Umbral más bajo para testing
+            // Evitar devolver memorias conversacionales si se busca conocimiento empresarial general
+            .filter(match => !['usuario_importante','asistente_importante'].includes(match.metadata?.tipo))
             .map(match => ({
                 id: match.id,
                 contenido: match.metadata.texto,
