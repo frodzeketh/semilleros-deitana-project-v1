@@ -1102,7 +1102,7 @@ function esPreguntaTelefonoCliente(userQuery, lastRealData) {
  * @example
  * await saveMessageToFirestore('user123', 'dame clientes', true);
  */
-async function saveMessageToFirestore(userId, message, isAdmin = true) {
+async function saveMessageToFirestore(userId, message, conversationId = 'admin_conversation', isAdmin = true) {
     try {
         const now = new Date();
         const messageData = {
@@ -1112,7 +1112,7 @@ async function saveMessageToFirestore(userId, message, isAdmin = true) {
         };
 
         const userChatRef = chatManager.chatsCollection.doc(userId);
-        const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+        const conversationRef = userChatRef.collection('conversations').doc(conversationId);
         
         // Primero obtenemos el documento actual
         const conversationDoc = await conversationRef.get();
@@ -1147,7 +1147,7 @@ async function saveMessageToFirestore(userId, message, isAdmin = true) {
  * @example
  * await saveAssistantMessageToFirestore('user123', 'Aquí tienes los clientes...');
  */
-async function saveAssistantMessageToFirestore(userId, message) {
+async function saveAssistantMessageToFirestore(userId, message, conversationId = 'admin_conversation') {
     try {
         const now = new Date();
         const messageData = {
@@ -1157,7 +1157,7 @@ async function saveAssistantMessageToFirestore(userId, message) {
         };
 
         const userChatRef = chatManager.chatsCollection.doc(userId);
-        const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+        const conversationRef = userChatRef.collection('conversations').doc(conversationId);
         
         // Primero obtenemos el documento actual
         const conversationDoc = await conversationRef.get();
@@ -1939,7 +1939,7 @@ async function processQuery({ message, userId, conversationId }) {
             const respuestaTrivial = await procesarConsultaTrivial(message, historialConversacion);
             
             // IMPORTANTE: Guardar en historial para preservar contexto (ASÍNCRONO)
-            saveAssistantMessageToFirestore(userId, respuestaTrivial).catch(err => 
+            saveAssistantMessageToFirestore(userId, respuestaTrivial, conversationId).catch(err => 
                 console.error('❌ [FIRESTORE] Error guardando mensaje trivial:', err.message)
             );
             
@@ -2032,7 +2032,7 @@ async function processQuery({ message, userId, conversationId }) {
                 // Manejo de errores del análisis SQL profesional
                 console.error('❌ [SQL-PARSER] Error inesperado en análisis SQL profesional:', error.message);
                 const respuestaError = `Ocurrió un error inesperado al analizar la consulta SQL. Por favor, revisa tu consulta o intenta de nuevo.`;
-                saveAssistantMessageToFirestore(userId, respuestaError).catch(err => 
+                saveAssistantMessageToFirestore(userId, respuestaError, conversationId).catch(err => 
                     console.error('❌ [FIRESTORE] Error guardando respuesta de error SQL:', err.message)
                 );
                 return {
@@ -2046,7 +2046,7 @@ async function processQuery({ message, userId, conversationId }) {
         }
         // Si no hay SQL, continuar con respuesta conversacional
         // IMPORTANTE: Guardar en historial para preservar contexto (ASÍNCRONO)
-        saveAssistantMessageToFirestore(userId, respuestaIA).catch(err => 
+        saveAssistantMessageToFirestore(userId, respuestaIA, conversationId).catch(err => 
             console.error('❌ [FIRESTORE] Error guardando respuesta conversacional:', err.message)
         );
         const tiempoTotal = Date.now() - tiempoInicio;
@@ -2061,7 +2061,7 @@ async function processQuery({ message, userId, conversationId }) {
         // Manejo de errores generales de la llamada principal
         console.error('❌ [SISTEMA-CHATGPT] Error inesperado en el procesamiento:', error.message);
         const respuestaError = `Ocurrió un error inesperado al procesar tu consulta. Por favor, intenta de nuevo más tarde.`;
-        saveAssistantMessageToFirestore(userId, respuestaError).catch(err => 
+        saveAssistantMessageToFirestore(userId, respuestaError, conversationId).catch(err => 
             console.error('❌ [FIRESTORE] Error guardando respuesta de error general:', err.message)
         );
         return {
@@ -2132,7 +2132,7 @@ async function processQueryStream({ message, userId, conversationId, response })
 
     try {
         // No esperar a que termine de guardar - hacer async
-        saveMessageToFirestore(userId, message).catch(err => 
+        saveMessageToFirestore(userId, message, conversationId).catch(err => 
             console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
         );
         console.log('💾 [FIRESTORE] Guardando mensaje del usuario (async)...');
@@ -2614,7 +2614,7 @@ Consultamos cuántas partidas de siembra se realizaron por año.
             }
 
             // Guardar respuesta completa en Firestore (async)
-            saveAssistantMessageToFirestore(userId, respuestaPersonalizada).catch(err =>
+            saveAssistantMessageToFirestore(userId, respuestaPersonalizada, conversationId).catch(err =>
                 console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
             );
 
