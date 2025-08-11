@@ -34,7 +34,9 @@
     "rehype-raw": "^7.0.0",
     "remark-emoji": "^5.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "sql-parser": "^0.5.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"

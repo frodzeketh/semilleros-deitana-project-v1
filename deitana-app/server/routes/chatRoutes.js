@@ -9,7 +9,7 @@ const { processQueryStream } = require('../admin/core/openAI');
 router.use(verifyToken);
 
 // =====================================
-// RUTA PARA STREAMING EN TIEMPO REAL
+// RUTA OPTIMIZADA PARA CHAT EN TIEMPO REAL
 // =====================================
 router.post('/stream', async (req, res) => {
     try {
@@ -17,66 +17,63 @@ router.post('/stream', async (req, res) => {
         const userId = req.user.uid;
         const isAdmin = req.user.isAdmin;
         
-        console.log('🚀 [STREAM-ROUTE] Iniciando streaming para usuario:', userId);
-        console.log('🚀 [STREAM-ROUTE] Mensaje:', message);
-        console.log('🚀 [STREAM-ROUTE] Conversación ID:', conversationId);
-        console.log('🚀 [STREAM-ROUTE] Es admin:', isAdmin);
+        console.log('🚀 [STREAM-ROUTE-OPTIMIZADO] Iniciando chat optimizado para usuario:', userId);
+        console.log('🚀 [STREAM-ROUTE-OPTIMIZADO] Mensaje:', message);
+        console.log('🚀 [STREAM-ROUTE-OPTIMIZADO] Conversación ID:', conversationId);
+        console.log('🚀 [STREAM-ROUTE-OPTIMIZADO] Es admin:', isAdmin);
         
         let currentConversationId = conversationId;
 
         // Si no hay conversación o es temporal, crear una nueva
         if (!currentConversationId || currentConversationId.startsWith('temp_')) {
             currentConversationId = await chatManager.createConversation(userId, message);
-            console.log('🆕 [STREAM-ROUTE] Nueva conversación creada:', currentConversationId);
+            console.log('🆕 [STREAM-ROUTE-OPTIMIZADO] Nueva conversación creada:', currentConversationId);
         }
 
         // Verificar que la conversación existe
         try {
             await chatManager.verifyChatOwnership(userId, currentConversationId);
         } catch (error) {
-            console.error('❌ [STREAM-ROUTE] Error al verificar la conversación:', error);
+            console.error('❌ [STREAM-ROUTE-OPTIMIZADO] Error al verificar la conversación:', error);
             return res.status(404).json({
                 success: false,
                 error: 'Conversación no encontrada'
             });
         }
 
-        // Agregar mensaje del usuario al historial
-        await chatManager.addMessageToConversation(userId, currentConversationId, {
-            role: 'user',
-            content: message
+        // processQueryStream maneja todos los headers y streaming automáticamente
+
+        // Llamar a la función optimizada
+        const tiempoInicio = Date.now();
+        const result = await processQueryStream({ 
+            message, 
+            userId, 
+            conversationId: currentConversationId,
+            response: res
         });
+        const tiempoTotal = Date.now() - tiempoInicio;
+
+        // processQueryStream maneja todo el streaming y respuesta automáticamente
         
-        // Llamar a la función de streaming que maneja la respuesta según el rol
-        let streamResult;
-        if (isAdmin) {
-            streamResult = await processQueryStream({ 
-                message, 
-                userId, 
-                conversationId: currentConversationId,
-                response: res 
-            });
-        } else {
-            // Para empleados, usar función de streaming específica (si existe)
-            streamResult = await processQueryStream({ 
-                message, 
-                userId, 
-                conversationId: currentConversationId,
-                response: res 
-            });
-        }
-        
-        // Nota: La respuesta ya fue enviada por processQueryStream
-        console.log('✅ [STREAM-ROUTE] Stream completado exitosamente');
+        console.log('✅ [STREAM-ROUTE-OPTIMIZADO] Chat completado en', tiempoTotal, 'ms');
+        console.log('📊 [STREAM-ROUTE-OPTIMIZADO] Optimizado:', result.optimizado, 'Cache hit:', result.cacheHit);
         
     } catch (error) {
-        console.error('❌ [STREAM-ROUTE] Error en streaming:', error);
+        console.error('❌ [STREAM-ROUTE-OPTIMIZADO] Error en chat:', error);
         
         if (!res.headersSent) {
-            res.status(500).json({ 
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
                 success: false, 
-                error: 'Error interno del servidor en streaming' 
-            });
+                error: 'Error interno del servidor' 
+            }));
+        } else {
+            res.write(JSON.stringify({
+                type: 'error',
+                message: 'Error procesando la consulta',
+                timestamp: Date.now()
+            }) + '\n');
+            res.end();
         }
     }
 });

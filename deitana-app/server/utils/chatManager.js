@@ -87,6 +87,35 @@ class ChatManager {
         return conversations;
     }
 
+    // Obtener conversaciones recientes del usuario para continuidad de contexto
+    async getRecentConversations(userId, limit = 3) {
+        if (!userId) {
+            throw new Error('userId es requerido');
+        }
+
+        try {
+            const snapshot = await this.chatsCollection
+                .doc(userId)
+                .collection('conversations')
+                .orderBy('updatedAt', 'desc')
+                .limit(limit)
+                .get();
+
+            const conversations = [];
+            snapshot.forEach(doc => {
+                conversations.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            return conversations;
+        } catch (error) {
+            console.error('Error obteniendo conversaciones recientes:', error);
+            return [];
+        }
+    }
+
     async getConversationMessages(userId, conversationId) {
         const conversationRef = this.chatsCollection
             .doc(userId)
