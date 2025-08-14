@@ -8,7 +8,7 @@ const { procesarYAlmacenarConocimiento } = require('./admin/core/ragInteligente'
 const fs = require('fs');
 const path = require('path');
 
-async function limpiarPinecone({ noReload = false } = {}) {
+async function limpiarPinecone() {
     console.log('🧹 [LIMPIEZA] Iniciando limpieza completa de Pinecone...');
     
     try {
@@ -18,40 +18,37 @@ async function limpiarPinecone({ noReload = false } = {}) {
         
         const index = pinecone.Index(process.env.PINECONE_INDEX || 'memoria-deitana');
         
-        // 1. Borrado en bucle hasta vaciar (topK limitado)
-        let totalEliminados = 0;
-        let iteracion = 0;
-        while (true) {
-            iteracion++;
-            console.log(`📊 [LIMPIEZA] Iteración ${iteracion}: obteniendo hasta 1000 vectores...`);
-            const queryResponse = await index.query({
-                vector: new Array(1536).fill(0.1),
-                topK: 1000,
-                includeMetadata: true
-            });
-            const encontrados = queryResponse.matches.length;
-            console.log(`📊 [LIMPIEZA] Encontrados ${encontrados} vectores para eliminar`);
-            if (encontrados === 0) {
-                break;
-            }
-            const idsAEliminar = queryResponse.matches.map(m => m.id);
+        // 1. Obtener todos los vectores existentes
+        console.log('📊 [LIMPIEZA] Obteniendo lista de vectores existentes...');
+        
+        const queryResponse = await index.query({
+            vector: new Array(1536).fill(0.1), // Vector dummy
+            topK: 1000, // Obtener todos los vectores
+            includeMetadata: true
+        });
+        
+        console.log(`📊 [LIMPIEZA] Encontrados ${queryResponse.matches.length} vectores para eliminar`);
+        
+        if (queryResponse.matches.length === 0) {
+            console.log('✅ [LIMPIEZA] Pinecone ya está vacío');
+        } else {
+            // 2. Extraer IDs de todos los vectores
+            const idsAEliminar = queryResponse.matches.map(match => match.id);
+            
+            console.log('🗑️ [LIMPIEZA] Eliminando vectores...');
+            
+            // Eliminar en lotes de 100 (límite de Pinecone)
             const LOTE_SIZE = 100;
             for (let i = 0; i < idsAEliminar.length; i += LOTE_SIZE) {
                 const lote = idsAEliminar.slice(i, i + LOTE_SIZE);
                 await index.deleteMany(lote);
-                totalEliminados += lote.length;
-                console.log(`🗑️ [LIMPIEZA] Eliminados ${totalEliminados} acumulados`);
+                console.log(`🗑️ [LIMPIEZA] Eliminados ${Math.min(i + LOTE_SIZE, idsAEliminar.length)}/${idsAEliminar.length} vectores`);
             }
-            // Pequeña pausa para evitar rate limit
-            await new Promise(r => setTimeout(r, 300));
+            
+            console.log('✅ [LIMPIEZA] Todos los vectores eliminados exitosamente');
         }
-        console.log('✅ [LIMPIEZA] Índice vaciado completamente');
         
-        if (noReload) {
-            console.log('\n🛑 [LIMPIEZA] Omitiendo recarga por bandera --no-reload. El índice quedará VACÍO.');
-            return;
-        }
-        // 3. Recargar conocimiento real (solo empresa oficial)
+        // 3. Recargar conocimiento real
         console.log('\n📚 [LIMPIEZA] Recargando conocimiento real del archivo...');
         
         const archivoPath = path.join(__dirname, 'admin', 'data', 'informacionEmpresa.txt');
@@ -85,7 +82,8 @@ async function limpiarPinecone({ noReload = false } = {}) {
         
         const consultas = [
             '¿Cuál es la sección de tarifas?',
-            '¿Qué información hay sobre zonas?'
+            '¿Qué información hay sobre zonas?',
+            '¿Cómo funciona la maquinaria?'
         ];
         
         for (const consulta of consultas) {
@@ -117,10 +115,7 @@ async function limpiarPinecone({ noReload = false } = {}) {
 }
 
 // Ejecutar limpieza
-const args = process.argv.slice(2);
-const noReload = args.includes('--no-reload') || args.includes('-n');
-
-limpiarPinecone({ noReload }).then(() => {
+limpiarPinecone().then(() => {
     console.log('\n✅ [LIMPIEZA] Proceso completado');
 }).catch(error => {
     console.error('❌ [LIMPIEZA] Error en el proceso:', error);

@@ -6,10 +6,6 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "pinecone:clean": "node limpiar-pinecone.js --no-reload",
-    "pinecone:reset": "node limpiar-pinecone.js",
-    "pinecone:load": "node admin/scripts/cargar-conocimiento.js",
-    "pinecone:reindex": "node reindexar-informacion-empresa.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -34,9 +30,7 @@
     "rehype-raw": "^7.0.0",
     "remark-emoji": "^5.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0",
-    "sql-parser": "^0.5.0",
-    "sqlite3": "^5.1.7"
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"
