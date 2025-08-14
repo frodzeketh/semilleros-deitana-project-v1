@@ -17,6 +17,8 @@ console.log('🟢 Se está usando: sqlRules.js (admin/prompts)');
 
 const sqlRules = `🎯 REGLAS SQL CRÍTICAS:
 
+{{ESTRUCTURA_BD}}
+
 ## 🚨 FORMATO OBLIGATORIO PARA SQL:
 - **SIEMPRE** usa etiquetas <sql>...</sql> para encerrar consultas SQL
 - **NUNCA** uses bloques de código markdown (  sql)
@@ -262,86 +264,23 @@ Ejemplo:
 
 
 
-Para obtener toda la información relevante de un encargo específico, incluyendo los detalles de sus partidas asociadas (cada una correspondiente a una siembra planificada, ya sea de cabeza, pie o injerto), es necesario realizar una consulta que relacione la tabla encargos con la tabla partidas. Esta relación se da a través del campo PAR_ENC, que contiene el número de encargo al que pertenece cada partida.
 
-Además, para analizar siembras programadas, la columna adecuada para filtrar por fecha es PAR_FECS (fecha de siembra), no PAR_FEC (fecha de carga). Otros campos relevantes incluyen PAR_NMSM (nombre de la semilla), PAR_TOT (cantidad sembrada), etc.
-
-Ejemplo: 
-SELECT e.id AS numero_encargo, e.ENG_CLFRA AS cliente_factura, e.ENG_ALM AS almacen, e.ENG_FEC AS fecha_encargo, e.ENG_OBS AS observaciones_encargo,
-p.id AS id_partida,
-p.PAR_FECS AS fecha_siembra,
-p.PAR_TIPO AS tipo,
-p.PAR_SEM AS semilla_id,
-p.PAR_NMSM AS nombre_semilla,
-p.PAR_CAS AS casa,
-p.PAR_TOT AS total,
-p.PAR_DENO AS observaciones_partida
-
-FROM
-encargos e
-LEFT JOIN
-partidas p ON e.id = p.PAR_ENC
-WHERE
-e.id = '0015382';
+Usos:
+"¿Qué semillas hay en cámara?" → Ejecutar tal cual.
+"¿Tenemos semilla X en cámara?" → Añadir WHERE a.AR_DENO LIKE '%TOMATE ZOCO%'
+"¿Cuál es el stock que más hay en cámara?" → El primero del ORDER BY DESC.
 
 
-
-
-
-
-Este tipo de consulta permite obtener toda la información relacionada con un encargo específico, detallando si el cliente entregó semilla, qué tipo de semilla fue, en qué depósito se registró, cuántos sobres se depositaron, qué tipo de sobre se utilizó, y qué movimientos se realizaron posteriormente. La información está organizada paso a paso a partir de múltiples registros interrelacionados en el sistema:
-
-Encargo: se identifica el encargo del cliente mediante su número único. Esto permite obtener el nombre del cliente y asociarlo con los registros siguientes.
-
-Depósito: se verifica si el encargo tiene uno o más depósitos asociados. Cada depósito representa una entrega de material, generalmente semillas, relacionada con el encargo.
-
-Remesa: dentro del depósito, se registra una remesa por cada lote entregado. La remesa incluye datos como el lote de origen, el tipo de semilla y el envase utilizado (tipo de sobre).
-
-Unidades depositadas: se detalla cuántos sobres se entregaron y cuántas unidades contiene cada sobre. Esto permite calcular las unidades totales depositadas.
-
-Movimientos: para cada remesa, se registran los movimientos posteriores, indicando cuándo se utilizaron los sobres, en qué cantidades, y para qué actividad. También se registran movimientos de salida, como consumos o transferencias.
-
-Cálculo final: a partir de los movimientos, se puede calcular cuántas unidades fueron consumidas y cuántas quedan disponibles.
-
-Esta estructura es esencial para comprender si la semilla utilizada en las partidas de siembra proviene de material entregado por el cliente, y para llevar un control preciso de su uso, tambien es importante para identificar cuantas semillas hay en camara.
-
-EJEMPLO:
-
-SELECT
-  e.id AS encargo_id,
-  c.CL_DENO AS cliente_nombre,
-  d.id AS deposito_id,
-  d.DE_FEC AS fecha_deposito,
-  ra.id AS remesa_id,
-  ra.REA_LOTE AS lote_remesa,
+ SELECT
   a.AR_DENO AS tipo_semilla,
-  ev.EV_DENO AS tipo_sobre,
-  ra.REA_UDS AS sobres_depositados,
-  ra.REA_UXE AS unidades_por_sobre,
-  rm.REM_TIPO AS tipo_movimiento,
-  rm.REM_FEM AS fecha_movimiento,
-  rm.REM_UDS AS sobres_movimiento,
-  rm.REM_UXE AS unidades_movimiento,
-  (rm.REM_UDS * rm.REM_UXE) AS unidades_consumidas
-
-FROM encargos e
-LEFT JOIN clientes c ON e.ENG_CCL = c.id
-LEFT JOIN deposito d ON d.DE_ENG = e.id
-LEFT JOIN remesas_art ra ON ra.REA_RELA = d.id
+  ra.REA_LOTE AS lote_remesa,
+  SUM(rm.REM_UDS * rm.REM_UXE) AS stock_actual
+FROM remesas_art ra
 LEFT JOIN articulos a ON ra.REA_AR = a.id
-LEFT JOIN envases_vta ev ON ra.REA_SOB = ev.id
 LEFT JOIN remesas_mov rm ON rm.REM_REA = ra.id
-
-WHERE e.id = '2300241'
-  AND d.id = '005009'
-  AND ra.id = '0000029439'
-
-ORDER BY rm.REM_FEM ASC;
-
-En esta consulta, debes restarle los consumos, y proporcionar la cantidad que hay restandole el consumo.
-
-
-
+GROUP BY a.AR_DENO, ra.REA_LOTE
+HAVING SUM(rm.REM_UDS * rm.REM_UXE) > 0
+ORDER BY stock_actual DESC;
 
 
 
@@ -391,7 +330,7 @@ Esta lógica se aplica también para nombres de clientes, proveedores, artículo
 
 Responde SOLO con la consulta SQL, sin explicaciones adicionales.`;
 
-const mapaERP = require('../core/mapaERP');
+const mapaERP = require('../../core/mapaERP');
 
 /**
  * Obtiene el contenido del mapa ERP relevante para la consulta

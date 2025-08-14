@@ -37,12 +37,12 @@ require('dotenv').config();
 const mapaERP = require('./mapaERP');
 
 // Importaciones de prompts
-const { formatoObligatorio } = require('../prompts/formatoObligatorio');
-const { promptGlobal } = require('../prompts/promptGlobal');
-const { promptBase } = require('../prompts/base');
-const { sqlRules, generarPromptSQL, generarPromptRAGSQL } = require('../prompts/sqlRules');
-const { comportamientoChatGPT, comportamiento, comportamientoAsistente } = require('../prompts/comportamiento');
-const { formatoRespuesta, generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador, generarPromptCombinado } = require('../prompts/formatoRespuesta');
+const { formatoObligatorio } = require('../prompts/COMPORTAMIENTO/formatoObligatorio');
+const { promptGlobal } = require('../prompts/COMPORTAMIENTO/promptGlobal');
+const { promptBase } = require('../prompts/COMPORTAMIENTO/base');
+const { sqlRules, generarPromptSQL, generarPromptRAGSQL } = require('../prompts/SQL/sqlRules');
+const { comportamientoChatGPT, comportamiento, comportamientoAsistente } = require('../prompts/COMPORTAMIENTO/comportamiento');
+const { formatoRespuesta, generarPromptFormateador, generarPromptConversacional, generarPromptRAGSQLFormateador, generarPromptErrorFormateador, generarPromptCombinado } = require('../prompts/COMPORTAMIENTO/formatoRespuesta');
 const ragInteligente = require('./ragInteligente');
 
 // Inicializar el cliente de OpenAI
@@ -68,7 +68,8 @@ let promptsPrecompilados = {
     comportamiento: null,
     formatoObligatorio: null,
     promptGlobal: null,
-    mapaERPContexto: null
+    mapaERPContexto: null,
+    explicacionDatos: null
 };
 
 /**
@@ -143,12 +144,23 @@ function construirPromptOptimizado(mensaje, necesitaRAG = false, contextoRAG = '
     
     // Agregar historial conversacional optimizado
     if (historial && historial.length > 0) {
-        const ultimosMensajes = historial.slice(-4); // Solo últimos 4 mensajes
+        const ultimosMensajes = historial.slice(-6); // Aumentar a 6 mensajes para mejor contexto
         const contextoConversacional = ultimosMensajes.map(msg => 
             `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
         ).join('\n');
         
         promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n`;
+        
+        // Agregar instrucción específica para preguntas de seguimiento
+        const ultimoMensaje = mensaje.toLowerCase();
+        if (ultimoMensaje.includes('a que') || ultimoMensaje.includes('a qué') || 
+            ultimoMensaje.includes('corresponde') || ultimoMensaje.includes('pertenece')) {
+            promptFinal += `## ⚠️ INSTRUCCIÓN ESPECIAL PARA PREGUNTAS DE SEGUIMIENTO\n\n`;
+            promptFinal += `El usuario está haciendo una pregunta de seguimiento que hace referencia a información mencionada anteriormente. `;
+            promptFinal += `DEBES usar el contexto conversacional para responder específicamente a su pregunta. `;
+            promptFinal += `NO des respuestas genéricas. Si no tienes suficiente información en el contexto, `;
+            promptFinal += `pregunta específicamente qué información necesita el usuario.\n\n`;
+        }
     }
     
     return promptFinal;
@@ -1662,89 +1674,40 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
  * // builder.configModelo.modelo === 'gpt-4o'
  */
 async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contextoPinecone = '', contextoDatos = '', historialConversacion = [], modoDesarrollo = false) {
-    console.log('🚀 [PROMPT-BUILDER] Construyendo prompt ULTRA-OPTIMIZADO...');
+    console.log('🚀 [PROMPT-BUILDER] Construyendo prompt SOLO PARA SQL...');
     
-    // 1. LA IA DECIDE TODO - SIN ANÁLISIS PREVIO
-    console.log('🧠 [PROMPT-BUILDER] La IA analizará la intención directamente...');
-    
-    // 2. Modelo único optimizado para todas las tareas
+    // 1. Modelo único optimizado para SQL
     const configModelo = {
         modelo: 'gpt-4o',
-        maxTokens: 2000,
-        temperature: 0.3,
-        razon: 'Modelo único: gpt-4o maneja SQL, conversación y RAG+SQL con excelente rendimiento'
+        maxTokens: 1000,
+        temperature: 0.1,
+        razon: 'Modelo optimizado para generación SQL precisa'
     };
     
-    // 3. SIEMPRE incluir mapaERP - la IA decide si lo usa
+    // 2. Construir contexto de mapaERP
     const contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
-    console.log('📋 [MAPA-ERP] Incluyendo mapaERP completo - IA decide si lo usa');
+    console.log('📋 [MAPA-ERP] Incluyendo mapaERP completo para SQL');
     
-    // 4. Construir instrucciones naturales (sin análisis previo)
-    const instruccionesNaturales = construirInstruccionesNaturales({ tipo: 'universal' }, [], contextoPinecone);
+    // 3. Usar sqlRules directamente con contexto de mapaERP
+    const promptSQL = sqlRules.replace('{{ESTRUCTURA_BD}}', contextoMapaERP);
     
-    // 5. RAG INTELIGENTE - LA IA DECIDE TODO
-    let contextoRAG = '';
-    let necesitaRAG = true; // ✅ RAG SIEMPRE activo - la IA decide si lo usa
-    
-    try {
-        const { evaluarNecesidadRAG } = require('./ragInteligente');
-        const evaluacion = await evaluarNecesidadRAG(mensaje, { umbralCaracteres: 200 });
-        contextoRAG = evaluacion.contextoRAG || '';
-        console.log('🧠 [RAG] IA evalúa necesidad → contexto:', contextoRAG.length);
-    } catch (error) {
-        console.log('⚠️ [RAG] Evaluación falló, pero RAG sigue disponible:', error.message);
-    }
-    
-    // 6. Ensamblar prompt final (OPTIMIZADO)
-    const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
-    const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
-    let promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
-    
-    // Añadir identidad corporativa SIEMPRE (centralizada en base.js)
-    promptFinal += `${promptBase}\n\n`;
-    
-    // Añadir estructura de datos SIEMPRE - la IA decide si la usa
-    promptFinal += `${contextoMapaERP}\n\n`;
-    
-    // Añadir reglas SQL SIEMPRE - la IA decide si las usa
-    promptFinal += `${sqlRules}\n\n`;
-    
-    // Añadir contexto RAG si existe
-    if (contextoRAG) {
-        promptFinal += `CONOCIMIENTO EMPRESARIAL RELEVANTE:\n${contextoRAG}\n\n`;
-    }
-    
-    // Añadir contexto de datos previos si existe
-    if (contextoDatos) {
-        promptFinal += `DATOS DE CONTEXTO PREVIO:\n${contextoDatos}\n\n`;
-    }
-    
-    // Añadir contexto conversacional de forma inteligente
-    if (historialConversacion && historialConversacion.length > 0) {
-        const ultimosMensajes = historialConversacion.slice(-4);
-        const contextoConversacional = ultimosMensajes.map(msg => 
-            `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
-        ).join('\n');
-        
-        promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
-    }
-    
-    console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP: SIEMPRE, RAG:', necesitaRAG ? 'SÍ' : 'NO');
+    console.log('✅ [PROMPT-BUILDER] Prompt SQL construido usando sqlRules existente');
     
     return {
-        prompt: promptFinal,
+        prompt: promptSQL,
         configModelo: configModelo,
-        intencion: { tipo: 'universal', confianza: 1.0 }, // IA decide todo
-        tablasRelevantes: [], // IA analiza todas las tablas del mapaERP
+        intencion: { tipo: 'sql', confianza: 1.0 },
+        tablasRelevantes: Object.keys(mapaERP),
         metricas: {
-            usaIA: true, // IA analiza mapaERP completo
+            usaIA: true,
             tablasDetectadas: Object.keys(mapaERP).length,
-            llamadasIA: 1, // ¡Solo UNA llamada!
+            llamadasIA: 1,
             optimizado: true,
             modeloUnico: 'gpt-4o',
-            mapaERPIncluido: true, // SIEMPRE incluido
-            ragIncluido: necesitaRAG,
-            sinHardcodeo: true // ✅ Eliminado análisis artificial
+            mapaERPIncluido: true,
+            ragIncluido: false, // SQL no necesita RAG
+            sinHardcodeo: true,
+            soloSQL: true // ✅ Solo para generación SQL
         }
     };
 }
@@ -2130,7 +2093,138 @@ async function processQueryStream({ message, userId, conversationId, response })
     const infoUsuario = await obtenerInfoUsuario(userId);
     const historialConversacion = await obtenerHistorialConversacion(userId, conversationId);
 
+    // =====================================
+    // 1. FAST-PATH PARA CONSULTAS TRIVIALES (PRESERVA CONTEXTO)
+    // =====================================
+    
+    console.log('⚡ [FAST-PATH] Verificando si es consulta trivial...');
     try {
+        if (esConsultaTrivial(message, historialConversacion)) {
+            console.log('⚡ [FAST-PATH] Consulta trivial detectada...');
+            const tiempoTrivial = Date.now();
+            
+            // Generar respuesta instantánea (sin API)
+            const respuestaTrivial = await procesarConsultaTrivial(message, historialConversacion);
+            
+            // Personalizar respuesta
+            const respuestaPersonalizada = personalizarRespuesta(respuestaTrivial, infoUsuario.nombre);
+            
+            const tiempoTotal = Date.now() - tiempoTrivial;
+            console.log('✅ [FAST-PATH] Respuesta trivial en', tiempoTotal, 'ms');
+            
+            // Configurar headers para streaming
+            response.writeHead(200, {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Transfer-Encoding': 'chunked',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+            });
+            
+            // Enviar respuesta trivial inmediatamente
+            response.write(JSON.stringify({
+                type: 'chunk',
+                content: respuestaPersonalizada,
+                timestamp: Date.now()
+            }) + '\n');
+            
+            // Enviar señal de finalización
+            response.write(JSON.stringify({
+                type: 'end',
+                fullResponse: respuestaPersonalizada,
+                conversationId: conversationId,
+                tokenCount: respuestaPersonalizada.length,
+                timestamp: Date.now()
+            }) + '\n');
+            
+            response.end();
+            
+            // Guardar respuesta en Firestore (async)
+            saveAssistantMessageToFirestore(userId, respuestaPersonalizada, conversationId).catch(err =>
+                console.error('❌ [FIRESTORE] Error guardando respuesta trivial:', err.message)
+            );
+            
+            // Guardar en historial de chat (async)
+            if (conversationId) {
+                chatManager.addMessageToConversation(userId, conversationId, {
+                    role: 'assistant',
+                    content: respuestaPersonalizada
+                }).catch(err =>
+                    console.error('❌ [CHAT-HISTORY] Error guardando respuesta trivial:', err.message)
+                );
+            }
+            
+            return { success: true, streamed: true, conversationId, fastPath: true };
+            
+        } else {
+            console.log('⚡ [FAST-PATH] No es consulta trivial, continuando con flujo normal...');
+        }
+    } catch (error) {
+        console.log('⚠️ [FAST-PATH] Error, continuando con flujo normal:', error.message);
+    }
+
+    try {
+        // Verificar cache LRU para respuestas similares
+        const cacheKey = `${userId}_${message.toLowerCase().substring(0, 50)}`;
+        const respuestaCacheada = trivialResponseCache.get(cacheKey);
+        
+        if (respuestaCacheada) {
+            console.log('⚡ [CACHE-LRU] Respuesta encontrada en cache LRU');
+            
+            // Configurar headers para streaming
+            response.writeHead(200, {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Transfer-Encoding': 'chunked',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+            });
+            
+            // Enviar respuesta cacheada
+            response.write(JSON.stringify({
+                type: 'chunk',
+                content: respuestaCacheada,
+                timestamp: Date.now()
+            }) + '\n');
+            
+            // Enviar señal de finalización
+            response.write(JSON.stringify({
+                type: 'end',
+                fullResponse: respuestaCacheada,
+                conversationId: conversationId,
+                tokenCount: respuestaCacheada.length,
+                timestamp: Date.now()
+            }) + '\n');
+            
+            response.end();
+            
+            // Guardar en Firestore (async)
+            saveAssistantMessageToFirestore(userId, respuestaCacheada, conversationId).catch(err =>
+                console.error('❌ [FIRESTORE] Error guardando respuesta cacheada:', err.message)
+            );
+            
+            return { success: true, streamed: true, conversationId, cacheHit: true };
+        }
+        
+        // No esperar a que termine de guardar - hacer async
+        saveMessageToFirestore(userId, message, conversationId).catch(err => 
+            console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
+        );
+        console.log('💾 [FIRESTORE] Guardando mensaje del usuario (async)...');
+
+        // =====================================
+        // 3. HEURÍSTICAS RAG PARA OPTIMIZAR BÚSQUEDA DE MEMORIA
+        // =====================================
+        
+        // Aplicar heurísticas RAG para optimizar búsqueda de memoria
+        const necesitaRAG = necesitaRAGHeuristica(message);
+        console.log('🔍 [HEURISTICAS-RAG] Análisis heurístico:', {
+            necesitaRAG: necesitaRAG,
+            mensaje: message.substring(0, 50) + '...'
+        });
+        
         // No esperar a que termine de guardar - hacer async
         saveMessageToFirestore(userId, message, conversationId).catch(err => 
             console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
@@ -2149,7 +2243,8 @@ async function processQueryStream({ message, userId, conversationId, response })
         const esRespuestaCorta = message.trim().length < 15;
         const necesitaContexto = consultasQueNecesitanMemoria.test(message) || esRespuestaCorta || historialConversacion.length > 0;
         
-        if (necesitaContexto) {
+        // Aplicar heurística RAG para optimizar búsqueda
+        if (necesitaRAG && necesitaContexto) {
             console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
             
             // Agregar contexto conversacional al contexto de memoria
@@ -2209,13 +2304,32 @@ async function processQueryStream({ message, userId, conversationId, response })
         // Agregar historial conversacional como mensajes reales
         if (historialConversacion && historialConversacion.length > 0) {
             console.log('💬 [STREAMING-CONTEXTO] Agregando historial conversacional como mensajes reales...');
-            historialConversacion.forEach((msg, index) => {
+            
+            // Tomar solo los últimos 8 mensajes para evitar tokens excesivos
+            const mensajesRecientes = historialConversacion.slice(-8);
+            
+            mensajesRecientes.forEach((msg, index) => {
                 console.log(`💬 [STREAMING-CONTEXTO] Mensaje ${index + 1}: ${msg.role} - "${msg.content.substring(0, 100)}..."`);
                 mensajesLlamada.push({
                     role: msg.role,
                     content: msg.content
                 });
             });
+            
+            // Agregar instrucción específica para contexto si es pregunta de seguimiento
+            const esPreguntaSeguimiento = detectarPreguntaSeguimiento(message, historialConversacion);
+            if (esPreguntaSeguimiento) {
+                console.log('🔍 [STREAMING-CONTEXTO] Pregunta de seguimiento detectada, agregando instrucción especial...');
+                
+                // Generar instrucción de contexto mejorada
+                const instruccionContexto = generarInstruccionContexto(message, historialConversacion);
+                const instruccionBase = 'IMPORTANTE: El usuario está haciendo una pregunta de seguimiento. Usa el contexto conversacional anterior para responder específicamente. NO des respuestas genéricas.';
+                
+                mensajesLlamada.push({
+                    role: 'system',
+                    content: instruccionBase + (instruccionContexto ? '\n\n' + instruccionContexto : '')
+                });
+            }
         }
 
         // Agregar el mensaje actual del usuario
@@ -2308,6 +2422,52 @@ async function processQueryStream({ message, userId, conversationId, response })
             if (sql) {
                 console.log('✅ [STREAMING] SQL encontrado, ejecutando consulta...');
                 console.log('🔍 [STREAMING] SQL original:', sql);
+                
+                // =====================================
+                // SQL PARSER PROFESIONAL CON AST
+                // =====================================
+                
+                console.log('🧠 [SQL-PARSER] Iniciando análisis profesional con AST...');
+                try {
+                    const analisisSQL = analizarSQLProfesional(sql);
+                    
+                    if (analisisSQL.error) {
+                        console.log('⚠️ [SQL-PARSER] Error en parsing, usando validación básica:', analisisSQL.error);
+                    } else {
+                        console.log('✅ [SQL-PARSER] Análisis AST completado:', {
+                            tablas: analisisSQL.tablas.length,
+                            columnas: analisisSQL.columnas.length,
+                            complejidad: analisisSQL.estadisticas.complejidad.nivel,
+                            tiempo: analisisSQL.estadisticas.tiempoParsing + 'ms'
+                        });
+                        
+                        // Validación semántica avanzada
+                        if (analisisSQL.validacionSemantica) {
+                            const validacion = analisisSQL.validacionSemantica;
+                            if (!validacion.esValido) {
+                                console.error('❌ [SQL-PARSER] Validación semántica falló:', validacion.errores);
+                            } else if (validacion.advertencias.length > 0) {
+                                console.log('⚠️ [SQL-PARSER] Advertencias:', validacion.advertencias);
+                            }
+                        }
+                        
+                        // Optimización automática si es posible
+                        if (analisisSQL.estadisticas.complejidad.nivel === 'COMPLEJA') {
+                            console.log('🔧 [SQL-PARSER] Consulta compleja detectada, aplicando optimizaciones...');
+                            const sqlOptimizado = generarSQLOptimizado(analisisSQL);
+                            if (sqlOptimizado && sqlOptimizado !== sql) {
+                                console.log('✅ [SQL-PARSER] SQL optimizado generado');
+                                console.log('🔍 [SQL-PARSER] Original:', sql.substring(0, 100) + '...');
+                                console.log('🔍 [SQL-PARSER] Optimizado:', sqlOptimizado.substring(0, 100) + '...');
+                                // Usar SQL optimizado
+                                sql = sqlOptimizado;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('⚠️ [SQL-PARSER] Error en análisis AST, continuando con validación básica:', error.message);
+                }
+                
                 try {
                     const results = await executeQuery(sql);
                     
@@ -2318,228 +2478,12 @@ async function processQueryStream({ message, userId, conversationId, response })
                         console.log('✅ [STREAMING] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
                         
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
-                        const promptExplicacion = `Eres el asistente inteligente de Semilleros Deitana, una empresa agrícola especializada en producción de semillas y tomates. Tu comportamiento debe ser exactamente como ChatGPT: **natural, inteligente, útil y visualmente atractivo**.
+                        const promptExplicacion = `Explica de forma natural y amigable los resultados de la consulta: "${message}"
 
-## 🎯 FUNCIÓN PRINCIPAL
+SQL ejecutado: ${sql}
+Resultados: ${JSON.stringify(results, null, 2)}
 
-Tu tarea principal es explicar de forma natural y amigable los resultados de una consulta SQL.
-
-CONSULTA ORIGINAL: "${message}"  
-SQL EJECUTADO: ${sql}  
-RESULTADOS: ${JSON.stringify(results, null, 2)}
-
----
-
-## 📌 INSTRUCCIONES BASE:
-
-- Explica los resultados de forma natural y conversacional
-- Usa **"NOSOTROS"** y **"NUESTRA empresa"** como si fueras un empleado interno
-- Sé específico sobre los datos encontrados
-- Si no hay resultados, explica claramente que no se encontraron registros
-- Mantén un tono **amigable, profesional y humano**
-- Usa emojis apropiados para hacer la respuesta más atractiva
-
----
-
-## 🌾 CONTEXTO DE SEMILLEROS DEITANA
-
-- **SIEMPRE** interpreta términos agrícolas en contexto profesional
-- **NUNCA** uses lenguaje o metáforas de entretenimiento o juegos
-- Aplica estos significados específicos:
-  - **Partida** = tanda de siembra específica (⚠️ no es juego)
-  - **Injertos** = unión vegetal para mejorar resistencia
-  - **Bandejas** = contenedores con alvéolos
-  - **Alvéolos** = cavidades donde crecen plántulas
-
----
-
-## 🧠 INTELIGENCIA Y RAZONAMIENTO
-
-### ✅ 1. Razonamiento Paso a Paso
-
-Para problemas complejos:
-- Explica paso a paso con lógica clara
-- Usa estructura visual y numeración
-
-**Ejemplo:**
-\\\
-## 🤔 Analicemos esto paso a paso:
-
-### 1️⃣ **Primer paso**: [Definir el problema]  
-### 2️⃣ **Segundo paso**: [Análisis de datos]  
-### 3️⃣ **Conclusión**: [Resultado o decisión]
-\\\
-
----
-
-### ✅ 2. Mantén el Contexto Conversacional
-
-- Si el usuario responde "¿Y?" o "Entonces?", continúa desde el tema anterior
-- Si dice "ok", ofrece el siguiente paso o amplía
-- **Nunca digas** "No tengo información suficiente"
-- **Sí di**: "Te explico lo que encontré y si querés, profundizo más sobre..."
-
----
-
-## 🧑‍🏫 INTERACCIÓN NATURAL
-
-### 💬 3. Tono Adaptativo
-
-Adapta tu estilo al usuario:
-- Formal → Profesional
-- Casual → Con emojis y más cercano
-- Técnico → Con detalles avanzados
-- Novato → Explicaciones simples y claras
-
----
-
-### 🎯 4. Reformulación Inteligente
-
-Cuando el mensaje del usuario sea ambiguo:
-1. Interpreta la intención más probable
-2. Reformula lo que entendiste
-3. Responde en base a esa interpretación
-4. Ofrece corregir si no era eso
-
-**Ejemplo:**
-> "Parece que querías saber sobre [X]. Te explico esto, y si no era eso, contame más detalles 😊"
-
----
-
-### 👀 5. Confirmaciones Inteligentes
-
-Para acciones importantes:
-- ⚠️ "¿Confirmás que querés eliminar esto?"
-- 📤 "¿Procedo a enviar esta información?"
-- 🔄 "¿Aplico los cambios?"
-
----
-
-## 🧾 CONTENIDO ENRIQUECIDO Y VISUAL
-
-### 🎨 6. Formato Markdown Obligatorio
-
-**Siempre que sea posible, usá:**
-
-- # Títulos con emojis
-- ## Subtítulos para organización
-- **Negritas** para conceptos clave  
-- *Cursivas* para aclaraciones  
-- ✅ Listas con emojis  
-- > Blockquotes para tips o recordatorios  
-- \`código inline\` para variables o términos clave  
-- Tablas para comparaciones o datos
-
-**Ejemplo:**
-\\\markdown
-| 📊 Año | 🧮 Cantidad de partidas |
-|-------|--------------------------|
-| 2023  | 145                      |
-| 2024  | 180                      |
-\\\
-
----
-
-## 🧭 PERSONALIDAD INTELIGENTE
-
-### 💡 9. Tu personalidad como IA
-
-Eres:
-- 🤝 Empático
-- 🧠 Inteligente y analítico
-- 🎯 Práctico y útil
-- 😊 Amigable y claro
-
-No eres:
-- ❌ Robótico
-- ❌ Vago o poco detallado
-- ❌ Formal en exceso
-
----
-
-### 📚 10. Resúmenes y Paráfrasis
-
-Cuando el usuario escriba algo largo/confuso:
-> "📝 **Resumen:** Entiendo que querías [tema]. Vamos a verlo juntos."
-
----
-
-### ✍️ 11. Herramientas de Escritura Inteligente
-
-Si hay errores de escritura:
-> "📝 Entiendo que querías decir [X]..."
-
-Ofrece versiones alternativas:
-> "🎯 ¿Querés que te lo diga de forma:
-> - 💼 Profesional
-> - 🗣️ Más directa
-> - 📚 Más detallada?"
-
----
-
-## 🔄 CONTINUIDAD CONVERSACIONAL
-
-### 📌 15. Confirmación de Entendimiento
-
-Siempre responde algo como:
-> "📋 Entiendo que necesitás [resumen]. ¿Es correcto? Te muestro lo que encontré 👇"
-
----
-
-### 🧩 16. División por Partes
-
-Cuando haya mucha info:
-> "📚 Te explico esto por partes:
-
-## 1️⃣ Parte 1: [Base]
-## 2️⃣ Parte 2: [Detalles]
-## 3️⃣ Parte 3: [Aplicaciones]
-
-¿Querés que profundice en alguna?"
-
----
-
-## ⭐ REGLAS DE ORO
-
-### ✅ SIEMPRE:
-
-1. 🎨 Usa Markdown y emojis  
-2. 🧠 Razoná paso a paso  
-3. 🔄 Mantén el hilo conversacional  
-4. 💡 Agregá valor extra si podés  
-5. 😊 Sé cálido, humano y profesional
-
-### ❌ NUNCA:
-
-1. ❌ Responder con texto plano sin formato  
-2. ❌ Decir que no se tiene info sin intentar ayudar  
-3. ❌ Ignorar contexto anterior  
-4. ❌ Ser seco, robótico o sin ejemplos
-
----
-
-## 📌 EJEMPLO DE RESPUESTA IDEAL
-
-\\\markdown
-# 🌱 Análisis de Partidas por Año
-
-Consultamos cuántas partidas de siembra se realizaron por año.
-
-## 📊 Resultados encontrados:
-
-| 📅 Año | 🌱 Partidas |
-|-------|-------------|
-| 2023  | 154         |
-| 2024  | 198         |
-
-## 🤔 ¿Qué significa esto?
-
-- En **2024** tuvimos un aumento significativo en partidas, lo que indica mayor actividad de siembra.
-- Esto puede deberse a campañas más intensas o demanda de clientes.
-
-💬 ¿Querés que analice alguna variedad o cultivo específico? Estoy para ayudarte 🌿
-\\\
-`;
+Usa un tono conversacional, emojis apropiados y explica qué significan los datos encontrados.`;
 
                         // Segunda llamada con historial para mantener contexto
                         const mensajesSegundaLlamada = [
@@ -2573,8 +2517,71 @@ Consultamos cuántas partidas de siembra se realizaron por año.
                         
                         console.log('✅ [STREAMING] Segunda llamada completada - respuesta natural generada');
                     } else {
-                        // Si no hay resultados, mantener la respuesta original del modelo
-                        console.log('📚 [STREAMING] Sin resultados SQL - usar respuesta del modelo');
+                        // =====================================
+                        // SISTEMA DE REINTENTOS INTELIGENTE
+                        // =====================================
+                        
+                        console.log('🔄 [STREAMING] SQL ejecutado pero sin resultados - iniciando sistema de reintentos...');
+                        
+                        try {
+                            // Clasificar la consulta para determinar estrategias de reintento
+                            const clasificacion = {
+                                tipo: 'base_datos',
+                                confianza: 0.8,
+                                razon: 'Consulta SQL sin resultados'
+                            };
+                            
+                            // Ejecutar sistema de reintentos inteligente
+                            const resultadoReintento = await sistemaReintentosInteligente(
+                                message, 
+                                sql, 
+                                clasificacion, 
+                                historialConversacion
+                            );
+                            
+                            if (resultadoReintento.exitoso) {
+                                console.log(`✅ [STREAMING] Reintento exitoso con estrategia: ${resultadoReintento.estrategiaUsada}`);
+                                
+                                // Usar la respuesta del reintento
+                                finalMessage = resultadoReintento.mensaje;
+                                
+                                // Si hay datos del reintento, guardarlos para contexto
+                                if (resultadoReintento.data) {
+                                    lastRealData = JSON.stringify(resultadoReintento.data);
+                                }
+                                
+                                // Si hay SQL del reintento, guardarlo para auditoría
+                                if (resultadoReintento.sql) {
+                                    console.log('🔍 [STREAMING] SQL del reintento:', resultadoReintento.sql);
+                                }
+                                
+                            } else {
+                                console.log('⚠️ [STREAMING] Sistema de reintentos no pudo encontrar resultados');
+                                
+                                // Generar respuesta amigable para el usuario
+                                finalMessage = `No encontré información específica para "${message}". 
+
+💡 **Te sugiero:**
+• Reformular tu pregunta de otra manera
+• Ser más específico con los criterios
+• Usar términos similares o sinónimos
+
+¿Podrías intentar con otra formulación? Estoy aquí para ayudarte 🌱`;
+                            }
+                            
+                        } catch (error) {
+                            console.error('❌ [STREAMING-REINTENTOS] Error en sistema de reintentos:', error.message);
+                            
+                            // Fallback a respuesta amigable
+                            finalMessage = `No pude encontrar la información que buscas para "${message}". 
+
+🔍 **Posibles causas:**
+• Los criterios son muy específicos
+• Los datos no están disponibles
+• Necesito más contexto
+
+¿Podrías reformular tu pregunta o ser más específico? 🌱`;
+                        }
                     }
                 } catch (error) {
                     console.error('❌ [STREAMING-SQL] Error ejecutando consulta:', error.message);
@@ -2784,6 +2791,10 @@ function analizarComplejidadRapida(mensaje) {
     const tienePalabrasClave = /(cuántos|cuántas|dame|muestra|lista|clientes|proveedores|artículos|datos|información|tabla|significa|funciona|protocolo|proceso)/i.test(mensaje);
     const tieneNumeros = /\d/.test(mensaje);
     
+    // Detectar preguntas específicas que requieren contexto
+    const tienePreguntasEspecificas = /(a que|a qué|de que|de qué|para que|para qué|cuando|cuándo|donde|dónde|como|cómo|quien|quién|cual|cuál|por que|por qué)/i.test(mensaje);
+    const tieneReferenciasContexto = /(corresponde|pertenece|es de|está en|se encuentra|este|esta|estos|estas|ese|esa|esos|esas)/i.test(mensaje);
+    
     let complejidad = 0;
     
     // Factores de complejidad
@@ -2792,6 +2803,10 @@ function analizarComplejidadRapida(mensaje) {
     if (tieneInterrogacion) complejidad += 0.2;
     if (tienePalabrasClave) complejidad += 0.4;
     if (tieneNumeros) complejidad += 0.1;
+    
+    // Aumentar complejidad para preguntas específicas que requieren contexto
+    if (tienePreguntasEspecificas) complejidad += 0.5;
+    if (tieneReferenciasContexto) complejidad += 0.4;
     
     return Math.min(complejidad, 1);
 }
@@ -2807,8 +2822,52 @@ function esConsultaTrivial(mensaje, historial = []) {
     const contexto = historial.length;
     const esPrimeraInteraccion = contexto === 0;
     
+    // Detectar preguntas de seguimiento que NO son triviales
+    const esPreguntaSeguimiento = detectarPreguntaSeguimiento(mensaje, historial);
+    
     // Heurística inteligente: consultas simples con poco contexto
-    return complejidad < 0.3 && contexto < 8 && !esPrimeraInteraccion;
+    // PERO excluir preguntas de seguimiento que requieren contexto
+    return complejidad < 0.3 && contexto < 8 && !esPrimeraInteraccion && !esPreguntaSeguimiento;
+}
+
+/**
+ * Detecta si es una pregunta de seguimiento que requiere contexto
+ * @param {string} mensaje - Mensaje del usuario
+ * @param {Array} historial - Historial conversacional
+ * @returns {boolean} True si es pregunta de seguimiento
+ */
+function detectarPreguntaSeguimiento(mensaje, historial) {
+    const mensajeLower = mensaje.toLowerCase().trim();
+    
+    // Patrones de preguntas de seguimiento que requieren contexto
+    const patronesSeguimiento = [
+        'a que', 'a qué', 'de que', 'de qué', 'para que', 'para qué',
+        'cuando', 'cuándo', 'donde', 'dónde', 'como', 'cómo',
+        'quien', 'quién', 'cual', 'cuál', 'por que', 'por qué',
+        'corresponde', 'pertenece', 'es de', 'está en', 'se encuentra',
+        'cliente', 'lote', 'proveedor', 'vendedor', 'artículo',
+        'fecha', 'hora', 'cantidad', 'precio', 'stock'
+    ];
+    
+    // Si hay historial y la pregunta contiene patrones de seguimiento
+    if (historial.length > 0 && patronesSeguimiento.some(patron => mensajeLower.includes(patron))) {
+        console.log('🔍 [CONTEXTO] Pregunta de seguimiento detectada:', mensaje);
+        return true;
+    }
+    
+    // Detectar preguntas que hacen referencia a información previa
+    const referenciasContexto = [
+        'este', 'esta', 'estos', 'estas', 'ese', 'esa', 'esos', 'esas',
+        'el anterior', 'la anterior', 'los anteriores', 'las anteriores',
+        'el mismo', 'la misma', 'los mismos', 'las mismas'
+    ];
+    
+    if (historial.length > 0 && referenciasContexto.some(ref => mensajeLower.includes(ref))) {
+        console.log('🔍 [CONTEXTO] Referencia a contexto previo detectada:', mensaje);
+        return true;
+    }
+    
+    return false;
 }
 
 /**
@@ -2872,6 +2931,61 @@ function generarRespuestaTrivial(mensaje, tipo) {
     const respuesta = respuestas[Math.floor(Math.random() * respuestas.length)];
     
     return respuesta;
+}
+
+/**
+ * Mejora el contexto conversacional para preguntas de seguimiento
+ * @param {string} mensaje - Mensaje actual del usuario
+ * @param {Array} historial - Historial conversacional
+ * @returns {string} Instrucción de contexto mejorada
+ */
+function generarInstruccionContexto(mensaje, historial) {
+    if (!historial || historial.length === 0) return '';
+    
+    const mensajeLower = mensaje.toLowerCase();
+    const ultimoAsistente = historial.filter(msg => msg.role === 'assistant').pop();
+    
+    if (!ultimoAsistente) return '';
+    
+    // Extraer información clave del último mensaje del asistente
+    const contenidoAsistente = ultimoAsistente.content.toLowerCase();
+    
+    // Buscar patrones específicos en la respuesta anterior
+    const patrones = {
+        stock: /(\d+)\s*(unidades?|uds?|pzas?)/i,
+        lote: /lote[:\s]*([a-z0-9]+)/i,
+        cliente: /cliente[:\s]*([^,\n]+)/i,
+        articulo: /(tomate|sandía|pepino|melón|puerro|brócoli|lechuga|cebolla|apio)/i
+    };
+    
+    let contextoExtraido = '';
+    
+    // Extraer información relevante
+    if (patrones.stock.test(contenidoAsistente)) {
+        const match = contenidoAsistente.match(patrones.stock);
+        contextoExtraido += `Stock mencionado: ${match[1]} ${match[2]}. `;
+    }
+    
+    if (patrones.lote.test(contenidoAsistente)) {
+        const match = contenidoAsistente.match(patrones.lote);
+        contextoExtraido += `Lote mencionado: ${match[1]}. `;
+    }
+    
+    if (patrones.cliente.test(contenidoAsistente)) {
+        const match = contenidoAsistente.match(patrones.cliente);
+        contextoExtraido += `Cliente mencionado: ${match[1]}. `;
+    }
+    
+    if (patrones.articulo.test(contenidoAsistente)) {
+        const match = contenidoAsistente.match(patrones.articulo);
+        contextoExtraido += `Artículo mencionado: ${match[1]}. `;
+    }
+    
+    if (contextoExtraido) {
+        return `CONTEXTO ESPECÍFICO DE LA CONVERSACIÓN ANTERIOR: ${contextoExtraido} Usa esta información para responder específicamente a la pregunta del usuario.`;
+    }
+    
+    return '';
 }
 
 /**
@@ -4455,3 +4569,5 @@ function reconstruirCondicion(condicion) {
     return condicion.toString();
 }
 
+
+ 
