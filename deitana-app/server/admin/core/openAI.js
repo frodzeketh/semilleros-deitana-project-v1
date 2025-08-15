@@ -35,8 +35,15 @@ const comandosMemoria = require('../../utils/comandosMemoria');
 const langfuseUtils = require('../../utils/langfuse');
 require('dotenv').config();
 const mapaERP = require('./mapaERP');
-const { formatoObligatorio } = require('../prompts/formatoObligatorio');
-const { promptGlobal } = require('../prompts/promptGlobal');
+// Importaciones desde las carpetas organizadas
+const { 
+    formatoObligatorio, 
+    promptGlobal, 
+    promptBase, 
+    comportamientoGlobal 
+} = require('../prompts/global');
+
+const { sqlRules } = require('../prompts/sql');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -744,9 +751,7 @@ async function fuzzySearchRetry(sql, userQuery) {
 // - Construcción de instrucciones naturales
 // - Ensamblaje final del prompt optimizado
 // =====================================
-const { promptBase } = require('../prompts/base');
-const { sqlRules } = require('../prompts/sqlRules');
-const { comportamientoChatGPT } = require('../prompts/comportamiento');
+// Las importaciones ya están hechas arriba desde las carpetas organizadas
 const ragInteligente = require('./ragInteligente');
 
 /**
@@ -1158,263 +1163,7 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
 // - Manejo de errores y fallbacks
 // =====================================
 
-/**
- * Función principal para procesar consultas de administrador
- * @param {Object} params - Parámetros de la consulta
- * @param {string} params.message - Mensaje del usuario
- * @param {string} params.userId - ID del usuario
- * @param {string} params.conversationId - ID de la conversación (opcional)
- * @returns {Object} Respuesta procesada
- */
-async function processQuery({ message, userId, conversationId }) {
-    const tiempoInicio = Date.now();
-    console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO ULTRA-RÁPIDO =====');
-    console.log('🚀 [SISTEMA] Procesando consulta:', message);
-    console.log('🚀 [SISTEMA] Usuario ID:', userId);
-    console.log('🚀 [SISTEMA] Conversación ID:', conversationId);
-    
-    // =====================================
-    // LOGS PARA IDENTIFICAR ARCHIVOS USADOS EN ESTA CONSULTA
-    // =====================================
-    console.log('🔍 [CONSULTA] ===== ARCHIVOS USADOS EN ESTA CONSULTA =====');
-    console.log('🟢 Se está usando: openAI.js (admin/core)');
 
-    // =====================================
-    // OBTENER INFORMACIÓN DEL USUARIO Y CONTEXTO (PARALELO)
-    // =====================================
-    
-    const [infoUsuario, historialConversacion] = await Promise.all([
-        obtenerInfoUsuario(userId),
-        obtenerHistorialConversacion(userId, conversationId)
-    ]);
-
-    // =====================================
-    // OPTIMIZACIÓN: Guardar mensaje al final (no bloquea)
-    // =====================================
-    const guardarMensaje = () => saveMessageToFirestore(userId, message).catch(err => 
-        console.error('❌ [FIRESTORE] Error guardando mensaje:', err.message)
-    );
-
-    // =====================================
-    // OPTIMIZACIÓN: Análisis rápido de tipo de consulta
-    // =====================================
-    const esConsultaSimple = message.length < 50 && !message.includes('?') && !message.includes('cuántos') && !message.includes('dame') && !message.includes('muestra');
-    const tieneHistorial = historialConversacion && historialConversacion.length > 0;
-    
-    // =====================================
-    // CONTEXTO DE MEMORIA (OPTIMIZADO)
-    // =====================================
-    
-    let contextoPinecone = '';
-    
-    // Solo buscar memoria si hay historial Y no es consulta simple
-    if (tieneHistorial && !esConsultaSimple) {
-        console.log('🧠 [MEMORIA] Consulta requiere contexto - buscando en memoria...');
-        
-        const ultimosMensajes = historialConversacion.slice(-2);
-        const contextoConversacional = ultimosMensajes.map(msg => 
-            `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
-        ).join('\n');
-            
-        contextoPinecone += `\n=== CONTEXTO CONVERSACIONAL RECIENTE ===\n${contextoConversacional}\n\nINSTRUCCIÓN: Mantén la continuidad de la conversación anterior.`;
-        
-        // Memoria en background (no bloquear)
-        pineconeMemoria.agregarContextoMemoria(userId, message)
-            .catch(error => console.error('❌ [PINECONE] Error:', error.message));
-    } else {
-        console.log('⚡ [OPTIMIZACIÓN] Sin historial o consulta simple - saltando búsqueda de memoria');
-    }
-
-    // =====================================
-    // CONSTRUIR PROMPT OPTIMIZADO
-    // =====================================
-    
-    console.log('🧠 [IA-INTELIGENTE] Construyendo prompt OPTIMIZADO...');
-    const promptBuilder = await construirPromptInteligente(
-        message, 
-        mapaERP,
-        openai,
-        contextoPinecone, 
-        lastRealData || '',
-        historialConversacion,
-        false
-    );
-    
-    console.log('🧠 [IA-INTELIGENTE] Intención:', promptBuilder.intencion.tipo, 'Modelo:', promptBuilder.configModelo.modelo);
-
-    // =====================================
-    // PROCESAMIENTO DE CONSULTA CON IA
-    // =====================================
-
-    console.log('🧠 [ETAPA-1] ===== GPT RECIBE LA CONSULTA =====');
-    console.log('🧠 [ETAPA-1] Preparando llamada a OpenAI...');
-
-    // Construir mensajes
-    const mensajesLlamada = [
-        {
-            role: 'system',
-            content: promptBuilder.prompt
-        }
-    ];
-
-    // Agregar historial conversacional solo si existe
-    if (tieneHistorial) {
-        historialConversacion.forEach((msg) => {
-            mensajesLlamada.push({
-                role: msg.role,
-                content: msg.content
-            });
-        });
-    }
-
-    // Agregar mensaje actual
-    mensajesLlamada.push({
-        role: 'user', 
-        content: message
-    });
-
-    // =====================================
-    // LLAMADA A OPENAI (OPTIMIZADA)
-    // =====================================
-
-    console.log('🤖 [OPENAI] Llamando a', promptBuilder.configModelo.modelo);
-
-    try {
-        const response = await openai.chat.completions.create({
-            model: promptBuilder.configModelo.modelo,
-            messages: mensajesLlamada,
-            max_tokens: promptBuilder.configModelo.maxTokens,
-            temperature: promptBuilder.configModelo.temperature,
-            stream: false
-        });
-
-        const respuestaIA = response.choices[0].message.content;
-        console.log('✅ [OPENAI] Respuesta recibida de OpenAI');
-        console.log('📊 [OPENAI] Tokens usados:', response.usage?.total_tokens || 'N/A');
-
-        // =====================================
-        // PROCESAMIENTO POST-IA (OPTIMIZADO)
-        // =====================================
-
-        console.log('🔍 [POST-PROCESAMIENTO] Analizando respuesta para SQL...');
-        
-        // Verificar si la respuesta contiene SQL
-        const sqlMatch = respuestaIA.match(/<sql>(.*?)<\/sql>/s);
-        
-        if (sqlMatch) {
-            console.log('🔍 [SQL] SQL detectado en respuesta');
-            const sql = sqlMatch[1].trim();
-            
-            try {
-                console.log('🔍 [SQL] Ejecutando SQL:', sql);
-                const resultados = await executeQuery(sql);
-                
-                if (resultados && resultados.length > 0) {
-                    console.log('✅ [SQL] Resultados obtenidos:', resultados.length, 'registros');
-                    
-                    // Formatear resultados y generar explicación
-                    const resultadosFormateados = formatResultsAsMarkdown(resultados);
-                    const respuestaFinal = await formatFinalResponse(resultados, message);
-                    
-                    // Guardar mensaje al final (no bloquea)
-                    guardarMensaje();
-                    
-                    const tiempoTotal = Date.now() - tiempoInicio;
-                    console.log('✅ [SISTEMA] Proceso completado en', tiempoTotal, 'ms');
-                    
-                    return {
-                        success: true,
-                        response: respuestaFinal,
-                        data: resultados,
-                        sql: sql,
-                        tiempo: tiempoTotal
-                    };
-                } else {
-                    console.log('⚠️ [SQL] No se encontraron resultados');
-                    const respuestaSinDatos = `No se encontraron registros en la base de datos para tu consulta.`;
-                    
-                    // Guardar mensaje al final (no bloquea)
-                    guardarMensaje();
-                    
-                    const tiempoTotal = Date.now() - tiempoInicio;
-                    console.log('✅ [SISTEMA] Proceso completado en', tiempoTotal, 'ms');
-                    
-                    return {
-                        success: true,
-                        response: respuestaSinDatos,
-                        data: [],
-                        sql: sql,
-                        tiempo: tiempoTotal
-                    };
-                }
-            } catch (error) {
-                console.error('❌ [SQL] Error ejecutando SQL:', error.message);
-                
-                // Intentar retry con fuzzy search
-                console.log('🔄 [SQL] Intentando retry con búsqueda fuzzy...');
-                const resultadoRetry = await fuzzySearchRetry(sql, message);
-                
-                if (resultadoRetry.success) {
-                    // Guardar mensaje al final (no bloquea)
-                    guardarMensaje();
-                    
-                    const tiempoTotal = Date.now() - tiempoInicio;
-                    console.log('✅ [SISTEMA] Proceso completado con retry en', tiempoTotal, 'ms');
-                    
-                    return resultadoRetry;
-                } else {
-                    const respuestaError = `Lo siento, no pude procesar tu consulta correctamente. Por favor, reformula tu pregunta de manera más específica.`;
-                    
-                    // Guardar mensaje al final (no bloquea)
-                    guardarMensaje();
-                    
-                    const tiempoTotal = Date.now() - tiempoInicio;
-                    console.log('❌ [SISTEMA] Proceso falló en', tiempoTotal, 'ms');
-                    
-                    return {
-                        success: false,
-                        response: respuestaError,
-                        error: error.message,
-                        tiempo: tiempoTotal
-                    };
-                }
-            }
-        } else {
-            console.log('📚 [RESPUESTA] Sin SQL - usar respuesta del modelo tal como está');
-            
-            // Personalizar respuesta
-            const respuestaPersonalizada = personalizarRespuesta(respuestaIA, infoUsuario.nombre);
-            
-            // Guardar mensaje al final (no bloquea)
-            guardarMensaje();
-            
-            const tiempoTotal = Date.now() - tiempoInicio;
-            console.log('✅ [SISTEMA] Proceso completado en', tiempoTotal, 'ms');
-            
-            return {
-                success: true,
-                response: respuestaPersonalizada,
-                tiempo: tiempoTotal
-            };
-        }
-
-    } catch (error) {
-        console.error('❌ [OPENAI] Error en llamada a OpenAI:', error.message);
-        
-        // Guardar mensaje al final (no bloquea)
-        guardarMensaje();
-        
-        const tiempoTotal = Date.now() - tiempoInicio;
-        console.log('❌ [SISTEMA] Proceso falló en', tiempoTotal, 'ms');
-        
-        return {
-            success: false,
-            response: 'Lo siento, hubo un error procesando tu consulta. Por favor, intenta de nuevo.',
-            error: error.message,
-            tiempo: tiempoTotal
-        };
-    }
-}
 
 // =====================================
 // FUNCIÓN STREAMING PARA TIEMPO REAL
@@ -1657,7 +1406,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         
                         // Construir prompt específico para explicación (SIN sqlRules)
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
-                        promptExplicacion += `${comportamientoChatGPT}\n\n`;
+                        promptExplicacion += `${comportamientoGlobal}\n\n`;
                         promptExplicacion += `## 🏢 CONTEXTO EMPRESARIAL\n\nEres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.\n\n**TU IDENTIDAD:**\n- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)\n- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas\n- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  \n- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad\n- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia\n\n**FORMA DE HABLAR:**\n- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"\n- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa\n- Habla como empleado que conoce los detalles internos\n- Sé específico sobre NUESTROS procesos reales\n\n`;
                         promptExplicacion += `${formatoObligatorio}\n\n`;
                         
@@ -1821,19 +1570,17 @@ Tu tarea es explicar estos resultados de forma natural y conversacional. NO gene
 // MÓDULO DE EXPORTACIÓN
 // =====================================
 // 
-// Este módulo exporta las funciones principales:
-// - processQuery: Procesamiento estándar de consultas
+// Este módulo exporta la función principal:
 // - processQueryStream: Procesamiento con streaming en tiempo real
 // 
 // USO EN OTROS ARCHIVOS:
-// const { processQuery, processQueryStream } = require('./admin/core/openAI');
+// const { processQueryStream } = require('./admin/core/openAI');
 // =====================================
 
 /**
  * Exportar la función principal para su uso en otros archivos
  */
 module.exports = {
-    processQuery,
     processQueryStream
 };
 
@@ -1915,7 +1662,7 @@ function seleccionarModeloInteligente(intencion, tablasRelevantes) {
  * Construye las instrucciones naturales para el prompt
  */
 function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
-    let instrucciones = comportamientoChatGPT + '\n\n';
+    let instrucciones = comportamientoGlobal + '\n\n';
     instrucciones += `\n## 🏢 CONTEXTO EMPRESARIAL\n\nEres un empleado experto de **Semilleros Deitana** trabajando desde adentro de la empresa.\n\n**TU IDENTIDAD:**\n- 🏢 Trabajas EN Semilleros Deitana (no "para" - estás DENTRO)\n- 🌱 Conoces NUESTROS procesos de producción de semillas y plántulas\n- 🍅 Sabes cómo funcionar NUESTROS sistemas de cultivo e injertos  \n- 🔬 Entiendes NUESTRAS certificaciones ISO 9001 y estándares de calidad\n- 🏗️ Conoces NUESTRAS instalaciones en Totana, Murcia\n\n**FORMA DE HABLAR:**\n- Usa "NOSOTROS", "NUESTRA empresa", "NUESTROS sistemas"\n- Jamás digas "una empresa" o "la empresa" - es NUESTRA empresa\n- Habla como empleado que conoce los detalles internos\n- Sé específico sobre NUESTROS procesos reales\n\n## 🧠 INTELIGENCIA HÍBRIDA - CONOCIMIENTO + DATOS\n\n### 📚 **CONOCIMIENTO EMPRESARIAL (PRIORIDAD)**\n- Usa SIEMPRE el conocimiento empresarial como base principal\n- El contexto de Pinecone contiene información oficial de la empresa\n- Úsalo para explicar procedimientos, protocolos y conceptos\n\n### 🗄️ **DATOS DE BASE DE DATOS (CUANDO SEA NECESARIO)**\n- Si la consulta requiere datos actuales específicos, genera SQL\n- Formato: \`<sql>SELECT...</sql>\`\n- Usa EXACTAMENTE las columnas de la estructura proporcionada\n- Combina conocimiento + datos de forma natural\n- **NUNCA inventes datos de entidades** (clientes, proveedores, almacenes, etc.)\n- **SIEMPRE genera SQL real** y deja que el sistema ejecute y muestre datos reales\n- **SI no hay datos reales**, di claramente "No se encontraron registros en la base de datos"\n\n### 🤝 **COMBINACIÓN INTELIGENTE**\n- Explica el "por qué" usando conocimiento empresarial\n- Muestra el "qué" usando datos actuales cuando sea útil\n- Mantén respuestas naturales y conversacionales\n- **NUNCA mezcles datos inventados con datos reales**\n\n## 🎯 **EJEMPLOS DE USO**\n\n**Consulta sobre conocimiento:**\n"qué significa quando el cliente dice quiero todo"\n→ Usa SOLO conocimiento empresarial\n\n**Consulta sobre datos actuales:**\n"dame 2 clientes"\n→ Combina conocimiento + datos SQL\n\n**Consulta compleja:**\n"cuántos artículos hay y qué tipos"\n→ Explica con conocimiento + muestra datos actuales\n\n## ✅ **REGLAS IMPORTANTES**\n\n1. **SIEMPRE responde** - nunca digas "no tengo información"\n2. **Usa emojis** y tono amigable\n3. **Mantén personalidad** de empleado interno\n4. **Combina fuentes** cuando sea apropiado\n5. **Sé útil y completo** - no restrictivo\n\n`;
     instrucciones += formatoObligatorio;
     return instrucciones;

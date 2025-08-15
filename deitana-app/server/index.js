@@ -6,7 +6,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
-const { processQuery } = require('./admin/core/openAI');
+const { processQueryStream } = require('./admin/core/openAI');
 const { processQuery: processQueryEmployee } = require('./employee/openAIEmployee');
 const { verifyToken } = require('./middleware/authMiddleware');
 const chatManager = require('./utils/chatManager');
@@ -138,24 +138,37 @@ app.post('/chat/new', verifyToken, async (req, res) => {
     // Procesar respuesta según el rol
     let response;
     if (req.user.isAdmin) {
-      response = await processQuery({ message, userId: req.user.uid });
+      // Para admin, usar processQueryStream con respuesta adaptada
+      const streamResult = await processQueryStream({ 
+        message, 
+        userId: req.user.uid, 
+        conversationId,
+        response: res 
+      });
+      
+      if (streamResult.success) {
+        // La respuesta ya fue enviada por streaming, solo retornar
+        return;
+      } else {
+        throw new Error(streamResult.error || 'Error en el procesamiento');
+      }
     } else {
       response = await processQueryEmployee({ message, userId: req.user.uid });
+      
+      // Guardar respuesta del asistente
+      await chatManager.addMessageToConversation(req.user.uid, conversationId, {
+        role: 'assistant',
+        content: response.data.message
+      });
+
+      res.json({ 
+        success: true, 
+        data: { 
+          conversationId,
+          message: response.data.message
+        }
+      });
     }
-
-    // Guardar respuesta del asistente
-    await chatManager.addMessageToConversation(req.user.uid, conversationId, {
-      role: 'assistant',
-      content: response.data.message
-    });
-
-    res.json({ 
-      success: true, 
-      data: { 
-        conversationId,
-        message: response.data.message
-      }
-    });
   } catch (error) {
     console.error('Error al crear nueva conversación:', error);
     res.status(500).json({ 
@@ -202,24 +215,37 @@ app.post('/chat', verifyToken, async (req, res) => {
         // Procesar la consulta según el rol
         let response;
         if (isAdmin) {
-            response = await processQuery({ message, userId, conversationId: currentConversationId });
+            // Para admin, usar processQueryStream con respuesta adaptada
+            const streamResult = await processQueryStream({ 
+                message, 
+                userId, 
+                conversationId: currentConversationId,
+                response: res 
+            });
+            
+            if (streamResult.success) {
+                // La respuesta ya fue enviada por streaming, solo retornar
+                return;
+            } else {
+                throw new Error(streamResult.error || 'Error en el procesamiento');
+            }
         } else {
             response = await processQueryEmployee({ message, userId, conversationId: currentConversationId });
+            
+            // Agregar respuesta del asistente
+            await chatManager.addMessageToConversation(userId, currentConversationId, {
+                role: 'assistant',
+                content: response.data.message
+            });
+
+            res.json({
+                success: true,
+                data: {
+                    message: response.data.message,
+                    conversationId: currentConversationId
+                }
+            });
         }
-
-        // Agregar respuesta del asistente
-        await chatManager.addMessageToConversation(userId, currentConversationId, {
-            role: 'assistant',
-            content: response.data.message
-        });
-
-        res.json({
-            success: true,
-            data: {
-                message: response.data.message,
-                conversationId: currentConversationId
-            }
-        });
     } catch (error) {
         console.error('Error al procesar mensaje:', error);
         res.status(500).json({
