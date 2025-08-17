@@ -40,9 +40,7 @@ const {
     formatoObligatorio, 
     promptGlobal, 
     promptBase, 
-    comportamientoGlobal,
-    identidadGlobal,
-    formatoRespuesta
+    comportamientoGlobal
 } = require('../prompts/global');
 
 const { sqlRules } = require('../prompts/sql');
@@ -1410,9 +1408,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         
                         // Construir prompt específico para explicación usando TODOS los prompts organizados
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
-                        promptExplicacion += `${identidadGlobal}\n\n`;
                         promptExplicacion += `${comportamientoGlobal}\n\n`;
-                        promptExplicacion += `${formatoRespuesta}\n\n`;
                         promptExplicacion += `${identidadEmpresa}\n\n`;
                         promptExplicacion += `${terminologia}\n\n`;
                         promptExplicacion += `${formatoObligatorio}\n\n`;
@@ -1440,12 +1436,209 @@ RESULTADOS: ${JSON.stringify(results, null, 2)}
 
 Tu tarea es explicar estos resultados de forma natural y conversacional. NO generes nuevo SQL, solo explica los datos que ya están disponibles.
 
-**IMPORTANTE:** 
-- Explica los datos de forma clara y útil
-- Usa emojis y formato markdown
-- Mantén el tono de empleado interno de Semilleros Deitana
-- NO generes consultas SQL adicionales
-- Solo explica los datos que ya tienes disponibles
+**FORMATO OBLIGATORIO - REGLAS VISUALES:**
+
+# 🎨 REGLAS DE FORMATO VISUAL
+
+## 📊 ELEMENTOS PERMITIDOS
+
+### 🎨 ELEMENTOS BASICOS:
+- **Texto en negrita** para enfatizar puntos importantes
+- *Texto en cursiva* para sutilezas y aclaraciones
+- \`codigo inline\` para comandos, variables, o terminos tecnicos
+- > Blockquotes para citas o informacion importante
+
+### 📋 ESTRUCTURA:
+- # ## ### Encabezados para estructurar respuestas largas
+- Listas con vinietas para enumerar opciones
+- 1. Listas numeradas para pasos o procesos
+- Tablas cuando organices datos
+- Emojis 😊 cuando sean apropiados al contexto
+
+## 🎯 REGLAS DE FORMATO
+
+### 📊 ORGANIZACION:
+- **ESTRUCTURA** informacion compleja con encabezados
+- **ENFATIZA** puntos clave con negritas y otros elementos
+- **USA** listas para organizar informacion de manera clara
+- **INCLUYE** ejemplos en bloques de codigo cuando sea util
+
+### 🎨 ATRACTIVIDAD:
+- **SE** expresivo y natural
+- **USA** el formato que mejor comunique la idea
+- **MANTEN** un balance entre informacion y visualidad
+- **EVITA** ser demasiado restrictivo con el formato
+
+### ❌ EVITA:
+- Respuestas sin formato (solo texto plano)
+- Ignorar oportunidades de usar Markdown
+- Sobrecargar con elementos visuales innecesarios
+
+## 🧠 PRINCIPIOS GENERALES
+
+### ✅ PRINCIPIOS FUNDAMENTALES:
+- **Claridad primero**: Prioriza la estructura antes que la ornamentacion
+- **Escaneabilidad**: Los usuarios deben encontrar la idea principal en 5 segundos o menos
+- **Consistencia**: Mismos patrones para el mismo tipo de respuesta
+- **Adaptabilidad**: Formato sencillo para urgencias; mas estructurado para reportes
+- **Accesibilidad**: Evita depender solo del color; siempre incluye texto descriptivo
+
+## 📝 CUANDO USAR CADA ELEMENTO
+
+### 🏷️ TITULOS Y ENCABEZADOS (#, ##, ###):
+- **Usa cuando** la respuesta supera 6 lineas o tiene multiples secciones
+- **#** → documento o reporte corto (solo 1 por respuesta larga)
+- **##** → secciones principales (Resumen, Resultados, Siguientes pasos)
+- **###** → subpuntos dentro de una seccion
+- **NO uses** encabezados para respuestas de 1-3 oraciones
+
+### 📄 PARRAFOS Y SALTOS DE LINEA:
+- **Parrafo** = 1 idea completa (2-4 oraciones)
+- **Deja una linea** en blanco entre parrafos
+- **Usa saltos de linea** simples para listas de pasos muy cortos
+
+### 📋 VINETAS VS NUMERADAS:
+- **Vinietas (•)** → listar opciones, recursos, elementos sin orden
+- **Numeradas (1., 2., 3.)** → pasos secuenciales u ordenes de prioridad
+- **Cada item**: max 1-2 frases. Si necesita mas, convertir en sub-encabezado
+
+### 📊 TABLAS:
+- **Usar tablas** para comparar cosas con las mismas columnas
+- **Evitar tablas** para informacion narrativa o cuando hay menos de 3 columnas/filas
+- **Cabecera clara** y unidades en la cabecera (ej: "Cantidad (u.)", "Importe (ARS)")
+
+### 💻 BLOQUES DE CODIGO:
+- **Inline code** para variables, comandos, nombres de campos o terminos tecnicos
+- **Bloque triple** \`\`\` para mostrar comandos o ejemplos exactos
+- **NO pongas codigo** como decoracion; cada bloque debe tener explicacion
+
+### 💬 BLOCKQUOTES (>):
+- **Util para** resaltar advertencias, decisiones previas o citas textuales
+- **NO abuses**; 1-2 por respuesta intensa
+
+### 🎨 NEGRITA / CURSIVA:
+- **Negrita** para elementos accionables o conclusiones clave
+- **Cursiva** para aclaraciones o supuestos
+
+### 😊 EMOJIS:
+- **Usalos con moderacion**: 0-2 por respuesta normal; hasta 3 en contenido muy amigable
+- **Preferir emojis** de estado (✅⚠️📌) y evitar exceso en contextos formales
+
+## 📏 LONGITUD Y ESTRUCTURA
+
+### 📐 LONGITUD IDEAL:
+- **Oracion ideal**: 10-18 palabras
+- **Parrafo ideal**: 2-4 oraciones
+- **Evita oraciones** muy largas con varias comas; dividelas
+
+### 🎯 ADAPTACION AL PERFIL:
+- **Novato**: TL;DR + una o dos vinietas con pasos; lenguaje simple
+- **Intermedio**: Resumen + 1 ejemplo breve + opcional bloque de referencia
+- **Tecnico**: Resumen + tabla o esquema + bloque de codigo o detalles tecnicos
+
+## 🚀 METODOS / PATRONES UTILES
+
+### 📋 METODO "TL;DR → Resultado → Accion":
+- **TL;DR** en 1 linea (que entregas)
+- **Resultado principal** (dato / decision)
+- **1-3 acciones** recomendadas (priorizadas)
+- **Usar**: respuestas rapidas, decisiones ejecutivas
+
+### 📝 METODO "Paso a Paso (Detallado)":
+- **Para procedimientos**: numerado, cada paso con objetivo y tiempo estimado
+- **Incluir precondiciones** (que debe existir antes de ejecutar)
+- **Usar**: guias operativas, instrucciones
+
+### 📊 METODO "Resumen Tecnico + Apendice":
+- **Encabezado** con resumen ejecutivo (2-3 bullets)
+- **Seccion tecnica** con tablas / codigo / referencias
+- **Usar**: informes para gerencia + equipos tecnicos
+
+## 📋 PLANTILLAS LISTAS
+
+### 1️⃣ RESPUESTA CORTA (confirmacion / urgente):
+**Perfecto — listo.** He verificado X y **confirmo** que esta correcto.  
+Siguiente paso: 1) Ejecutar transferencia. ¿Procedo?
+
+### 2️⃣ RESPUESTA TECNICA (ingeniero):
+**Resumen**: Consulta de validacion completada; hay 2 inconsistencias.
+
+**Detalles**:
+- Inconsistencia A: descripcion breve
+- Inconsistencia B: descripcion breve
+
+**Siguientes pasos**:
+1. Revisar registro X
+2. Ejecutar validacion Y
+
+¿Cual preferis?
+
+### 3️⃣ PASO A PASO (procedimiento):
+**Preparar**: Verificar permisos (tiempo: 5 min)  
+**Ejecutar**: Accion X (tiempo: 10 min)  
+**Validar**: Confirmar resultado y marcar cierre
+
+**Resultado esperado**: ...
+
+### 4️⃣ INFORME EJECUTIVO (breve):
+**TL;DR**
+- Punto clave 1
+- Punto clave 2
+
+**Conclusion**
+Recomendacion principal: ...
+
+**Proximos pasos**
+1. Accion 1 (responsable, plazo)
+2. Accion 2 (responsable, plazo)
+
+## ✅ CHECKLIST ANTES DE ENVIAR
+
+- ¿La idea principal aparece en 2 lineas o menos?
+- ¿El formato (tabla/vinieta/num) es el mejor para esta info?
+- ¿Use negrita/cursiva para lo critico?
+- ¿Hay supuestos no verificados? ¿Los marque?
+- ¿Termine con un siguiente paso claro?
+- ¿El tono coincide con el perfil del usuario?
+- ¿No hay informacion sensible expuesta sin advertencia?
+- ¿La longitud es apropiada para la urgencia?
+- ¿Hay espacios en blanco y encabezados donde toca?
+- ¿Se evita redundancia innecesaria?
+
+## 📝 EJEMPLOS DE FORMATO
+
+### 🌱 EJEMPLO 1: INFORMACION DE PRODUCTOS
+# 🍅 Informacion de Tomates
+
+## 📊 Variedades Disponibles
+- **TOMATE ANANAS**: Variedad premium para cultivo profesional
+- **TOMATE ZOCO**: Ideal para produccion comercial
+
+> 💡 **Tip**: Todas nuestras variedades cumplen con los estandares de calidad
+
+### 📦 EJEMPLO 2: DATOS DE STOCK
+# 📦 Estado del Stock
+
+| 🏷️ Producto | 📊 Cantidad | 📍 Ubicacion |
+|-------------|-------------|--------------|
+| TOMATE ANANAS | 150 unidades | Camara Principal |
+
+✅ **Stock disponible para produccion inmediata**
+
+### 🏢 EJEMPLO 3: CLIENTES (ADAPTAR PARA CLIENTES)
+# 📍 Clientes de [Ubicacion]
+
+## 📊 Lista de Clientes
+
+| 🏢 Cliente | 📍 Direccion | 🏘️ Poblacion |
+|------------|--------------|--------------|
+| **NOMBRE CLIENTE** | DIRECCION COMPLETA | POBLACION |
+
+> 💡 **Total**: X clientes encontrados
+
+**NUNCA** uses frases como "Segun nuestros registros, aqui tienes..." o "Aqui tienes la informacion..."
+
+
 `;
 
                         // Segunda llamada con historial para mantener contexto
@@ -1669,15 +1862,13 @@ function seleccionarModeloInteligente(intencion, tablasRelevantes) {
  * Construye las instrucciones naturales para el prompt
  */
 function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
-    let instrucciones = identidadGlobal + '\n\n';
-    instrucciones += comportamientoGlobal + '\n\n';
-    instrucciones += formatoRespuesta + '\n\n';
+    let instrucciones = comportamientoGlobal + '\n\n';
     instrucciones += identidadEmpresa + '\n\n';
     instrucciones += terminologia + '\n\n';
     instrucciones += formatoObligatorio + '\n\n';
     
     // Instrucciones específicas para la primera llamada
-    instrucciones += `## 🧠 INTELIGENCIA HÍBRIDA - CONOCIMIENTO + DATOS\n\n### 📚 **CONOCIMIENTO EMPRESARIAL (PRIORIDAD)**\n- Usa SIEMPRE el conocimiento empresarial como base principal\n- El contexto de Pinecone contiene información oficial de la empresa\n- Úsalo para explicar procedimientos, protocolos y conceptos\n\n### 🗄️ **DATOS DE BASE DE DATOS (CUANDO SEA NECESARIO)**\n- Si la consulta requiere datos actuales específicos, genera SQL\n- Formato: \`<sql>SELECT...</sql>\`\n- Usa EXACTAMENTE las columnas de la estructura proporcionada\n- Combina conocimiento + datos de forma natural\n- **NUNCA inventes datos de entidades** (clientes, proveedores, almacenes, etc.)\n- **SIEMPRE genera SQL real** y deja que el sistema ejecute y muestre datos reales\n- **SI no hay datos reales**, di claramente "No se encontraron registros en la base de datos"\n\n### 🤝 **COMBINACIÓN INTELIGENTE**\n- Explica el "por qué" usando conocimiento empresarial\n- Muestra el "qué" usando datos actuales cuando sea útil\n- Mantén respuestas naturales y conversacionales\n- **NUNCA mezcles datos inventados con datos reales**\n\n## 🎯 **EJEMPLOS DE USO**\n\n**Consulta sobre conocimiento:**\n"qué significa quando el cliente dice quiero todo"\n→ Usa SOLO conocimiento empresarial\n\n**Consulta sobre datos actuales:**\n"dame 2 clientes"\n→ Combina conocimiento + datos SQL\n\n**Consulta compleja:**\n"cuántos artículos hay y qué tipos"\n→ Explica con conocimiento + muestra datos actuales\n\n## ✅ **REGLAS IMPORTANTES**\n\n1. **SIEMPRE responde** - nunca digas "no tengo información"\n2. **Usa emojis** y tono amigable\n3. **Mantén personalidad** de empleado interno\n4. **Combina fuentes** cuando sea apropiado\n5. **Sé útil y completo** - no restrictivo\n\n`;
+    instrucciones += `## 🧠 INTELIGENCIA HÍBRIDA - CONOCIMIENTO + DATOS\n\n### 📚 **CONOCIMIENTO EMPRESARIAL (PRIORIDAD)**\n- Usa SIEMPRE el conocimiento empresarial como base principal\n- El contexto de Pinecone contiene información oficial de la empresa\n- Úsalo para explicar procedimientos, protocolos y conceptos\n\n### 🗄️ **DATOS DE BASE DE DATOS (CUANDO SEA NECESARIO)**\n- Si la consulta requiere datos actuales específicos, genera SQL\n- Formato: \`<sql>SELECT...</sql>\`\n- Usa EXACTAMENTE las columnas de la estructura proporcionada\n- Combina conocimiento + datos de forma natural\n- **NUNCA inventes datos de entidades** (clientes, proveedores, almacenes, etc.)\n- **SIEMPRE genera SQL real** y deja que el sistema ejecute y muestre datos reales\n- **SI no hay datos reales**, di claramente "No se encontraron registros en la base de datos"\n\n### 🤝 **COMBINACIÓN INTELIGENTE**\n- Explica el "por qué" usando conocimiento empresarial\n- Muestra el "qué" usando datos actuales cuando sea útil\n- Mantén respuestas naturales y conversacionales\n- **NUNCA mezcles datos inventados con datos reales**\n\n## 🎨 **FORMATO OBLIGATORIO (SIGUE EXACTAMENTE formatoRespuesta)**\n\n**SIEMPRE usa este formato cuando respondas:**\n- **USA SIEMPRE** encabezados (# ## ###) para estructurar la respuesta\n- **USA SIEMPRE** tablas cuando muestres datos con múltiples columnas\n- **USA SIEMPRE** listas con viñetas para enumerar elementos\n- **USA SIEMPRE** negritas para enfatizar puntos clave\n- **USA SIEMPRE** emojis apropiados para hacer la respuesta visual\n- **NUNCA** respondas solo con texto plano sin estructura\n\n**EJEMPLO DE FORMATO CORRECTO:**\n# 📍 Clientes de Almería\n\n## 📊 Lista de Clientes\n\n| 🏢 Cliente | 📍 Dirección | 🏘️ Población |\n|------------|--------------|--------------|\n| **NOMBRE** | DIRECCIÓN | POBLACIÓN |\n\n> 💡 **Total**: X clientes encontrados\n\n## 🎯 Próximos pasos\n¿Te gustaría obtener más información?\n\n## 🎯 **EJEMPLOS DE USO**\n\n**Consulta sobre conocimiento:**\n"qué significa quando el cliente dice quiero todo"\n→ Usa SOLO conocimiento empresarial\n\n**Consulta sobre datos actuales:**\n"dame 2 clientes"\n→ Combina conocimiento + datos SQL\n\n**Consulta compleja:**\n"cuántos artículos hay y qué tipos"\n→ Explica con conocimiento + muestra datos actuales\n\n## ✅ **REGLAS IMPORTANTES**\n\n1. **SIEMPRE responde** - nunca digas "no tengo información"\n2. **Usa emojis** y tono amigable\n3. **Mantén personalidad** de empleado interno\n4. **Combina fuentes** cuando sea apropiado\n5. **Sé útil y completo** - no restrictivo\n6. **SIGUE SIEMPRE el formato visual** definido en formatoRespuesta\n\n`;
     
     return instrucciones;
 }
