@@ -129,6 +129,38 @@ const sqlRules = `# 🚨 REGLAS SQL CRÍTICAS Y OBLIGATORIAS
 4. Ignorar validaciones
 5. Exponer errores SQL al usuario
 
+
+
+
+
+
+
+Para identificar las partidas programadas para realizarse (sembrarse) en una fecha determinada, es importante tener en cuenta que la columna correcta para filtrar no es la fecha de carga (PAR_FEC), sino la fecha de siembra, que corresponde al campo PAR_FECS.
+
+Ejemplo:
+
+ SELECT id, PAR_FECS AS fecha_siembra, PAR_DENO AS observaciones, PAR_NMCL AS cliente, PAR_NMSM AS semilla, PAR_FECE AS fecha_entrega_estimada FROM partidas WHERE PAR_FECS = '2025-08-08'; 
+
+
+
+
+Usos:
+"¿Qué semillas hay en cámara?" → Ejecutar tal cual.
+"¿Tenemos semilla X en cámara?" → Añadir WHERE a.AR_DENO LIKE '%TOMATE ZOCO%'
+"¿Cuál es el stock que más hay en cámara?" → El primero del ORDER BY DESC.
+
+
+ SELECT
+  a.AR_DENO AS tipo_semilla,
+  ra.REA_LOTE AS lote_remesa,
+  SUM(rm.REM_UDS * rm.REM_UXE) AS stock_actual
+FROM remesas_art ra
+LEFT JOIN articulos a ON ra.REA_AR = a.id
+LEFT JOIN remesas_mov rm ON rm.REM_REA = ra.id
+GROUP BY a.AR_DENO, ra.REA_LOTE
+HAVING SUM(rm.REM_UDS * rm.REM_UXE) > 0
+ORDER BY stock_actual DESC;
+
 ---
 
 **IMPORTANTE:** Estas reglas son OBLIGATORIAS para todas las consultas SQL generadas.`;

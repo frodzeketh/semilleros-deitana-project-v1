@@ -36,16 +36,16 @@ const langfuseUtils = require('../../utils/langfuse');
 require('dotenv').config();
 const mapaERP = require('./mapaERP');
 // Importaciones desde las carpetas organizadas
-const { 
+const {
     formatoObligatorio, 
     promptGlobal, 
     promptBase, 
     comportamientoGlobal
-} = require('../prompts/global');
+} = require('../prompts/GLOBAL');
 
-const { sqlRules } = require('../prompts/sql');
+const { sqlRules } = require('../prompts/SQL');
 
-const { identidadEmpresa, terminologia } = require('../prompts/deitana');
+const { identidadEmpresa, terminologia } = require('../prompts/DEITANA');
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -324,47 +324,75 @@ async function executeQuery(sql) {
 function validarRespuestaSQL(response) {
     console.log('🔍 [SQL-VALIDATION] Validando respuesta para extraer SQL...');
     
-    // Primero intentar con etiquetas <sql>
-    let sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
+    const sqlQueries = [];
     
-    // Si no encuentra, intentar con bloques de código SQL
-    if (!sqlMatch) {
-        sqlMatch = response.match(/```sql\s*([\s\S]*?)```/);
-        if (sqlMatch) {
-            console.log('⚠️ [SQL-VALIDATION] SQL encontrado en formato markdown, convirtiendo');
-            response = response.replace(/```sql\s*([\s\S]*?)```/, '<sql>$1</sql>');
-            sqlMatch = response.match(/<sql>([\s\S]*?)<\/sql>/);
+    // Buscar múltiples consultas SQL con etiquetas <sql>
+    const sqlMatches = response.match(/<sql>([\s\S]*?)<\/sql>/g);
+    if (sqlMatches) {
+        console.log('✅ [SQL-VALIDATION] Encontradas', sqlMatches.length, 'consultas SQL con etiquetas');
+        sqlMatches.forEach((match, index) => {
+            const sqlContent = match.replace(/<\/?sql>/g, '').trim();
+            if (sqlContent && sqlContent.toLowerCase().startsWith('select')) {
+                sqlQueries.push(procesarSQL(sqlContent, `SQL ${index + 1}`));
+            }
+        });
+    }
+    
+    // Si no encontró con etiquetas, buscar con bloques de código SQL
+    if (sqlQueries.length === 0) {
+        const codeMatches = response.match(/```sql\s*([\s\S]*?)```/g);
+        if (codeMatches) {
+            console.log('✅ [SQL-VALIDATION] Encontradas', codeMatches.length, 'consultas SQL en bloques de código');
+            codeMatches.forEach((match, index) => {
+                const sqlContent = match.replace(/```sql\s*/, '').replace(/```/, '').trim();
+                if (sqlContent && sqlContent.toLowerCase().startsWith('select')) {
+                    sqlQueries.push(procesarSQL(sqlContent, `SQL ${index + 1}`));
+                }
+            });
         }
     }
     
-    // Si no encuentra, buscar SQL en texto plano (nueva funcionalidad)
-    if (!sqlMatch) {
+    // Si no encontró con bloques, buscar SQL en texto plano
+    if (sqlQueries.length === 0) {
         console.log('🔍 [SQL-VALIDATION] Buscando SQL en texto plano...');
-        const sqlPattern = /(SELECT\s+[\s\S]*?)(?:;|$)/i;
-        sqlMatch = response.match(sqlPattern);
-        if (sqlMatch) {
-            console.log('✅ [SQL-VALIDATION] SQL encontrado en texto plano');
+        const sqlPattern = /(SELECT\s+[\s\S]*?)(?:;|$)/gi;
+        let match;
+        let index = 0;
+        while ((match = sqlPattern.exec(response)) !== null) {
+            const sqlContent = match[1].trim();
+            if (sqlContent && sqlContent.toLowerCase().startsWith('select')) {
+                sqlQueries.push(procesarSQL(sqlContent, `SQL ${index + 1}`));
+                index++;
+            }
+        }
+        if (sqlQueries.length > 0) {
+            console.log('✅ [SQL-VALIDATION] Encontradas', sqlQueries.length, 'consultas SQL en texto plano');
         }
     }
     
-    if (!sqlMatch) {
+    if (sqlQueries.length === 0) {
         console.log('❌ [SQL-VALIDATION] No se encontró SQL en la respuesta');
-        return null; // Permitir respuestas sin SQL
+        return null;
     }
     
-    let sql = sqlMatch[1].trim();
-    if (!sql) {
-        console.error('❌ [SQL-VALIDATION] La consulta SQL está vacía');
-        throw new Error('La consulta SQL está vacía');
+    // Si solo hay una consulta, devolverla como string (compatibilidad)
+    if (sqlQueries.length === 1) {
+        return sqlQueries[0];
     }
+    
+    // Si hay múltiples consultas, devolver array
+    console.log('✅ [SQL-VALIDATION] Devolviendo', sqlQueries.length, 'consultas SQL');
+    return sqlQueries;
+}
+
+function procesarSQL(sql, nombre) {
+    console.log(`🔍 [SQL-PROCESSING] Procesando ${nombre}:`, sql.substring(0, 100) + '...');
     
     // Validar que es una consulta SQL válida
     if (!sql.toLowerCase().startsWith('select')) {
-        console.error('❌ [SQL-VALIDATION] La consulta no es SELECT');
-        throw new Error('La consulta debe comenzar con SELECT');
+        console.error(`❌ [SQL-PROCESSING] ${nombre} no es SELECT`);
+        throw new Error(`${nombre} debe comenzar con SELECT`);
     }
-    
-    console.log('✅ [SQL-VALIDATION] SQL válido extraído');
     
     // Validar y corregir sintaxis común
     if (sql.includes('OFFSET')) {
@@ -374,7 +402,7 @@ function validarRespuestaSQL(response) {
                 /LIMIT\s+(\d+)\s+OFFSET\s+(\d+)/i,
                 `LIMIT ${offsetMatch[2]}, ${offsetMatch[1]}`
             );
-            console.log('🔄 [SQL-VALIDATION] Corregida sintaxis OFFSET');
+            console.log(`🔄 [SQL-PROCESSING] Corregida sintaxis OFFSET en ${nombre}`);
         }
     }
     
@@ -387,13 +415,12 @@ function validarRespuestaSQL(response) {
     
     // Si no tiene LIMIT y no es excepción, AGREGAR LIMIT automáticamente
     if (!esConsultaConteo && !tieneDistinct && !tieneGroupBy && !sql.toLowerCase().includes('limit') && !(tieneJoin && tieneFiltroFecha)) {
-        // Buscar el final de la consulta (antes de ; si existe)
         sql = sql.replace(/;*\s*$/, '');
         sql += ' LIMIT 10';
-        console.log('🔄 [SQL-VALIDATION] Agregado LIMIT automático');
+        console.log(`🔄 [SQL-PROCESSING] Agregado LIMIT automático en ${nombre}`);
     }
     
-    console.log('✅ [SQL-VALIDATION] SQL final validado:', sql.substring(0, 100) + '...');
+    console.log(`✅ [SQL-PROCESSING] ${nombre} validado:`, sql.substring(0, 100) + '...');
     return sql;
 }
 
@@ -1389,11 +1416,30 @@ async function processQueryStream({ message, userId, conversationId, response })
             const sql = validarRespuestaSQL(fullResponse);
             
             if (sql) {
-                console.log('✅ [STREAMING] SQL encontrado, ejecutando consulta...');
+                console.log('✅ [STREAMING] SQL encontrado, ejecutando consulta(s)...');
                 try {
-                    const results = await executeQuery(sql);
+                    let results;
+                    let allResults = [];
                     
-                    if (results && results.length > 0) {
+                    // Manejar múltiples consultas SQL
+                    if (Array.isArray(sql)) {
+                        console.log(`🔄 [STREAMING] Ejecutando ${sql.length} consultas SQL...`);
+                        for (let i = 0; i < sql.length; i++) {
+                            console.log(`🔍 [STREAMING] Ejecutando consulta ${i + 1}/${sql.length}`);
+                            const queryResults = await executeQuery(sql[i]);
+                            allResults.push({
+                                query: sql[i],
+                                results: queryResults,
+                                index: i + 1
+                            });
+                        }
+                        results = allResults;
+                    } else {
+                        // Consulta única (compatibilidad)
+                        results = await executeQuery(sql);
+                    }
+                    
+                    if (results && (Array.isArray(results) ? results.length > 0 : results.length > 0)) {
                         // Guardar los resultados reales para contexto futuro
                         lastRealData = JSON.stringify(results);
                         
@@ -1429,12 +1475,18 @@ async function processQueryStream({ message, userId, conversationId, response })
                         promptExplicacion += `## 📊 DATOS A EXPLICAR:
 
 CONSULTA ORIGINAL: "${message}"  
-SQL EJECUTADO: ${sql}  
+${Array.isArray(sql) ? 
+    `CONSULTAS SQL EJECUTADAS: ${sql.length} consultas\n${sql.map((q, i) => `${i + 1}. ${q}`).join('\n')}` : 
+    `SQL EJECUTADO: ${sql}`}  
 RESULTADOS: ${JSON.stringify(results, null, 2)}
 
 ## 🎯 INSTRUCCIÓN ESPECÍFICA:
 
 Tu tarea es explicar estos resultados de forma natural y conversacional. NO generes nuevo SQL, solo explica los datos que ya están disponibles.
+
+${Array.isArray(results) ? 
+    `**IMPORTANTE**: Tienes ${results.length} conjuntos de resultados diferentes. Explica cada uno por separado usando encabezados claros.` : 
+    ''}
 
 **FORMATO OBLIGATORIO - REGLAS VISUALES:**
 

@@ -2,8 +2,8 @@
 // SCRIPT DE PRUEBA - OPTIMIZACIÓN DE COSTOS
 // =====================================
 
-const { construirPrompt } = require('../prompts/construirPrompt');
-const mapaERP = require('./mapaERP');
+const { construirPromptInteligente } = require('../core/openAI');
+const mapaERP = require('../core/mapaERP');
 
 // Casos de prueba para demostrar la optimización
 const casosPrueba = [
@@ -50,7 +50,7 @@ function calcularCostoEstimado(modelo, tokens) {
 }
 
 // Función principal de prueba
-function probarOptimizacion() {
+async function probarOptimizacion() {
     console.log('🧪 ===== PRUEBA DE OPTIMIZACIÓN DE COSTOS =====\n');
     
     let costoTotalAnterior = 0;
@@ -63,7 +63,7 @@ function probarOptimizacion() {
         
         try {
             // Construir prompt optimizado
-            const resultado = construirPrompt(caso.mensaje, mapaERP, '', '', false);
+            const resultado = await construirPromptInteligente(caso.mensaje, mapaERP, null, '', '', [], false);
             
             // Calcular métricas
             const tokensOptimizados = resultado.metricas.tokensEstimados;
@@ -108,7 +108,7 @@ function probarOptimizacion() {
 }
 
 // Función para probar detección de intención específica
-function probarDeteccionIntencion() {
+async function probarDeteccionIntencion() {
     console.log('\n\n🔍 ===== PRUEBA DE DETECCIÓN DE INTENCIÓN =====\n');
     
     const mensajesPrueba = [
@@ -125,18 +125,24 @@ function probarDeteccionIntencion() {
         "Comparar rendimiento anual"
     ];
     
-    const { analizarIntencion } = require('../prompts/construirPrompt');
+    // La función analizarIntencion ahora está integrada en construirPromptInteligente
+    // No necesitamos importarla por separado
     
-    mensajesPrueba.forEach(mensaje => {
-        const intencion = analizarIntencion(mensaje);
-        console.log(`"${mensaje}" → ${intencion.tipo} | ${intencion.complejidad}`);
-    });
+    for (const mensaje of mensajesPrueba) {
+        try {
+            const resultado = await construirPromptInteligente(mensaje, mapaERP, null, '', '', [], false);
+            console.log(`"${mensaje}" → ${resultado.intencion.tipo} | ${resultado.intencion.complejidad}`);
+        } catch (error) {
+            console.log(`"${mensaje}" → Error: ${error.message}`);
+        }
+    }
 }
 
 // Ejecutar si se llama directamente
 if (require.main === module) {
-    probarOptimizacion();
-    probarDeteccionIntencion();
+    probarOptimizacion().then(() => {
+        return probarDeteccionIntencion();
+    }).catch(console.error);
 }
 
 module.exports = {
