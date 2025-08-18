@@ -2497,6 +2497,65 @@ partidas: {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ================================================*/
+partidas_par_ubic: {
+  // Clave principal (nombre de tabla)
+  descripcion:
+    "Registra la ubicación física de las partidas de siembra, permitiendo un seguimiento detallado. Contiene información sobre el invernadero, sector, fila y número de bandeja para cada partida.",
+  tabla: `partidas_par_ubic`, // Nombre de la tabla principal
+  columnas: {
+    id: "ID de la partida, clave foránea a la tabla 'partidas'.",
+    id2: "Identificador secundario que aumenta si una partida se divide en varias ubicaciones.",
+    C0: "Invernadero. Ejemplo: 'A1'.",
+    C1: "Sector dentro del invernadero.",
+    C2: "Fila",
+    C4: "Bandejas que quedan",
+
+  },
+  relaciones: {
+    partidas: {
+      tabla_relacionada: "partidas",
+      tipo: "Uno a muchos",
+      campo_enlace_local: "id",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula la ubicación con la partida de siembra a la que pertenece.",
+    },
+  },
+  ejemplos: {
+    consulta_ubicacion_por_partida:
+      "Obtener la ubicación de una partida específica usando su 'id'.",
+    filtrar_por_invernadero:
+      "Listar todas las partidas ubicadas en un invernadero específico (filtrando por C0).",
+    buscar_ubicacion_especifica:
+      "Encontrar la partida que se encuentra en una ubicación exacta (ej. Invernadero 'A1', Sector 'B', Fila '3', Bandeja '10').",
+    actualizar_ubicacion_partida:
+      "Mover una partida a una nueva ubicación, actualizando los campos C0, C1, C2 y C3.",
+  },
+},
+
+
+
+
+
+
+
+
 /* ================================================*/
 /* Ventas – Otros – Reservas */
 /* ================================================*/

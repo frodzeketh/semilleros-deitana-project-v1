@@ -2,8 +2,8 @@
 // SCRIPT DE PRUEBA - OPTIMIZACIÓN DE COSTOS
 // =====================================
 
-const { construirPromptInteligente } = require('../core/openAI');
-const mapaERP = require('../core/mapaERP');
+// const { construirPrompt } = require('../prompts/construirPrompt');
+// const mapaERP = require('./mapaERP');
 
 // Casos de prueba para demostrar la optimización
 const casosPrueba = [
@@ -50,7 +50,7 @@ function calcularCostoEstimado(modelo, tokens) {
 }
 
 // Función principal de prueba
-async function probarOptimizacion() {
+function probarOptimizacion() {
     console.log('🧪 ===== PRUEBA DE OPTIMIZACIÓN DE COSTOS =====\n');
     
     let costoTotalAnterior = 0;
@@ -63,7 +63,7 @@ async function probarOptimizacion() {
         
         try {
             // Construir prompt optimizado
-            const resultado = await construirPromptInteligente(caso.mensaje, mapaERP, null, '', '', [], false);
+            // const resultado = construirPrompt(caso.mensaje, mapaERP, '', '', false);
             
             // Calcular métricas
             const tokensOptimizados = resultado.metricas.tokensEstimados;
@@ -108,7 +108,7 @@ async function probarOptimizacion() {
 }
 
 // Función para probar detección de intención específica
-async function probarDeteccionIntencion() {
+function probarDeteccionIntencion() {
     console.log('\n\n🔍 ===== PRUEBA DE DETECCIÓN DE INTENCIÓN =====\n');
     
     const mensajesPrueba = [
@@ -125,24 +125,18 @@ async function probarDeteccionIntencion() {
         "Comparar rendimiento anual"
     ];
     
-    // La función analizarIntencion ahora está integrada en construirPromptInteligente
-    // No necesitamos importarla por separado
+    const { analizarIntencion } = require('../prompts/construirPrompt');
     
-    for (const mensaje of mensajesPrueba) {
-        try {
-            const resultado = await construirPromptInteligente(mensaje, mapaERP, null, '', '', [], false);
-            console.log(`"${mensaje}" → ${resultado.intencion.tipo} | ${resultado.intencion.complejidad}`);
-        } catch (error) {
-            console.log(`"${mensaje}" → Error: ${error.message}`);
-        }
-    }
+    mensajesPrueba.forEach(mensaje => {
+        const intencion = analizarIntencion(mensaje);
+        console.log(`"${mensaje}" → ${intencion.tipo} | ${intencion.complejidad}`);
+    });
 }
 
 // Ejecutar si se llama directamente
 if (require.main === module) {
-    probarOptimizacion().then(() => {
-        return probarDeteccionIntencion();
-    }).catch(console.error);
+    probarOptimizacion();
+    probarDeteccionIntencion();
 }
 
 module.exports = {

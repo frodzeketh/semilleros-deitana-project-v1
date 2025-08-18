@@ -58,6 +58,19 @@ const sqlRules = `# 🚨 REGLAS SQL CRÍTICAS Y OBLIGATORIAS
 - Subconsultas complejas
 - Funciones de sistema
 
+## 🚨 REGLA CRÍTICA ESPECÍFICA PARA PARTIDAS
+
+### ⚠️ **OBLIGATORIO PARA CONSULTAS DE PARTIDAS:**
+**SIEMPRE** usa \`ORDER BY p.id DESC\` para obtener las partidas **MÁS RECIENTES**.
+**NUNCA** muestres partidas antiguas o con IDs bajos.
+**SIEMPRE** incluye \`LIMIT\` para evitar mostrar demasiadas partidas.
+
+**EJEMPLO CORRECTO:**
+\`<sql>SELECT * FROM partidas ORDER BY id DESC LIMIT 10</sql>\`
+
+**EJEMPLO INCORRECTO:**
+\`<sql>SELECT * FROM partidas ORDER BY id ASC</sql>\`
+
 ## 📋 VALIDACIÓN OBLIGATORIA
 
 ### 🔍 ANTES DE EJECUTAR:
@@ -160,6 +173,91 @@ LEFT JOIN remesas_mov rm ON rm.REM_REA = ra.id
 GROUP BY a.AR_DENO, ra.REA_LOTE
 HAVING SUM(rm.REM_UDS * rm.REM_UXE) > 0
 ORDER BY stock_actual DESC;
+
+
+
+
+
+
+
+
+
+
+
+Para consultas como: "¿Qué partidas tenemos en el invernadero A1 y cuántas bandejas quedan?"
+Recuerda, que es importante que te enfoques en proporcionar partidas que sean recientes, no partidas que años anteriores o las primeras ya que eso no es factible por ningun motivo.
+
+## 🚨 REGLA CRÍTICA PARA CONSULTAS DE PARTIDAS
+
+### ⚠️ **OBLIGATORIO PARA TODAS LAS CONSULTAS DE PARTIDAS:**
+**SIEMPRE** enfócate en proporcionar partidas que sean **RECIENTES**, NO partidas de años anteriores o las primeras partidas. Esto es **CRÍTICO** porque las partidas antiguas no son factibles por ningún motivo.
+
+### 📋 **EJEMPLOS DE CONSULTAS DE PARTIDAS:**
+
+**Consulta:** "¿Qué partidas tenemos en el invernadero A1 y cuántas bandejas quedan?"
+
+**SQL CORRECTO (partidas recientes):**
+\`<sql>
+SELECT 
+    p.id AS partida_id,
+    pu.id2 AS sub_partida,
+    pu.C0 AS invernadero,
+    pu.C1 AS sector,
+    pu.C2 AS fila,
+    pu.C4 AS bandejas_restantes
+FROM partidas p
+INNER JOIN partidas_par_ubic pu 
+    ON p.id = pu.id
+WHERE pu.C0 = 'A1'
+ORDER BY p.id DESC
+LIMIT 10;
+</sql>\`
+
+**IMPORTANTE:** 
+- **SIEMPRE** usa \`ORDER BY p.id DESC\` para obtener las partidas más recientes
+- **SIEMPRE** usa \`LIMIT\` para evitar mostrar demasiadas partidas
+- **NUNCA** muestres partidas con IDs bajos (antiguas)
+- **SIEMPRE** prioriza partidas con IDs altos (recientes)
+
+### 📋 **CONSULTAS ESPECÍFICAS POR ID:**
+
+**Consulta:** "Dame la información de la partida con id 25006502 incluyendo cuántas bandejas quedan"
+
+**SQL CORRECTO:**
+\`<sql>
+SELECT 
+    p.id AS partida_id,
+    pu.id2 AS sub_partida,
+    pu.C0 AS invernadero,
+    pu.C1 AS sector,
+    pu.C2 AS fila,
+    pu.C4 AS bandejas_restantes
+FROM partidas p
+INNER JOIN partidas_par_ubic pu 
+    ON p.id = pu.id
+WHERE p.id = 25006502;
+</sql>\`
+
+## 📝 Prompt — Diccionario de Interpretación
+
+### 🔎 Reglas de búsqueda de artículos
+
+Cuando se consulte por brócoli Ares, en la base de datos el artículo corresponde a:
+BROC. ARES
+
+La mayoría de artículos de brócoli comienzan con:
+BROC (no con BROCOLI).
+
+### 🥦 Interpretación de términos de ubicación
+
+Cuando en una consulta aparezca la palabra "cabeza", debes buscar el artículo común (ejemplo: BROC. ARES).
+
+Cuando en una consulta aparezca la palabra "pie", debes buscar el artículo de portainjerto, que aparece en la base de datos con el prefijo:
+PORTAINJ
+
+**Ejemplo:**
+"Pie de tomate Fervour" → corresponde a PORTAINJ TOMATE FERVOUR
+
 
 ---
 
