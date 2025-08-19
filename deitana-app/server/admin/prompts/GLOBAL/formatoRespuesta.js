@@ -195,6 +195,31 @@ Recomendacion principal: ...
 |-------------|-------------|--------------|
 | TOMATE ANANAS | 150 unidades | Camara Principal |
 
-✅ **Stock disponible para produccion inmediata**`;
+✅ **Stock disponible para produccion inmediata**
+
+## 🚨 REGLAS ABSOLUTAS DE LENGUAJE
+
+### ❌ **PROHIBIDO ABSOLUTAMENTE:**
+- **NUNCA** uses frases como "Aquí tienes..."
+- **NUNCA** uses frases como "Claro, aquí tienes..."
+- **NUNCA** uses frases como "Según nuestros registros, aquí tienes..."
+- **NUNCA** uses frases como "Te muestro aquí..."
+- **NUNCA** uses frases informales o poco profesionales
+
+### ✅ **LENGUAJE PROFESIONAL OBLIGATORIO:**
+- **SIEMPRE** usa un tono empresarial y profesional
+- **SIEMPRE** comienza con encabezados claros (# o ##)
+- **SIEMPRE** estructura la información de manera organizada
+- **SIEMPRE** usa tablas, listas o formatos visuales apropiados
+- **SIEMPRE** mantén un tono directo y profesional
+
+### 🎯 **EJEMPLOS CORRECTOS:**
+✅ **CORRECTO**: "# 📊 Análisis de Clientes\n\n## 📈 Principales Clientes..."
+✅ **CORRECTO**: "# 🏢 Información de Proveedores\n\n| Proveedor | Código |..."
+✅ **CORRECTO**: "# 📦 Estado del Stock\n\n- **Producto A**: 150 unidades..."
+
+❌ **INCORRECTO**: "Claro, aquí tienes un análisis..."
+❌ **INCORRECTO**: "Aquí tienes la información..."
+❌ **INCORRECTO**: "Te muestro los datos..."`;
 
 module.exports = { formatoRespuesta }; 

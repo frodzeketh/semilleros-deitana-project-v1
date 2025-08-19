@@ -167,32 +167,25 @@ async function formatFinalResponse(results, query) {
     const cantidadMatch = query.match(/(\d+)\s+/i);
     const cantidadSolicitada = cantidadMatch ? parseInt(cantidadMatch[1]) : null;
     
-    // Detectar tipo de entidad
+    // Detectar tipo de entidad para contexto
     let tipoEntidad = 'registros';
-    let saludo = 'Aquí tienes';
     
     if (/almacenes?/i.test(query)) {
         tipoEntidad = results.length === 1 ? 'almacén' : 'almacenes';
-        saludo = cantidadSolicitada ? `Los ${cantidadSolicitada} ${tipoEntidad} que me pediste son` : `Los ${tipoEntidad} disponibles son`;
     } else if (/tecnicos?/i.test(query)) {
         tipoEntidad = results.length === 1 ? 'técnico' : 'técnicos';
-        saludo = cantidadSolicitada ? `Los ${cantidadSolicitada} ${tipoEntidad} que me pediste son` : `Los ${tipoEntidad} disponibles son`;
     } else if (/clientes?/i.test(query)) {
         tipoEntidad = results.length === 1 ? 'cliente' : 'clientes';
-        saludo = cantidadSolicitada ? `Los ${cantidadSolicitada} ${tipoEntidad} que me pediste son` : `Los ${tipoEntidad} disponibles son`;
     } else if (/articulos?/i.test(query)) {
         tipoEntidad = results.length === 1 ? 'artículo' : 'artículos';
-        saludo = cantidadSolicitada ? `Los ${cantidadSolicitada} ${tipoEntidad} que me pediste son` : `Los ${tipoEntidad} disponibles son`;
     } else if (/proveedores?/i.test(query)) {
         tipoEntidad = results.length === 1 ? 'proveedor' : 'proveedores';
-        saludo = cantidadSolicitada ? `Los ${cantidadSolicitada} ${tipoEntidad} que me pediste son` : `Los ${tipoEntidad} disponibles son`;
     } else if (/bandejas?/i.test(query)) {
         tipoEntidad = results.length === 1 ? 'bandeja' : 'bandejas';
-        saludo = cantidadSolicitada ? `Las ${cantidadSolicitada} ${tipoEntidad} que me pediste son` : `Las ${tipoEntidad} disponibles son`;
     }
     
-    // Construir respuesta natural
-    let respuesta = `${saludo}:\n\n`;
+    // Construir respuesta natural - DEJAR QUE EL PROMPT DE formatoRespuesta MANEJE EL FORMATO
+    let respuesta = '';
     
     // Filtrar resultados válidos (sin valores vacíos en los campos principales)
     const resultadosValidos = results.filter(resultado => {
@@ -1470,7 +1463,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                                 `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
                             ).join('\n');
                             
-                            promptExplicacion += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
+                            promptExplicacion += `${formatoRespuesta}\n\n## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
                         }
                         
                         promptExplicacion += `## 📊 DATOS A EXPLICAR:
