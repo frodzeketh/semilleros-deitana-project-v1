@@ -78,74 +78,7 @@ let lastRealData = null;
 // - Generar respuestas naturales y conversacionales
 // =====================================
 
-/**
- * Función para formatear resultados en Markdown
- * @param {Array} results - Resultados de la consulta SQL
- * @returns {string} Resultados formateados en Markdown
- */
-function formatResultsAsMarkdown(results) {
-    if (!results || results.length === 0) {
-        return "No se han encontrado resultados para tu consulta.";
-    }
 
-    if (results.length === 1 && Object.keys(results[0]).length === 1) {
-        const value = Object.values(results[0])[0];
-        return `Total: ${value}`;
-    }
-
-    const columns = Object.keys(results[0]);
-    let markdown = "| " + columns.join(" | ") + " |\n";
-    markdown += "| " + columns.map(() => "---").join(" | ") + " |\n";
-    results.forEach(row => {
-        markdown += "| " + columns.map(col => (row[col] ?? "No disponible")).join(" | ") + " |\n";
-    });
-    return markdown;
-}
-
-/**
- * Función para obtener la descripción de una columna desde mapaERP
- * @param {string} tabla - Nombre de la tabla
- * @param {string} columna - Nombre de la columna
- * @returns {string} Descripción de la columna o el nombre original
- */
-function obtenerDescripcionColumna(tabla, columna) {
-    if (mapaERP[tabla] && mapaERP[tabla].columnas && mapaERP[tabla].columnas[columna]) {
-        return mapaERP[tabla].columnas[columna];
-    }
-    return columna;
-}
-
-/**
- * Función para determinar la tabla basada en las columnas
- * @param {Array} columnas - Array de nombres de columnas
- * @returns {string|null} Nombre de la tabla o null si no se encuentra
- */
-function determinarTabla(columnas) {
-    for (const [tabla, info] of Object.entries(mapaERP)) {
-        const columnasTabla = Object.keys(info.columnas || {});
-        if (columnas.every(col => columnasTabla.includes(col))) {
-            return tabla;
-        }
-    }
-    return null;
-}
-
-/**
- * Función para limitar resultados con opción de aleatorización
- * @param {Array} results - Resultados de la consulta
- * @param {number} limite - Número máximo de resultados (default: 5)
- * @param {boolean} aleatorio - Si se deben seleccionar registros aleatorios (default: false)
- * @returns {Array} Resultados limitados
- */
-function limitarResultados(results, limite = 5, aleatorio = false) {
-    if (!results || results.length === 0) return [];
-    if (aleatorio && results.length > 1) {
-        // Selecciona registros aleatorios
-        const shuffled = results.sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, limite);
-    }
-    return results.slice(0, limite);
-}
 
 /**
  * Función para formatear la respuesta final - RESPUESTAS NATURALES
@@ -162,111 +95,7 @@ function limitarResultados(results, limite = 5, aleatorio = false) {
  * - Capitaliza nombres automáticamente
  * - Agrega preguntas de seguimiento
  */
-async function formatFinalResponse(results, query) {
-    if (!results || results.length === 0) {
-        return "No encontré información que coincida con tu consulta. ¿Quieres que busque algo similar, o puedes darme más detalles para afinar la búsqueda?";
-    }
 
-    // Detectar cantidad solicitada en la consulta
-    const cantidadMatch = query.match(/(\d+)\s+/i);
-    const cantidadSolicitada = cantidadMatch ? parseInt(cantidadMatch[1]) : null;
-    
-    // Detectar tipo de entidad para contexto
-    let tipoEntidad = 'registros';
-    
-    if (/almacenes?/i.test(query)) {
-        tipoEntidad = results.length === 1 ? 'almacén' : 'almacenes';
-    } else if (/tecnicos?/i.test(query)) {
-        tipoEntidad = results.length === 1 ? 'técnico' : 'técnicos';
-    } else if (/clientes?/i.test(query)) {
-        tipoEntidad = results.length === 1 ? 'cliente' : 'clientes';
-    } else if (/articulos?/i.test(query)) {
-        tipoEntidad = results.length === 1 ? 'artículo' : 'artículos';
-    } else if (/proveedores?/i.test(query)) {
-        tipoEntidad = results.length === 1 ? 'proveedor' : 'proveedores';
-    } else if (/bandejas?/i.test(query)) {
-        tipoEntidad = results.length === 1 ? 'bandeja' : 'bandejas';
-    }
-    
-    // Construir respuesta natural - DEJAR QUE EL PROMPT DE formatoRespuesta MANEJE EL FORMATO
-    let respuesta = '';
-    
-    // Filtrar resultados válidos (sin valores vacíos en los campos principales)
-    const resultadosValidos = results.filter(resultado => {
-        const campos = Object.entries(resultado);
-        return campos.some(([campo, valor]) => {
-            // Filtrar campos principales que no estén vacíos
-            const esCampoPrincipal = campo.includes('DENO') || campo.includes('NOMBRE') || campo.includes('NAME');
-            return esCampoPrincipal && valor && valor.toString().trim() !== '';
-        });
-    });
-    
-    // Si no hay resultados válidos después del filtro, usar los originales
-    const resultadosFinales = resultadosValidos.length > 0 ? resultadosValidos : results;
-    
-    resultadosFinales.forEach((resultado, index) => {
-        // Buscar el campo principal de nombre/denominación
-        let nombrePrincipal = null;
-        const campos = Object.entries(resultado);
-        
-        // Prioridad: DENO > NOMBRE > NAME > primer campo con valor
-        for (const [campo, valor] of campos) {
-            if (!nombrePrincipal && valor && valor.toString().trim() !== '') {
-                if (campo.includes('DENO')) {
-                    nombrePrincipal = valor;
-                    break;
-                } else if (campo.includes('NOMBRE') || campo.includes('NAME')) {
-                    nombrePrincipal = valor;
-                    break;
-                }
-            }
-        }
-        
-        // Si no encontró campo principal, usar el primer campo con valor
-        if (!nombrePrincipal) {
-            for (const [campo, valor] of campos) {
-                if (valor && valor.toString().trim() !== '') {
-                    nombrePrincipal = valor;
-                    break;
-                }
-            }
-        }
-        
-        // Formatear el nombre principal
-        if (nombrePrincipal) {
-            nombrePrincipal = nombrePrincipal.toString().trim();
-            // Capitalizar si está en mayúsculas
-            if (nombrePrincipal === nombrePrincipal.toUpperCase() && nombrePrincipal.length > 3) {
-                nombrePrincipal = nombrePrincipal.toLowerCase()
-                    .split(' ')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-            }
-        }
-        
-        if (nombrePrincipal) {
-            respuesta += `${index + 1}. ${nombrePrincipal}\n`;
-        } else {
-            respuesta += `${index + 1}. [Sin nombre disponible]\n`;
-        }
-    });
-    
-    // Agregar nota adicional según el contexto
-    if (resultadosValidos.length < results.length) {
-        respuesta += `\n(Nota: Se filtraron algunos registros sin información válida)`;
-    }
-    
-    // Pregunta de seguimiento natural
-    if (resultadosFinales.length === 1) {
-        respuesta += `\n\n¿Necesitas más información sobre este ${tipoEntidad.replace(/s$/, '')}?`;
-    } else if (resultadosFinales.length <= 3) {
-        respuesta += `\n\n¿Te interesa información específica de alguno de estos ${tipoEntidad}?`;
-    } else {
-        respuesta += `\n\n¿Quieres que te dé más detalles de alguno en particular?`;
-    }
-    
-    return respuesta;
-}
 
 // =====================================
 // FUNCIONES DE EJECUCIÓN Y VALIDACIÓN SQL
@@ -422,13 +251,7 @@ function procesarSQL(sql, nombre) {
     return sql;
 }
 
-// Función para obtener el nombre real de la tabla desde mapaERP
-function obtenerNombreRealTabla(nombreClave) {
-    if (mapaERP[nombreClave] && mapaERP[nombreClave].tabla) {
-        return mapaERP[nombreClave].tabla;
-    }
-    return nombreClave;
-}
+
 
 // Función para reemplazar nombres de tablas en la consulta SQL
 function reemplazarNombresTablas(sql) {
@@ -443,62 +266,9 @@ function reemplazarNombresTablas(sql) {
 }
 
 // Función para validar que la tabla existe en mapaERP
-function validarTablaEnMapaERP(sql) {
-    const tablas = Object.keys(mapaERP);
-    const tablasEnConsulta = sql.match(/FROM\s+(\w+)|JOIN\s+(\w+)/gi)?.map(t => 
-        t.replace(/FROM\s+|JOIN\s+/gi, '').toLowerCase()
-    ) || [];
-    
-    for (const tabla of tablasEnConsulta) {
-        if (!tablas.includes(tabla)) {
-            throw new Error(`La tabla ${tabla} no existe en el mapaERP. Tablas disponibles: ${tablas.join(', ')}`);
-        }
-    }
-}
 
-// Función para validar que las columnas existen en mapaERP
-function validarColumnasEnMapaERP(sql, tabla) {
-    if (!mapaERP[tabla] || !mapaERP[tabla].columnas) {
-        throw new Error(`La tabla ${tabla} no está definida correctamente en mapaERP`);
-    }
 
-    const columnas = Object.keys(mapaERP[tabla].columnas);
-    
-    // Extraer las columnas de la consulta SQL
-    const selectMatch = sql.match(/SELECT\s+([^\s]*?)\s+FROM/i);
-    if (!selectMatch) return; // Si no podemos extraer las columnas, permitimos la consulta
 
-    // Verificar si se está usando SELECT *
-    if (selectMatch[1].trim() === '*') {
-        throw new Error(`No se permite usar SELECT *. Por favor, especifica las columnas definidas en mapaERP: ${columnas.join(', ')}`);
-    }
-    
-    const columnasEnSQL = selectMatch[1]
-        .split(',')
-        .map(col => {
-            col = col.trim();
-            // Si es una función SQL (COUNT, AVG, etc.), la permitimos
-            if (col.match(/^[A-Za-z]+\s*\([^)]*\)$/)) return null;
-            // Si es un alias (AS), tomamos la parte antes del AS
-            if (col.toLowerCase().includes(' as ')) {
-                const [columna, alias] = col.split(/\s+as\s+/i);
-                return columna.trim();
-            }
-            // Removemos el prefijo de tabla si existe
-            return col.replace(/^[a-z]+\./, '');
-        })
-        .filter(col => col !== null); // Eliminamos las funciones SQL
-    
-    // Verificar que cada columna existe en mapaERP
-    const columnasNoValidas = columnasEnSQL.filter(columna => !columnas.includes(columna));
-    
-    if (columnasNoValidas.length > 0) {
-        throw new Error(
-            `Las siguientes columnas no existen en la tabla ${tabla}: ${columnasNoValidas.join(', ')}. ` +
-            `Columnas disponibles: ${columnas.join(', ')}`
-        );
-    }
-}
 
 
 
@@ -515,13 +285,7 @@ function validarColumnasEnMapaERP(sql, tabla) {
 // =====================================
 
 // Función auxiliar para detectar si la pregunta es de seguimiento sobre teléfono de cliente
-function esPreguntaTelefonoCliente(userQuery, lastRealData) {
-    if (!lastRealData || lastRealData.type !== 'cliente' || !lastRealData.data) return false;
-    const texto = userQuery.toLowerCase();
-    return (
-        texto.includes('telefono') || texto.includes('teléfono')
-    );
-}
+
 
 // Función para guardar mensaje en Firestore
 async function saveMessageToFirestore(userId, message, isAdmin = true) {
@@ -664,162 +428,6 @@ async function saveAssistantMessageToFirestore(userId, message) {
 // - Recuperación automática cuando consultas exactas fallan
 // =====================================
 
-/**
- * Función auxiliar para intentar una búsqueda flexible (fuzzy search) en SQL
- * Se ejecuta cuando una consulta SQL exacta falla, generando variantes inteligentes
- * 
- * @param {string} sql - SQL original que falló
- * @param {string} userQuery - Consulta original del usuario
- * @returns {Object|null} Resultados encontrados o null si no hay coincidencias
- * 
- * ESTRATEGIAS DE BÚSQUEDA:
- * - Genera variantes del término (mayúsculas, minúsculas, sin tildes)
- * - Prueba múltiples columnas de texto
- * - Búsqueda multi-término para artículos
- * - Manejo especial para tablas específicas
- * - Recuperación automática cuando consultas exactas fallan
- */
-async function fuzzySearchRetry(sql, userQuery) {
-    console.log('🔍 [FUZZY-SEARCH] Iniciando búsqueda flexible...');
-    console.log('🔍 [FUZZY-SEARCH] SQL original:', sql);
-    console.log('🔍 [FUZZY-SEARCH] Query usuario:', userQuery);
-    
-    // Detectar el término de búsqueda en el WHERE
-    const likeMatch = sql.match(/WHERE\s+([\w.]+)\s+LIKE\s+'%([^%']+)%'/i);
-    const eqMatch = sql.match(/WHERE\s+([\w.]+)\s*=\s*'([^']+)'/i);
-    let columna = null;
-    let valor = null;
-    if (likeMatch) {
-        columna = likeMatch[1];
-        valor = likeMatch[2];
-        console.log('🔍 [FUZZY-SEARCH] Detectado LIKE:', columna, '=', valor);
-    } else if (eqMatch) {
-        columna = eqMatch[1];
-        valor = eqMatch[2];
-        console.log('🔍 [FUZZY-SEARCH] Detectado igualdad:', columna, '=', valor);
-    }
-    if (!columna || !valor) {
-        console.log('⚠️ [FUZZY-SEARCH] No se pudo detectar columna/valor para fuzzy search');
-        return null;
-    }
-
-    // Detectar la tabla principal del FROM
-    const fromMatch = sql.match(/FROM\s+([`\w]+)/i);
-    let tabla = fromMatch ? fromMatch[1].replace(/`/g, '') : null;
-    console.log('🔍 [FUZZY-SEARCH] Tabla detectada:', tabla);
-    
-    // Buscar la clave de mapaERP que corresponde a la tabla real
-    let claveMapa = tabla && Object.keys(mapaERP).find(k => (mapaERP[k].tabla || k) === tabla);
-    // Si no se detecta, fallback a la columna original
-    let columnasTexto = [columna];
-    if (claveMapa && mapaERP[claveMapa].columnas) {
-        // Filtrar solo columnas tipo texto (por nombre o heurística)
-        columnasTexto = Object.keys(mapaERP[claveMapa].columnas).filter(c => {
-            const nombre = c.toLowerCase();
-            return !nombre.match(/(id|num|cant|fecha|fec|total|importe|precio|monto|valor|kg|ha|area|superficie|lat|lon|long|ancho|alto|diam|mm|cm|m2|m3|porc|\d)/);
-        });
-        if (columnasTexto.length === 0) columnasTexto = Object.keys(mapaERP[claveMapa].columnas);
-        console.log('🔍 [FUZZY-SEARCH] Columnas texto disponibles:', columnasTexto.join(', '));
-    }
-
-    // Generar variantes del valor para fuzzy search
-    const variantes = [
-        valor,
-        valor.toUpperCase(),
-        valor.toLowerCase(),
-        valor.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // sin tildes
-        valor.split(' ')[0], // solo la primera palabra
-        valor.replace(/\s+/g, ''), // sin espacios
-        valor.replace(/cc/gi, ' CC'),
-        valor.replace(/lt/gi, ' LT'),
-        valor.replace(/\./g, ''),
-        valor.replace(/\d+/g, ''),
-        valor.slice(0, Math.max(3, Math.floor(valor.length * 0.7)))
-    ];
-    
-    console.log('🔍 [FUZZY-SEARCH] Variantes generadas:', variantes.length);
-
-    // --- MEJORA: Si el valor tiene varios términos, buscar artículos cuyo AR_DENO contenga TODOS los términos (AND) ---
-    if (tabla === 'articulos' && valor.trim().split(/\s+/).length > 1) {
-        console.log('🔍 [FUZZY-SEARCH] Búsqueda multi-término en artículos...');
-        const terminos = valor.trim().split(/\s+/).filter(Boolean);
-        // Buscar en AR_DENO y AR_REF, ambos deben contener todos los términos
-        const condicionesDeno = terminos.map(t => `AR_DENO LIKE '%${t}%'`).join(' AND ');
-        const condicionesRef = terminos.map(t => `AR_REF LIKE '%${t}%'`).join(' AND ');
-        // Probar primero en AR_DENO
-        let sqlMultiTerm = `SELECT * FROM articulos WHERE ${condicionesDeno} LIMIT 5`;
-        try {
-            console.log('🔍 [FUZZY-SEARCH] Probando multi-término AR_DENO...');
-            const results = await executeQuery(sqlMultiTerm);
-            if (results && results.length > 0) {
-                console.log('✅ [FUZZY-SEARCH] Encontrados con multi-término AR_DENO:', results.length);
-                return { results, sqlFuzzyTry: sqlMultiTerm };
-            }
-        } catch (e) {
-            console.log('⚠️ [FUZZY-SEARCH] Error en multi-término AR_DENO:', e.message);
-        }
-        // Probar en AR_REF
-        let sqlMultiTermRef = `SELECT * FROM articulos WHERE ${condicionesRef} LIMIT 5`;
-        try {
-            console.log('🔍 [FUZZY-SEARCH] Probando multi-término AR_REF...');
-            const results = await executeQuery(sqlMultiTermRef);
-            if (results && results.length > 0) {
-                console.log('✅ [FUZZY-SEARCH] Encontrados con multi-término AR_REF:', results.length);
-                return { results, sqlFuzzyTry: sqlMultiTermRef };
-            }
-        } catch (e) {
-            console.log('⚠️ [FUZZY-SEARCH] Error en multi-término AR_REF:', e.message);
-        }
-        // Probar en ambos (OR)
-        let sqlMultiTermBoth = `SELECT * FROM articulos WHERE (${condicionesDeno}) OR (${condicionesRef}) LIMIT 5`;
-        try {
-            console.log('🔍 [FUZZY-SEARCH] Probando multi-término combinado...');
-            const results = await executeQuery(sqlMultiTermBoth);
-            if (results && results.length > 0) {
-                console.log('✅ [FUZZY-SEARCH] Encontrados con multi-término combinado:', results.length);
-                return { results, sqlFuzzyTry: sqlMultiTermBoth };
-            }
-        } catch (e) {
-            console.log('⚠️ [FUZZY-SEARCH] Error en multi-término combinado:', e.message);
-        }
-    }
-    // --- FIN MEJORA ---
-
-    // Probar todas las combinaciones de columna y variante
-    console.log('🔍 [FUZZY-SEARCH] Probando combinaciones columna-variante...');
-    for (const col of columnasTexto) {
-        for (const variante of variantes) {
-            if (!variante || variante.length < 2) continue;
-            let sqlFuzzyTry = sql.replace(/WHERE[\sS]*/i, `WHERE ${col} LIKE '%${variante}%' LIMIT 5`);
-            try {
-                const results = await executeQuery(sqlFuzzyTry);
-                if (results && results.length > 0) {
-                    console.log(`✅ [FUZZY-SEARCH] Encontrados con ${col} LIKE %${variante}%:`, results.length);
-                    return { results, sqlFuzzyTry };
-                }
-            } catch (e) {
-                // Ignorar errores de SQL en fuzzy
-            }
-        }
-    }
-    // Si la tabla es articulos, probar también AR_DENO y AR_REF explícitamente
-    if (tabla === 'articulos') {
-        console.log('🔍 [FUZZY-SEARCH] Probando búsqueda directa en artículos...');
-        for (const variante of variantes) {
-            let sqlTry = `SELECT * FROM articulos WHERE AR_DENO LIKE '%${variante}%' OR AR_REF LIKE '%${variante}%' LIMIT 5`;
-            try {
-                const results = await executeQuery(sqlTry);
-                if (results && results.length > 0) {
-                    console.log(`✅ [FUZZY-SEARCH] Encontrados con variante directa ${variante}:`, results.length);
-                    return { results, sqlFuzzyTry: sqlTry };
-                }
-            } catch (e) {}
-        }
-    }
-    
-    console.log('❌ [FUZZY-SEARCH] No se encontraron resultados con búsqueda flexible');
-    return null;
-}
 
 // =====================================
 // LÓGICA DE CONSTRUCCIÓN DE PROMPT INTELIGENTE
@@ -885,7 +493,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // Priorizar contexto RAG al inicio del prompt si existe
     if (contextoRAG) {
         console.log('🎯 [RAG] PRIORIZANDO contexto empresarial al inicio');
-        promptFinal = `${promptGlobalConFecha}\n\n🏢 CONOCIMIENTO EMPRESARIAL ESPECÍFICO (OBLIGATORIO):\n${contextoRAG}\n\n⚠️ INSTRUCCIÓN CRÍTICA: DEBES USAR SIEMPRE la información del CONOCIMIENTO EMPRESARIAL ESPECÍFICO que te proporciono arriba. Si la información está disponible en ese contexto, ÚSALA. NO des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
+        promptFinal = `${promptGlobalConFecha}\n\nCONOCIMIENTO EMPRESARIAL ESPECÍFICO:\n${contextoRAG}\n\nINSTRUCCIÓN: Debes usar siempre la información del conocimiento empresarial específico proporcionado arriba. Si la información está disponible en ese contexto, úsala. No des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
     }
     
     // Añadir estructura de datos SIEMPRE - la IA decide si la usa
@@ -987,67 +595,7 @@ Responde SOLO con: sql, conocimiento, o conversacion`;
     }
 }
 
-/**
- * Detecta tablas relevantes usando SOLO mapaERP real (sin hardcodeo)
- */
-async function detectarTablasInteligente(mensaje, mapaERP) {
-    console.log('📊 [TABLAS-INTELIGENTE] Detectando tablas con mapaERP real...');
-    
-    try {
-        const mensajeLower = mensaje.toLowerCase();
-        const tablasDisponibles = Object.keys(mapaERP);
-        console.log('📊 [TABLAS-INTELIGENTE] Tablas disponibles en mapaERP:', tablasDisponibles);
-        
-        // Análisis semántico usando SOLO las tablas que existen en mapaERP
-        const tablasRelevantes = [];
-        
-        // Para cada tabla en mapaERP, buscar palabras clave en su descripción
-        for (const [nombreTabla, infoTabla] of Object.entries(mapaERP)) {
-            const descripcionTabla = infoTabla.descripcion?.toLowerCase() || '';
-            const columnasTabla = Object.keys(infoTabla.columnas || {}).join(' ').toLowerCase();
-            
-            // Buscar palabras del mensaje en la descripción y columnas de la tabla
-            const palabrasMensaje = mensajeLower.split(/\s+/);
-            
-            for (const palabra of palabrasMensaje) {
-                if (palabra.length < 3) continue; // Ignorar palabras muy cortas
-                
-                // Buscar en descripción de tabla
-                if (descripcionTabla.includes(palabra)) {
-                    tablasRelevantes.push(nombreTabla);
-                    console.log(`📊 [TABLAS-INTELIGENTE] Coincidencia: "${palabra}" en tabla "${nombreTabla}"`);
-                    break;
-                }
-                
-                // Buscar en nombres de columnas
-                if (columnasTabla.includes(palabra)) {
-                    tablasRelevantes.push(nombreTabla);
-                    console.log(`📊 [TABLAS-INTELIGENTE] Coincidencia columna: "${palabra}" en tabla "${nombreTabla}"`);
-                    break;
-                }
-            }
-        }
-        
-        // Si no encuentra nada específico, incluir tablas comunes que SÍ existen
-        if (tablasRelevantes.length === 0) {
-            const tablasComunes = ['clientes', 'articulos', 'tecnicos'];
-            const tablasComunesExistentes = tablasComunes.filter(tabla => tablasDisponibles.includes(tabla));
-            tablasRelevantes.push(...tablasComunesExistentes);
-            console.log('📊 [TABLAS-INTELIGENTE] Usando tablas comunes:', tablasComunesExistentes);
-        }
-        
-        // Eliminar duplicados
-        const tablasUnicas = [...new Set(tablasRelevantes)];
-        
-        console.log('📊 [TABLAS-INTELIGENTE] Tablas detectadas (reales):', tablasUnicas);
-        return tablasUnicas;
-        
-    } catch (error) {
-        console.error('❌ [TABLAS-INTELIGENTE] Error:', error.message);
-        // Fallback a tablas que sabemos que existen
-        return ['clientes', 'articulos', 'tecnicos'];
-    }
-}
+
 
 
 
@@ -1493,12 +1041,18 @@ async function processQueryStream({ message, userId, conversationId, response })
                         promptExplicacion += `${terminologia}\n\n`;
                         promptExplicacion += `${formatoRespuesta}\n\n`;
                         
+                        // DEBUG: Mostrar el prompt completo que se está construyendo
+                        console.log('🔍 [DEBUG-PROMPT] Prompt unificado construido:');
+                        console.log('📄 [DEBUG-PROMPT] Longitud total:', promptExplicacion.length, 'caracteres');
+                        console.log('📄 [DEBUG-PROMPT] Contenido formatoRespuesta incluido:', formatoRespuesta ? 'SÍ' : 'NO');
+                        
                         // Añadir contexto RAG si existe (CRÍTICO para evitar alucinaciones)
                         try {
                             const contextoRAGSegunda = await ragInteligente.recuperarConocimientoRelevante(message, 'sistema');
                             if (contextoRAGSegunda) {
                                 console.log('🎯 [RAG] Incluyendo contexto empresarial en segunda llamada');
-                                promptExplicacion += `🏢 CONOCIMIENTO EMPRESARIAL ESPECÍFICO (PRIORITARIO):\n${contextoRAGSegunda}\n\n`;
+                                // Usar el sistema de prompts unificado para el RAG también
+                                promptExplicacion += `\n${contextoRAGSegunda}\n\n`;
                             }
                         } catch (error) {
                             console.log('⚠️ [RAG] No se pudo obtener contexto RAG para segunda llamada:', error.message);
@@ -1514,7 +1068,9 @@ async function processQueryStream({ message, userId, conversationId, response })
                                 `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
                             ).join('\n');
                             
-                            promptExplicacion += `${formatoRespuesta}\n\n## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
+                            // Agregar contexto conversacional (SIN duplicar formatoRespuesta que ya está incluido)
+                            console.log('🔍 [DEBUG] formatoRespuesta ya incluido en línea 1042:', formatoRespuesta ? 'SÍ' : 'NO');
+                            promptExplicacion += `CONTEXTO CONVERSACIONAL RECIENTE:\n\n${contextoConversacional}\n\nINSTRUCCIONES DE CONTINUIDAD:\nMantén la continuidad natural de la conversación. NO te presentes de nuevo si ya has saludado. Usa el contexto previo para dar respuestas coherentes. Si el usuario hace referencia a algo mencionado antes, úsalo. Mantén el tono y estilo de la conversación en curso.\n\n`;
                         }
                         
                         promptExplicacion += `## 📊 DATOS A EXPLICAR:
@@ -1763,9 +1319,9 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
     instrucciones += identidadEmpresa + '\n\n';
     instrucciones += terminologia + '\n\n';
     instrucciones += formatoObligatorio + '\n\n';
+    instrucciones += formatoRespuesta + '\n\n';
     
-    // Instrucciones específicas para la primera llamada
-    instrucciones += `## 🧠 INTELIGENCIA HÍBRIDA - CONOCIMIENTO + DATOS\n\n### 📚 **CONOCIMIENTO EMPRESARIAL (PRIORIDAD)**\n- Usa SIEMPRE el conocimiento empresarial como base principal\n- El contexto de Pinecone contiene información oficial de la empresa\n- Úsalo para explicar procedimientos, protocolos y conceptos\n\n### 🗄️ **DATOS DE BASE DE DATOS (CUANDO SEA NECESARIO)**\n- Si la consulta requiere datos actuales específicos, genera SQL\n- Formato: \`<sql>SELECT...</sql>\`\n- Usa EXACTAMENTE las columnas de la estructura proporcionada\n- Combina conocimiento + datos de forma natural\n- **NUNCA inventes datos de entidades** (clientes, proveedores, almacenes, etc.)\n- **SIEMPRE genera SQL real** y deja que el sistema ejecute y muestre datos reales\n- **SI no hay datos reales**, di claramente "No se encontraron registros en la base de datos"\n\n### 🤝 **COMBINACIÓN INTELIGENTE**\n- Explica el "por qué" usando conocimiento empresarial\n- Muestra el "qué" usando datos actuales cuando sea útil\n- Mantén respuestas naturales y conversacionales\n- **NUNCA mezcles datos inventados con datos reales**\n\n## 🎨 **FORMATO OBLIGATORIO (SIGUE EXACTAMENTE formatoRespuesta)**\n\n**SIEMPRE usa este formato cuando respondas:**\n- **USA SIEMPRE** encabezados (# ## ###) para estructurar la respuesta\n- **USA SIEMPRE** tablas cuando muestres datos con múltiples columnas\n- **USA SIEMPRE** listas con viñetas para enumerar elementos\n- **USA SIEMPRE** negritas para enfatizar puntos clave\n- **USA SIEMPRE** emojis apropiados para hacer la respuesta visual\n- **NUNCA** respondas solo con texto plano sin estructura\n\n**EJEMPLO DE FORMATO CORRECTO:**\n# 📍 Clientes de Almería\n\n## 📊 Lista de Clientes\n\n| 🏢 Cliente | 📍 Dirección | 🏘️ Población |\n|------------|--------------|--------------|\n| **NOMBRE** | DIRECCIÓN | POBLACIÓN |\n\n> 💡 **Total**: X clientes encontrados\n\n## 🎯 Próximos pasos\n¿Te gustaría obtener más información?\n\n## 🎯 **EJEMPLOS DE USO**\n\n**Consulta sobre conocimiento:**\n"qué significa quando el cliente dice quiero todo"\n→ Usa SOLO conocimiento empresarial\n\n**Consulta sobre datos actuales:**\n"dame 2 clientes"\n→ Combina conocimiento + datos SQL\n\n**Consulta compleja:**\n"cuántos artículos hay y qué tipos"\n→ Explica con conocimiento + muestra datos actuales\n\n## ✅ **REGLAS IMPORTANTES**\n\n1. **SIEMPRE responde** - nunca digas "no tengo información"\n2. **Usa emojis** y tono amigable\n3. **Mantén personalidad** de empleado interno\n4. **Combina fuentes** cuando sea apropiado\n5. **Sé útil y completo** - no restrictivo\n6. **SIGUE SIEMPRE el formato visual** definido en formatoRespuesta\n\n`;
+
     
     return instrucciones;
 }
