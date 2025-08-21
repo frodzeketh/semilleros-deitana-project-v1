@@ -83,97 +83,23 @@ function extraerChunksCriticos(contenido, metadatos) {
     const chunksCriticos = [];
     let contador = 0;
     
-    // CHUNK CRÍTICO 1: Información sobre Facundo (programador)
-    const infoFacundo = contenido.match(/Facundo[^.]*\.[^.]*\./g);
-    if (infoFacundo) {
-        const contextoFacundo = `INFORMACIÓN ESPECÍFICA - PERSONAL TÉCNICO
-Facundo es el ingeniero programador que hace que el asistente evolucione y el creador de que exista Deitana IA.
-Facundo es responsable del desarrollo y evolución del sistema de inteligencia artificial Deitana IA.
-Rol: Ingeniero Programador y Creador de Deitana IA
-Función: Desarrollo y evolución del asistente de IA`;
-        
-        chunksCriticos.push(crearChunk(contextoFacundo, 'Personal Técnico - Facundo', metadatos, `critico_facundo_${contador++}`));
-    }
+    // CHUNKS CRÍTICOS: Extraer información real del archivo (SIN HARDCODING)
+    // Buscar nombres importantes y extraer contexto real del archivo
     
-    // CHUNK CRÍTICO 2: Fertilizantes específicos
-    const fertilizantes = contenido.match(/15-10-31[^.]*\.|Ambra 48[^.]*/g);
-    if (fertilizantes) {
-        const contextoFertilizantes = `INFORMACIÓN ESPECÍFICA - FERTILIZANTES Y PRODUCTOS
-15-10-31: Fosfato monopotásico
-Ambra 48: Peróxido de hidrógeno
-Productos químicos específicos utilizados en los procesos de fertilización y tratamiento de agua.`;
-        
-        chunksCriticos.push(crearChunk(contextoFertilizantes, 'Fertilizantes Específicos', metadatos, `critico_fertilizantes_${contador++}`));
-    }
+    const nombresImportantes = [
+        'Facundo', 'Pedro Muñoz', 'José Luis Galera', 'Antonio Galera', 
+        'Felipe Galera', 'ANTONIO MIRAS MOYA', 'MARCIA PADILLA'
+    ];
     
-    // CHUNK CRÍTICO 3: Pantanos A, B, C
-    const pantanos = contenido.match(/PANTANO [ABC]:[^.]*\./g);
-    if (pantanos && pantanos.length > 0) {
-        let contextoPantanos = `INFORMACIÓN ESPECÍFICA - PANTANOS DE AGUA
-La empresa cuenta con tres pantanos principales:
-`;
-        
-        // Buscar información específica de cada pantano
-        if (contenido.includes('PANTANO A:')) {
-            contextoPantanos += `PANTANO A: Depósito de agua específico para tratamientos de agua con documentación rigurosa RG CB 7.2.\n`;
+    for (const nombre of nombresImportantes) {
+        const indice = contenido.indexOf(nombre);
+        if (indice !== -1) {
+            // Extraer contexto real del archivo alrededor del nombre
+            const inicio = Math.max(0, indice - 150);
+            const fin = Math.min(contenido.length, indice + 300);
+            const contextoReal = contenido.substring(inicio, fin);
+            chunksCriticos.push(crearChunk(contextoReal, `Personal - ${nombre}`, metadatos, `critico_${nombre.replace(/\s+/g, '_').toLowerCase()}_${contador++}`));
         }
-        if (contenido.includes('PANTANO B:')) {
-            contextoPantanos += `PANTANO B: Depósito de agua para aplicación de tratamientos fitosanitarios y desinfección.\n`;
-        }
-        if (contenido.includes('PANTANO C:')) {
-            contextoPantanos += `PANTANO C: Depósito de agua específico para tratamientos con control preciso de dosificación.\n`;
-        }
-        
-        contextoPantanos += `Cada pantano tiene procedimientos específicos y documentación asociada para tratamientos de agua.`;
-        
-        chunksCriticos.push(crearChunk(contextoPantanos, 'Pantanos A, B, C', metadatos, `critico_pantanos_${contador++}`));
-    }
-    
-    // CHUNK CRÍTICO 4: Personal de Injertos Hacer (Antonio Miras Moya, Marcia Padilla)
-    const personalInjertos = contenido.match(/ANTONIO MIRAS MOYA|MARCIA PADILLA/g);
-    if (personalInjertos && personalInjertos.length > 0) {
-        // Buscar el contexto completo alrededor de estos nombres
-        const contextoCompleto = extraerContextoPersonal(contenido, ['ANTONIO MIRAS MOYA', 'MARCIA PADILLA']);
-        
-        const contextoDPersonal = `INFORMACIÓN ESPECÍFICA - PERSONAL INJERTOS HACER
-ANA BELÉN SÁNCHEZ: Responsable de la sección Injertos Hacer
-ANTONIO MIRAS MOYA: Encargado de Injertos Hacer
-MARCIA PADILLA: Encargada de Injertos Hacer
-VICTOR MANUEL CELA: Sustituto en Injertos Hacer
-LIVIA CARMITA SERRANO: Sustituta en Injertos Hacer
-Tareas Auxiliares: Sala Injertos
-
-Jerarquía operativa clara con responsables, encargados y sustitutos para garantizar continuidad operacional.`;
-        
-        chunksCriticos.push(crearChunk(contextoDPersonal, 'Personal Injertos Hacer', metadatos, `critico_personal_injertos_${contador++}`));
-    }
-    
-    // CHUNK CRÍTICO 5: Información fundacional y propietarios
-    const infoFundacion = contenido.match(/José Luis Galera|Antonio Galera|Felipe Galera|fundad[ao]|1988|1989/gi);
-    if (infoFundacion) {
-        const contextoFundacion = `INFORMACIÓN ESPECÍFICA - PROPIETARIOS Y FUNDACIÓN
-Semilleros Deitana fundada en 1989 (según algunos datos, iniciada en 1988)
-Fundador original: Felipe Galera
-Propietarios actuales: José Luis Galera y Antonio Galera (hermanos)
-José Luis Galera: Dueño actual de la empresa
-Antonio Galera: Co-propietario
-Gestión familiar que continúa el legado del fundador Felipe Galera.`;
-        
-        chunksCriticos.push(crearChunk(contextoFundacion, 'Propietarios y Fundación', metadatos, `critico_fundacion_${contador++}`));
-    }
-    
-    // CHUNK CRÍTICO 6: Pedro Muñoz y responsabilidades específicas
-    const infoPedroMunoz = contenido.match(/Pedro Muñoz/g);
-    if (infoPedroMunoz) {
-        const contextoPedro = `INFORMACIÓN ESPECÍFICA - PERSONAL RESPONSABILIDADES
-Pedro Muñoz: Responsable de que todos los encargos salgan con la fórmula aplicada
-Función: Supervisar que los clientes sepan exactamente la planta que van a tener
-Control: Garantizar que no se siembren ni más ni menos pies de lo que corresponde
-Gestión: Controlar el excedente del semillero
-Área: Gestión de encargos y fórmulas de siembra
-Ubicación sistema: Ventas – Gestión – Encargos de siembra`;
-        
-        chunksCriticos.push(crearChunk(contextoPedro, 'Personal - Pedro Muñoz', metadatos, `critico_pedro_munoz_${contador++}`));
     }
     
     console.log(`📄 [RAG ULTRA] Creados ${chunksCriticos.length} chunks críticos para información específica`);
@@ -538,53 +464,8 @@ ${fragmentosPedro[0].metadata.texto}`;
             }
         }
         
-        // 4. BÚSQUEDA ESPECÍFICA DE ENTRADA EN CÁMARA DE GERMINACIÓN
-        if (consulta.toLowerCase().includes('entrada en cámara') || 
-            consulta.toLowerCase().includes('entrada en camara') ||
-            consulta.toLowerCase().includes('cámara de germinación') ||
-            consulta.toLowerCase().includes('camara de germinacion') ||
-            consulta.toLowerCase().includes('germinación') ||
-            consulta.toLowerCase().includes('germinacion')) {
-            console.log('🎯 [RAG] Activación directa: Información sobre entrada en cámara de germinación');
-            
-            const contextoCamara = `=== CONOCIMIENTO RELEVANTE DE SEMILLEROS DEITANA ===
-
-**ENTRADA EN CÁMARA DE GERMINACIÓN - PROCESO ESPECÍFICO**
-
-**Proceso detallado:**
-Las bandejas sembradas y etiquetadas se trasladan en carros a la cámara de germinación asignada en el ERP. Cada carro se deposita considerando:
-- Humedad/temperatura óptima
-- Tiempo estimado de germinación
-- Restricciones por tratamientos
-
-**Registro en el sistema:**
-El encargado de siembra o suministros registra en el sistema:
-- Cámara asignada
-- Número de carro/lote interno
-- Fila/posición (si aplica)
-- Fecha exacta de entrada
-- Partida asociada a cada carro
-
-**Trazabilidad completa:**
-- Se garantiza la trazabilidad completa en Ventas - Otros - Partidas
-- El ERP controla los días de germinación estándar
-- Genera aviso automático a la PDA del encargado cuando se alcanza el plazo estimado para la salida al invernadero
-
-**Control de calidad:**
-Antes de sacar las bandejas, el técnico realiza:
-- Control visual de la germinación (porcentaje, uniformidad, problemas)
-- Si es correcto, se aprueba la liberación de la partida
-- Cualquier incidencia se registra en Archivos – Generales – Acciones Comerciales - Observaciones
-- O se categoriza con Archivos - Auxiliares - Motivos
-
-**Integración con el ERP:**
-- Todo el proceso está integrado al sistema ERP de Semilleros Deitana
-- Permite seguimiento completo desde la entrada hasta la salida
-- Control automático de tiempos y alertas
-- Registro de incidencias para análisis posterior`;
-            
-            return contextoCamara;
-        }
+        // 4. BÚSQUEDA VECTORIAL NORMAL (SIN HARDCODING)
+        console.log('🔍 [RAG] Usando búsqueda vectorial con Pinecone');
         
         // 5. BÚSQUEDA VECTORIAL NORMAL
         return await buscarVectorial(consulta);
@@ -663,10 +544,16 @@ function filtrarFragmentosOptimos(resultados, consulta) {
     }
     
     // --- NUEVA LÓGICA: SEPARAR POR TIPO DE FUENTE ---
+    console.log('🔍 [RAG] Analizando fragmentos para clasificación...');
+    ordenados.forEach((f, i) => {
+        console.log(`   Fragmento ${i + 1}: ID="${f.id}", Tipo="${f.tipo}", Contiene oficial: ${f.contenido && f.contenido.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL')}`);
+    });
+    
     const fragmentosEmpresaOficial = ordenados.filter(f => 
         f.id && (
             f.id.includes('informacion_empresa') || 
             f.id.includes('conocimiento_empresa') ||
+            (f.metadata && f.metadata.texto && f.metadata.texto.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL')) ||
             (f.contenido && f.contenido.includes('SEMILLEROS DEITANA - INFORMACIÓN OFICIAL'))
         )
     );
@@ -704,7 +591,33 @@ function filtrarFragmentosOptimos(resultados, consulta) {
     const fragmentosCoincidenciaExacta = [];
     const fragmentosRestantes = [];
     
+    // PRIORIZACIÓN ESPECIAL para Pedro Muñoz
+    const consultaLower = consulta.toLowerCase();
+    const esConsultaPedroMunoz = consultaLower.includes('pedro') && (consultaLower.includes('muñoz') || consultaLower.includes('munoz'));
+    
+    if (esConsultaPedroMunoz) {
+        console.log('🎯 [RAG] Detectada consulta específica de Pedro Muñoz - Priorizando información relevante');
+        
+        // Buscar específicamente fragmentos que contengan información de Pedro Muñoz
+        const fragmentosPedroMunoz = fragmentosFinales.filter(frag => {
+            const contenido = frag.contenido.toLowerCase();
+            return contenido.includes('pedro') && (contenido.includes('muñoz') || contenido.includes('munoz'));
+        });
+        
+        if (fragmentosPedroMunoz.length > 0) {
+            console.log(`🎯 [RAG] Encontrados ${fragmentosPedroMunoz.length} fragmentos específicos de Pedro Muñoz`);
+            fragmentosCoincidenciaExacta.push(...fragmentosPedroMunoz);
+        }
+    }
+    
+    // Procesar el resto de fragmentos normalmente
     for (const frag of fragmentosFinales) {
+        if (esConsultaPedroMunoz && frag.contenido.toLowerCase().includes('pedro') && 
+            (frag.contenido.toLowerCase().includes('muñoz') || frag.contenido.toLowerCase().includes('munoz'))) {
+            // Ya agregado arriba
+            continue;
+        }
+        
         const contenido = frag.contenido.toLowerCase();
         const hayCoincidencia = terminosClave.some(tc => contenido.includes(tc.toLowerCase()));
         if (hayCoincidencia) {

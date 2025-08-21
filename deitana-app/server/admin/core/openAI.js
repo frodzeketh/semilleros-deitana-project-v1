@@ -48,6 +48,10 @@ const { sqlRules } = require('../prompts/SQL');
 
 const { identidadEmpresa, terminologia } = require('../prompts/DEITANA');
 
+// Importar sistema RAG
+const ragInteligente = require('../data/integrar_rag_nuevo');
+const { analizarIntencionConIA } = require('../data/funcion_intencion_ia');
+
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -580,15 +584,70 @@ async function saveAssistantMessageToFirestore(userId, message) {
         // Agregamos el nuevo mensaje
         messages.push(messageData);
         
+        // LIMITAR EL TAMAÑO DE LA CONVERSACIÓN PARA EVITAR ERRORES DE FIRESTORE
+        const MAX_MESSAGES = 30; // Máximo 30 mensajes por conversación
+        const MAX_MESSAGE_SIZE = 50000; // Máximo 50KB por mensaje
+        
+        // Si el mensaje es muy grande, truncarlo
+        if (messageData.content.length > MAX_MESSAGE_SIZE) {
+            console.log(`⚠️ [FIRESTORE] Mensaje muy grande (${messageData.content.length} chars), truncando...`);
+            messageData.content = messageData.content.substring(0, MAX_MESSAGE_SIZE) + '\n\n[Contenido truncado por límite de tamaño]';
+        }
+        
+        // Si hay demasiados mensajes, mantener solo los últimos MAX_MESSAGES
+        if (messages.length > MAX_MESSAGES) {
+            console.log(`⚠️ [FIRESTORE] Demasiados mensajes (${messages.length}), manteniendo últimos ${MAX_MESSAGES}...`);
+            messages = messages.slice(-MAX_MESSAGES);
+        }
+        
+        // Calcular tamaño aproximado del documento
+        const documentSize = JSON.stringify({
+            lastUpdated: now,
+            messages: messages
+        }).length;
+        
+        if (documentSize > 900000) { // 900KB como margen de seguridad
+            console.log(`⚠️ [FIRESTORE] Documento muy grande (${documentSize} bytes), limpiando conversación...`);
+            // Mantener solo los últimos 10 mensajes
+            messages = messages.slice(-10);
+        }
+        
         // Actualizamos el documento con el nuevo array de mensajes
         await conversationRef.set({
             lastUpdated: now,
             messages: messages
         }, { merge: true });
 
+        console.log(`✅ [FIRESTORE] Mensaje guardado. Total mensajes: ${messages.length}`);
         return true;
     } catch (error) {
         console.error('Error al guardar mensaje del asistente en Firestore:', error);
+        
+        // Si el error es por tamaño, intentar limpiar la conversación
+        if (error.message && error.message.includes('exceeds the maximum allowed size')) {
+            console.log('🔄 [FIRESTORE] Intentando limpiar conversación por tamaño...');
+            try {
+                const userChatRef = chatManager.chatsCollection.doc(userId);
+                const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+                
+                // Crear nueva conversación con solo el mensaje actual
+                await conversationRef.set({
+                    lastUpdated: new Date(),
+                    messages: [{
+                        content: message.length > 50000 ? message.substring(0, 50000) + '\n\n[Contenido truncado]' : message,
+                        role: 'assistant',
+                        timestamp: new Date()
+                    }]
+                });
+                
+                console.log('✅ [FIRESTORE] Conversación limpiada exitosamente');
+                return true;
+            } catch (cleanupError) {
+                console.error('❌ [FIRESTORE] Error limpiando conversación:', cleanupError);
+                return false;
+            }
+        }
+        
         return false;
     }
 }
@@ -775,7 +834,6 @@ async function fuzzySearchRetry(sql, userQuery) {
 // - Ensamblaje final del prompt optimizado
 // =====================================
 // Las importaciones ya están hechas arriba desde las carpetas organizadas
-const ragInteligente = require('./ragInteligente');
 
 /**
  * Construye un prompt optimizado usando IA inteligente (UNA SOLA LLAMADA)
@@ -808,23 +866,15 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     
     // 5. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
     let contextoRAG = '';
-    const necesitaRAG = intencion.tipo === 'rag_sql' || 
-                       mensaje.toLowerCase().includes('qué significa') ||
-                       mensaje.toLowerCase().includes('como funciona') ||
-                       mensaje.toLowerCase().includes('proceso') ||
-                       mensaje.toLowerCase().includes('protocolo') ||
-                       mensaje.length > 100;
     
-    if (necesitaRAG) {
-        try {
-            console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
-            contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
-            console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
-        } catch (error) {
-            console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
-        }
-    } else {
-        console.log('⚡ [OPTIMIZACIÓN] Saltando RAG - no necesario para esta consulta');
+    // RAG SIEMPRE ACTIVO para evitar alucinaciones
+    try {
+        console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+        contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
+        console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
+    } catch (error) {
+        console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
+        // Continuar sin RAG si hay error, pero registrar el problema
     }
     
     // 6. Ensamblar prompt final (OPTIMIZADO)
@@ -832,9 +882,10 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
     let promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
     
-    // Añadir conocimiento empresarial solo si es necesario
-    if (intencion.tipo === 'conversacion' || intencion.tipo === 'rag_sql' || necesitaRAG) {
-        promptFinal += `${promptBase}\n\n`;
+    // Priorizar contexto RAG al inicio del prompt si existe
+    if (contextoRAG) {
+        console.log('🎯 [RAG] PRIORIZANDO contexto empresarial al inicio');
+        promptFinal = `${promptGlobalConFecha}\n\n🏢 CONOCIMIENTO EMPRESARIAL ESPECÍFICO (OBLIGATORIO):\n${contextoRAG}\n\n⚠️ INSTRUCCIÓN CRÍTICA: DEBES USAR SIEMPRE la información del CONOCIMIENTO EMPRESARIAL ESPECÍFICO que te proporciono arriba. Si la información está disponible en ese contexto, ÚSALA. NO des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
     }
     
     // Añadir estructura de datos SIEMPRE - la IA decide si la usa
@@ -845,10 +896,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         promptFinal += `${sqlRules}\n\n`;
     }
     
-    // Añadir contexto RAG si existe
-    if (contextoRAG) {
-        promptFinal += `CONOCIMIENTO EMPRESARIAL RELEVANTE:\n${contextoRAG}\n\n`;
-    }
+    // El contexto RAG ya se añadió al inicio si existe
     
     // Añadir contexto de datos previos si existe
     if (contextoDatos) {
@@ -865,7 +913,7 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
     }
     
-    console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP: SIEMPRE, RAG:', necesitaRAG ? 'SÍ' : 'NO');
+    console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP: SIEMPRE, RAG: SIEMPRE');
     
     return {
         prompt: promptFinal,
@@ -879,70 +927,62 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
             optimizado: true,
             modeloUnico: 'gpt-4o',
             mapaERPIncluido: true, // SIEMPRE incluido
-            ragIncluido: necesitaRAG
+            ragIncluido: true // SIEMPRE incluido para evitar alucinaciones
         }
     };
 }
 
 /**
- * Analiza la intención de forma inteligente usando análisis de texto rápido
+ * Analiza la intención usando IA real (escalable para 900 tablas y 200 usuarios)
  */
 async function analizarIntencionInteligente(mensaje) {
-    console.log('🧠 [INTENCION-INTELIGENTE] Analizando consulta...');
+    console.log('🧠 [INTENCION-IA] Analizando consulta con IA real...');
     
     try {
-        // Análisis de texto simple y rápido (sin embeddings costosos)
-        const mensajeLower = mensaje.toLowerCase();
-        
-        // Patrones para consultas de datos
-        const patronesSQL = [
-            'cuántos', 'cuantas', 'cuanto', 'cuanta', 'dame', 'muestra', 'lista',
-            'clientes', 'proveedores', 'artículos', 'bandejas', 'partidas',
-            'registros', 'datos', 'información', 'tabla', 'cuántas', 'cuánto'
-        ];
-        
-        // Patrones para consultas de conocimiento
-        const patronesConocimiento = [
-            'qué significa', 'que significa', 'como funciona', 'cómo funciona',
-            'protocolo', 'proceso', 'procedimiento', 'cuando el cliente',
-            'quiero todo', 'pedro muñoz', 'germinación', 'cámara',
-            'entrada en cámara', 'desinfección', 'fertilizante', 'qué es',
-            'que es', 'explica', 'describe'
-        ];
-        
-        // Patrones para conversación simple
-        const patronesConversacion = [
-            'hola', 'buenos', 'buenas', 'saludos', 'gracias', 'ok', 'okay',
-            'perfecto', 'genial', 'excelente', 'bien', 'mal', 'ayuda'
-        ];
-        
-        // Análisis rápido por conteo de patrones
-        const scoreSQL = patronesSQL.filter(patron => mensajeLower.includes(patron)).length;
-        const scoreConocimiento = patronesConocimiento.filter(patron => mensajeLower.includes(patron)).length;
-        const scoreConversacion = patronesConversacion.filter(patron => mensajeLower.includes(patron)).length;
-        
-        // Clasificación inteligente basada en scores
-        if (scoreSQL > 0 && scoreConocimiento > 0) {
-            return { tipo: 'rag_sql', confianza: 0.9 };
-        } else if (scoreSQL > 0) {
-            return { tipo: 'sql', confianza: 0.9 };
-        } else if (scoreConocimiento > 0) {
-            return { tipo: 'rag_sql', confianza: 0.8 };
-        } else if (scoreConversacion > 0) {
-            return { tipo: 'conversacion', confianza: 0.9 };
+        // Usar IA para analizar la intención de forma inteligente
+        const promptAnalisis = `Analiza la siguiente consulta y determina qué tipo de respuesta necesita:
+
+CONSULTA: "${mensaje}"
+
+OPCIONES:
+1. "sql" - Si la consulta pide datos, números, conteos, listas, información de la base de datos
+2. "conocimiento" - Si la consulta pide explicaciones, definiciones, protocolos, información del archivo .txt
+3. "conversacion" - Si es un saludo, agradecimiento, o conversación casual
+
+Ejemplos:
+- "cuantas partidas se hicieron" → sql
+- "qué significa tratamientos extraordinarios" → conocimiento  
+- "hola, cómo estás" → conversacion
+- "dame la lista de clientes" → sql
+- "explica el protocolo de germinación" → conocimiento
+
+Responde SOLO con: sql, conocimiento, o conversacion`;
+
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: promptAnalisis }],
+            max_tokens: 10,
+            temperature: 0.1
+        });
+
+        const tipo = response.choices[0].message.content.trim().toLowerCase();
+        console.log(`✅ [INTENCION-IA] Tipo detectado: ${tipo}`);
+
+        // Mapear a tipos internos
+        if (tipo === 'sql') {
+            return { tipo: 'sql', confianza: 0.95 };
+        } else if (tipo === 'conocimiento') {
+            return { tipo: 'rag_sql', confianza: 0.95 };
+        } else {
+            return { tipo: 'conversacion', confianza: 0.95 };
         }
-        
-        // Por defecto, asumir que necesita datos si es una pregunta
-        if (mensajeLower.includes('?')) {
-            return { tipo: 'sql', confianza: 0.7 };
-        }
-        
-        // Si no hay patrones claros, asumir conversación
-        return { tipo: 'conversacion', confianza: 0.8 };
         
     } catch (error) {
-        console.error('❌ [INTENCION-INTELIGENTE] Error:', error.message);
-        // Fallback a conversación
+        console.error('❌ [INTENCION-IA] Error:', error.message);
+        // Fallback inteligente: si tiene signo de interrogación, probablemente necesita datos
+        if (mensaje.toLowerCase().includes('?')) {
+            return { tipo: 'sql', confianza: 0.7 };
+        }
         return { tipo: 'conversacion', confianza: 0.5 };
     }
 }
@@ -1452,6 +1492,17 @@ async function processQueryStream({ message, userId, conversationId, response })
                         promptExplicacion += `${identidadEmpresa}\n\n`;
                         promptExplicacion += `${terminologia}\n\n`;
                         promptExplicacion += `${formatoRespuesta}\n\n`;
+                        
+                        // Añadir contexto RAG si existe (CRÍTICO para evitar alucinaciones)
+                        try {
+                            const contextoRAGSegunda = await ragInteligente.recuperarConocimientoRelevante(message, 'sistema');
+                            if (contextoRAGSegunda) {
+                                console.log('🎯 [RAG] Incluyendo contexto empresarial en segunda llamada');
+                                promptExplicacion += `🏢 CONOCIMIENTO EMPRESARIAL ESPECÍFICO (PRIORITARIO):\n${contextoRAGSegunda}\n\n`;
+                            }
+                        } catch (error) {
+                            console.log('⚠️ [RAG] No se pudo obtener contexto RAG para segunda llamada:', error.message);
+                        }
                         
                         // Añadir contexto de datos previos
                         promptExplicacion += `DATOS DE CONTEXTO PREVIO:\n${JSON.stringify(results)}\n\n`;
