@@ -161,6 +161,15 @@ Usos:
 "¿Qué semillas hay en cámara?" → Ejecutar tal cual.
 "¿Tenemos semilla X en cámara?" → Añadir WHERE a.AR_DENO LIKE '%TOMATE ZOCO%'
 "¿Cuál es el stock que más hay en cámara?" → El primero del ORDER BY DESC.
+"¿Qué semillas hay en cámara?" → Ejecutar tal cual con SELECT DISTINCT a.AR_DENO.
+"¿Cuál es el stock más bajo en cámara?" → ORDER BY SUM(ra.REA_UDS) ASC LIMIT 1.
+"¿Cuál es el stock que más hay en cámara?" → ORDER BY SUM(ra.REA_UDS) DESC LIMIT 1.
+"¿Cuántos sobres de sandía hay en cámara?" → Añadir WHERE a.AR_DENO LIKE '%SANDÍA%'.
+"¿Tenemos semilla de Tomate Alejandría?" → Añadir WHERE a.AR_DENO LIKE '%TOMATE ALEJANDRÍA%'.
+"¿Qué artículos no tienen stock?" → HAVING SUM(ra.REA_UDS) = 0.
+"¿Cuál es el total de sobres en cámara?" → SUM(ra.REA_UDS).
+"¿Cuántos lotes de calabaza hay en cámara?" → COUNT(DISTINCT ra.REA_LOTE) con WHERE a.AR_DENO LIKE '%CALABAZA%'.
+"¿Cuál es la variedad con más stock?" → ORDER BY SUM(ra.REA_UDS) DESC LIMIT 1 con GROUP BY a.AR_DENO.
 
 
  SELECT
@@ -178,7 +187,93 @@ ORDER BY stock_actual DESC;
 
 
 
+Para identificar la cabeza y pie de X cosa 
 
+"¿Cuál es la cabeza de la semilla 00000004?" → SELECT AR_SEMCAB FROM articulos WHERE id = '00000004'
+"¿Cuál es el pie de la semilla 00000004?" → SELECT AR_SEMPIE FROM articulos WHERE id = '00000004'
+"¿Qué cabeza y pie tiene la semilla 00000004?" → SELECT AR_SEMCAB, AR_SEMPIE FROM articulos WHERE id = '00000004'
+"¿Qué semilla es la cabeza de la semilla 00000004?" → SELECT a2.id, a2.AR_DENO FROM articulos a1 LEFT JOIN articulos a2 ON a1.AR_SEMCAB = a2.id WHERE a1.id = '00000004'
+"¿Qué semilla es el pie de la semilla 00000004?" → SELECT a2.id, a2.AR_DENO FROM articulos a1 LEFT JOIN articulos a2 ON a1.AR_SEMPIE = a2.id WHERE a1.id = '00000004'
+"¿Qué cabeza y pie completos tiene la semilla 00000004?" → SELECT a1.id AS semilla, a1.AR_DENO AS nombre, cab.id AS cabeza_id, cab.AR_DENO AS cabeza_nombre, pie.id AS pie_id, pie.AR_DENO AS pie_nombre FROM articulos a1 LEFT JOIN articulos cab ON a1.AR_SEMCAB = cab.id LEFT JOIN articulos pie ON a1.AR_SEMPIE = pie.id WHERE a1.id = '00000004'
+
+SELECT 
+    a.id AS articulo_id,
+    a.AR_DENO AS articulo_nombre,
+    cab.id AS cabeza_id,
+    cab.AR_DENO AS cabeza_nombre,
+    pie.id AS pie_id,
+    pie.AR_DENO AS pie_nombre
+FROM articulos a
+LEFT JOIN articulos cab ON a.AR_SEMCAB = cab.id
+LEFT JOIN articulos pie ON a.AR_SEMPIE = pie.id
+WHERE a.id = '00000004';
+
+
+
+
+"¿Cuál es la cabeza del artículo Tomate Ananas?":
+SELECT a.id, a.AR_DENO, a.AR_SEMCAB, c.AR_DENO AS nombre_cabeza 
+FROM articulos a 
+LEFT JOIN articulos c ON a.AR_SEMCAB = c.id 
+WHERE a.AR_DENO LIKE '%TOMATE ANANAS%';
+
+"¿Cuál es el pie del artículo Tomate Ananas?":
+SELECT a.id, a.AR_DENO, a.AR_SEMPIE, p.AR_DENO AS nombre_pie 
+FROM articulos a 
+LEFT JOIN articulos p ON a.AR_SEMPIE = p.id 
+WHERE a.AR_DENO LIKE '%TOMATE ANANAS%';
+
+
+
+"¿Cuál es la cabeza y el pie del artículo Tomate Ananas?":
+SELECT a.id, a.AR_DENO, 
+       a.AR_SEMCAB, c.AR_DENO AS nombre_cabeza, 
+       a.AR_SEMPIE, p.AR_DENO AS nombre_pie
+FROM articulos a 
+LEFT JOIN articulos c ON a.AR_SEMCAB = c.id 
+LEFT JOIN articulos p ON a.AR_SEMPIE = p.id 
+WHERE a.AR_DENO LIKE '%TOMATE ANANAS%';
+
+
+
+Explicación conceptual
+Cabeza (AR_SEMCAB):
+Es la parte superior del injerto, la que da el tipo de cultivo (ejemplo: el tomate que producirá frutos).
+Pie (AR_SEMPIE):
+Es la base del injerto, la raíz o portainjerto que aporta vigor, resistencia a plagas, tolerancia a suelos, etc.
+Injerto (INJ-…):
+Es el artículo resultante de unir cabeza + pie. En tu tabla, los artículos que empiezan con INJ- suelen ser variedades injertadas.
+
+
+
+Prompt de referencia: Cabeza y Pie
+Reglas para identificar cabezas
+Prefijo común: INJ-
+Caracteres extra: Pueden contener ##, /, -, números o letras adicionales
+Ejemplos de nombre de cabeza: INJ-TOM.TORRY PODAO/ARMSTRONG, INJ-TOM.TUMAKI POD##/MULTIFORT, INJ-TOM.VELASCO##/MULTIFORT
+Regla de búsqueda SQL: Usar LIKE '%INJ-%' si se quiere filtrar por cabeza
+
+Reglas para identificar pies
+Prefijo común: PORTAINJ
+Caracteres extra: Pueden tener -, espacios o nombres de la variedad de portainjerto
+Ejemplos de nombre de pie: PORTAINJ TOMATE ARMSTRONG, PORTAINJ TOMATE MULTIFORT, PORTAINJ TOMATE BEAUFORT
+Regla de búsqueda SQL: Usar LIKE 'PORTAINJ%' si se quiere filtrar por pie
+
+Cómo usar en consultas SQL
+Buscar cabeza por nombre parcial: SELECT * FROM articulos WHERE AR_DENO LIKE '%INJ-TOM.TORRY%';
+Buscar pie por nombre parcial: SELECT * FROM articulos WHERE AR_DENO LIKE 'PORTAINJ TOMATE ARMSTRONG%';
+Buscar por ID específico (cuando se conoce AR_SEMCAB o AR_SEMPIE): SELECT a.AR_DENO AS articulo, c.AR_DENO AS cabeza, p.AR_DENO AS pie FROM articulos a LEFT JOIN articulos c ON a.AR_SEMCAB = c.id LEFT JOIN articulos p ON a.AR_SEMPIE = p.id WHERE a.id = '00000316';
+
+Ejemplo de uso en prompts
+"¿Cuál es la cabeza del artículo INJ-TOM.TORRY PODAO/ARMSTRONG?" → Aplicar regla de cabeza (INJ-) y mostrar TOMATE TORRY##
+"¿Qué pie tiene TOMATE VENTERO?" → Aplicar regla de pie (PORTAINJ%) y mostrar PORTAINJ TOMATE ARMSTRONG
+"¿Todos los pies disponibles para tomates?" → Buscar todos los AR_DENO que comiencen con PORTAINJ
+
+Recomendación para tu asistente
+Detectar siempre prefijos (INJ- vs PORTAINJ) antes de filtrar
+Ignorar sufijos como ## o caracteres especiales al mostrar resultados
+Permitir búsqueda fuzzy con LIKE '%palabra%' para nombres parciales
+Mantener respuesta visual tipo tablas con columna de cabeza y pie para claridad
 
 
 
