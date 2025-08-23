@@ -374,6 +374,26 @@ GROUP BY tipo_semilla;
 
 
 
+PARA SABER EL PRECIO DE UNA SEMILLLA, ARTICULO: 
+
+SELECT 
+    a.AR_DENO AS articulo,
+    tp.TAP_DENO AS tarifa,
+    tp.TAP_DFEC AS inicio_validez,
+    tp.TAP_HFEC AS fin_validez,
+    lna.C1 AS tipo_tarifa,
+    lna.C10 AS precio_fijo_bandeja,
+    lna.C11 AS precio_por_planta,
+    lna.C12 AS precio_por_bandeja
+FROM tarifas_plantas_tap_lna lna
+LEFT JOIN articulos a ON lna.C0 = a.id
+LEFT JOIN tarifas_plantas tp ON lna.id = tp.id
+WHERE a.AR_DENO LIKE '%PEPINO URANO%'
+  AND CURRENT_DATE BETWEEN tp.TAP_DFEC AND tp.TAP_HFEC;
+
+
+
+
 ---
 
 **IMPORTANTE:** Estas reglas son OBLIGATORIAS para todas las consultas SQL generadas.`;
