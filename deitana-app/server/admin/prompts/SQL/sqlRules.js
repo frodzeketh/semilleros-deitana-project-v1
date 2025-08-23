@@ -354,6 +354,26 @@ PORTAINJ
 "Pie de tomate Fervour" → corresponde a PORTAINJ TOMATE FERVOUR
 
 
+
+Por si te preguntan tambien si hay brocoli ares en camara, u otro articulo, semilla, este es la consulta sql para saber el stock exacto, debes aplicarlo en muchas ocaciones que se te solicite saber el stock, semillas en camara, articulos en camara, ya que da el stock exacto.
+Recuerda el diccionario: BROC. ARES y haz esta consulta.
+
+SELECT tipo_semilla, SUM(stock_actual) AS stock_total
+FROM (
+    SELECT a.AR_DENO AS tipo_semilla, 
+           ra.REA_LOTE AS lote_remesa, 
+           SUM(rm.REM_UDS * rm.REM_UXE) AS stock_actual
+    FROM remesas_art ra
+    LEFT JOIN articulos a ON ra.REA_AR = a.id
+    LEFT JOIN remesas_mov rm ON rm.REM_REA = ra.id
+    WHERE a.AR_DENO LIKE '%BROC. ARES%'
+    GROUP BY a.AR_DENO, ra.REA_LOTE
+    HAVING SUM(rm.REM_UDS * rm.REM_UXE) > 0
+) AS sub
+GROUP BY tipo_semilla;
+
+
+
 ---
 
 **IMPORTANTE:** Estas reglas son OBLIGATORIAS para todas las consultas SQL generadas.`;
