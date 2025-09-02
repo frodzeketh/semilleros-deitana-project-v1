@@ -154,9 +154,43 @@ const Home = () => {
   useEffect(() => {
     const conversationId = searchParams.get("chat")
     if (conversationId && !conversationId.startsWith("temp_")) {
-      setCurrentConversationId(conversationId)
+      // Validar que el chat pertenece al usuario antes de cargarlo
+      const validateAndLoadChat = async () => {
+        try {
+          const token = await auth.currentUser?.getIdToken()
+          if (!token) return
+
+          // Intentar cargar los mensajes del chat (esto ya valida la pertenencia en el backend)
+          const response = await fetch(`${API_URL}/conversations/${conversationId}/messages`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+
+          if (response.ok) {
+            // Si la respuesta es exitosa, el chat pertenece al usuario
+            setCurrentConversationId(conversationId)
+          } else if (response.status === 404 || response.status === 403) {
+            // Si el chat no existe o no pertenece al usuario, limpiar la URL
+            console.warn("Chat no encontrado o no pertenece al usuario:", conversationId)
+            setSearchParams({}) // Limpiar parámetros de URL
+            setCurrentConversationId(null)
+            setChatMessages([])
+          } else {
+            console.error("Error al validar el chat:", response.status)
+          }
+        } catch (error) {
+          console.error("Error al validar la conversación:", error)
+          // En caso de error, limpiar la URL para evitar estados inconsistentes
+          setSearchParams({})
+          setCurrentConversationId(null)
+          setChatMessages([])
+        }
+      }
+
+      validateAndLoadChat()
     }
-  }, [searchParams])
+  }, [searchParams, setSearchParams])
 
   const handleConversationClick = (conversationId) => {
     console.log("Conversación seleccionada:", conversationId)

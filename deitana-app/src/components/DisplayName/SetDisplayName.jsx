@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { updatePassword, updateProfile } from 'firebase/auth'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import '../../global.css'
 
@@ -12,6 +12,7 @@ const SetDisplayName = () => {
   
   const { user, completeSetup } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const handleContinue = async () => {
     if (!user) {
@@ -34,8 +35,13 @@ const SetDisplayName = () => {
       // Marcar que el usuario completó la configuración
       completeSetup()
 
-      // Redirigir al home
-      navigate('/home', { replace: true })
+      // Verificar si hay una URL de redirección pendiente
+      const redirectUrl = searchParams.get('redirect')
+      if (redirectUrl) {
+        navigate(redirectUrl, { replace: true })
+      } else {
+        navigate('/home', { replace: true })
+      }
     } catch (err) {
       console.error('Error al configurar usuario:', err)
       setError('Error al guardar la configuración. Intenta de nuevo.')

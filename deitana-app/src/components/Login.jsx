@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "./Authenticator/firebase"
 import { useAuth } from "../context/AuthContext"
@@ -15,17 +15,31 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { user, loading, needsSetup } = useAuth()
+  const [searchParams] = useSearchParams()
 
   // Si el usuario ya está autenticado, redirigir según su estado
   useEffect(() => {
     if (!loading && user && user.uid) {
+      // Obtener la URL de redirección si existe
+      const redirectUrl = searchParams.get('redirect')
+      
       if (needsSetup) {
-        navigate("/configuser", { replace: true })
+        // Si necesita configuración, ir a configuser pero preservar la redirección
+        if (redirectUrl) {
+          navigate(`/configuser?redirect=${encodeURIComponent(redirectUrl)}`, { replace: true })
+        } else {
+          navigate("/configuser", { replace: true })
+        }
       } else {
-        navigate("/home", { replace: true })
+        // Si no necesita configuración, ir a la URL de redirección o al home
+        if (redirectUrl) {
+          navigate(redirectUrl, { replace: true })
+        } else {
+          navigate("/home", { replace: true })
+        }
       }
     }
-  }, [user, loading, needsSetup, navigate])
+  }, [user, loading, needsSetup, navigate, searchParams])
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {

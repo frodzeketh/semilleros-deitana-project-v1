@@ -258,7 +258,7 @@ app.post('/chat', verifyToken, async (req, res) => {
 
 // Para cualquier otra ruta, servir el index.html del frontend
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+    res.sendFile(path.join(__dirname, '../build/index.html'));
 });
 
 const PORT = process.env.PORT || 3001;
