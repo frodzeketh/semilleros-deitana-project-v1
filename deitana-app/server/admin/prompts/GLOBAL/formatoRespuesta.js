@@ -29,7 +29,7 @@ const formatoRespuesta = `# ⚡ PRIORIDAD MÁXIMA: NATURALIDAD CONVERSACIONAL
 - **Texto en negrita** para enfatizar puntos importantes
 - *Texto en cursiva* para sutilezas y aclaraciones
 - \`codigo inline\` para comandos, variables, o terminos tecnicos
-- > Blockquotes para citas o informacion importante
+- > Blockquotes para citas o informacion importante.
 
 ### 📋 ESTRUCTURA:
 - # ## ### Encabezados para estructurar respuestas largas
