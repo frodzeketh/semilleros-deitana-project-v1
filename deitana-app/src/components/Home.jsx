@@ -42,7 +42,7 @@ const Home = () => {
 
   // Agregar un nuevo estado para controlar el menú del usuario:
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [modalView, setModalView] = useState("account") // 'main', 'admin', 'appearance', etc.
+  const [modalView, setModalView] = useState("main") // 'main', 'admin', 'appearance', etc.
 
   // Estado para el modal de búsqueda
   const [searchModalOpen, setSearchModalOpen] = useState(false)
@@ -1082,7 +1082,12 @@ const Home = () => {
                   <span>Cerrar </span>
                 </button>
 
-                <button className={`ds-nav-item ${activeSection === "chat" ? "active" : ""}`} onClick={handleNewChat}>
+                <button className={`ds-nav-item ${activeSection === "chat" ? "active" : ""}`} onClick={() => {
+                  handleNewChat()
+                  if (isMobile) {
+                    setMobileSidebarOpen(false)
+                  }
+                }}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                     <path
                       strokeLinecap="round"
@@ -1171,7 +1176,12 @@ const Home = () => {
             <div className="ds-sidebar-footer">
               <div className="ds-user-section">
                 <div className="ds-user-info">
-                  <button className="ds-user-circle" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+                  <button className="ds-user-circle" onClick={() => {
+                    setUserMenuOpen(!userMenuOpen)
+                    if (isMobile) {
+                      setMobileSidebarOpen(false)
+                    }
+                  }}>
                     <span>{getUserInitials()}</span>
                   </button>
                 </div>
@@ -1273,7 +1283,12 @@ const Home = () => {
             <div className="ds-sidebar-footer">
               <div className="ds-user-section">
                 <div className="ds-user-info">
-                  <button className="ds-user-circle" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+                  <button className="ds-user-circle" onClick={() => {
+                    setUserMenuOpen(!userMenuOpen)
+                    if (isMobile) {
+                      setMobileSidebarOpen(false)
+                    }
+                  }}>
                     <span>{getUserInitials()}</span>
                   </button>
                 </div>
@@ -1309,7 +1324,10 @@ const Home = () => {
             </button>
           </div>
           {isMobile && (
-            <button className="ds-mobile-new-chat-button" onClick={handleNewChat}>
+            <button className="ds-mobile-new-chat-button" onClick={() => {
+              handleNewChat()
+              setMobileSidebarOpen(false)
+            }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                 <path d="M12.007 19.98a9.869 9.869 0 0 1 -4.307 -.98l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c1.992 1.7 2.93 4.04 2.747 6.34" />
@@ -1810,9 +1828,7 @@ const Home = () => {
                     <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
                     <div className="ds-user-email-large">{user?.email || ""}</div>
                   </div>
-                  <button className="ds-admin-btn" onClick={() => setModalView("admin")}>
-                    Administrar
-                  </button>
+
                 </div>
                 <div className="ds-id-section">{user?.uid || ""}</div>
               </div>
@@ -1908,44 +1924,7 @@ const Home = () => {
               </div>
             )}
 
-            {modalView === "admin" && (
-              <div className="section-content">
-                <div className="ds-admin-options">
-                  <h3>Administrar cuenta</h3>
-                  <button className="ds-admin-option-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <span>Cambiar Nombre</span>
-                  </button>
-                  <button className="ds-admin-option-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <circle cx="12" cy="16" r="1" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                    <span>Cambiar contraseña</span>
-                  </button>
-                  <button className="ds-admin-option-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
-                    <span>Cambiar email</span>
-                  </button>
-                  <button className="ds-admin-option-btn ds-admin-danger">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3,6 5,6 21,6" />
-                      <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2" />
-                      <line x1="10" y1="11" x2="10" y2="17" />
-                      <line x1="14" y1="11" x2="14" y2="17" />
-                    </svg>
-                    <span>Eliminar cuenta</span>
-                  </button>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       )}
@@ -1974,7 +1953,7 @@ const Home = () => {
                 className="ds-user-modal-close"
                 onClick={() => {
                   setUserMenuOpen(false)
-                  setModalView("account")
+                  setModalView("main")
                 }}
               >
                 ×
@@ -1984,7 +1963,7 @@ const Home = () => {
             <div className="ds-user-modal-content">
               <div className="ds-user-modal-sidebar">
                 <button
-                  className={`ds-modal-nav-item ${modalView === "account" ? "active" : ""}`}
+                  className={`ds-modal-nav-item ${(modalView === "account" || modalView === "main") ? "active" : ""}`}
                   onClick={() => setModalView("account")}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2061,7 +2040,7 @@ const Home = () => {
               </div>
 
               <div className="ds-user-modal-main">
-                {(modalView === "account" || !modalView) && (
+                {(modalView === "account" || modalView === "main" || !modalView) && (
                   <>
                 <div className="ds-user-profile-card">
                   <div className="ds-user-avatar-large">
@@ -2071,9 +2050,7 @@ const Home = () => {
                         <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
                         <div className="ds-user-email-large">{user?.email || ""}</div>
                   </div>
-                      <button className="ds-admin-btn" onClick={() => setModalView("admin")}>
-                        Administrar
-                      </button>
+
                 </div>
 
                 <div className="ds-language-section">
@@ -2087,42 +2064,7 @@ const Home = () => {
                   </>
                 )}
 
-                {modalView === "admin" && (
-                  <div className="ds-admin-options">
-                    <h3>Administrar cuenta</h3>
-                    <button className="ds-admin-option-btn">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                      <span>Cambiar Nombre</span>
-                    </button>
-                    <button className="ds-admin-option-btn">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <circle cx="12" cy="16" r="1" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
-                      <span>Cambiar contraseña</span>
-                    </button>
-                    <button className="ds-admin-option-btn">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                        <polyline points="22,6 12,13 2,6" />
-                      </svg>
-                      <span>Cambiar email</span>
-                    </button>
-                    <button className="ds-admin-option-btn ds-admin-danger">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3,6 5,6 21,6" />
-                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2" />
-                        <line x1="10" y1="11" x2="10" y2="17" />
-                        <line x1="14" y1="11" x2="14" y2="17" />
-                      </svg>
-                      <span>Eliminar cuenta</span>
-                    </button>
-              </div>
-                )}
+
 
                 {modalView === "appearance" && (
                   <div className="ds-config-section">

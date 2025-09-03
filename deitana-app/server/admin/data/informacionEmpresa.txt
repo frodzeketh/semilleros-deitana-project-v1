@@ -14,6 +14,50 @@ Facundo es el ingeniero programador que hace que el asistente evolucione y el cr
 
 Ambos hermanos han tomado las riendas de la compañía, consolidándola como una referencia en el sector agrícola gracias a su apuesta por la innovación, la calidad en los procesos de producción y el compromiso con el medio ambiente. Bajo su liderazgo, Semilleros Deitana ha fortalecido su presencia en el mercado y ampliado su infraestructura, manteniendo siempre una gestión familiar cercana y responsable.
 
+SECCIÓN: ACCIONES COMERCIALES
+DESCRIPCIÓN GENERAL: Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Acciones Comerciales
+
+Columnas:
+id: Identificador único de la acción comercial
+ACCO_DENO: Denominación o tipo de acción comercial
+ACCO_CDCL: Código del cliente
+ACCO_CDVD: Código del vendedor
+ACCO_FEC: Fecha de la acción
+ACCO_HOR: Hora de la acción
+
+Ejemplo de una Acción Comercial:
+ID: 0000000293
+Denominación: VISITA CLIENTE
+Código Cliente: 001
+Código Vendedor: 007
+Fecha: 2024-03-15
+Hora: 10:30
+
+SECCIÓN: ARTÍCULOS
+DESCRIPCIÓN GENERAL: Los artículos representan todo tipo de productos que comercializa la empresa. Pueden ser productos fitosanitarios, semillas, injertos, portainjertos, sustratos, fertilizantes, tipos de semillas, algunas de las caracteristicas es que los injertos pueden tener denominacion como INJ, tambien PORTAINJ, pies de tomate, muchos tipos de pie de tomate(Un pie es literalmente la parte inferior de la planta, es decir, el sistema radicular y el tallo base sobre el que se injerta otra variedad). Los articulos, semillas, injertos, tienen un proveedor designado, no son nuestros, sino que el campo de proveedor almacena quien provee estos articulos, semillas, etc, en caso de que este campo se encuentre vacio, es simplemente por que no se registro un proveedor. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Artículos
+
+id: "Código único del artículo (Clave Primaria). "
+AR_DENO: "Denominación o descripción del artículo."
+AR_REF: "Referencia adicional del artículo."
+AR_BAR: "Código de barras del artículo."
+AR_TIVA: "Tipo de IVA aplicado al artículo."
+AR_GRP: "Código del grupo al que pertenece el artículo."
+AR_FAM: "Código de la familia del artículo. Clave foránea a la tabla 'familias'."
+AR_PRV: "Código del proveedor principal del artículo. Clave foránea a la tabla 'proveedores'. Si está vacío, el proveedor no está cargado o se adquirió de otra forma."
+AR_WEB: "Información adicional para la web."
+AR_IVAP: "IVA aplicado al precio."
+AR_PGE: "Porcentaje de germinación."
+AR_DCG: "Tiempo de germinación en días."
+
+Ejemplo de un Articulo, semilla, planta, portainjerto, injerto, etc.
+
+ID: 00000013
+Denominación: TOMATE AMARELO
+Codigo de barra: 7100000219990
+Iva: 1
+Codigo del proveedor: 00359
+Familia: 0015
+
 
 SECCIÓN: CLIENTES
 DESCRIPCIÓN GENERAL: Los clientes son las personas o empresas con las que Semilleros Deitana comercializa sus productos. La información de los clientes incluye sus datos de contacto, ubicación y detalles comerciales relevantes para establecer y mantener una relación fluida. Es fundamental tener un registro completo para la gestión de ventas, seguimiento y comunicación. Cada cliente tiene un código único que lo identifica en nuestra base de datos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Clientes
@@ -48,44 +92,83 @@ Email: info@agricoladelsol.com
 Web: www.agricoladelsol.com
 País: ESPAÑA
 IBAN: ES1234
-Tarifa: TIPO A
+Tarifa: A
 
 
-
-SECCIÓN: ARTÍCULOS
-DESCRIPCIÓN GENERAL: Los artículos representan todo tipo de productos que comercializa la empresa. Pueden ser productos fitosanitarios, semillas, injertos, portainjertos, sustratos, fertilizantes, tipos de semillas, algunas de las caracteristicas es que los injertos pueden tener denominacion como INJ, tambien PORTAINJ, pies de tomate, muchos tipos de pie de tomate(Un pie es literalmente la parte inferior de la planta, es decir, el sistema radicular y el tallo base sobre el que se injerta otra variedad). Los articulos, semillas, injertos, tienen un proveedor designado, no son nuestros, sino que el campo de proveedor almacena quien provee estos articulos, semillas, etc, en caso de que este campo se encuentre vacio, es simplemente por que no se registro un proveedor. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Artículos
-
-id: "Significa codigo unico de cada articulo, semilla, injerto, portainjertos, pie de tomate, producto fitosanitarios, etc."
-AR_DENO: "Denominación o nombre del artículo, semilla, injerto, portainjertos, pie de tomate, producto fitosanitarios, etc."
-AR_BAR: "Codigo de barra del artículo"
-AR_IVAP: "Porcentaje de IVA aplicable"
-AR_PRV: "ID del proveedor principal asociado al artículo. Indica quién suministra el artículo (semillas, injertos, etc.). Si el cliente no provee el insumo, este campo identifica al proveedor del artículo en nuestra base."
-AR_FAM: "Familia o categoría del artículo"
-
-Ejemplo de un Articulo, semilla, planta, portainjerto, injerto, etc.
-
-ID: 00000013
-Denominación: TOMATE AMARELO
-Codigo de barra: 7100000219990
-Iva: 1
-Codigo del proveedor: 00359
-Familia: 0015
-
-
-SECCIÓN: BANDEJAS
-DESCRIPCIÓN GENERAL: Esta sección es un catálogo de las bandejas que utiliza la empresa. Esta bandejas la utilizamos en siembras, partidas, etc. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Bandejas
+SECCIÓN: FAMILIAS Y GRUPOS
+DESCRIPCIÓN GENERAL: Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Familias y Grupos
 
 Columnas:
-ID: Código único que identifica cada tipo de bandeja.
-BN_DENO: Denominación o nombre de la bandeja.
-BN_ALV: Número total de alvéolos (huecos) que tiene la bandeja.
-BN_RET: Indica si la bandeja es Reutilizable (SI o NO).
+id: Código único de la familia (Clave Primaria)
+FM_DENO: Nombre del Grupo/Familia
+FM_LAT: Nombre en Latín
+FM_PGER: Porcentaje de germinación
 
-Ejemplo de una Bandeja:
+Ejemplo de una Familia:
+ID: 0015
+Denominación: TOMATE
+Nombre en Latín: Solanum lycopersicum
+Porcentaje de Germinación: 95
+
+
+SECCIÓN: FORMAS DE PAGO/COBRO
+DESCRIPCIÓN GENERAL: La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Formas de pago/cobro
+
+Columnas:
+ID: Código único que identifica cada forma de pago o cobro. Es la clave primaria de esta tabla.
+FP_DENO: Denominación o descripción de la forma de pago, como por ejemplo, 'RECIBO 90 DIAS F.F.' o 'TRANSFERENCIA INMEDIATA'.
+FP_NVT: Número de vencimientos asociados a esta forma de pago. Indica en cuántas partes se divide el pago o cobro.
+FP_CART: Indica si esta forma de pago se gestiona en la cartera de cobros/pagos. Esto es relevante para el seguimiento de documentos pendientes.
+FP_RW: Referencia relacionada con la web. El propósito específico de este campo no está detallado, pero podría vincularse a funcionalidades online.
+
+Ejemplo de una Forma de Pago/Cobro:
 ID: 001
-Denominación: BANDEJA FORESTAL 104 ALV
-Alvéolos: 104
-Reutilizable: SI
+Denominación: TRANSFERENCIA 30 DÍAS
+Número de Vencimientos: 1
+Gestiona en Cartera: NO
+Referencia Web: N/A
+
+
+SECCIÓN: NUESTROS BANCOS
+DESCRIPCIÓN GENERAL: Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Nuestros bancos
+
+Columnas:
+id: Código único del banco (Clave Primaria)
+BA_DENO: Denominación o nombre del banco
+BA_DOM: Domicilio del banco
+BA_POB: Población del banco
+BA_PROV: Provincia del banco
+BA_CDP: Código postal del banco
+BA_TEL: Número(s) de teléfono del banco
+BA_FAX: Número de FAX del banco
+BA_EMA: Dirección de correo electrónico del banco
+BA_IBAN: Número de cuenta bancaria en formato IBAN
+BA_COD: Código de la entidad bancaria
+BA_OFI: Código de la oficina bancaria
+BA_CUEN: Número de cuenta bancaria tradicional
+BA_SWI: Código SWIFT/BIC
+BA_RIES: Nivel de riesgo interno
+BA_TIPO: Tipo de banco (clasificación interna)
+BA_OBS: Observaciones o comentarios internos
+
+Ejemplo de un Banco:
+ID: 001
+Denominación: BANCO AGRARIO
+Domicilio: C/ PRINCIPAL, 123
+Población: MADRID
+Provincia: MADRID
+Código Postal: 28001
+Teléfono: 915555555
+FAX: 915555556
+Email: info@bancoagrario.es
+IBAN: ES1234567890123456789012
+Código Entidad: 1234
+Código Oficina: 5678
+Cuenta: 1234567890
+SWIFT: AGRRESMM
+Riesgo: BAJO
+Tipo: PRINCIPAL
+Observaciones: Banco principal de la empresa
 
 
 SECCIÓN: PROVEEDORES
@@ -126,24 +209,6 @@ Forma de Pago: 001
 IBAN: ES9876543210987654321098
 
 
-SECCIÓN: FORMAS DE PAGO/COBRO
-DESCRIPCIÓN GENERAL: La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Formas de pago/cobro
-
-Columnas:
-ID: Código único que identifica cada forma de pago o cobro. Es la clave primaria de esta tabla.
-FP_DENO: Denominación o descripción de la forma de pago, como por ejemplo, 'RECIBO 90 DIAS F.F.' o 'TRANSFERENCIA INMEDIATA'.
-FP_NVT: Número de vencimientos asociados a esta forma de pago. Indica en cuántas partes se divide el pago o cobro.
-FP_CART: Indica si esta forma de pago se gestiona en la cartera de cobros/pagos. Esto es relevante para el seguimiento de documentos pendientes.
-FP_RW: Referencia relacionada con la web. El propósito específico de este campo no está detallado, pero podría vincularse a funcionalidades online.
-
-Ejemplo de una Forma de Pago/Cobro:
-ID: 001
-Denominación: TRANSFERENCIA 30 DÍAS
-Número de Vencimientos: 1
-Gestiona en Cartera: NO
-Referencia Web: N/A
- 
-
 SECCIÓN: VENDEDORES
 DESCRIPCIÓN GENERAL: La sección de vendedores en el sistema ERP de Semilleros Deitana es el punto central para gestionar la información de todo el personal interno que realiza funciones de venta o que, simplemente, tiene acceso al sistema como usuario. Aquí se almacena la información clave de cada individuo, facilitando la administración de sus roles y datos de contacto. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Vendedores/Usuarios
 
@@ -162,10 +227,29 @@ Domicilio: C/ LOS NARANJOS, 5
 Población: ALICANTE
 Provincia: ALICANTE
 Número Técnico Asociado: 003
+ 
+
+
+
+SECCIÓN: BANDEJAS
+DESCRIPCIÓN GENERAL: Esta sección es un catálogo de las bandejas que utiliza la empresa. Esta bandejas la utilizamos en siembras, partidas, etc. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Bandejas
+
+Columnas:
+ID: Código único que identifica cada tipo de bandeja.
+BN_DENO: Denominación o nombre de la bandeja.
+BN_ALV: Número total de alvéolos (huecos) que tiene la bandeja.
+BN_RET: Indica si la bandeja es Reutilizable (SI o NO).
+
+Ejemplo de una Bandeja:
+ID: 001
+Denominación: BANDEJA FORESTAL 104 ALV
+Alvéolos: 104
+Reutilizable: SI
+
 
 
 SECCIÓN: CASAS COMERCIALES
-DESCRIPCIÓN GENERAL: La sección de Casas Comerciales (casas_com) se enfoca en la gestión y el almacenamiento de la información de todas las empresas o entidades con las que Semilleros Deitana mantiene una relación comercial. Es vital para llevar un registro organizado de estos socios, incluyendo sus datos identificativos y de contacto, lo que facilita la colaboración y el seguimiento. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Casas comerciales
+DESCRIPCIÓN GENERAL: La sección de Casas Comerciales (casas_com) se enfoca en la gestión y el almacenamiento de la información de todas las empresas o entidades con las que Semilleros Deitana mantiene una relación comercial. Es vital para llevar un registro organizado de estos socios, incluyendo sus datos identificativos y de contacto, lo que facilita la colaboración y el seguimiento. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Casas Comerciales
 
 Columnas:
 ID: Es el identificador único de cada casa comercial y funciona como la clave primaria de esta tabla.
@@ -196,6 +280,41 @@ Email: info@agrotech.es
 Web: www.agrotech.es
 
 
+SECCIÓN: CATEGORÍAS
+DESCRIPCIÓN GENERAL: Define las categorías laborales utilizadas en Semilleros Deitana para establecer condiciones contractuales y económicas de los trabajadores (salario, horarios, costes). No son categorías de producto. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Categorias
+
+Columnas:
+id: Identificador único de la categoría laboral (Clave Primaria)
+CG_DENO: Nombre o denominación de la categoría laboral (Ej: PRODUCCION, ENCARGADO)
+CG_SALDIA: Salario diario base para esta categoría (Tipo: DECIMAL)
+CG_COSHOR: Coste calculado por hora de trabajo normal (Tipo: DECIMAL)
+CG_SDIA: Coste calculado por hora extra (Tipo: DECIMAL)
+
+Ejemplo de una Categoría:
+ID: 001
+Denominación: PRODUCCION
+Salario Diario: 45.00
+Coste Hora Normal: 5.63
+Coste Hora Extra: 6.75
+
+
+SECCIÓN: CRÉDITOS CAUCIÓN
+DESCRIPCIÓN GENERAL: Gestión y seguimiento de seguros de crédito (créditos caución) asociados a clientes para proteger frente al riesgo de impago. Permite registrar y consultar pólizas o acuerdos de seguro de crédito específicos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Créditos caución
+
+Columnas:
+id: Identificador único del crédito caución (Clave Primaria)
+CAU_CCL: Código del cliente asociado. Clave foránea a la tabla 'clientes'
+CAU_DIAS: Número máximo de días de crédito permitidos (Tipo: INT)
+CAU_TIPO: Tipo de crédito caución ('N': No asegurado, 'A': Asegurado)
+
+Ejemplo de un Crédito Caución:
+ID: 001
+Código Cliente: 001
+Días de Crédito: 30
+Tipo: A (Asegurado)
+
+
+
 SECCIÓN: ALMACENES
 DESCRIPCIÓN GENERAL: La sección de almacenes es fundamental para representar las distintas delegaciones o ubicaciones físicas y operativas de la empresa. Su propósito principal es servir como una referencia clara para identificar la localización específica asociada a cualquier acción o transacción dentro del sistema ERP. Además, permite vincular recursos financieros por defecto, como cajas y cuentas bancarias, a cada almacén. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Delegaciones
 
@@ -210,6 +329,34 @@ ID: 001
 Denominación: ALMACÉN CENTRAL
 Caja por Defecto: CAJA PRINCIPAL
 Banco por Defecto: BANCO AGRARIO
+
+
+SECCIÓN: DISPOSITIVOS MÓVILES
+DESCRIPCIÓN GENERAL: Gestión centralizada de dispositivos móviles (PDAs u otros terminales portátiles) utilizados en Semilleros Deitana para operaciones en campo y gestión móvil. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Dispositivos móviles
+
+Columnas:
+id: Código único del dispositivo móvil (Clave Primaria)
+DIS_DENO: Denominación o nombre descriptivo del dispositivo
+DIS_MARCA: Marca comercial del dispositivo
+DIS_MOD: Modelo técnico del dispositivo
+DIS_FCOM: Fecha de adquisición (Puede ser NULL)
+DIS_MAC: Dirección MAC del dispositivo
+DIS_IP: Dirección IP asignada al dispositivo
+DIS_KEY: Clave o identificador de seguridad
+DIS_BAJA: Estado operativo (0: Activo, 1: Dado de baja)
+
+Ejemplo de un Dispositivo Móvil:
+ID: 001
+Denominación: PDA CAMPO 1
+Marca: SAMSUNG
+Modelo: GALAXY TAB A
+Fecha Compra: 2023-01-15
+MAC: 00:11:22:33:44:55
+IP: 192.168.1.100
+Clave: PDA001
+Estado: 0 (Activo)
+
+
 
 
 SECCIÓN: ENVASES DE VENTA
@@ -253,6 +400,60 @@ Total Filas: 20
 Secciones Excluidas de Tratamientos: SECCION 3
 
 
+SECCIÓN: MOTIVOS
+DESCRIPCIÓN GENERAL: Catálogo estandarizado de causas o razones predefinidas utilizadas para documentar y clasificar eventos, acciones o situaciones internas (Ej: plagas, descartes, incidencias). Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Motivos
+
+Columnas:
+id: Código único del motivo (Clave Primaria)
+MOT_DENO: Denominación o descripción del motivo (Ej: PLAGA, DESCARTE)
+
+Ejemplo de un Motivo:
+ID: 0001
+Denominación: PLAGA
+
+
+SECCIÓN: PAÍSES
+DESCRIPCIÓN GENERAL: Catálogo maestro de referencia con el listado de países relevantes para la actividad comercial y productiva de la empresa (origen/destino productos, ubicación clientes/proveedores). Diseñada para servir como soporte a otras tablas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Paises
+
+Columnas:
+id: Código único del país (Clave Primaria)
+PA_DENO: Denominación o nombre completo del país (Ej: FRANCIA, ESPAÑA)
+
+Ejemplo de un País:
+ID: 001
+Denominación: ESPAÑA
+
+SECCIÓN: PROCESOS
+DESCRIPCIÓN GENERAL: Define las etapas o procedimientos del ciclo productivo agrícola (semillero), como germinación o trasplante. Contiene campos que controlan la lógica interna del ERP para estas etapas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Procesos
+
+Columnas:
+id: Código único del proceso (Clave Primaria)
+PRO_DENO: Denominación o nombre del proceso (Ej: GERMINACIÓN)
+PRO_MGER: ¿Modifica germinación? ('S' o '')
+PRO_MBAN: ¿Modifica bandejas? ('S' o '')
+PRO_MSOP: ¿Modifica soporte? ('S' o '')
+PRO_CDIF: ¿Calcular por diferencia? ('S' o '')
+PRO_NOUBI: ¿Permitir sin ubicación? ('S' o '')
+PRO_NEM: Nemotécnico (abreviatura del proceso)
+PRO_SEMB: ¿Es parte del proceso de siembra?
+PRO_IDIAS: Porcentaje o cantidad de días estimados de siembra
+PRO_OBS: Campo OBSOLETO para observaciones
+
+Ejemplo de un Proceso:
+ID: 001
+Denominación: GERMINACIÓN
+Modifica Germinación: S
+Modifica Bandejas: N
+Modifica Soporte: N
+Calcular por Diferencia: S
+Permitir sin Ubicación: N
+Nemotécnico: GERM
+Es Siembra: S
+Días Siembra: 5
+Observaciones: (Campo obsoleto)
+
+
+
 SECCIÓN: PRODUCTOS FITOSANITARIOS
 DESCRIPCIÓN GENERAL: Esta sección, referida internamente como tipo_trat, se dedica a la gestión y el registro detallado de los productos fitosanitarios utilizados en los tratamientos agronómicos de Semilleros Deitana. Su objetivo es centralizar la información técnica y de uso de estos productos, ya sean para prevención, control de plagas o enfermedades, garantizando una aplicación segura y una trazabilidad completa. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Productos Fitosanitarios
 
@@ -282,6 +483,31 @@ Agentes Nocivos: FITOPHTHORA - PITIUM
 Nº Registro: 21345
 
 
+SECCIÓN: RUTAS
+DESCRIPCIÓN GENERAL: Catálogo de rutas de distribución o transporte utilizadas para la entrega de productos a clientes. Permite organizar y optimizar las entregas por zonas geográficas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Rutas
+
+Columnas:
+id: Código único de la ruta (Clave Primaria)
+RU_DENO: Denominación o nombre de la ruta
+RU_DESC: Descripción adicional de la ruta
+
+Ejemplo de una Ruta:
+ID: 001
+Denominación: RUTA CON PORTES
+Descripción:
+
+
+SECCIÓN: SECCIÓN TAREAS
+DESCRIPCIÓN GENERAL: Catálogo de las diferentes secciones o áreas de tareas dentro de la empresa. Permite clasificar y organizar las tareas por áreas funcionales. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Sección Tareas
+
+Columnas:
+id: Código único de la sección de tarea (Clave Primaria)
+TARS_DENO: Denominación o nombre de la sección de tarea
+
+Ejemplo de una Sección de Tarea:
+ID: 01
+Denominación: LOGÍSTICA
+
 
 SECCIÓN: SECTORES
 DESCRIPCIÓN GENERAL: La sección de sectores define las clasificaciones de origen para pedidos y clientes. Es un elemento crucial para realizar análisis, segmentación y seguimiento por canal dentro de Semilleros Deitana. Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos de estos sectores existen y se utilizan activamente para fines de clasificación. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Sectores y Subsectores
@@ -293,7 +519,6 @@ SC_DENO: Nombre o denominación del sector o subsector (Ej: SIN ASIGNAR, TIENDA,
 Ejemplo de un Sector:
 ID: 002
 Denominación: PROFESIONAL
-
 
 
 SECCIÓN: SUSTRATOS
@@ -312,6 +537,24 @@ PVP por alvéolo: 0.05
 Coste por alvéolo: 0.03
 
 
+SECCIÓN: TARIFAS
+DESCRIPCIÓN GENERAL: La sección de Tarifas (tarifas) registra las diferentes tarifas de precios disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe, permitiendo una clara distinción entre las políticas de precios aplicadas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tarifas de precios
+
+Columnas:
+ID: Identificador único de la tarifa. Es la clave primaria.
+TP_DENO: Denominación o descripción de la tarifa (ej: 'Tarifa A', 'Tarifa por Volumen').
+
+SECCIÓN: TIPOS DE SIEMBRA
+DESCRIPCIÓN GENERAL: Catálogo de los diferentes tipos de siembra utilizados en los procesos productivos. Define las modalidades y técnicas de siembra aplicadas en la empresa. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tipos de siembra
+
+Columnas:
+id: Código único del tipo de siembra (Clave Primaria)
+TSI_DENO: Denominación o nombre del tipo de siembra
+
+Ejemplo de un Tipo de Siembra:
+ID: 5001
+Denominación: SIEMBRA DIRECTA
+
 
 SECCIÓN: UBICACIONES
 DESCRIPCIÓN GENERAL: La sección de ubicaciones es un catálogo centralizado de todas las localizaciones físicas o lógicas relevantes para las operaciones de la empresa, incluyendo invernaderos, semilleros y almacenes. Proporciona una referencia espacial estandarizada, crucial para organizar, trazar y optimizar todas las actividades y recursos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Ubicaciones
@@ -323,7 +566,6 @@ UBI_DENO: Denominación o nombre descriptivo de la ubicación (Ej: 'SEMILLERO A'
 Ejemplo de una Ubicación:
 ID: 003
 Denominación: SEMILLERO C
-
 
 
 SECCIÓN: ZONAS
@@ -341,8 +583,6 @@ Denominación: ZONA SEMILLERO A
 Subzona: SUB-A1
 
 
-
-
 SECCIÓN: DEPARTAMENTOS
 DESCRIPCIÓN GENERAL: La sección de departamentos cataloga las diferentes áreas o unidades funcionales dentro de la empresa, como administración, producción, etc. Es esencial para asignar responsabilidades, gestionar usuarios y roles, clasificar tareas y generar reportes segmentados por área. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Otros – Departamentos
 
@@ -355,7 +595,6 @@ ID: 002
 Denominación: PRODUCCIÓN
 
 
-
 SECCIÓN: SECCIONES DE TRABAJADORES
 DESCRIPCIÓN GENERAL: La sección de secciones de trabajadores cataloga las áreas funcionales, grupos o secciones internas a las que pertenece el personal de la empresa. Es fundamental para la gestión de Recursos Humanos, la asignación de tareas específicas y la generación de reportes de personal segmentados por su área de trabajo. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Otros – Secciones Trabajadores
 
@@ -366,7 +605,6 @@ SE_DENO: Denominación o nombre de la sección (Ej: ADMINISTRACION, PRODUCCION, 
 Ejemplo de una Sección de Trabajadores:
 ID: 001
 Denominación: ADMINISTRACION
-
 
 
 
@@ -392,6 +630,252 @@ ID: 001
 Denominación: H. CARRETILLERO
 Código Sección: 01 (Sección de Logística, por ejemplo)
 Tipo de Tarea: Otros
+
+
+----------------------------------------------
+
+SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE SIEMBRA
+DESCRIPCIÓN GENERAL: Gestiona la información relacionada con los partes de siembra realizados en la empresa. Registra datos técnicos y operativos de cada evento de siembra, incluyendo responsables, materiales utilizados, ubicación y estado. Es fundamental para la trazabilidad de la producción agrícola, el control de insumos y el seguimiento de la actividad productiva. Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Siembra.
+
+Columnas:
+id: Código identificador único de cada parte de siembra (Clave Primaria)
+PSI_FEC: Fecha en que se realizó la siembra
+PSI_HOR: Hora exacta en que se registró la siembra
+PSI_OPE: Número de operario que realizó la siembra (relacionado con tabla vendedores → VD_DENO)
+PSI_SEM: Identificador de la semilla o artículo sembrado (relacionado con tabla articulos → AR_DENO)
+PSI_EST: Estado actual del parte de siembra
+PSI_ALM: Identificador del almacén donde se realizó la siembra (relacionado con tabla almacenes → AM_DENO)
+PSI_TIPO: Tipo de parte de siembra
+PSI_LOTE: Lote asociado a la siembra
+PSI_CCOM: Identificador de la casa comercial asociada (relacionado con tabla casas_com → denominación)
+
+Ejemplo de un Parte de Siembra:
+ID: 145
+Fecha: 2025-03-12
+Hora: 08:30:00
+Operario: 023 (PEDRO GÓMEZ LÓPEZ)
+Semilla: 457 (MAÍZ HÍBRIDO PREMIUM)
+Estado: S
+Almacén: 05 (ALMACÉN CENTRAL)
+Tipo: A
+Lote: R:11776
+Casa Comercial: 12 (AGROINSUMOS DEL NORTE S.A.)
+
+
+
+SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE EXTENDIDO
+DESCRIPCIÓN GENERAL: Gestiona la información de los partes de extendido, que documentan los traslados internos de plantas o bandejas entre invernaderos de origen y destino. Registra datos sobre responsables, fechas, horas, tipos de operación, partidas y ubicaciones involucradas. Es fundamental para el control de inventario de plantas en crecimiento, la planificación del espacio en los invernaderos y la trazabilidad de la producción. Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Extendido.
+
+Columnas:
+id: Identificador único de cada parte de extendido (Clave Primaria)
+PEX_NPA: Número de partida asociada al extendido
+PEX_FEC: Fecha en que se realizó el extendido
+PEX_HORA: Hora exacta en que se efectuó el extendido
+PEX_USU: Identificador del usuario que realizó el extendido (relacionado con tabla vendedores → VD_DENO)
+PEX_TIPO: Tipo de operación de extendido (ej: P, C)
+PEX_IOR: Identificador del invernadero de origen (relacionado con tabla invernaderos → INV_DENO)
+PEX_IDE: Identificador del invernadero de destino (relacionado con tabla invernaderos → INV_DENO)
+
+Ejemplo de un Parte de Extendido:
+ID: 302
+Número de Partida: 7789
+Fecha: 2025-04-10
+Hora: 10:15:00
+Usuario: 00 (SEMILLEROS DEITANA S.L.U.)
+Tipo: P
+Invernadero Origen: A2 (A2 Pg28-Par1000)
+Invernadero Destino: CA5 (CÁMARA 5)
+
+
+
+SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE TRATAMIENTO
+DESCRIPCIÓN GENERAL: Registra los partes de tratamiento fitosanitario realizados en la empresa. Incluye información general del parte, personal responsable, aplicador y equipo utilizado, así como el problema fitosanitario detectado y el tratamiento aplicado. Contiene además relaciones con las zonas tratadas, los productos utilizados y las familias a tratar. Es fundamental para garantizar la trazabilidad de los tratamientos, el cumplimiento normativo y la correcta gestión fitosanitaria. Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Tratamiento.
+
+Columnas:
+id: Código identificador único de cada parte de tratamiento (Clave Primaria)
+PAT_FEC: Fecha en que se gestionó el parte de tratamiento
+PAT_HORA: Hora en que se gestionó el parte de tratamiento
+PAT_USU: Vendedor encargado o responsable (relacionado con tabla vendedores → VD_DENO)
+PAT_EST: Estado del parte de tratamiento (P: Prevista, R: Realizada)
+PAT_FPRE: Fecha prevista para la realización
+PAT_HPRE: Hora prevista para la realización
+PAT_FREA: Fecha en que se realizó efectivamente el tratamiento
+PAT_HREA: Hora en que se realizó efectivamente el tratamiento
+PAT_PER: Personal autorizado (relacionado con tabla vendedores → VD_DENO)
+PAT_TEC: Técnica de aplicación utilizada
+PAT_APLI: Aplicador fitosanitario (relacionado con tabla aplicadores_fit → AFI_DENO)
+PAT_EQUI: Equipo fitosanitario empleado (relacionado con tabla equipo_fito → EFI_DENO)
+PAT_PROB: Problema fitosanitario detectado
+PAT_TRAT: Código del tratamiento aplicado (relacionado con tabla tratamientos → TT_DENO)
+
+Ejemplo de un Parte de Tratamiento:
+ID: 520
+Fecha: 2025-05-20
+Hora: 09:00:00
+Responsable: 014 (CARLOS MARTÍN SÁNCHEZ)
+Estado: R
+Fecha Prevista: 2025-05-19
+Hora Prevista: 08:30:00
+Fecha Realizada: 2025-05-20
+Hora Realizada: 09:00:00
+Personal Autorizado: 027 (ANA GÓMEZ LÓPEZ)
+Técnica: Pulverización foliar
+Aplicador: 03 (APLICADOR FITOSANITARIO SUR S.L.)
+Equipo: 07 (MOCHILA PULVERIZADORA STIHL)
+Problema Fitosanitario: Mildiu en hojas jóvenes
+Tratamiento: 112 (FUNGICIDA SISTÉMICO COBRE 50%)
+
+
+
+
+-------------------
+Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Injerto
+
+------------------
+
+
+SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE VISITA
+DESCRIPCIÓN GENERAL: Registra las visitas realizadas, documentando la fecha, hora, el usuario responsable de la gestión, y el cliente o proveedor asociado. Además, permite vincular las partidas específicas que fueron objeto de la visita. Esta información es fundamental para el seguimiento de relaciones comerciales, la trazabilidad de interacciones y la gestión de visitas programadas o realizadas. Se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Visita.
+
+Columnas:
+id: Código identificador único de la parte de visita (Clave Primaria)
+RV_FEC: Fecha en que se realizó la visita
+RV_HORA: Hora en que se realizó la visita
+RV_USU: Usuario que gestionó la visita (relacionado con tabla vendedores → VD_DENO)
+RV_CCL: Identificador del cliente asociado a la visita (relacionado con tabla clientes → CL_DENO)
+RV_CDPR: Identificador del proveedor asociado a la visita (relacionado con tabla proveedores → PR_DENO)
+
+Ejemplo de un Parte de Visita:
+ID: 880
+Fecha: 2025-06-01
+Hora: 11:45:00
+Usuario: 009 (MARÍA LÓPEZ FERNÁNDEZ)
+Cliente Asociado: 120 (HORTALIZAS LA HUERTA S.L.)
+Proveedor Asociado: NULL
+Partidas visitadas: Lote 2235 – Invernadero 4
+
+
+
+
+-------------------
+Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes Varios
+
+------------------
+
+-------------------
+Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes Extendido Mult
+
+------------------
+
+-------------------
+
+
+------------------
+
+
+--------------------------------------------------------
+
+
+SECCIÓN: INJERTOS Y ABONADOS – UTILIDADES – MEDIAS BANDEJAS
+DESCRIPCIÓN GENERAL: Registra información sobre medias bandejas, incluyendo el código de la partida, cantidad de alveolos, huecos, etiqueta, cantidad de plantas, fecha y hora de registro, y el operario asociado. El identificador principal suele coincidir con el código de partida. Esta información es fundamental para el seguimiento del inventario de medias bandejas y la trazabilidad de plantas dentro de la producción. Se encuentra en el ERP en la sección del menú Injertos y Abonados – Utilidades – Medias Bandejas.
+
+Columnas:
+id: Código de la media bandeja (Clave Primaria). Frecuentemente coincide con el código de la partida
+PMB_PAR: Código de la partida asociada
+PMB_ALV: Cantidad de alveolos
+PMB_HUE: Cantidad de huecos
+PMB_ETIQ: Etiqueta de la media bandeja
+PMB_PLAN: Cantidad de plantas
+PMB_FEC: Fecha de registro
+PMB_HORA: Hora de registro
+PMB_CDOP: Código del operario
+
+Ejemplo de una Media Bandeja:
+ID: 15011300
+Partida: 15011300
+Alveolos: 104
+Huecos: 15
+Etiqueta: 3801130009256
+Cantidad de Plantas: 0
+Fecha: 2021-06-02
+Hora: 11:48
+Operario: 0002
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -710,254 +1194,46 @@ EFI_DENO: Denominación del equipo fitosanitario (Ej: 'ATOMIZADOR 1000L', 'PULVE
 
 
 
-SECCIÓN: TARIFAS
-DESCRIPCIÓN GENERAL: La sección de Tarifas (tarifas) registra las diferentes tarifas de precios disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe, permitiendo una clara distinción entre las políticas de precios aplicadas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tarifas de precios
-
-Columnas:
-ID: Identificador único de la tarifa. Es la clave primaria.
-TP_DENO: Denominación o descripción de la tarifa (ej: 'Tarifa A', 'Tarifa por Volumen').
 
 
 
-SECCIÓN: ACCIONES COMERCIALES
-DESCRIPCIÓN GENERAL: Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Acciones Comerciales
-
-Columnas:
-id: Identificador único de la acción comercial
-ACCO_DENO: Denominación o tipo de acción comercial
-ACCO_CDCL: Código del cliente
-ACCO_CDVD: Código del vendedor
-ACCO_FEC: Fecha de la acción
-ACCO_HOR: Hora de la acción
-
-Ejemplo de una Acción Comercial:
-ID: 0000000293
-Denominación: VISITA CLIENTE
-Código Cliente: 001
-Código Vendedor: 007
-Fecha: 2024-03-15
-Hora: 10:30
 
 
 
-SECCIÓN: FAMILIAS Y GRUPOS
-DESCRIPCIÓN GENERAL: Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Familias y Grupos
-
-Columnas:
-id: Código único de la familia (Clave Primaria)
-FM_DENO: Nombre del Grupo/Familia
-FM_LAT: Nombre en Latín
-FM_PGER: Porcentaje de germinación
-
-Ejemplo de una Familia:
-ID: 0015
-Denominación: TOMATE
-Nombre en Latín: Solanum lycopersicum
-Porcentaje de Germinación: 95
 
 
 
-SECCIÓN: NUESTROS BANCOS
-DESCRIPCIÓN GENERAL: Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Nuestros bancos
-
-Columnas:
-id: Código único del banco (Clave Primaria)
-BA_DENO: Denominación o nombre del banco
-BA_DOM: Domicilio del banco
-BA_POB: Población del banco
-BA_PROV: Provincia del banco
-BA_CDP: Código postal del banco
-BA_TEL: Número(s) de teléfono del banco
-BA_FAX: Número de FAX del banco
-BA_EMA: Dirección de correo electrónico del banco
-BA_IBAN: Número de cuenta bancaria en formato IBAN
-BA_COD: Código de la entidad bancaria
-BA_OFI: Código de la oficina bancaria
-BA_CUEN: Número de cuenta bancaria tradicional
-BA_SWI: Código SWIFT/BIC
-BA_RIES: Nivel de riesgo interno
-BA_TIPO: Tipo de banco (clasificación interna)
-BA_OBS: Observaciones o comentarios internos
-
-Ejemplo de un Banco:
-ID: 001
-Denominación: BANCO AGRARIO
-Domicilio: C/ PRINCIPAL, 123
-Población: MADRID
-Provincia: MADRID
-Código Postal: 28001
-Teléfono: 915555555
-FAX: 915555556
-Email: info@bancoagrario.es
-IBAN: ES1234567890123456789012
-Código Entidad: 1234
-Código Oficina: 5678
-Cuenta: 1234567890
-SWIFT: AGRRESMM
-Riesgo: BAJO
-Tipo: PRINCIPAL
-Observaciones: Banco principal de la empresa
 
 
 
-SECCIÓN: DISPOSITIVOS MÓVILES
-DESCRIPCIÓN GENERAL: Gestión centralizada de dispositivos móviles (PDAs u otros terminales portátiles) utilizados en Semilleros Deitana para operaciones en campo y gestión móvil. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Dispositivos móviles
-
-Columnas:
-id: Código único del dispositivo móvil (Clave Primaria)
-DIS_DENO: Denominación o nombre descriptivo del dispositivo
-DIS_MARCA: Marca comercial del dispositivo
-DIS_MOD: Modelo técnico del dispositivo
-DIS_FCOM: Fecha de adquisición (Puede ser NULL)
-DIS_MAC: Dirección MAC del dispositivo
-DIS_IP: Dirección IP asignada al dispositivo
-DIS_KEY: Clave o identificador de seguridad
-DIS_BAJA: Estado operativo (0: Activo, 1: Dado de baja)
-
-Ejemplo de un Dispositivo Móvil:
-ID: 001
-Denominación: PDA CAMPO 1
-Marca: SAMSUNG
-Modelo: GALAXY TAB A
-Fecha Compra: 2023-01-15
-MAC: 00:11:22:33:44:55
-IP: 192.168.1.100
-Clave: PDA001
-Estado: 0 (Activo)
 
 
 
-SECCIÓN: CATEGORÍAS
-DESCRIPCIÓN GENERAL: Define las categorías laborales utilizadas en Semilleros Deitana para establecer condiciones contractuales y económicas de los trabajadores (salario, horarios, costes). No son categorías de producto. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Categorias
-
-Columnas:
-id: Identificador único de la categoría laboral (Clave Primaria)
-CG_DENO: Nombre o denominación de la categoría laboral (Ej: PRODUCCION, ENCARGADO)
-CG_SALDIA: Salario diario base para esta categoría (Tipo: DECIMAL)
-CG_COSHOR: Coste calculado por hora de trabajo normal (Tipo: DECIMAL)
-CG_SDIA: Coste calculado por hora extra (Tipo: DECIMAL)
-
-Ejemplo de una Categoría:
-ID: 001
-Denominación: PRODUCCION
-Salario Diario: 45.00
-Coste Hora Normal: 5.63
-Coste Hora Extra: 6.75
 
 
 
-SECCIÓN: CRÉDITOS CAUCIÓN
-DESCRIPCIÓN GENERAL: Gestión y seguimiento de seguros de crédito (créditos caución) asociados a clientes para proteger frente al riesgo de impago. Permite registrar y consultar pólizas o acuerdos de seguro de crédito específicos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Créditos caución
-
-Columnas:
-id: Identificador único del crédito caución (Clave Primaria)
-CAU_CCL: Código del cliente asociado. Clave foránea a la tabla 'clientes'
-CAU_DIAS: Número máximo de días de crédito permitidos (Tipo: INT)
-CAU_TIPO: Tipo de crédito caución ('N': No asegurado, 'A': Asegurado)
-
-Ejemplo de un Crédito Caución:
-ID: 001
-Código Cliente: 001
-Días de Crédito: 30
-Tipo: A (Asegurado)
 
 
 
-SECCIÓN: MOTIVOS
-DESCRIPCIÓN GENERAL: Catálogo estandarizado de causas o razones predefinidas utilizadas para documentar y clasificar eventos, acciones o situaciones internas (Ej: plagas, descartes, incidencias). Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Motivos
-
-Columnas:
-id: Código único del motivo (Clave Primaria)
-MOT_DENO: Denominación o descripción del motivo (Ej: PLAGA, DESCARTE)
-
-Ejemplo de un Motivo:
-ID: 0001
-Denominación: PLAGA
 
 
 
-SECCIÓN: PAÍSES
-DESCRIPCIÓN GENERAL: Catálogo maestro de referencia con el listado de países relevantes para la actividad comercial y productiva de la empresa (origen/destino productos, ubicación clientes/proveedores). Diseñada para servir como soporte a otras tablas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Paises
-
-Columnas:
-id: Código único del país (Clave Primaria)
-PA_DENO: Denominación o nombre completo del país (Ej: FRANCIA, ESPAÑA)
-
-Ejemplo de un País:
-ID: 001
-Denominación: ESPAÑA
 
 
 
-SECCIÓN: PROCESOS
-DESCRIPCIÓN GENERAL: Define las etapas o procedimientos del ciclo productivo agrícola (semillero), como germinación o trasplante. Contiene campos que controlan la lógica interna del ERP para estas etapas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Procesos
-
-Columnas:
-id: Código único del proceso (Clave Primaria)
-PRO_DENO: Denominación o nombre del proceso (Ej: GERMINACIÓN)
-PRO_MGER: ¿Modifica germinación? ('S' o '')
-PRO_MBAN: ¿Modifica bandejas? ('S' o '')
-PRO_MSOP: ¿Modifica soporte? ('S' o '')
-PRO_CDIF: ¿Calcular por diferencia? ('S' o '')
-PRO_NOUBI: ¿Permitir sin ubicación? ('S' o '')
-PRO_NEM: Nemotécnico (abreviatura del proceso)
-PRO_SEMB: ¿Es parte del proceso de siembra?
-PRO_IDIAS: Porcentaje o cantidad de días estimados de siembra
-PRO_OBS: Campo OBSOLETO para observaciones
-
-Ejemplo de un Proceso:
-ID: 001
-Denominación: GERMINACIÓN
-Modifica Germinación: S
-Modifica Bandejas: N
-Modifica Soporte: N
-Calcular por Diferencia: S
-Permitir sin Ubicación: N
-Nemotécnico: GERM
-Es Siembra: S
-Días Siembra: 5
-Observaciones: (Campo obsoleto)
 
 
 
-SECCIÓN: RUTAS
-DESCRIPCIÓN GENERAL: Catálogo de rutas de distribución o transporte utilizadas para la entrega de productos a clientes. Permite organizar y optimizar las entregas por zonas geográficas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Rutas
-
-Columnas:
-id: Código único de la ruta (Clave Primaria)
-RU_DENO: Denominación o nombre de la ruta
-RU_DESC: Descripción adicional de la ruta
-
-Ejemplo de una Ruta:
-ID: 001
-Denominación: RUTA MADRID CENTRO
-Descripción: Entrega en el centro de Madrid
 
 
 
-SECCIÓN: SECCIÓN TAREAS
-DESCRIPCIÓN GENERAL: Catálogo de las diferentes secciones o áreas de tareas dentro de la empresa. Permite clasificar y organizar las tareas por áreas funcionales. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Sección Tareas
-
-Columnas:
-id: Código único de la sección de tarea (Clave Primaria)
-TARS_DENO: Denominación o nombre de la sección de tarea
-
-Ejemplo de una Sección de Tarea:
-ID: 01
-Denominación: LOGÍSTICA
 
 
 
-SECCIÓN: TIPOS DE SIEMBRA
-DESCRIPCIÓN GENERAL: Catálogo de los diferentes tipos de siembra utilizados en los procesos productivos. Define las modalidades y técnicas de siembra aplicadas en la empresa. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tipos de siembra
 
-Columnas:
-id: Código único del tipo de siembra (Clave Primaria)
-TSI_DENO: Denominación o nombre del tipo de siembra
 
-Ejemplo de un Tipo de Siembra:
-ID: 5001
-Denominación: SIEMBRA DIRECTA
+
+
 
 
 
@@ -1508,18 +1784,7 @@ Denominación: INVERNADERO 1
 
 
 
-SECCIÓN: TAREAS PERSONAL
-DESCRIPCIÓN GENERAL: Catálogo de tareas que pueden realizar los técnicos en sus fichajes diarios. Define las actividades laborales específicas que se registran en el sistema de fichajes. Fundamental para control de productividad y asignación de trabajo. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tareas Personal
 
-Columnas:
-id: Código identificador único de cada tarea (Clave Primaria)
-TARP_DENO: Denominación o nombre descriptivo de la tarea (Ej: 'SIEMBRA', 'RIEGO', 'TRATAMIENTO FITOSANITARIO', 'COSECHA')
-TARP_SECC: Código de la sección a la que pertenece la tarea. Clave foránea a la tabla 'tareas_seccion'
-
-Ejemplo de una Tarea:
-ID: 001
-Denominación: SIEMBRA
-Sección: 001
 
 
 
