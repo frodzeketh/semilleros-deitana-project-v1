@@ -1,5 +1,35 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 
+/* Scrollbars globales personalizadas */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+*::-webkit-scrollbar-corner {
+  background: #f9fafb;
+}
+
 .login-page {
   font-family: "Plus Jakarta Sans", sans-serif;
   display: flex;
@@ -439,6 +469,39 @@ input:focus {
 
 .ds-historial-delete-button:active {
   transform: scale(0.9);
+}
+
+/* Botón "Ver más" del historial */
+.ds-show-more-container {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 8px;
+}
+
+.ds-show-more-button {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.ds-show-more-button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.ds-show-more-button:active {
+  transform: scale(0.98);
+  background-color: #f3f4f6;
 }
 
 /* Secciones del chat */
@@ -1711,6 +1774,7 @@ input:focus {
   position: relative !important;
   display: flex !important;
   flex-direction: column !important;
+  overflow: hidden !important; /* Evitar que el scroll exterior rompa el border-radius */
 }
 
 .ds-user-modal-header {
@@ -1757,6 +1821,64 @@ input:focus {
   flex: 1 !important;
   padding: 24px !important;
   overflow-y: auto !important;
+  /* Scrollbar personalizada para mantener el diseño */
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+  margin-right: -8px; /* Compensar para que el scroll no afecte el layout */
+  padding-right: 32px; /* Espacio para la scrollbar */
+}
+
+/* Scrollbar personalizada para Webkit (Chrome, Safari, Edge) */
+.ds-user-modal-main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ds-user-modal-main::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.ds-user-modal-main::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.ds-user-modal-main::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.ds-user-modal-main::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Asegurar que todas las secciones del modal respeten el scroll personalizado */
+.ds-config-section {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  max-height: 100%;
+  overflow-y: auto;
+  /* Heredar scrollbar personalizada */
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.ds-config-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ds-config-section::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.ds-config-section::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.ds-config-section::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 .ds-modal-nav-item {

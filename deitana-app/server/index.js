@@ -23,14 +23,53 @@ dotenv.config();
 
 const app = express();
 
-// Configuración de CORS más permisiva para desarrollo
+// Configuración de CORS segura
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001', 
+  'https://semilleros-deitana-project-v1-production.up.railway.app',
+  // Agregar otros dominios de producción aquí
+];
+
 app.use(cors({
-  origin: '*',  // En producción, cambiar esto a los orígenes específicos
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   methods: ['GET', 'POST'],
   credentials: true
 }));
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' })); // Limitar tamaño del body
+
+// Headers de seguridad
+app.use((req, res, next) => {
+  // Prevenir ataques de clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  
+  // Prevenir MIME type sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  
+  // Prevenir XSS
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // Política de seguridad de contenido básica
+  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;");
+  
+  // Política de referrer
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Prevenir información de servidor
+  res.removeHeader('X-Powered-By');
+  
+  next();
+});
 
 // Comentar middleware de logging excesivo
 // app.use((req, res, next) => {

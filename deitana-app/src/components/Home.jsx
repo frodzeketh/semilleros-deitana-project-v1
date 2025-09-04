@@ -4,6 +4,8 @@ import { Send, ChevronDown, Search, Trash2 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
+import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { useSearchParams } from "react-router-dom"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
@@ -63,6 +65,17 @@ const Home = () => {
   // Obtener la función de logout del contexto de autenticación
   const { logout, user } = useAuth()
 
+  // Estados para el perfil de usuario
+  const [profileName, setProfileName] = useState("")
+  const [profileImage, setProfileImage] = useState(null)
+  const [newPassword, setNewPassword] = useState("")
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
+  const [profileError, setProfileError] = useState("")
+  const [profileSuccess, setProfileSuccess] = useState("")
+  const fileInputRef = useRef(null)
+
   // Función para obtener las iniciales del usuario
   const getUserInitials = () => {
     if (!user?.displayName) return "U"
@@ -72,6 +85,14 @@ const Home = () => {
       return (names[0][0] + names[1][0]).toUpperCase()
     }
     return names[0][0].toUpperCase()
+  }
+
+  // Función para obtener la imagen del avatar o las iniciales
+  const getUserAvatar = () => {
+    if (user?.photoURL) {
+      return <img src={user.photoURL} alt="Avatar" className="ds-avatar-image" style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}} />
+    }
+    return <span>{getUserInitials()}</span>
   }
 
   // Función para obtener solo el primer nombre del usuario
@@ -85,8 +106,20 @@ const Home = () => {
   // Datos de ejemplo para el historial de chats
   const [chatHistory, setChatHistory] = useState([])
 
+  // Sincronizar datos del usuario con estados locales
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.displayName || "")
+      // La imagen se manejará desde user.photoURL
+    }
+  }, [user])
+
   // Agregar estado para forzar la actualización de las fechas
   const [timeUpdate, setTimeUpdate] = useState(0)
+
+  // Estados para paginación del historial
+  const [historialItemsToShow, setHistorialItemsToShow] = useState(10) // Mostrar 10 inicialmente
+  const HISTORIAL_INCREMENT = 10 // Cargar 10 más cada vez
 
   // Cargar el historial de chats al montar el componente
   useEffect(() => {
@@ -138,6 +171,138 @@ const Home = () => {
       setMobileSidebarOpen(!mobileSidebarOpen)
     } else {
       setSidebarOpen(!sidebarOpen)
+    }
+  }
+
+  // Funciones para manejo del perfil
+  const handleImageSelect = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      setProfileError("Por favor selecciona un archivo de imagen válido")
+      return
+    }
+
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileError("La imagen debe ser menor a 5MB")
+      return
+    }
+
+    try {
+      setIsUpdatingProfile(true)
+      setProfileError("")
+
+      // Inicializar Firebase Storage
+      const storage = getStorage()
+      const imageRef = ref(storage, `profile-images/${user.uid}/${Date.now()}-${file.name}`)
+
+      // Subir imagen
+      const snapshot = await uploadBytes(imageRef, file)
+      const downloadURL = await getDownloadURL(snapshot.ref)
+
+      // Actualizar perfil del usuario
+      await updateProfile(user, {
+        photoURL: downloadURL
+      })
+
+      setProfileSuccess("Imagen actualizada exitosamente")
+      setTimeout(() => setProfileSuccess(""), 3000)
+
+    } catch (error) {
+      console.error("Error al subir imagen:", error)
+      setProfileError("Error al subir la imagen. Intenta de nuevo.")
+    } finally {
+      setIsUpdatingProfile(false)
+    }
+  }
+
+  const handleUpdateName = async () => {
+    if (!profileName.trim()) {
+      setProfileError("El nombre no puede estar vacío")
+      return
+    }
+
+    try {
+      setIsUpdatingProfile(true)
+      setProfileError("")
+
+      await updateProfile(user, {
+        displayName: profileName.trim()
+      })
+
+      setProfileSuccess("Nombre actualizado exitosamente")
+      setTimeout(() => setProfileSuccess(""), 3000)
+
+    } catch (error) {
+      console.error("Error al actualizar nombre:", error)
+      setProfileError("Error al actualizar el nombre. Intenta de nuevo.")
+    } finally {
+      setIsUpdatingProfile(false)
+    }
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      setProfileError("Debes completar ambos campos de contraseña")
+      return
+    }
+
+    if (newPassword.length < 6) {
+      setProfileError("La nueva contraseña debe tener al menos 6 caracteres")
+      return
+    }
+
+    try {
+      setIsUpdatingProfile(true)
+      setProfileError("")
+
+      // Reautenticar usuario
+      const credential = EmailAuthProvider.credential(user.email, currentPassword)
+      await reauthenticateWithCredential(user, credential)
+
+      // Actualizar contraseña
+      await updatePassword(user, newPassword)
+
+      setNewPassword("")
+      setCurrentPassword("")
+      setProfileSuccess("Contraseña actualizada exitosamente")
+      setTimeout(() => setProfileSuccess(""), 3000)
+
+    } catch (error) {
+      console.error("Error al actualizar contraseña:", error)
+      if (error.code === 'auth/wrong-password') {
+        setProfileError("La contraseña actual es incorrecta")
+      } else {
+        setProfileError("Error al actualizar la contraseña. Intenta de nuevo.")
+      }
+    } finally {
+      setIsUpdatingProfile(false)
+    }
+  }
+
+  const handleSaveChanges = async () => {
+    setProfileError("")
+    setProfileSuccess("")
+
+    // Actualizar nombre si cambió
+    if (profileName.trim() !== user?.displayName) {
+      await handleUpdateName()
+    }
+
+    // Actualizar contraseña si se proporcionó
+    if (newPassword && currentPassword) {
+      await handleUpdatePassword()
+    }
+
+    if (profileName.trim() === user?.displayName && !newPassword) {
+      setProfileError("No hay cambios para guardar")
     }
   }
 
@@ -979,6 +1144,35 @@ const Home = () => {
     }
   }
 
+  // Función para mostrar más elementos del historial
+  const handleShowMoreHistory = () => {
+    setHistorialItemsToShow(prev => prev + HISTORIAL_INCREMENT)
+  }
+
+  // Función para obtener chats limitados por paginación
+  const getLimitedChatHistory = () => {
+    const groupedChats = groupChatsByDate(chatHistory)
+    const limitedGroups = {}
+    let totalShown = 0
+
+    for (const [dateGroup, chats] of Object.entries(groupedChats)) {
+      if (totalShown >= historialItemsToShow) break
+      
+      const remainingSlots = historialItemsToShow - totalShown
+      const chatsToShow = chats.slice(0, remainingSlots)
+      
+      if (chatsToShow.length > 0) {
+        limitedGroups[dateGroup] = chatsToShow
+        totalShown += chatsToShow.length
+      }
+    }
+
+    return {
+      groups: limitedGroups,
+      hasMore: totalShown < chatHistory.length
+    }
+  }
+
   return (
     <div className="ds-home-container">
       <style>
@@ -1115,8 +1309,12 @@ const Home = () => {
                     if (activeSection !== "historial") {
                       setActiveSection("historial")
                       setHistorialExpanded(true)
+                      setHistorialItemsToShow(10) // Reiniciar paginación
                     } else {
                       setHistorialExpanded(!historialExpanded)
+                      if (!historialExpanded) {
+                        setHistorialItemsToShow(10) // Reiniciar paginación al abrir
+                      }
                     }
                   }}
                 >
@@ -1134,32 +1332,50 @@ const Home = () => {
                 <div className="ds-section-content">
                   {historialExpanded && (
                     <div className="ds-historial-content">
-                      {Object.entries(groupChatsByDate(chatHistory)).map(([dateGroup, chats]) => (
-                        <div key={dateGroup} className="ds-date-group">
-                          <div className="ds-date-header">{dateGroup}</div>
-                          {chats.map((chat) => (
-                            <button
-                              key={`${chat.id}-${timeUpdate}`}
-                              onClick={() => handleConversationClick(chat.id)}
-                              className={`ds-historial-item ${currentConversationId === chat.id ? "active" : ""}`}
-                            >
-                              <span className="ds-historial-title">
-                                {chat.title === "NUEVA_CONEXION" ? "Nueva conversación" : chat.title}
-                              </span>
-                              <button
-                                className="ds-historial-delete-button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteChat(chat.id, e)
-                                }}
-                                title="Eliminar chat"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </button>
-                          ))}
-                        </div>
-                      ))}
+                      {(() => {
+                        const { groups, hasMore } = getLimitedChatHistory()
+                        return (
+                          <>
+                            {Object.entries(groups).map(([dateGroup, chats]) => (
+                              <div key={dateGroup} className="ds-date-group">
+                                <div className="ds-date-header">{dateGroup}</div>
+                                {chats.map((chat) => (
+                                  <button
+                                    key={`${chat.id}-${timeUpdate}`}
+                                    onClick={() => handleConversationClick(chat.id)}
+                                    className={`ds-historial-item ${currentConversationId === chat.id ? "active" : ""}`}
+                                  >
+                                    <span className="ds-historial-title">
+                                      {chat.title === "NUEVA_CONEXION" ? "Nueva conversación" : chat.title}
+                                    </span>
+                                    <button
+                                      className="ds-historial-delete-button"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteChat(chat.id, e)
+                                      }}
+                                      title="Eliminar chat"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </button>
+                                ))}
+                              </div>
+                            ))}
+                            
+                            {hasMore && (
+                              <div className="ds-show-more-container">
+                                <button 
+                                  className="ds-show-more-button"
+                                  onClick={handleShowMoreHistory}
+                                >
+                                  Ver más ({chatHistory.length - historialItemsToShow} restantes)
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1182,7 +1398,7 @@ const Home = () => {
                       setMobileSidebarOpen(false)
                     }
                   }}>
-                    <span>{getUserInitials()}</span>
+                    {getUserAvatar()}
                   </button>
                 </div>
               </div>
@@ -1258,8 +1474,12 @@ const Home = () => {
                     if (activeSection !== "historial") {
                     setActiveSection("historial")
                     setHistorialExpanded(true)
+                    setHistorialItemsToShow(10) // Reiniciar paginación
                     } else {
                       setHistorialExpanded(!historialExpanded)
+                      if (!historialExpanded) {
+                        setHistorialItemsToShow(10) // Reiniciar paginación al abrir
+                      }
                     }
                     if (!sidebarOpen) toggleSidebar()
                   }}
@@ -1289,7 +1509,7 @@ const Home = () => {
                       setMobileSidebarOpen(false)
                     }
                   }}>
-                    <span>{getUserInitials()}</span>
+                    {getUserAvatar()}
                   </button>
                 </div>
               </div>
@@ -1822,7 +2042,7 @@ const Home = () => {
               <div className="section-content">
                 <div className="ds-user-profile-card">
                   <div className="ds-user-avatar-large">
-                    <span>{getUserInitials()}</span>
+                    {getUserAvatar()}
                   </div>
                   <div className="ds-user-info-large">
                     <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
@@ -1841,7 +2061,7 @@ const Home = () => {
                     <label className="ds-config-label">Imagen</label>
                     <div className="ds-profile-image-section">
                       <div className="ds-user-avatar-config">
-                        <span>{getUserInitials()}</span>
+                        {getUserAvatar()}
                       </div>
                       <button className="ds-edit-image-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2044,7 +2264,7 @@ const Home = () => {
                   <>
                 <div className="ds-user-profile-card">
                   <div className="ds-user-avatar-large">
-                        <span>{getUserInitials()}</span>
+                        {getUserAvatar()}
                   </div>
                   <div className="ds-user-info-large">
                         <div className="ds-user-name-large">{user?.displayName || "Usuario"}</div>
@@ -2073,15 +2293,26 @@ const Home = () => {
                       <label className="ds-config-label">Imagen</label>
                       <div className="ds-profile-image-section">
                         <div className="ds-user-avatar-config">
-                          <span>{getUserInitials()}</span>
+                          {getUserAvatar()}
             </div>
-                        <button className="ds-edit-image-btn">
+                        <button 
+                          className="ds-edit-image-btn"
+                          onClick={handleImageSelect}
+                          disabled={isUpdatingProfile}
+                        >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                           </svg>
-                          Editar imagen
+                          {isUpdatingProfile ? "Subiendo..." : "Editar imagen"}
                         </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          style={{ display: 'none' }}
+                        />
                       </div>
                     </div>
 
@@ -2092,8 +2323,10 @@ const Home = () => {
                         <input
                           type="text"
                           className="ds-config-input"
-                          defaultValue={user?.displayName || ""}
+                          value={profileName}
+                          onChange={(e) => setProfileName(e.target.value)}
                           placeholder="Ingresa tu nombre"
+                          disabled={isUpdatingProfile}
                         />
                         <button className="ds-input-button">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2106,29 +2339,86 @@ const Home = () => {
 
                     {/* Sección de contraseña */}
                     <div className="ds-config-item">
-                      <label className="ds-config-label">Contraseña</label>
+                      <label className="ds-config-label">Contraseña actual</label>
                       <div className="ds-password-section">
                         <div className="ds-input-with-button">
                           <input
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             className="ds-config-input"
-                            defaultValue="password123"
-                            placeholder="Ingresa tu contraseña"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="Contraseña actual"
+                            disabled={isUpdatingProfile}
                           />
-                          <button className="ds-input-button ds-toggle-password-btn">
+                          <button 
+                            className="ds-input-button ds-toggle-password-btn"
+                            onClick={() => setShowPassword(!showPassword)}
+                            type="button"
+                          >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                               <circle cx="12" cy="12" r="3" />
                             </svg>
                           </button>
                         </div>
-                        <button className="ds-change-password-btn">Ver contraseña</button>
                       </div>
                     </div>
 
+                    {/* Sección de nueva contraseña */}
+                    <div className="ds-config-item">
+                      <label className="ds-config-label">Nueva contraseña</label>
+                      <div className="ds-password-section">
+                        <div className="ds-input-with-button">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className="ds-config-input"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Nueva contraseña (opcional)"
+                            disabled={isUpdatingProfile}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mensajes de error y éxito */}
+                    {profileError && (
+                      <div style={{
+                        color: '#dc3545',
+                        fontSize: '14px',
+                        textAlign: 'center',
+                        padding: '8px',
+                        backgroundColor: '#f8d7da',
+                        borderRadius: '4px',
+                        margin: '16px 0'
+                      }}>
+                        {profileError}
+                      </div>
+                    )}
+                    
+                    {profileSuccess && (
+                      <div style={{
+                        color: '#155724',
+                        fontSize: '14px',
+                        textAlign: 'center',
+                        padding: '8px',
+                        backgroundColor: '#d4edda',
+                        borderRadius: '4px',
+                        margin: '16px 0'
+                      }}>
+                        {profileSuccess}
+                      </div>
+                    )}
+
                     {/* Botón de guardar */}
                     <div className="ds-config-actions">
-                      <button className="ds-save-config-btn">Guardar cambios</button>
+                      <button 
+                        className="ds-save-config-btn"
+                        onClick={handleSaveChanges}
+                        disabled={isUpdatingProfile}
+                      >
+                        {isUpdatingProfile ? "Guardando..." : "Guardar cambios"}
+                      </button>
                     </div>
                   </div>
                 )}

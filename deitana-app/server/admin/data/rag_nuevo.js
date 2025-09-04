@@ -7,7 +7,7 @@ const OpenAI = require('openai');
 
 // Configuración
 const CONFIG = {
-    PINECONE_API_KEY: 'pcsk_6muZqf_4bnwdp2YQ21dH7Kh6ghB7YdGkAvjkDCmNkXfFLaXx5iDTnNJWUrkvZ92F1EuBzm',
+    PINECONE_API_KEY: process.env.PINECONE_API_KEY,
     PINECONE_INDEX: 'memoria-deitana',
     PINECONE_ENVIRONMENT: 'us-east-1-aws',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
