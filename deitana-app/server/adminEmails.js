@@ -8,6 +8,10 @@ const adminEmails = [
     'rodrigog@gmail.com',
     'joseluis@semillerosdeitana.com',   
     'facundo@semillerosdeitana.com',
+    'pedro.munoz@semillerosdeitana.com',   
+    'antonio.informatica@semillerosdeitana.com',
+    'antonio@semillerosdeitana.com',   
+    'francisco@semillerosdeitana.com',
     'virginia@semillerosdeitana.com',
 
 ];
