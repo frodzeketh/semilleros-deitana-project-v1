@@ -1,0 +1,62 @@
+# =====================================
+# CONFIGURACIÓN RAILWAY - VPS BRIDGE
+# =====================================
+# Variables de entorno para la aplicación Railway
+# que se conecta al VPS puente para acceder a MySQL
+
+# =====================================
+# CONFIGURACIÓN VPS BRIDGE
+# =====================================
+
+# URL del VPS Bridge API (tu dominio con SSL)
+VPS_BRIDGE_URL=https://mysql-bridge.tu-dominio.com
+
+# Credenciales para autenticación con VPS Bridge
+VPS_BRIDGE_USER=api_user
+VPS_BRIDGE_PASSWORD=tu_password_super_seguro_aqui
+
+# Modo de operación
+USE_VPS_BRIDGE=true
+FALLBACK_TO_DIRECT=false
+
+# =====================================
+# CONFIGURACIÓN DE CONEXIÓN DIRECTA (FALLBACK)
+# =====================================
+# Solo necesario si FALLBACK_TO_DIRECT=true
+
+DB_HOST=centerbeam.proxy.rlwy.net
+DB_USER=root
+DB_PASSWORD=gbrIerodvEYzzDQbgtlQjelgLaLlgPuf
+DB_NAME=railway
+DB_PORT=32877
+
+# =====================================
+# CONFIGURACIÓN OPENAI Y SERVICIOS
+# =====================================
+
+OPENAI_API_KEY=sk-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+
+# =====================================
+# CONFIGURACIÓN FIREBASE
+# =====================================
+
+FIREBASE_PROJECT_ID=tu-proyecto-firebase
+# El JSON de las credenciales de Firebase debe estar en FIREBASE_SERVICE_ACCOUNT_KEY
+
+# =====================================
+# CONFIGURACIÓN PINECONE
+# =====================================
+
+PINECONE_API_KEY=tu-pinecone-api-key
+PINECONE_ENVIRONMENT=us-west1-gcp-free
+PINECONE_INDEX_NAME=tu-index-name
+
+# =====================================
+# CONFIGURACIÓN GENERAL
+# =====================================
+
+NODE_ENV=production
+PORT=3000

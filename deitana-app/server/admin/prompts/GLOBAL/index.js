@@ -10,6 +10,7 @@ const { comportamientoGlobal } = require('./comportamiento');
 const { promptBase } = require('./base');
 const { promptGlobal } = require('./promptGlobal');
 const { formatoRespuesta } = require('./formatoRespuesta');
+const { formatoRespuestaSimple } = require('./formatoRespuestaSimple');
 const { formatoObligatorio } = require('./formatoObligatorio');
 
 module.exports = {
@@ -22,5 +23,6 @@ module.exports = {
     
     // Prompts de formato
     formatoRespuesta,
+    formatoRespuestaSimple,
     formatoObligatorio
 };

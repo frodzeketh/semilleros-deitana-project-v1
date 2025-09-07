@@ -67,7 +67,6 @@ const Home = () => {
 
   // Estados para el perfil de usuario
   const [profileName, setProfileName] = useState("")
-  const [profileImage, setProfileImage] = useState(null)
   const [newPassword, setNewPassword] = useState("")
   const [currentPassword, setCurrentPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)

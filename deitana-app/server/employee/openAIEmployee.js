@@ -352,8 +352,11 @@ ${promptComportamiento}`
         const completion = await openai.chat.completions.create({
             model: "gpt-4o", // ← Modelo unificado para consistencia
             messages: messages,
-            temperature: 0.7,
-            max_tokens: 400 // ← Reducido para ahorrar costos
+            temperature: 0.9, // ← Aumentado para mayor variabilidad y naturalidad
+            max_tokens: 1000, // ← Aumentado para respuestas más completas y variadas
+            top_p: 0.95, // ← Añadido para mayor creatividad en la selección de tokens
+            frequency_penalty: 0.3, // ← Reduce repetición de frases
+            presence_penalty: 0.2 // ← Fomenta temas nuevos
         });
 
         const response = completion.choices[0].message.content;

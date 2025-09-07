@@ -39,6 +39,7 @@ const mapaERP = require('./mapaERP');
 const {
     formatoObligatorio, 
     formatoRespuesta,
+    formatoRespuestaSimple,
     promptGlobal, 
     promptBase, 
     comportamientoGlobal
@@ -1039,7 +1040,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         promptExplicacion += `${comportamientoGlobal}\n\n`;
                         promptExplicacion += `${identidadEmpresa}\n\n`;
                         promptExplicacion += `${terminologia}\n\n`;
-                        promptExplicacion += `${formatoRespuesta}\n\n`;
+                        promptExplicacion += `${formatoRespuestaSimple}\n\n`;
                         
                         // DEBUG: Mostrar el prompt completo que se está construyendo
                         console.log('🔍 [DEBUG-PROMPT] Prompt unificado construido:');
@@ -1298,12 +1299,15 @@ function construirContextoMapaERPCompleto(mapaERP) {
  * Selecciona el modelo apropiado para la consulta
  */
 function seleccionarModeloInteligente(intencion, tablasRelevantes) {
-    // ✅ MODELO ÚNICO OPTIMIZADO PARA TODAS LAS TAREAS
+    // ✅ MODELO ÚNICO OPTIMIZADO PARA TODAS LAS TAREAS CON VARIABILIDAD
     const config = {
         modelo: 'gpt-4o',           // Modelo más capaz para todas las tareas
-        maxTokens: 2000,            // Tokens suficientes para consultas complejas
-        temperature: 0.3,           // Balance entre creatividad y precisión
-        razon: 'Modelo único optimizado: gpt-4o maneja SQL, conversación y RAG+SQL con excelente rendimiento'
+        maxTokens: 3000,            // Más tokens para respuestas variadas y completas
+        temperature: 0.8,           // Mayor creatividad y variabilidad
+        topP: 0.95,                 // Sampling más creativo
+        frequencyPenalty: 0.3,      // Reduce repetición de frases comunes
+        presencePenalty: 0.2,       // Fomenta diversidad en temas
+        razon: 'Modelo optimizado con parámetros para máxima variabilidad y naturalidad'
     };
     
 
@@ -1319,7 +1323,7 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
     instrucciones += identidadEmpresa + '\n\n';
     instrucciones += terminologia + '\n\n';
     instrucciones += formatoObligatorio + '\n\n';
-    instrucciones += formatoRespuesta + '\n\n';
+    instrucciones += formatoRespuestaSimple + '\n\n';
     
 
     
