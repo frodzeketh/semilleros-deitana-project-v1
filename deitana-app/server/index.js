@@ -59,8 +59,8 @@ app.use((req, res, next) => {
   // Prevenir XSS
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
-  // Política de seguridad de contenido básica
-  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;");
+  // Política de seguridad de contenido básica con Firebase permitido
+  res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebase.googleapis.com https://*.identitytoolkit.googleapis.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;");
   
   // Política de referrer
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
