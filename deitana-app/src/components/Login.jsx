@@ -56,11 +56,43 @@ const Login = () => {
     setError("")
 
     try {
+      console.log("🔐 Intentando autenticación Firebase...")
       await signInWithEmailAndPassword(auth, email, password)
+      console.log("✅ Autenticación exitosa")
       // La redirección se manejará automáticamente por el useEffect
     } catch (err) {
-      setError("Correo o contraseña incorrectos.")
-      console.error(err)
+      console.error("❌ Error de autenticación Firebase:", err)
+      
+      // Manejar diferentes tipos de errores de Firebase
+      let errorMessage = "Error de autenticación"
+      
+      switch (err.code) {
+        case 'auth/invalid-email':
+          errorMessage = "El formato del email no es válido"
+          break
+        case 'auth/user-disabled':
+          errorMessage = "Esta cuenta ha sido deshabilitada"
+          break
+        case 'auth/user-not-found':
+          errorMessage = "No existe una cuenta con este email"
+          break
+        case 'auth/wrong-password':
+          errorMessage = "Contraseña incorrecta"
+          break
+        case 'auth/invalid-credential':
+          errorMessage = "Credenciales inválidas. Verifica tu email y contraseña"
+          break
+        case 'auth/too-many-requests':
+          errorMessage = "Demasiados intentos fallidos. Intenta de nuevo más tarde"
+          break
+        case 'auth/network-request-failed':
+          errorMessage = "Error de conexión. Verifica tu internet"
+          break
+        default:
+          errorMessage = `Error: ${err.message || "Correo o contraseña incorrectos"}`
+      }
+      
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
