@@ -15,6 +15,7 @@ const { formatoRespuestaSimple } = require('./formatoRespuestaSimple');
 const { formatoUltraNatural } = require('./formatoUltraNatural');
 const { guiaMarkdownCompleta } = require('./guiaMarkdownCompleta');
 const { estiloVisualChatGPT } = require('./estiloVisualChatGPT');
+const { prioridadMaximaChatGPT } = require('./prioridadMaximaChatGPT');
 const { formatoObligatorio } = require('./formatoObligatorio');
 
 module.exports = {
@@ -32,5 +33,6 @@ module.exports = {
     formatoUltraNatural,
     guiaMarkdownCompleta,
     estiloVisualChatGPT,
+    prioridadMaximaChatGPT,
     formatoObligatorio
 };
