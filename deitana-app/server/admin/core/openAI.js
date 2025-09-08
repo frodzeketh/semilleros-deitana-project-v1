@@ -477,6 +477,8 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     
     // 4. Construir instrucciones naturales
     const instruccionesNaturales = construirInstruccionesNaturales(intencion, [], contextoPinecone);
+    console.log(`🔍 [DEBUG-PROMPT] Intención final: ${JSON.stringify(intencion)}`);
+    console.log(`🔍 [DEBUG-PROMPT] Instrucciones naturales construidas: ${instruccionesNaturales.length} caracteres`);
     
     // 5. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
     let contextoRAG = '';
@@ -597,6 +599,8 @@ Responde SOLO con: sql, conocimiento, o conversacion`;
 
         const tipo = response.choices[0].message.content.trim().toLowerCase();
         console.log(`✅ [INTENCION-IA] Tipo detectado: ${tipo}`);
+        console.log(`🔍 [INTENCION-IA] Mensaje original: "${mensaje}"`);
+        console.log(`🔍 [INTENCION-IA] Respuesta completa: "${response.choices[0].message.content}"`);
 
         // Mapear a tipos internos
         if (tipo === 'sql') {
@@ -1102,24 +1106,60 @@ async function processQueryStream({ message, userId, conversationId, response })
                             promptExplicacion += `CONTEXTO CONVERSACIONAL RECIENTE:\n\n${contextoConversacional}\n\nINSTRUCCIONES DE CONTINUIDAD:\nMantén la continuidad natural de la conversación. NO te presentes de nuevo si ya has saludado. Usa el contexto previo para dar respuestas coherentes. Si el usuario hace referencia a algo mencionado antes, úsalo. Mantén el tono y estilo de la conversación en curso.\n\n`;
                         }
                         
-                        promptExplicacion += `## 📊 DATOS A EXPLICAR:
+                        promptExplicacion += `🚨🚨🚨 ANTI-ROBOT SUPREMO 🚨🚨🚨
 
-CONSULTA ORIGINAL: "${message}"  
+❌❌❌ JAMÁS DIGAS ESTO ❌❌❌
+- "Aquí tienes una lista de..."
+- "Por supuesto, aquí tienes..."  
+- "Claro, aquí tienes..."
+- "Te muestro los clientes/datos que..."
+- "He revisado en el ERP..."
+
+✅✅✅ USA VARIACIONES NATURALES ✅✅✅
+Reglas de comunicación:
+- Usa un tono humano, cercano y natural, no robótico.
+- Sé comprensivo: reconoce la situación del usuario antes de dar la respuesta.
+- Explica paso a paso y con claridad, no solo muestres datos.
+- Varía tus frases iniciales, evita comenzar siempre igual. Ejemplos:
+  - "Perfecto, esto es lo que encontré:"
+  - "Mirá, revisando los datos tenemos:"
+  - "Genial, acá están los resultados:"
+  - "Te muestro lo que encontré:"
+  - "Esto es lo que aparece en la base:"
+- Cuando muestres información, preséntala de manera ordenada (listas, párrafos claros).
+- Si hay un error o limitación, explica la causa y guía al usuario sobre qué hacer.
+- Usa emojis solo cuando sumen empatía o claridad, nunca en exceso.
+- Tu objetivo es que el usuario sienta que habla con una persona experta y atenta, no con un bot rígido.
+
+## 📊 DATOS A FORMATEAR:
+
+CONSULTA: "${message}"  
 ${Array.isArray(sql) ? 
-    `CONSULTAS SQL EJECUTADAS: ${sql.length} consultas\n${sql.map((q, i) => `${i + 1}. ${q}`).join('\n')}` : 
-    `SQL EJECUTADO: ${sql}`}  
+    `SQL: ${sql.length} consultas\n${sql.map((q, i) => `${i + 1}. ${q}`).join('\n')}` : 
+    `SQL: ${sql}`}  
 RESULTADOS: ${JSON.stringify(results, null, 2)}
 
-## 🎯 INSTRUCCIÓN ESPECÍFICA:
+## 🎯 MISIÓN CRÍTICA:
 
-Tu tarea es explicar estos resultados de forma natural y conversacional. NO generes nuevo SQL, solo explica los datos que ya están disponibles.
+Convierte estos datos en una respuesta NATURAL y VARIADA. 
+- NO uses frases robóticas corporativas
+- SÉ NATURAL como ChatGPT
+- EXPLICA QUÉ significan los datos
+- AGREGA análisis e insights
+
+🔥 FORMATO OBLIGATORIO:
+📊 **[Título descriptivo]**
+
+• **[Dato]**: [explicación]
+• **[Dato]**: [explicación]
+
+💡 **Observación**: [insight natural sobre los datos]
 
 ${Array.isArray(results) ? 
-    `**IMPORTANTE**: Tienes ${results.length} conjuntos de resultados diferentes. Explica cada uno por separado usando encabezados claros.` : 
+    `⚠️ MÚLTIPLES CONJUNTOS - explica cada uno separadamente` : 
     ''}
 
-**IMPORTANTE**: Sigue las reglas de formato visual definidas en el prompt para dar respuestas estéticas y bien estructuradas.
-
+⚡ RECUERDA: JAMÁS uses las frases prohibidas arriba ⚡
 
 `;
 
@@ -1345,23 +1385,6 @@ function seleccionarModeloInteligente(intencion, tablasRelevantes) {
 }
 
 /**
- * Construye las instrucciones naturales para el prompt
- */
-function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
-    // ⚡ PRIORIDAD MÁXIMA AL INICIO - ESTILO CHATGPT
-    let instrucciones = prioridadMaximaChatGPT + '\n\n';  // ⚡ PRIORIDAD MÁXIMA
-    instrucciones += comportamientoChatGPT + '\n\n';
-    instrucciones += estiloVisualChatGPT + '\n\n';       // ⚡ ESTILO VISUAL CHATGPT ANTI-ROBÓTICO
-    instrucciones += guiaMarkdownCompleta + '\n\n';     // ⚡ GUÍA COMPLETA DE MARKDOWN
-    instrucciones += identidadEmpresa + '\n\n';
-    instrucciones += terminologia + '\n\n';
-    
-    // Los prompts organizados ya contienen toda la lógica necesaria
-    
-    return instrucciones;
-}
-
-/**
  * Genera embeddings para análisis semántico
  */
 async function generarEmbedding(texto) {
@@ -1377,6 +1400,48 @@ async function generarEmbedding(texto) {
     }
 }
 
+/**
+ * Construye las instrucciones naturales para el prompt
+ */
+function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
+    // ⚡ PRIORIDAD MÁXIMA AL INICIO - ESTILO CHATGPT
+    let instrucciones = prioridadMaximaChatGPT + '\n\n';  // ⚡ PRIORIDAD MÁXIMA
+    instrucciones += comportamientoChatGPT + '\n\n';
+    instrucciones += estiloVisualChatGPT + '\n\n';       // ⚡ ESTILO VISUAL CHATGPT ANTI-ROBÓTICO
+    instrucciones += guiaMarkdownCompleta + '\n\n';     // ⚡ GUÍA COMPLETA DE MARKDOWN
+    instrucciones += identidadEmpresa + '\n\n';
+    instrucciones += terminologia + '\n\n';
+    
+    // ⚡ USAR CONTEXTO PINECONE SI EXISTE
+    if (contextoPinecone && contextoPinecone.trim()) {
+        instrucciones += `## 🧠 CONTEXTO DE MEMORIA:\n${contextoPinecone}\n\n`;
+    }
+    
+    // ⚡ REFUERZO CRÍTICO PARA CONSULTAS SQL
+    if (intencion && (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql')) {
+        instrucciones += `
+🚨🚨🚨 CONSULTA SQL DETECTADA 🚨🚨🚨
+
+**OBLIGATORIO GENERAR SQL REAL:**
+- ⚡ FORMATO: <sql>SELECT columnas FROM tabla WHERE condiciones LIMIT X</sql>
+- ⚡ JAMÁS inventes datos falsos
+- ⚡ USA la base de datos real
+- ⚡ Ejemplos:
+  - Partidas: <sql>SELECT * FROM partidas WHERE fecha_entrega LIKE '%miércoles%' LIMIT 5</sql>
+  - Clientes: <sql>SELECT * FROM clientes WHERE provincia='Almería' LIMIT 5</sql>
+
+⚡ SI NO GENERAS SQL, HABRÁS FALLADO ⚡
+`;
+    }
+    
+    // ⚡ USAR TABLAS RELEVANTES SI EXISTEN
+    if (tablasRelevantes && tablasRelevantes.length > 0) {
+        instrucciones += `## 📊 TABLAS RELEVANTES:\n${tablasRelevantes.join(', ')}\n\n`;
+    }
+    
+    return instrucciones;
+}
+
 // =====================================
 // EXPORTACIONES DEL MÓDULO
 // =====================================
@@ -1388,10 +1453,11 @@ module.exports = {
     // Funciones auxiliares
     analizarIntencionInteligente,
     construirPromptInteligente,
+    construirInstruccionesNaturales,
     obtenerInfoUsuario,
     obtenerHistorialConversacion,
     executeQuery,
-    saveMessageToFirestore, 
+    saveMessageToFirestore,
     saveAssistantMessageToFirestore,
     generarEmbedding
 };
