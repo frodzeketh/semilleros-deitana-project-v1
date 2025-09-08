@@ -56,7 +56,7 @@ const { identidadEmpresa, terminologia } = require('../prompts/DEITANA');
 
 // Importar sistema RAG
 const ragInteligente = require('../data/integrar_rag_nuevo');
-const { analizarIntencionConIA } = require('../data/funcion_intencion_ia');
+// Removido: analizarIntencionConIA no se usa - usamos analizarIntencionInteligente local
 
 // Inicializar el cliente de OpenAI
 const openai = new OpenAI({
@@ -560,18 +560,31 @@ CONSULTA: "${mensaje}"
 
 OPCIONES:
 1. "sql" - Si la consulta pide datos, números, conteos, listas, información de la base de datos
-2. "conocimiento" - Si la consulta pide explicaciones, definiciones, protocolos, información del archivo .txt
+2. "conocimiento" - Si la consulta pide explicaciones, definiciones, protocolos, información del archivo .txt  
 3. "conversacion" - Si es un saludo, agradecimiento, o conversación casual
 
-Ejemplos:
-- "cuantas partidas se hicieron" → sql
-- "5 técnicos" → sql
-- "dime 3 vendedores" → sql
-- "casas comerciales" → sql
-- "lista de clientes" → sql
-- "qué significa tratamientos extraordinarios" → conocimiento  
-- "hola, cómo estás" → conversacion
-- "explica el protocolo de germinación" → conocimiento
+REGLAS INTELIGENTES:
+
+🔍 ES SQL SI:
+- Pide DATOS específicos (números, cantidades, listas)
+- Usa palabras como: "cuántos", "dame", "lista de", "muestra", "busca"
+- Menciona ENTIDADES de base de datos (clientes, productos, ventas, etc.)
+- Pide información que requiere CONSULTAR datos
+- Incluye filtros (por fecha, ubicación, tipo, etc.)
+
+📚 ES CONOCIMIENTO SI:
+- Pide EXPLICACIONES o DEFINICIONES
+- Usa palabras como: "qué es", "cómo funciona", "explica", "significa"
+- Pregunta sobre PROCESOS o PROTOCOLOS
+- Busca información conceptual o teórica
+
+💬 ES CONVERSACIÓN SI:
+- Saludos, despedidas, agradecimientos
+- Charla casual sin solicitud específica de datos
+
+⚡ PRINCIPIO CLAVE: Si hay DUDA, es probablemente SQL (la mayoría de consultas en ERP piden datos)
+
+Analiza la INTENCIÓN SEMÁNTICA, no palabras específicas.
 
 Responde SOLO con: sql, conocimiento, o conversacion`;
 
@@ -1378,7 +1391,7 @@ module.exports = {
     obtenerInfoUsuario,
     obtenerHistorialConversacion,
     executeQuery,
-    saveMessageToFirestore,
+    saveMessageToFirestore, 
     saveAssistantMessageToFirestore,
     generarEmbedding
 };
