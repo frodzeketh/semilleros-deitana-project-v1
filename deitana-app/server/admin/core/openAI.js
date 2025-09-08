@@ -31,23 +31,17 @@ const pool = require('../../db');
 const chatManager = require('../../utils/chatManager');
 const admin = require('../../firebase-admin');
 const pineconeMemoria = require('../../utils/pinecone');
-const comandosMemoria = require('../../utils/comandosMemoria');
-const langfuseUtils = require('../../utils/langfuse');
+// Comandos y langfuse removidos - no se usan
 require('dotenv').config();
 const mapaERP = require('./mapaERP');
 // Importaciones desde las carpetas organizadas
 const {
-    formatoObligatorio, 
-    formatoRespuesta,
-    formatoRespuestaSimple,
-    formatoUltraNatural,
     guiaMarkdownCompleta,
     estiloVisualChatGPT,
     prioridadMaximaChatGPT,
     promptGlobal, 
-    promptBase, 
-    comportamientoGlobal,
-    comportamientoChatGPT
+    comportamientoChatGPT,
+    formatoRespuesta
 } = require('../prompts/GLOBAL');
 
 const { sqlRules } = require('../prompts/SQL');
@@ -1069,6 +1063,7 @@ async function processQueryStream({ message, userId, conversationId, response })
                         promptExplicacion += `${comportamientoChatGPT}\n\n`;
                         promptExplicacion += `${estiloVisualChatGPT}\n\n`;    // ⚡ ESTILO CHATGPT ANTI-ROBÓTICO
                         promptExplicacion += `${guiaMarkdownCompleta}\n\n`;  // ⚡ GUÍA COMPLETA DE MARKDOWN
+                        promptExplicacion += `${formatoRespuesta}\n\n`;      // ⚡ FORMATO DE RESPUESTA
                         promptExplicacion += `${identidadEmpresa}\n\n`;
                         promptExplicacion += `${terminologia}\n\n`;
                         
@@ -1120,12 +1115,13 @@ Reglas de comunicación:
 - Usa un tono humano, cercano y natural, no robótico.
 - Sé comprensivo: reconoce la situación del usuario antes de dar la respuesta.
 - Explica paso a paso y con claridad, no solo muestres datos.
-- Varía tus frases iniciales, evita comenzar siempre igual. Ejemplos:
-  - "Perfecto, esto es lo que encontré:"
-  - "Mirá, revisando los datos tenemos:"
-  - "Genial, acá están los resultados:"
-  - "Te muestro lo que encontré:"
-  - "Esto es lo que aparece en la base:"
+- Varía tus respuestas completamente, NUNCA uses patrones fijos.
+- RESPONDE directo como ChatGPT, sin introducción explicativa.
+- Ejemplos de INICIOS NATURALES:
+  - "En Almería tenemos estos clientes:"
+  - "Para el miércoles hay 5 partidas programadas:"
+  - "Los técnicos disponibles son:"
+  - "Encontré 3 facturas recientes:"
 - Cuando muestres información, preséntala de manera ordenada (listas, párrafos claros).
 - Si hay un error o limitación, explica la causa y guía al usuario sobre qué hacer.
 - Usa emojis solo cuando sumen empatía o claridad, nunca en exceso.
@@ -1139,13 +1135,15 @@ ${Array.isArray(sql) ?
     `SQL: ${sql}`}  
 RESULTADOS: ${JSON.stringify(results, null, 2)}
 
-## 🎯 MISIÓN CRÍTICA:
+## 🎯 RESPONDE COMO CHATGPT:
 
-Convierte estos datos en una respuesta NATURAL y VARIADA. 
-- NO uses frases robóticas corporativas
-- SÉ NATURAL como ChatGPT
-- EXPLICA QUÉ significan los datos
-- AGREGA análisis e insights
+NUNCA digas "Convierte" o "Explica" - simplemente RESPONDE directamente.
+Actúa como si fueras ChatGPT respondiendo la consulta original.
+
+- RESPONDE la pregunta directamente
+- USA datos reales de la consulta SQL
+- SÉ natural y conversacional
+- NO menciones "conversión" o "explicación"
 
 🔥 FORMATO OBLIGATORIO:
 📊 **[Título descriptivo]**
@@ -1182,7 +1180,7 @@ ${Array.isArray(results) ?
                         }
 
                         const segundaLlamada = await openai.chat.completions.create({
-                            model: 'gpt-4o',
+                            model: 'gpt-4o',  // ⚡ MODELO FINE-TUNED ULTRA-NATURAL
                             messages: mensajesSegundaLlamada,
                             max_tokens: 2000,               // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
                             temperature: 0.9,               // ⚡ MÁXIMA CREATIVIDAD
