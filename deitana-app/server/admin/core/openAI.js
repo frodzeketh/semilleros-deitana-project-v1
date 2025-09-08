@@ -1370,12 +1370,15 @@ async function generarEmbedding(texto) {
 
 module.exports = {
     // Función principal de consulta
-    consultaModelo,
+    processQueryStream,
     
     // Funciones auxiliares
     analizarIntencionInteligente,
-    construirPromptUnificado,
-    seleccionarModeloInteligente,
-    construirInstruccionesNaturales,
+    construirPromptInteligente,
+    obtenerInfoUsuario,
+    obtenerHistorialConversacion,
+    executeQuery,
+    saveMessageToFirestore,
+    saveAssistantMessageToFirestore,
     generarEmbedding
 };
