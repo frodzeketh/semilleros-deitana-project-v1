@@ -40,9 +40,14 @@ const {
     formatoObligatorio, 
     formatoRespuesta,
     formatoRespuestaSimple,
+    formatoUltraNatural,
+    guiaMarkdownCompleta,
+    estiloVisualChatGPT,
+    prioridadMaximaChatGPT,
     promptGlobal, 
     promptBase, 
-    comportamientoGlobal
+    comportamientoGlobal,
+    comportamientoChatGPT
 } = require('../prompts/GLOBAL');
 
 const { sqlRules } = require('../prompts/SQL');
@@ -560,9 +565,12 @@ OPCIONES:
 
 Ejemplos:
 - "cuantas partidas se hicieron" → sql
+- "5 técnicos" → sql
+- "dime 3 vendedores" → sql
+- "casas comerciales" → sql
+- "lista de clientes" → sql
 - "qué significa tratamientos extraordinarios" → conocimiento  
 - "hola, cómo estás" → conversacion
-- "dame la lista de clientes" → sql
 - "explica el protocolo de germinación" → conocimiento
 
 Responde SOLO con: sql, conocimiento, o conversacion`;
@@ -944,6 +952,9 @@ async function processQueryStream({ message, userId, conversationId, response })
                 messages: mensajesLlamada,
                 max_tokens: promptBuilder.configModelo.maxTokens,
                 temperature: promptBuilder.configModelo.temperature,
+                top_p: promptBuilder.configModelo.topP,                       // ⚡ SAMPLING CREATIVO
+                frequency_penalty: promptBuilder.configModelo.frequencyPenalty, // ⚡ ANTI-REPETICIÓN
+                presence_penalty: promptBuilder.configModelo.presencePenalty,   // ⚡ DIVERSIDAD
                 stream: true  // ¡AQUÍ ESTÁ LA MAGIA!
             });
 
@@ -1035,12 +1046,16 @@ async function processQueryStream({ message, userId, conversationId, response })
                         const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
                         const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
                         
-                        // Construir prompt específico para explicación usando TODOS los prompts organizados
+                        // ⚡ CONSTRUIR SEGUNDA LLAMADA CON MÁXIMA PRIORIDAD CHATGPT
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
-                        promptExplicacion += `${comportamientoGlobal}\n\n`;
+                        promptExplicacion += `${prioridadMaximaChatGPT}\n\n`; // ⚡ PRIORIDAD MÁXIMA AL INICIO
+                        promptExplicacion += `${comportamientoChatGPT}\n\n`;
+                        promptExplicacion += `${estiloVisualChatGPT}\n\n`;    // ⚡ ESTILO CHATGPT ANTI-ROBÓTICO
+                        promptExplicacion += `${guiaMarkdownCompleta}\n\n`;  // ⚡ GUÍA COMPLETA DE MARKDOWN
                         promptExplicacion += `${identidadEmpresa}\n\n`;
                         promptExplicacion += `${terminologia}\n\n`;
-                        promptExplicacion += `${formatoRespuestaSimple}\n\n`;
+                        
+                        // Los prompts organizados ya contienen toda la lógica de formato
                         
                         // DEBUG: Mostrar el prompt completo que se está construyendo
                         console.log('🔍 [DEBUG-PROMPT] Prompt unificado construido:');
@@ -1116,8 +1131,11 @@ ${Array.isArray(results) ?
                         const segundaLlamada = await openai.chat.completions.create({
                             model: 'gpt-4o',
                             messages: mensajesSegundaLlamada,
-                            max_tokens: 1000,
-                            temperature: 0.7
+                            max_tokens: 2000,               // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
+                            temperature: 0.9,               // ⚡ MÁXIMA CREATIVIDAD
+                            top_p: 0.95,                    // ⚡ SAMPLING CREATIVO
+                            frequency_penalty: 0.6,         // ⚡ PENALIZAR FUERTEMENTE REPETICIONES
+                            presence_penalty: 0.4           // ⚡ MÁXIMA DIVERSIDAD EN ESTILO
                         });
 
                         const explicacionNatural = segundaLlamada.choices[0].message.content;
@@ -1299,18 +1317,16 @@ function construirContextoMapaERPCompleto(mapaERP) {
  * Selecciona el modelo apropiado para la consulta
  */
 function seleccionarModeloInteligente(intencion, tablasRelevantes) {
-    // ✅ MODELO ÚNICO OPTIMIZADO PARA TODAS LAS TAREAS CON VARIABILIDAD
+    // ✅ CONFIGURACIÓN ULTRA-NATURAL COMO CHATGPT
     const config = {
-        modelo: 'gpt-4o',           // Modelo más capaz para todas las tareas
-        maxTokens: 3000,            // Más tokens para respuestas variadas y completas
-        temperature: 0.8,           // Mayor creatividad y variabilidad
-        topP: 0.95,                 // Sampling más creativo
-        frequencyPenalty: 0.3,      // Reduce repetición de frases comunes
-        presencePenalty: 0.2,       // Fomenta diversidad en temas
-        razon: 'Modelo optimizado con parámetros para máxima variabilidad y naturalidad'
+        modelo: 'gpt-4o',           // Modelo más capaz para naturalidad
+        maxTokens: 3000,            // Tokens generosos para variabilidad
+        temperature: 0.9,           // ⚡ MÁXIMA CREATIVIDAD Y VARIABILIDAD
+        topP: 0.95,                 // Sampling creativo
+        frequencyPenalty: 0.5,      // ⚡ PENALIZAR FUERTEMENTE REPETICIONES
+        presencePenalty: 0.4,       // ⚡ MÁXIMA DIVERSIDAD EN TEMAS Y ESTILO
+        razon: 'Configuración ultra-natural para eliminar robótica y repetitividad'
     };
-    
-
     
     return config;
 }
@@ -1319,13 +1335,15 @@ function seleccionarModeloInteligente(intencion, tablasRelevantes) {
  * Construye las instrucciones naturales para el prompt
  */
 function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
-    let instrucciones = comportamientoGlobal + '\n\n';
+    // ⚡ PRIORIDAD MÁXIMA AL INICIO - ESTILO CHATGPT
+    let instrucciones = prioridadMaximaChatGPT + '\n\n';  // ⚡ PRIORIDAD MÁXIMA
+    instrucciones += comportamientoChatGPT + '\n\n';
+    instrucciones += estiloVisualChatGPT + '\n\n';       // ⚡ ESTILO VISUAL CHATGPT ANTI-ROBÓTICO
+    instrucciones += guiaMarkdownCompleta + '\n\n';     // ⚡ GUÍA COMPLETA DE MARKDOWN
     instrucciones += identidadEmpresa + '\n\n';
     instrucciones += terminologia + '\n\n';
-    instrucciones += formatoObligatorio + '\n\n';
-    instrucciones += formatoRespuestaSimple + '\n\n';
     
-
+    // Los prompts organizados ya contienen toda la lógica necesaria
     
     return instrucciones;
 }
@@ -1345,3 +1363,19 @@ async function generarEmbedding(texto) {
         return null;
     }
 }
+
+// =====================================
+// EXPORTACIONES DEL MÓDULO
+// =====================================
+
+module.exports = {
+    // Función principal de consulta
+    consultaModelo,
+    
+    // Funciones auxiliares
+    analizarIntencionInteligente,
+    construirPromptUnificado,
+    seleccionarModeloInteligente,
+    construirInstruccionesNaturales,
+    generarEmbedding
+};
