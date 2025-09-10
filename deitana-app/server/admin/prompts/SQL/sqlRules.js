@@ -392,6 +392,71 @@ WHERE a.AR_DENO LIKE '%PEPINO URANO%'
   AND CURRENT_DATE BETWEEN tp.TAP_DFEC AND tp.TAP_HFEC;
 
 
+PARA VER LOS DATOS GENERALES DE UNA ORDEN DE RECOGIDA
+
+SELECT 
+    pc.id AS id_orden,
+    pc.PCA_FEC AS fecha,
+    pc.PCA_HORA AS hora,
+    c.CL_DENO AS cliente,
+    a.AM_DENO AS almacen,
+    f.FP_DENO AS forma_pago,
+    r.RU_DENO AS ruta,
+    pc.PCA_EST AS estado
+FROM 'p-carga' pc
+LEFT JOIN clientes c ON pc.PCA_CCL = c.id
+LEFT JOIN almacenes a ON pc.PCA_ALM = a.id
+LEFT JOIN fpago f ON pc.PCA_FP = f.id
+LEFT JOIN rutas r ON pc.PCA_RUTA = r.id
+WHERE pc.id = '00070406';
+
+
+
+PARA SABER LAS PARTIDAS, ARTICULOS QUE VAN ASOCIADAS A UNA ORDEN DE RECOGIDA
+
+SELECT 
+    pcp.id AS id_orden,
+    pcp.id2 AS linea,
+    pa.PAR_DENO AS partida,
+    ar.AR_DENO AS articulo,
+    cli.CL_DENO AS cliente,
+    pcp.C3 AS invernadero,
+    pcp.C4 AS seccion,
+    pcp.C5 AS fila,
+    pcp.C6 AS columna,
+    pcp.C7 AS bandejas,
+    pcp.C8 AS plantas
+FROM 'p-carga_pca_par' pcp
+LEFT JOIN partidas pa ON pcp.C0 = pa.id
+LEFT JOIN articulos ar ON pcp.C2 = ar.id
+LEFT JOIN clientes cli ON pcp.C1 = cli.id
+WHERE pcp.id = '00070406'
+ORDER BY pcp.id2;
+
+ORDENES DE RECOGIDA POR CLIENTE 
+
+SELECT 
+    pc.id AS id_orden,
+    pc.PCA_FEC AS fecha,
+    pc.PCA_ALB AS albaran,
+    pc.PCA_EST AS estado,
+    c.CL_DENO AS cliente
+FROM 'p-carga' pc
+LEFT JOIN clientes c ON pc.PCA_CCL = c.id
+WHERE c.CL_DENO LIKE '%Garcia%'
+ORDER BY pc.PCA_FEC DESC;
+
+Calcular totales de bandejas y plantas en una orden
+
+SELECT 
+    pcp.id AS id_orden,
+    SUM(pcp.C7) AS total_bandejas,
+    SUM(pcp.C8) AS total_plantas
+FROM 'p-carga_pca_par' pcp
+WHERE pcp.id = '00070404'
+GROUP BY pcp.id;
+
+
 
 
 ---

@@ -2112,6 +2112,130 @@ encargos: {
 /* ================================================*/
 
 
+p_carga: {
+  // Clave principal (nombre de tabla)
+  descripcion:
+    "Registra las órdenes de recogida (cargas) de clientes, incluyendo información del cliente, almacén, albarán, forma de pago, estado y datos de PDA. Se vincula con las partidas de siembra a recoger a través de la tabla 'p-carga_pca_par'.",
+  tabla: `p-carga`, // Nombre de la tabla principal
+  columnas: {
+    id: "Número de orden de recogida (Clave Primaria).",
+    PCA_FEC: "Fecha del día de la orden de recogida.",
+    PCA_HORA: "Hora del registro de la orden.",
+    PCA_USU: "Usuario que gestionó la orden.",
+    PCA_CCL: "Código del cliente. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+    PCA_ALB: "Número de albarán asociado.",
+    PCA_TIPO: "Tipo de orden (código interno).",
+    PCA_TALB: "Tipo de albarán (código interno).",
+    PCA_ALM: "Código del almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+    PCA_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+    PCA_EST: "Estado de la orden de recogida.",
+    PCA_DFI: "Descripción de la finca vinculada a la recogida.",
+    PCA_USUA: "Usuario encargado del alta de la orden.",
+    PCA_UPDA: "Número de técnico PDA.",
+    PCA_EPDA: "Indica si fue leído en PDA.",
+    PCA_ENVPDA: "Indica si fue enviado desde PDA.",
+    PCA_CLFAC: "Cliente de facturación. Clave foránea a 'clientes' para obtener la denominación (CL_DENO).",
+    PCA_TNPDA: "Número de técnico PDA (sin relación a otra tabla).",
+    PCA_UEP: "Usuario encargado de la gestión en PDA.",
+    PCA_FEP: "Fecha de entrada en PDA.",
+    PCA_HEP: "Hora de entrada en PDA.",
+    PCA_FCP: "Fecha de cierre en PDA.",
+    PCA_HCP: "Hora de cierre en PDA.",
+    PCA_RUTA: "Ruta de recogida. Clave foránea a la tabla 'rutas' para obtener la denominación (RU_DENO).",
+  },
+  relaciones: {
+    clientes: {
+      tabla_relacionada: "clientes",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PCA_CCL",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula la orden de recogida con el cliente principal.",
+    },
+    clientes_facturacion: {
+      tabla_relacionada: "clientes",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PCA_CLFAC",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula la orden con el cliente de facturación.",
+    },
+    almacenes: {
+      tabla_relacionada: "almacenes",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PCA_ALM",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula la orden con el almacén de salida.",
+    },
+    fpago: {
+      tabla_relacionada: "fpago",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PCA_FP",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula la orden con la forma de pago.",
+    },
+    rutas: {
+      tabla_relacionada: "rutas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PCA_RUTA",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula la orden con la ruta de distribución/recogida.",
+    },
+    p_carga_pca_par: {
+      tabla_relacionada: "p-carga_pca_par",
+      tipo: "Uno a muchos (una orden puede tener varias partidas asociadas)",
+      campo_enlace_local: "id", // ID de la orden de recogida
+      campo_enlace_externo: "id", // ID de la orden en la tabla de partidas
+      descripcion: "Partidas de siembra que forman parte de la orden de recogida.",
+      estructura_relacionada: {
+        id: "ID de la orden de recogida.",
+        id2: "Identificador secuencial de la partida dentro de la orden.",
+        C0: "Código de la partida. Clave foránea a la tabla 'partidas' para obtener información detallada.",
+        C1: "Código de cliente. Clave foránea a la tabla 'clientes' (CL_DENO).",
+        C2: "Artículo de la partida. Clave foránea a la tabla 'articulos' (AR_DENO).",
+        C3: "Invernadero (ejemplo: A2, A3).",
+        C4: "Sección dentro del invernadero.",
+        C5: "Fila asignada.",
+        C6: "Columna asignada.",
+        C7: "Número de bandejas de la partida.",
+        C8: "Número de plantas correspondientes.",
+      },
+      relaciones_internas_de_detalle: {
+        partidas: {
+          tabla_relacionada: "partidas",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "C0",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida de la orden con los detalles completos de siembra.",
+        },
+        clientes: {
+          tabla_relacionada: "clientes",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "C1",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con el cliente correspondiente.",
+        },
+        articulos: {
+          tabla_relacionada: "articulos",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "C2",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula la partida con el artículo/semilla asociada.",
+        },
+      },
+    },
+  },
+  ejemplos: {
+    consulta_por_id:
+      "Obtener los detalles generales de una orden de recogida usando su 'id'.",
+    consultar_info_relacionada:
+      "Para una orden, obtener información del cliente, almacén, ruta y forma de pago.",
+    consultar_partidas_asociadas:
+      "Para una orden, listar las partidas de siembra asociadas con detalle (artículo, cliente, ubicación en invernadero, bandejas, plantas).",
+    filtrar_por_cliente_fecha_o_ruta:
+      "Listar órdenes de recogida filtradas por cliente, fecha o ruta.",
+    consultar_estado_pda:
+      "Verificar si una orden fue leída, enviada o cerrada desde PDA.",
+  },
+},
 
 
 
