@@ -452,12 +452,12 @@ SELECT
     pcp.id AS id_orden,
     SUM(pcp.C7) AS total_bandejas,
     SUM(pcp.C8) AS total_plantas
-FROM 'p-carga_pca_par' pcp
+FROM p-carga_pca_par pcp
 WHERE pcp.id = '00070404'
 GROUP BY pcp.id;
 
 
-
+PARA LAS CONSULTAS SQL USA LOS BACKTIST CORRESPONDIENTES A MYSQL WORKBRENCH \`\ NO USES '' AUN QUE LOS EJEMPLOS LO MUESTREN ASI.
 
 ---
 
