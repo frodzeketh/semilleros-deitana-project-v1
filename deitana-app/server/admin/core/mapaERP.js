@@ -356,6 +356,8 @@ familias: {
     },
   },
 
+   /* ==============================================================================================================================================*/
+
   /* ================================================*/
   /* Archivos – Auxiliares – Bandejas */
   /* ================================================*/
@@ -392,6 +394,11 @@ familias: {
       // Los ejemplos dados son valores de ejemplo para campos específicos.
     },
   },
+  /* ================================================*/
+  /* Archivos – Auxiliares – Calendarios */
+  /* ================================================*/
+
+
 
   /* ================================================*/
   /* Archivos – Auxiliares – Casas comerciales */
@@ -449,6 +456,18 @@ familias: {
       // Los ejemplos dados son valores de ejemplo para campos específicos.
     },
   },
+
+  /* ================================================*/
+  /* Archivos – Auxiliares – Clasificacón Cli */
+  /* ================================================*/
+
+  /* ================================================*/
+  /* Archivos – Auxiliares – Codigo Postal */
+  /* ================================================*/
+
+  /* ================================================*/
+  /* Archivos – Auxiliares – Conceptos incidencias */
+  /* ================================================*/
 
   /* ================================================*/
   /* Archivos – Auxiliares – Créditos caución */
@@ -591,6 +610,64 @@ familias: {
       consulta_presentacion: "Obtener el número de unidades por presentación (EV_UDSS) si aplica para un envase específico.",
     },
   },
+
+  /* ================================================*/
+  /* Archivos – Auxiliares – Fincas Clientes */
+  /* ================================================*/
+
+
+alm_clientes: {
+  descripcion:
+    "Gestiona el registro de las fincas o ubicaciones de los clientes, detallando la información de contacto y su ubicación geográfica. Es una herramienta clave para la organización y la logística.",
+  tabla: `alm-clientes`, // Nombre de la tabla principal
+  columnas: {
+    id: "Identificador único de la finca del cliente (Clave Primaria).",
+    AL_DENO: "Nombre o denominación de la finca.",
+    AL_CCL: "Código del cliente asociado a la finca. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+    AL_TEL: "Número de teléfono de la finca.",
+    AL_FAX: "Número de fax de la finca.",
+    AL_EMA: "Dirección de correo electrónico de la finca.",
+    AL_CON: "Nombre de la persona de contacto en la finca.",
+    AL_DOM: "Domicilio o dirección física de la finca.",
+    AL_POB: "Población o localidad de la finca.",
+    AL_PAIS: "País de la finca.",
+    AL_ZONA: "Código de la zona geográfica de la finca. Clave foránea a la tabla 'zonas' para obtener la denominación (ZN_DENO).",
+    AL_CLF: "Nombre del cliente final.",
+    AL_PROV: "Provincia de la finca.",
+  },
+  relaciones: {
+    clientes: {
+      tabla_relacionada: "clientes",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "AL_CCL",
+      campo_enlace_externo: "id", // Suponiendo 'id' es la clave primaria de 'clientes'
+      descripcion: "Vincula la finca con la información principal del cliente propietario.",
+    },
+    zonas: {
+      tabla_relacionada: "zonas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "AL_ZONA",
+      campo_enlace_externo: "id", // Suponiendo 'id' es la clave primaria de 'zonas'
+      descripcion: "Vincula la finca con la zona geográfica correspondiente.",
+    },
+  },
+  ejemplos: {
+    consulta_finca_por_id:
+      "Obtener todos los datos de una finca de cliente específica usando su 'id'.",
+    consultar_datos_contacto:
+      "Para una finca, obtener su nombre ('AL_DENO'), teléfono ('AL_TEL'), email ('AL_EMA') y persona de contacto ('AL_CON').",
+    filtrar_fincas_por_cliente_o_zona:
+      "Listar todas las fincas de un cliente en particular (filtrando por 'AL_CCL') o agrupar las fincas por zona geográfica ('AL_ZONA').",
+    analisis_geografico:
+      "Identificar la distribución de las fincas de los clientes por población, provincia o país ('AL_POB', 'AL_PROV', 'AL_PAIS').",
+    buscar_cliente_final:
+      "Buscar fincas según el nombre del cliente final ('AL_CLF').",
+  },
+},
+
+ /* ================================================*/
+  /* Archivos – Auxiliares – Incidencias Fras */
+  /* ================================================*/
 
   /* ================================================*/
   /* Archivos - Auxiliares - Invernaderos */
@@ -796,9 +873,6 @@ rutas: {
   },
 
 
-
-
-
   /* ================================================*/
   /* Archivos – Auxiliares – Sección Tareas */
   /* ================================================*/
@@ -850,6 +924,14 @@ rutas: {
   },
 
   /* ================================================*/
+  /* Archivos – Auxiliares – Series Facturacion */
+  /* ================================================*/
+
+  /* ================================================*/
+  /* Archivos – Auxiliares – Situaciones */
+  /* ================================================*/
+
+  /* ================================================*/
   /* Archivos – Auxiliares – Sustratos */
   /* ================================================*/
   sustratos: {
@@ -893,11 +975,85 @@ rutas: {
 
 
 
+
+
 /* ================================================*/
 /* Archivos – Auxiliares – Tipos de siembra */
 /* ================================================*/
-
-
+t_siembras: {
+  // Clave principal (nombre de tabla)
+  descripcion:
+    "Cataloga los diferentes tipos de siembra utilizados en la empresa, detallando las características clave como la bandeja, el sustrato, el número de alveolos y la densidad de plantas. También se vincula a los procesos y observaciones específicas de cada tipo de siembra.",
+  tabla: `t-siembras`, // Nombre de la tabla principal
+  columnas: {
+    id: "Identificador único del tipo de siembra (Clave Primaria).",
+    TSI_DENO: "Denominación del tipo de siembra.",
+    TSI_BAN: "Código de la bandeja utilizada. Clave foránea a la tabla 'bandejas' para obtener la denominación (BN_DENO).",
+    TSI_SUS: "Código del sustrato utilizado. Clave foránea a la tabla 'sustratos' para obtener la denominación (SUS_DENO).",
+    TSI_ALV: "Número de alveolos en la bandeja.",
+    TSI_PALV: "Cantidad de plantas por alveolo.",
+    TSI_PBSI: "Cantidad de plantas por bandeja de siembra.",
+  },
+  relaciones: {
+    bandejas: {
+      tabla_relacionada: "bandejas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "TSI_BAN",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el tipo de siembra con el tipo de bandeja utilizada.",
+    },
+    sustratos: {
+      tabla_relacionada: "sustratos",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "TSI_SUS",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el tipo de siembra con el sustrato utilizado.",
+    },
+    t_siembras_tsi_pro: {
+      tabla_relacionada: "t-siembras_tsi_pro",
+      tipo: "Uno a muchos (un tipo de siembra puede tener varios procesos asociados)",
+      campo_enlace_local: "id", // ID del tipo de siembra en la tabla principal
+      campo_enlace_externo: "id", // ID del tipo de siembra en la tabla de procesos
+      descripcion: "Detalla los procesos específicos que se aplican a este tipo de siembra.",
+      estructura_relacionada: {
+        id: "ID del tipo de siembra (igual que 't-siembras.id').",
+        id2: "Identificador secuencial del proceso.",
+        C0: "Código del proceso. Clave foránea a la tabla 'procesos' para obtener la denominación (PRO_DENO).",
+      },
+      relaciones_internas_de_detalle: {
+        procesos: {
+          tabla_relacionada: "procesos",
+          tipo: "Muchos a uno",
+          campo_enlace_local: "C0",
+          campo_enlace_externo: "id",
+          descripcion: "Vincula el código del proceso con su denominación y detalles en la tabla 'procesos'.",
+        },
+      },
+    },
+    t_siembras_tsi_obs: {
+      tabla_relacionada: "t-siembras_tsi_obs",
+      tipo: "Uno a muchos (un tipo de siembra puede tener múltiples observaciones)",
+      campo_enlace_local: "id", // ID del tipo de siembra en la tabla principal
+      campo_enlace_externo: "id", // ID del tipo de siembra en la tabla de observaciones
+      descripcion: "Almacena observaciones y características detalladas para cada tipo de siembra.",
+      estructura_relacionada: {
+        id: "ID del tipo de siembra (igual que 't-siembras.id').",
+        id2: "Identificador secuencial de la observación.",
+        C0: "Contenido de la observación o característica.",
+      },
+    },
+  },
+  ejemplos: {
+    consulta_tipo_siembra_por_id:
+      "Obtener la denominación, bandeja, sustrato y detalles de alveolos para un tipo de siembra específico.",
+    consultar_procesos:
+      "Para un tipo de siembra (ej. ID '0001'), listar los procesos asociados uniéndose a la tabla 'procesos' a través de 't-siembras_tsi_pro'.",
+    consultar_observaciones:
+      "Obtener todas las observaciones y características de un tipo de siembra específico desde la tabla 't-siembras_tsi_obs'.",
+    analisis_de_insumos:
+      "Agrupar los tipos de siembra por bandeja ('TSI_BAN') o sustrato ('TSI_SUS') para analizar el uso de insumos.",
+  },
+},
 
 
 
@@ -961,6 +1117,8 @@ rutas: {
     },
   },
 
+   /* ==============================================================================================================================================*/
+
   /* ================================================*/
   /* Archivos – Otros – Departamentos */
   /* ================================================*/
@@ -988,6 +1146,14 @@ rutas: {
       // asignar_tarea_a_departamento: "Vincular una tarea a un departamento responsable."
     },
   },
+
+  /* ================================================*/
+  /* Archivos – Otros – Empresa */
+  /* ================================================*/
+
+  /* ================================================*/
+  /* Archivos – Otros – Invernaderos */
+  /* ================================================*/
 
   /* ================================================*/
   /* Archivos – Otros – Secciones Trabajadores */
@@ -1053,8 +1219,7 @@ rutas: {
   },
 
   /* ======================================================================================================================================================================*/
-  /* PRODUCCION                                                                                                                                                             */
-  /* ======================================================================================================================================================================*/
+ 
 
   /* ================================================*/
   /* Producción - Partes – Partes de Siembra */
@@ -1392,8 +1557,78 @@ p_aplica_trat2: {
 
   
 /* ================================================*/
-/* Produccion-Partes-Partes de Injertos */
+/* Produccion - Partes - Partes de Injertos */
 /* ================================================*/
+p_injertos: {
+  // Clave principal (nombre de tabla)
+  descripcion:
+    "Registra y gestiona los partes de trabajo de injertos de plantas. Documenta el proceso desde la realización del injerto hasta su paso por la cámara, incluyendo detalles de la producción, el personal, los materiales usados y el estado actual de las plantas.",
+  tabla: `p-injertos`, // Nombre de la tabla principal
+  columnas: {
+    id: "Número de parte o identificador único del registro de injerto (Clave Primaria).",
+    PIN_FEC: "Fecha en que se realizó el parte de injerto.",
+    PIN_HOR: "Hora de realización del parte.",
+    PIN_USU: "Código del usuario o vendedor que registró el parte. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+    PIN_PAR: "Código de la partida de plantas injertadas. Clave foránea a la tabla 'partidas' para obtener detalles de la partida.",
+    PIN_NPLA: "Número de plantas actuales en el parte.",
+    PIN_NBAN: "Número de bandejas actuales en el parte.",
+    PIN_BAN: "Código de la bandeja utilizada. Clave foránea a la tabla 'bandejas' para obtener la denominación (BN_DENO).",
+    PIN_SUST: "Código del sustrato utilizado. Clave foránea a la tabla 'sustratos' para obtener la denominación (SUS_DENO).",
+    PIN_EST: "Estado actual del proceso de injerto. Los posibles valores son: 'I' (Injerto realizado), 'E' (Entrado en cámara), 'S' (Salida de cámara).",
+    PIN_DEL: "Código de la delegación o almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+  },
+  relaciones: {
+    vendedores: {
+      tabla_relacionada: "vendedores",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PIN_USU",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte de injerto con el vendedor o usuario que lo registró.",
+    },
+    partidas: {
+      tabla_relacionada: "partidas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PIN_PAR",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte de injerto con la partida de producción a la que pertenece.",
+    },
+    bandejas: {
+      tabla_relacionada: "bandejas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PIN_BAN",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con la bandeja específica que se utilizó en el proceso de injerto.",
+    },
+    sustratos: {
+      tabla_relacionada: "sustratos",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PIN_SUST",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con el sustrato que se utilizó.",
+    },
+    almacenes: {
+      tabla_relacionada: "almacenes",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PIN_DEL",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte de injerto con la delegación o almacén donde se realizó.",
+    },
+    // Lógicamente, este parte podría tener una tabla de detalle, aunque no se especifica.
+    // Por ejemplo, para registrar los tipos de plantas o semillas injertadas.
+  },
+  ejemplos: {
+    consulta_parte_injerto:
+      "Obtener el estado actual y detalles de un parte de injerto específico usando su 'id'.",
+    seguimiento_partida:
+      "Para una partida específica, listar todos los partes de injertos asociados para seguir su proceso desde el injerto hasta la salida de cámara.",
+    analisis_productividad:
+      "Analizar la cantidad de plantas y bandejas injertadas por usuario ('PIN_USU') o por delegación ('PIN_DEL').",
+    analisis_materiales:
+      "Evaluar el uso de bandejas ('PIN_BAN') y sustratos ('PIN_SUST') en los procesos de injerto.",
+    filtrar_por_estado:
+      "Listar todos los partes de injerto que están actualmente 'En cámara' (filtrando por PIN_EST = 'E').",
+  },
+},
 
 
 
@@ -1502,18 +1737,102 @@ reg_visitas: {
 
 
 /* ================================================*/
-/* Produccion-Partes-Partes Varios */
+/* Produccion - Partes - Partes Varios */
 /* ================================================*/
+p_tratamientos: {
+  // Clave principal (nombre de tabla)
+  descripcion:
+    "Registra los partes de trabajo de varios procesos en la producción de plantas, como tratamientos, trasplantes y otros eventos. Documenta los cambios en la partida, incluyendo la cantidad de plantas y bandejas antes y después del proceso, así como los nuevos materiales utilizados.",
+  tabla: `p-tratamientos`, // Nombre de la tabla principal
+  columnas: {
+    id: "Identificador único del registro o número de parte de tratamiento (Clave Primaria).",
+    PTR_FEC: "Fecha del registro del parte.",
+    PTR_HOR: "Hora del registro del parte.",
+    PTR_USU: "Código del usuario o vendedor que registró el parte. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+    PTR_PAR: "Código de la partida asociada al parte. Clave foránea a la tabla 'partidas' para obtener detalles de la partida.",
+    PTR_PROC: "Código del proceso realizado. Clave foránea a la tabla 'procesos' para obtener la denominación (PRO_DENO).",
+    // Columnas para el estado actual de la partida
+    PTR_NBA: "Número de bandejas actual.",
+    PTR_APB: "Número de alveolos por bandeja actual.",
+    PTR_ALV: "Número de alveolos actual.",
+    PTR_PLA: "Número de plantas actual.",
+    PTR_PPA: "Número de plantas por alveolo actual.",
+    // Columnas para el nuevo estado después del proceso
+    PTR_NNBA: "Nuevo número de bandejas total.",
+    PTR_NAPB: "Nuevo número de alveolos por bandeja.",
+    PTR_NALV: "Nuevo número de alveolos.",
+    PTR_NPPA: "Nuevo número de plantas por alveolo.",
+    PTR_NPLA: "Nuevo número de plantas.",
+    // Columnas para nuevos materiales
+    PTR_BAN: "Código de la nueva bandeja utilizada. Clave foránea a la tabla 'bandejas' para obtener la denominación (BN_DENO).",
+    PTR_SUST: "Código del nuevo sustrato utilizado. Clave foránea a la tabla 'sustratos' para obtener la denominación (SUS_DENO).",
+  },
+  relaciones: {
+    vendedores: {
+      tabla_relacionada: "vendedores",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PTR_USU",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte de tratamiento con el vendedor o usuario que lo registró.",
+    },
+    partidas: {
+      tabla_relacionada: "partidas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PTR_PAR",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con la partida de producción a la que pertenece.",
+    },
+    procesos: {
+      tabla_relacionada: "procesos",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PTR_PROC",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte de tratamiento con el proceso específico que se realizó.",
+    },
+    bandejas: {
+      tabla_relacionada: "bandejas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PTR_BAN",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con la nueva bandeja utilizada en el proceso.",
+    },
+    sustratos: {
+      tabla_relacionada: "sustratos",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PTR_SUST",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con el nuevo sustrato utilizado en el proceso.",
+    },
+  },
+  ejemplos: {
+    consulta_parte_tratamiento:
+      "Obtener los detalles de un parte de tratamiento específico, incluyendo los cambios en la cantidad de plantas y bandejas.",
+    seguimiento_partida:
+      "Para una partida específica, listar todos los partes de tratamientos asociados para rastrear la evolución de la cantidad de plantas y los procesos realizados.",
+    analisis_procesos:
+      "Analizar la frecuencia de un proceso específico (ej. 'trasplante') y el impacto en las métricas de la partida (ej. 'PTR_NPLA', 'PTR_NNBA').",
+  },
+},
 
 
 
-
+/* ================================================*/
+/* Produccion-Partes-Partes Extension Mult.          */
+/* ================================================*/
 
 
 
 /* ================================================*/
 /* Produccion-Partes-Partes Estructurales          */
 /* ================================================*/
+
+
+/* ================================================*/
+/* Produccion-Partes-Partes Consumo         */
+/* ================================================*/
+
+
+/* ==============================================================================================================================================*/
 
 
 
@@ -1538,6 +1857,101 @@ reg_visitas: {
 /* ================================================*/
 
 
+/* ==============================================================================================================================================*/
+
+
+/* ================================================*/
+/* Produccion- Utilidades - Partes Lavado */
+/* ================================================*/
+
+
+p_lavar: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra los partes de trabajo correspondientes al lavado de bandejas. Documenta la cantidad de bandejas lavadas, el tipo de bandeja, la fecha, la hora y el técnico responsable, lo cual es fundamental para el control de inventario y la trazabilidad del proceso.",
+    tabla: `p-lavar`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único de registro del lavado de bandejas (Clave Primaria).",
+      LAV_ENV: "Código del tipo de bandeja lavada. Clave foránea a la tabla 'bandejas' para obtener la denominación (BN_DENO).",
+      LAV_BAND: "Número total de bandejas lavadas o a lavar.",
+      LAV_FEC: "Fecha en que se realizó el lavado.",
+      LAV_HORA: "Hora en que se registró el lavado.",
+      LAV_USU: "Código del técnico responsable del lavado. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+    },
+    relaciones: {
+      bandejas: {
+        tabla_relacionada: "bandejas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "LAV_ENV",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro de lavado con el tipo de bandeja correspondiente.",
+      },
+      tecnicos: {
+        tabla_relacionada: "tecnicos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "LAV_USU",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro de lavado con el técnico que realizó el trabajo.",
+      },
+    },
+    ejemplos: {
+      consulta_por_id:
+        "Obtener los detalles de un registro de lavado específico usando su 'id'.",
+      control_de_inventario:
+        "Listar las bandejas lavadas por tipo de bandeja y fecha para actualizar el inventario de bandejas limpias.",
+      analisis_de_productividad:
+        "Calcular el número total de bandejas lavadas por cada técnico en un período de tiempo para evaluar la productividad.",
+      filtrar_por_fecha_o_tecnico:
+        "Buscar todos los registros de lavado realizados en una fecha específica o por un técnico en particular.",
+    },
+  },
+
+
+
+/* ================================================*/
+/* Produccion- Utilidades - Partes Sacudir */
+/* ================================================*/
+
+p_sacudir: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Registra los partes de trabajo de sacudido de bandejas, un proceso que suele realizarse para remover el exceso de sustrato o para acondicionar las bandejas. Documenta el tipo y la cantidad de bandejas sacudidas, junto con la fecha, hora y el técnico responsable de la tarea.",
+    tabla: `p-sacudir`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código único de registro del sacudido de bandejas (Clave Primaria).",
+      SAC_ENV: "Código del tipo de bandeja sacudida. Clave foránea a la tabla 'bandejas' para obtener la denominación (BN_DENO).",
+      SAC_BAND: "Número total de bandejas sacudidas.",
+      SAC_FEC: "Fecha en que se realizó el sacudido.",
+      SAC_HORA: "Hora en que se registró el sacudido.",
+      SAC_USU: "Código del técnico responsable del trabajo. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+    },
+    relaciones: {
+      bandejas: {
+        tabla_relacionada: "bandejas",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "SAC_ENV",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro de sacudido con el tipo de bandeja correspondiente.",
+      },
+      tecnicos: {
+        tabla_relacionada: "tecnicos",
+        tipo: "Muchos a uno",
+        campo_enlace_local: "SAC_USU",
+        campo_enlace_externo: "id",
+        descripcion: "Vincula el registro de sacudido con el técnico que realizó la tarea.",
+      },
+    },
+    ejemplos: {
+      consulta_por_id:
+        "Obtener los detalles de un registro de sacudido específico usando su 'id'.",
+      analisis_productividad:
+        "Calcular la cantidad total de bandejas sacudidas por un técnico en un período de tiempo para evaluar la productividad.",
+      control_de_inventario:
+        "Utilizar esta tabla para rastrear la cantidad de bandejas que han pasado por el proceso de sacudido.",
+      filtrar_por_fecha_o_tecnico:
+        "Buscar todos los registros de sacudido realizados en una fecha específica o por un técnico en particular.",
+    },
+  },
 
 
 
@@ -1546,11 +1960,72 @@ reg_visitas: {
 /* ================================================*/
 
 
+p_manipulado: {
+  // Clave principal (nombre de tabla)
+  descripcion:
+    "Registra los partes de trabajo de manipulado de plantas, documentando la fecha, hora, el técnico responsable, la tarea realizada y la cantidad manipulada por partida. Es crucial para la trazabilidad y el control de la producción.",
+  tabla: `p-manipulado`, // Nombre de la tabla principal
+  columnas: {
+    id: "Código único de registro del parte de manipulado (Clave Primaria).",
+    PMA_FEC: "Fecha del parte de manipulado.",
+    PMA_HORA: "Hora de registro del parte.",
+    PMA_CDTN: "Código del técnico responsable. Clave foránea a la tabla 'tecnicos' para obtener la denominación (TN_DENO).",
+    PMA_CDSEC: "Código de la sección de la tarea. Clave foránea a la tabla 'tareas_seccion' para obtener la denominación (TARS_DENO).",
+    PMA_CDTAR: "Código de la tarea realizada. Clave foránea a la tabla 'tareas_per' para obtener la denominación (TARP_DENO).",
+    PMA_CDPAR: "Código de la partida de producción. Clave foránea a la tabla 'partidas' para obtener detalles de la partida y la variedad.",
+    PMA_VALOR: "Cantidad manipulada (ej. número de plantas, bandejas, etc.).",
+    PMA_CDUBI: "Código de la ubicación. Clave foránea a la tabla 'ubicaciones' para obtener la denominación (UBI_DENO).",
+  },
+  relaciones: {
+    tecnicos: {
+      tabla_relacionada: "tecnicos",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PMA_CDTN",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte de manipulado con el técnico que realizó la tarea.",
+    },
+    tareas_seccion: {
+      tabla_relacionada: "tareas_seccion",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PMA_CDSEC",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con la sección o área de la tarea.",
+    },
+    tareas_per: {
+      tabla_relacionada: "tareas_per",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PMA_CDTAR",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con el tipo de tarea específica de personal realizada.",
+    },
+    partidas: {
+      tabla_relacionada: "partidas",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PMA_CDPAR",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con la partida de producción manipulada para rastrear la variedad y otros detalles.",
+    },
+    ubicaciones: {
+      tabla_relacionada: "ubicaciones",
+      tipo: "Muchos a uno",
+      campo_enlace_local: "PMA_CDUBI",
+      campo_enlace_externo: "id",
+      descripcion: "Vincula el parte con la ubicación física donde se realizó el manipulado.",
+    },
+  },
+  ejemplos: {
+    consulta_parte_manipulado:
+      "Obtener todos los detalles de un parte de manipulado específico, incluyendo el técnico, la tarea y la cantidad.",
+    seguimiento_partida:
+      "Para una partida específica, rastrear las tareas de manipulado que se le han realizado a lo largo del tiempo.",
+    analisis_productividad:
+      "Evaluar la cantidad manipulada por técnico ('PMA_VALOR' agrupado por 'PMA_CDTN') o por tipo de tarea ('PMA_CDTAR').",
+    control_de_procesos:
+      "Analizar qué tareas se realizan en qué secciones y ubicaciones para optimizar el flujo de trabajo.",
+  },
+},
 
-
-
-
-
+/* ==============================================================================================================================================*/
 
 
 /* ================================================*/
@@ -1607,12 +2082,11 @@ reg_visitas: {
 
 
 /* ======================================================================================================================================================================*/
-/* Injertos                                                                                                                                                      */
-/* ======================================================================================================================================================================*/
+
 
 
 /* ================================================*/
-/* Injertos - Utilidades – Medias bandejas */
+/* Injertos Y Abonados - Utilidades – Medias bandejas */
 /* ================================================*/
 p_medias_band: {
     // Clave principal (nombre de tabla)
@@ -1659,7 +2133,7 @@ p_medias_band: {
 
 
 /* ================================================*/
-/* Injertos - Utilidades – Escandallo Injertos */
+/* Injertos Y Abonados - Utilidades – Escandallo Injertos */
 /* ================================================*/
 p_escan_inj: {
     // Clave principal (nombre de tabla)
@@ -1707,8 +2181,10 @@ p_escan_inj: {
   },
 
 
+/* ======================================================================================================================================================================*/
+
 /* ================================================*/
-/* Injertos - Injertos por fases – Técnicos fases */
+/* Injertos Y Abonados - Injertos por fases – Técnicos fases */
 /* ================================================*/
 tecnicos_fases: {
     // Clave principal (nombre de tabla)
@@ -1769,8 +2245,9 @@ tecnicos_fases: {
 
 
 /* ================================================*/
-/* Injertos - Injertos por fases – Partes injertos sandía */
+/* Injertos Y Abonados - Injertos por fases – Partes injertos sandía */
 /* ================================================*/
+
 p_inj_sandia: {
     // Clave principal (nombre de tabla)
     descripcion:
@@ -1815,7 +2292,7 @@ p_inj_sandia: {
 
 
 /* ================================================*/
-/* Injertos - Injertos por fases – Partes injertos tomate */
+/* Injertos Y Abonados - Injertos por fases – Partes injertos tomate */
 /* ================================================*/
 p_inj_tomate: {
     // Clave principal (nombre de tabla)
@@ -2492,6 +2969,7 @@ facturas_e: {
   },
 
 
+/* ================================================================================================================================================*/
 
 /* ================================================*/
 /* Ventas - Otros - Partidas */
@@ -2596,25 +3074,6 @@ partidas: {
   },
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ================================================*/
 partidas_par_ubic: {
   // Clave principal (nombre de tabla)
@@ -2652,9 +3111,9 @@ partidas_par_ubic: {
 },
 
 
-
-
-
+/* ================================================*/
+/* Ventas - Otros - Proforma */
+/* ================================================*/
 
 
 
