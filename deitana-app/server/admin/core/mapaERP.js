@@ -3015,7 +3015,7 @@ partidas: {
       PAR_TOT: "Total",
       PAR_TBAC: "Situacion actual bandeja",
       PAR_STAC: "Situacion actual sustrato",
-      PAR_EST: "Estado de la partida",
+      PAR_EST: "Estado de la partida T significa terminado, C servido a cliente, R Apartado Cliente, si esto esta vacio, es por que esta en curso ",
       PAR_DENO: "Denominación u observación de la partida (Ej: 'PARTIDA Nº ...').",
       PAR_FECES: "Fechas (Solicitada 'E'/Entrega 'E'/Siembra 'S').",
 
@@ -3070,6 +3070,52 @@ partidas: {
         "Listar partidas por fecha de partida o fecha de entrega.",
       filtrar_partidas_por_semilla:
         "Listar partidas donde se utilizó una semilla específica (filtrando por PAR_SEM).",
+    },
+  },
+
+  partidas_par_esta: {
+    // Clave principal (nombre de tabla)
+    descripcion:
+      "Almacena el estado actual y detallado de cada partida de producción. Cada partida tiene exactamente 13 registros (`id2` del 1 al 13) que representan métricas clave como la cantidad de bandejas, alveolos y plantas en diferentes estados del ciclo de vida de la producción y venta.",
+    tabla: `partidas_par_esta`, // Nombre de la tabla principal
+    columnas: {
+      id: "Código de la partida de producción. Clave foránea a la tabla `partidas`.",
+      id2: "Indicador numérico (del 1 al 13) que define el tipo de estado o métrica de la fila.",
+      C0: "Número de bandejas para el estado o métrica especificada en `id2`.",
+      C1: "Número de alveolos para el estado o métrica especificada en `id2`.",
+      C2: "Número de plantas para el estado o métrica especificada en `id2`.",
+    },
+    relaciones: {
+      partidas: {
+        tabla_relacionada: "partidas",
+        tipo: "Muchos a uno", // Múltiples registros de estado para una sola partida
+        campo_enlace_local: "id",
+        campo_enlace_externo: "id", // Suponiendo 'id' es la clave primaria de 'partidas'
+        descripcion: "Vincula las métricas de estado con la partida de producción a la que pertenecen.",
+      },
+    },
+    descripcion_filas: {
+      1: "Requerido Producción: Cantidad de producción planeada.",
+      2: "Disponible para cliente: Cantidad de plantas listas para ser retiradas por el cliente.",
+      3: "Retiro del cliente: Cantidad que el cliente ha retirado.",
+      4: "Pendiente retirar cliente: Cantidad que el cliente aún no ha retirado.",
+      5: "Tiradas: Plantas desechadas o perdidas.",
+      6: "Disponible para venta: Plantas libres para la venta a cualquier cliente (plantas 'libres').",
+      7: "Sembrado/Injertado: Cantidad total de plantas sembradas o injertadas inicialmente.",
+      8: "Vendido total: Total de plantas que han sido vendidas.",
+      9: "Actuales: Cantidad de plantas actualmente en stock físico.",
+      10: "Descuadre actual: Diferencia o inconsistencia entre el stock físico y los registros (`id2` 9 y `id2` 7).",
+      11: "Venta + Descuadre: Suma de la cantidad vendida y el descuadre.",
+      12: "En recuperación: Plantas que están en proceso de recuperación.",
+      13: "Reservas: Plantas que están reservadas para un cliente o propósito específico.",
+    },
+    ejemplos: {
+      consulta_estado_completo:
+        "Obtener las 13 filas de estado para una partida específica (ej. `25006219`) y analizar cada métrica (bandejas, alveolos, plantas).",
+      analisis_disponibilidad_cliente:
+        "Para una partida, comparar `id2` 2 (disponible para cliente) con `id2` 4 (pendiente retirar) y `id2` 3 (retirado) para entender el progreso de la entrega.",
+      analisis_stock_y_pérdidas:
+        "Comparar el `id2` 9 (actuales) con el `id2` 7 (sembrado/injertado) para evaluar las pérdidas, que se reflejarían en el `id2` 5 (tiradas) y `id2` 10 (descuadre).",
     },
   },
 
