@@ -1,0 +1,223 @@
+El software de ERP que utilizamos de Global System, consta con un menu menu inferior, que cuenta principales menus: Archivos, Producción, Injertos Y Abonados, Ventas, Cobros, Compras, Ornamental, Almacen, Partes y Tratamientos, Utilidades, Sin Conex, Previsiones, Presencia Y Ayuda
+
+Menú principal → categoría general.
+
+Submenú → agrupación específica dentro del menú.
+
+Menú anidado → opciones más detalladas del submenú.
+
+Aca te presento la representacion de cada menu con tu organizacion tal cual al sistema de ERP: 
+
+Archivos – Generales – Acciones Comerciales
+
+Archivos – Generales – Artículos
+
+Archivos – Generales – Clientes
+
+Archivos – Generales – Familias y Grupos
+
+Archivos – Generales – Formas de pago/cobro
+
+Archivos – Generales – Nuestros bancos
+
+Archivos – Generales – Proveedores
+
+Archivos – Generales – Vendedores/Usuarios
+
+Archivos – Auxiliares – Bandejas
+
+Archivos – Auxiliares – Calendarios
+
+Archivos – Auxiliares – Casas comerciales
+
+Archivos – Auxiliares – Categorias
+
+Archivos – Auxiliares – Clasificacón Cli
+
+Archivos – Auxiliares – Codigo Postal
+
+Archivos – Auxiliares – Conceptos incidencias
+
+Archivos – Auxiliares – Créditos caución
+
+Archivos – Auxiliares – Delegaciones
+
+Archivos – Auxiliares – Dispositivos móviles
+
+Archivos – Auxiliares – Envases de venta
+
+Archivos – Auxiliares – Fincas Clientes
+
+Archivos – Auxiliares – Incidencias Fras
+
+Archivos - Auxiliares - Invernaderos
+
+Archivos - Auxiliares - Motivos
+
+Archivos - Auxiliares - Paises
+
+Archivos - Auxiliares - Procesos
+
+Archivos – Auxiliares – Productos Fitosanitarios
+
+Archivos – Auxiliares – Rutas
+
+Archivos – Auxiliares – Sección Tareas
+
+Archivos – Auxiliares – Sectores y Subsectores
+
+Archivos – Auxiliares – Series Facturacion
+
+Archivos – Auxiliares – Situaciones
+
+Archivos – Auxiliares – Sustratos
+
+Archivos – Auxiliares – Tarifas de precios
+
+Archivos – Auxiliares – Tipos de siembra
+
+Archivos – Auxiliares – Ubicaciones
+
+Archivos – Auxiliares – Zonas
+
+Archivos – Otros – Departamentos
+
+Archivos – Otros – Empresa
+
+Archivos – Otros – Invernaderos
+
+Archivos – Otros – Secciones Trabajadores
+
+Archivos – Otros – Tareas Per
+
+Producción - Partes – Partes de Siembra
+
+Produccion - Partes - Partes Extendido
+
+Produccion - Partes - Partes de tratamiento
+
+Produccion - Partes - Partes de Injertos
+
+Produccion - Partes - Partes de Visita
+
+Produccion - Partes - Partes Varios
+
+Produccion-Partes-Partes Extension Mult.
+
+Produccion - Partes - Partes Estructurales
+
+Produccion - Partes - Partes Consumo
+
+Produccion - Otras - Partes Muestreo
+
+Produccion - Otras - Cortes Cebolla
+
+Produccion - Otras - Planta Enferma
+
+Produccion - Utilidades - Partes Sacudir
+
+Produccion - Utilidades - Parte Manipulado
+
+Produccion - Controles - Costes
+
+Produccion - Controles - Resumen Costes
+
+Produccion- Controles - Historico Costes
+
+Injertos Y Abonados - Utilidades – Medias bandejas
+
+Injertos Y Abonados - Utilidades – Escandallo Injertos
+
+Injertos Y Abonados - Injertos por fases – Técnicos fases
+
+Injertos Y Abonados - Injertos por fases – Partes injertos sandía
+
+Injertos Y Abonados - Injertos por fases – Partes injertos tomate
+
+Ventas – Gestion – Encargos de siembra
+
+Ventas – Gestion – Orden de Recogida
+
+Ventas – Gestion – Albaranes de Venta
+
+Ventas – Gestion – Devoluciones clientes
+
+Ventas – Gestion – Registro de Facturas Emitidas
+
+Ventas - Otros - Partidas
+
+Ventas - Otros - Proforma
+
+Ventas – Otros – Reservas
+
+Ventas – Gestión Comercial – Futuros Clientes
+
+Cobros – General – Cartera de Cobros
+
+Cobros – General – Remesas Cobros
+
+Cobros - General - Control de impagos
+
+Cobros – Caja – Movimientos Caja Bancos
+
+Compras – Gestión Compras – Albaranes Compra
+
+Compras – Gestión Compras – Pedidos a Proveedor
+
+Compras – Facturación Compras – Registro de Facturas Recibidas
+
+Compras – Facturación Compras – Facturas de Gastos
+
+Compras – General Pagos – Cartera de pagos
+
+Compras – General Pagos – Remesas de Pago
+
+Ornamental – Compras – Albarán Compra Ornamental
+
+Ornamental – Ventas – Albarán venta Ornamental
+
+Ornamental – Ventas – Registro Facturas Emitidas
+
+Ornamental – Producción – Partes
+
+Almacen - General - Tratamientos fitosanitarios
+
+Almacen - General - Telefonos
+
+Almacen - Almacen - Recuento inventario
+
+Almacén - Almacén - Recuentos plantas
+
+Almacen - Almacen - Consumo
+
+Almacén - Varios - Remesas
+
+Almacén - Varios - Tarifas de precios
+
+Almacén - Varios - Carros
+
+Almacén - Varios - Depositos
+
+Almacén – Maquinaria - Maquinaria
+
+Almacén – Maquinaria - Tipo Maquinaria
+
+Almacén – Maquinaria - Reparaciones
+
+Almacén – Maquinaria - Partes Gasoil
+
+Almacén – Maquinaria - Entregas Material(EPI)
+
+Partes y Tratamientos – Personal – Fichajes personal
+
+Partes y Tratamientos – Aplicadores Fitosanitarios
+
+Partes y Tratamientos – Equipos Fitosanitarios
+
+
+
+
+
+
+
+

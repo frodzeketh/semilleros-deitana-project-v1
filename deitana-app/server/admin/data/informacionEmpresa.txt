@@ -14,16 +14,33 @@ Facundo es el ingeniero programador que hace que el asistente evolucione y el cr
 
 Ambos hermanos han tomado las riendas de la compañía, consolidándola como una referencia en el sector agrícola gracias a su apuesta por la innovación, la calidad en los procesos de producción y el compromiso con el medio ambiente. Bajo su liderazgo, Semilleros Deitana ha fortalecido su presencia en el mercado y ampliado su infraestructura, manteniendo siempre una gestión familiar cercana y responsable.
 
+==============================
+
 SECCIÓN: ACCIONES COMERCIALES
-DESCRIPCIÓN GENERAL: Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Acciones Comerciales
+DESCRIPCIÓN GENERAL: Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con los clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido. Al ingresar en este menu, solo hay una pestaña llamada "General" en donde se encuentran los campos vacios para completar. Esta seccion, contiene un campo a rellenar que se observan las observaciones de las acciones comerciales registradas.
+Menú lateral derecho – Funcionalidades de los botones
+Flechas izquierda / derecha
+Permiten navegar entre los registros guardados, ya sea desde el más reciente al más antiguo o viceversa.
+Modificar (icono de hoja con lápiz)
+Habilita la edición de los datos del registro seleccionado.
+Nuevo (icono de reloj con flecha)
+Crea un nuevo registro en blanco para ingresar información.
+Grabar (icono de signo “+” en color verde)
+Guarda la información ingresada de un nuevo registro.
+Borrar (icono de “X” en color rojo)
+Elimina el registro seleccionado.
+Listado (icono de hoja)
+Muestra un listado de registros disponibles y permite aplicar filtros para facilitar la búsqueda.
+Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Acciones Comerciales
 
 Columnas:
 id: Identificador único de la acción comercial
 ACCO_DENO: Denominación o tipo de acción comercial
-ACCO_CDCL: Código del cliente
-ACCO_CDVD: Código del vendedor
+ACCO_CDCL: Código del cliente, al poner el codigo de cliente se completara la denominación del mismo.
+ACCO_CDVD: Código del vendedor, al poner el codigo de vendedor se completara la denominación del mismo.
 ACCO_FEC: Fecha de la acción
 ACCO_HOR: Hora de la acción
+Obvservaciones:
 
 Ejemplo de una Acción Comercial:
 ID: 0000000293
@@ -32,9 +49,13 @@ Código Cliente: 001
 Código Vendedor: 007
 Fecha: 2024-03-15
 Hora: 10:30
+Observaciones: Informo de siembra hoy. ok
+
+==============================
 
 SECCIÓN: ARTÍCULOS
-DESCRIPCIÓN GENERAL: Los artículos representan todo tipo de productos que comercializa la empresa. Pueden ser productos fitosanitarios, semillas, injertos, portainjertos, sustratos, fertilizantes, tipos de semillas, algunas de las caracteristicas es que los injertos pueden tener denominacion como INJ, tambien PORTAINJ, pies de tomate, muchos tipos de pie de tomate(Un pie es literalmente la parte inferior de la planta, es decir, el sistema radicular y el tallo base sobre el que se injerta otra variedad). Los articulos, semillas, injertos, tienen un proveedor designado, no son nuestros, sino que el campo de proveedor almacena quien provee estos articulos, semillas, etc, en caso de que este campo se encuentre vacio, es simplemente por que no se registro un proveedor. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Artículos
+DESCRIPCIÓN GENERAL: Los artículos representan todo tipo de productos que comercializa la empresa. Pueden ser productos fitosanitarios, semillas, injertos, portainjertos, sustratos, prestaciones de servicios tantos internos como externos, herramientas, fertilizantes, tipos de semillas, algunas de las caracteristicas es que los injertos pueden tener denominacion como INJ, tambien PORTAINJ, pies de tomate, muchos tipos de pie de tomate(Un pie es literalmente la parte inferior de la planta, es decir, el sistema radicular y el tallo base sobre el que se injerta otra variedad). Los articulos, semillas, injertos, tienen un proveedor designado, no son nuestros, sino que el campo de proveedor almacena quien provee estos articulos, semillas, etc, en caso de que este campo se encuentre vacio, es simplemente por que no se registro un proveedor. Al ingresar en este menu, hay pestañas "General" que es la inicial, "Toxicidad / Otros datos", "Imagen", "Precios", "Historico Compras", "Historico Ventas", "Tarifas de precios Ornamental" y "Tabla conversión".
+Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Artículos
 
 id: "Código único del artículo (Clave Primaria). "
 AR_DENO: "Denominación o descripción del artículo."
@@ -51,13 +72,20 @@ AR_DCG: "Tiempo de germinación en días."
 
 Ejemplo de un Articulo, semilla, planta, portainjerto, injerto, etc.
 
-ID: 00000013
-Denominación: TOMATE AMARELO
-Codigo de barra: 7100000219990
+ID: 00000014
+Denominación: INJ-TOM.PRISTYLA POD.##/MULTIFORT
+Referencia:
+Codigo de barra: 7100000000147
+Grupo: 0010
+Familia: 0010
 Iva: 1
 Codigo del proveedor: 00359
 Familia: 0015
 
+
+==============================
+
+SECCIÓN: ARTICULOS REDUCIDA
 
 SECCIÓN: CLIENTES
 DESCRIPCIÓN GENERAL: Los clientes son las personas o empresas con las que Semilleros Deitana comercializa sus productos. La información de los clientes incluye sus datos de contacto, ubicación y detalles comerciales relevantes para establecer y mantener una relación fluida. Es fundamental tener un registro completo para la gestión de ventas, seguimiento y comunicación. Cada cliente tiene un código único que lo identifica en nuestra base de datos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Clientes
@@ -94,6 +122,11 @@ País: ESPAÑA
 IBAN: ES1234
 Tarifa: A
 
+==============================
+
+SECCIÓN: CLIENTES REDUCIDA
+
+==============================
 
 SECCIÓN: FAMILIAS Y GRUPOS
 DESCRIPCIÓN GENERAL: Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Familias y Grupos
@@ -110,6 +143,7 @@ Denominación: TOMATE
 Nombre en Latín: Solanum lycopersicum
 Porcentaje de Germinación: 95
 
+==============================
 
 SECCIÓN: FORMAS DE PAGO/COBRO
 DESCRIPCIÓN GENERAL: La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Formas de pago/cobro
@@ -128,6 +162,7 @@ Número de Vencimientos: 1
 Gestiona en Cartera: NO
 Referencia Web: N/A
 
+==============================
 
 SECCIÓN: NUESTROS BANCOS
 DESCRIPCIÓN GENERAL: Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Nuestros bancos
@@ -170,6 +205,7 @@ Riesgo: BAJO
 Tipo: PRINCIPAL
 Observaciones: Banco principal de la empresa
 
+==============================
 
 SECCIÓN: PROVEEDORES
 DESCRIPCIÓN GENERAL: La sección de proveedores se encarga de gestionar toda la información de las empresas o personas que suministran productos o servicios a Semilleros Deitana. Aquí se incluyen sus datos de contacto y otros detalles comerciales esenciales para una relación fluida y eficiente, como la forma de pago preferida y los datos bancarios. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Proveedores
@@ -208,8 +244,9 @@ País: ESPAÑA
 Forma de Pago: 001
 IBAN: ES9876543210987654321098
 
+==============================
 
-SECCIÓN: VENDEDORES
+SECCIÓN: VENDEDORES/USUARIOS
 DESCRIPCIÓN GENERAL: La sección de vendedores en el sistema ERP de Semilleros Deitana es el punto central para gestionar la información de todo el personal interno que realiza funciones de venta o que, simplemente, tiene acceso al sistema como usuario. Aquí se almacena la información clave de cada individuo, facilitando la administración de sus roles y datos de contacto. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Vendedores/Usuarios
 
 Columnas:
@@ -228,8 +265,7 @@ Población: ALICANTE
 Provincia: ALICANTE
 Número Técnico Asociado: 003
  
-
-
+==============================
 
 SECCIÓN: BANDEJAS
 DESCRIPCIÓN GENERAL: Esta sección es un catálogo de las bandejas que utiliza la empresa. Esta bandejas la utilizamos en siembras, partidas, etc. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Bandejas
@@ -246,7 +282,9 @@ Denominación: BANDEJA FORESTAL 104 ALV
 Alvéolos: 104
 Reutilizable: SI
 
+==============================
 
+SECCIÓN: CALENDARIOS
 
 SECCIÓN: CASAS COMERCIALES
 DESCRIPCIÓN GENERAL: La sección de Casas Comerciales (casas_com) se enfoca en la gestión y el almacenamiento de la información de todas las empresas o entidades con las que Semilleros Deitana mantiene una relación comercial. Es vital para llevar un registro organizado de estos socios, incluyendo sus datos identificativos y de contacto, lo que facilita la colaboración y el seguimiento. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Casas Comerciales
@@ -279,6 +317,7 @@ CIF: B41987654
 Email: info@agrotech.es
 Web: www.agrotech.es
 
+==============================
 
 SECCIÓN: CATEGORÍAS
 DESCRIPCIÓN GENERAL: Define las categorías laborales utilizadas en Semilleros Deitana para establecer condiciones contractuales y económicas de los trabajadores (salario, horarios, costes). No son categorías de producto. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Categorias
@@ -297,6 +336,19 @@ Salario Diario: 45.00
 Coste Hora Normal: 5.63
 Coste Hora Extra: 6.75
 
+==============================
+
+SECCIÓN: CLASIFICACIÓN CLI
+
+==============================
+
+SECCIÓN: CODIGO POSTAL
+
+==============================
+
+SECCIÓN: CONCEPTOS INCIDENCIAS
+
+==============================
 
 SECCIÓN: CRÉDITOS CAUCIÓN
 DESCRIPCIÓN GENERAL: Gestión y seguimiento de seguros de crédito (créditos caución) asociados a clientes para proteger frente al riesgo de impago. Permite registrar y consultar pólizas o acuerdos de seguro de crédito específicos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Créditos caución
@@ -313,9 +365,9 @@ Código Cliente: 001
 Días de Crédito: 30
 Tipo: A (Asegurado)
 
+==============================
 
-
-SECCIÓN: ALMACENES
+SECCIÓN: ALMACENES/DELEGACIONES
 DESCRIPCIÓN GENERAL: La sección de almacenes es fundamental para representar las distintas delegaciones o ubicaciones físicas y operativas de la empresa. Su propósito principal es servir como una referencia clara para identificar la localización específica asociada a cualquier acción o transacción dentro del sistema ERP. Además, permite vincular recursos financieros por defecto, como cajas y cuentas bancarias, a cada almacén. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Delegaciones
 
 Columnas:
@@ -330,6 +382,7 @@ Denominación: ALMACÉN CENTRAL
 Caja por Defecto: CAJA PRINCIPAL
 Banco por Defecto: BANCO AGRARIO
 
+==============================
 
 SECCIÓN: DISPOSITIVOS MÓVILES
 DESCRIPCIÓN GENERAL: Gestión centralizada de dispositivos móviles (PDAs u otros terminales portátiles) utilizados en Semilleros Deitana para operaciones en campo y gestión móvil. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Dispositivos móviles
@@ -356,8 +409,7 @@ IP: 192.168.1.100
 Clave: PDA001
 Estado: 0 (Activo)
 
-
-
+==============================
 
 SECCIÓN: ENVASES DE VENTA
 DESCRIPCIÓN GENERAL: La sección de Envases de Venta (envases_vta) es un catálogo de los distintos tipos de envases y formatos que utilizamos para comercializar nuestras semillas y productos. Además de describir sus características físicas y comerciales, estos envases también son fundamentales para otras operaciones internas como siembras y la gestión de partidas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Envases de venta
@@ -375,6 +427,16 @@ Denominación: SOBRE GRANDE SEMILLAS
 Unidad de Medida: SB
 Cantidad: 100
 Unidades por Presentación: 10
+
+==============================
+
+SECCIÓN: FINCAS CLIENTES
+
+==============================
+
+SECCIÓN: INCIDENCIAS FRAS
+
+==============================
 
 
 SECCIÓN: INVERNADEROS
@@ -399,6 +461,7 @@ Total Secciones: 5
 Total Filas: 20
 Secciones Excluidas de Tratamientos: SECCION 3
 
+==============================
 
 SECCIÓN: MOTIVOS
 DESCRIPCIÓN GENERAL: Catálogo estandarizado de causas o razones predefinidas utilizadas para documentar y clasificar eventos, acciones o situaciones internas (Ej: plagas, descartes, incidencias). Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Motivos
@@ -411,6 +474,7 @@ Ejemplo de un Motivo:
 ID: 0001
 Denominación: PLAGA
 
+==============================
 
 SECCIÓN: PAÍSES
 DESCRIPCIÓN GENERAL: Catálogo maestro de referencia con el listado de países relevantes para la actividad comercial y productiva de la empresa (origen/destino productos, ubicación clientes/proveedores). Diseñada para servir como soporte a otras tablas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Paises
@@ -422,6 +486,8 @@ PA_DENO: Denominación o nombre completo del país (Ej: FRANCIA, ESPAÑA)
 Ejemplo de un País:
 ID: 001
 Denominación: ESPAÑA
+
+==============================
 
 SECCIÓN: PROCESOS
 DESCRIPCIÓN GENERAL: Define las etapas o procedimientos del ciclo productivo agrícola (semillero), como germinación o trasplante. Contiene campos que controlan la lógica interna del ERP para estas etapas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Procesos
@@ -452,7 +518,7 @@ Es Siembra: S
 Días Siembra: 5
 Observaciones: (Campo obsoleto)
 
-
+==============================
 
 SECCIÓN: PRODUCTOS FITOSANITARIOS
 DESCRIPCIÓN GENERAL: Esta sección, referida internamente como tipo_trat, se dedica a la gestión y el registro detallado de los productos fitosanitarios utilizados en los tratamientos agronómicos de Semilleros Deitana. Su objetivo es centralizar la información técnica y de uso de estos productos, ya sean para prevención, control de plagas o enfermedades, garantizando una aplicación segura y una trazabilidad completa. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Productos Fitosanitarios
@@ -482,6 +548,7 @@ Especies: CALABACÍN - MELÓN
 Agentes Nocivos: FITOPHTHORA - PITIUM
 Nº Registro: 21345
 
+==============================
 
 SECCIÓN: RUTAS
 DESCRIPCIÓN GENERAL: Catálogo de rutas de distribución o transporte utilizadas para la entrega de productos a clientes. Permite organizar y optimizar las entregas por zonas geográficas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Rutas
@@ -496,6 +563,7 @@ ID: 001
 Denominación: RUTA CON PORTES
 Descripción:
 
+==============================
 
 SECCIÓN: SECCIÓN TAREAS
 DESCRIPCIÓN GENERAL: Catálogo de las diferentes secciones o áreas de tareas dentro de la empresa. Permite clasificar y organizar las tareas por áreas funcionales. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Sección Tareas
@@ -508,8 +576,9 @@ Ejemplo de una Sección de Tarea:
 ID: 01
 Denominación: LOGÍSTICA
 
+==============================
 
-SECCIÓN: SECTORES
+SECCIÓN: SECTORES Y SUBSECTORES
 DESCRIPCIÓN GENERAL: La sección de sectores define las clasificaciones de origen para pedidos y clientes. Es un elemento crucial para realizar análisis, segmentación y seguimiento por canal dentro de Semilleros Deitana. Aunque la gestión directa no siempre es visible en el entorno de prueba, los datos de estos sectores existen y se utilizan activamente para fines de clasificación. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Sectores y Subsectores
 
 Columnas:
@@ -520,6 +589,15 @@ Ejemplo de un Sector:
 ID: 002
 Denominación: PROFESIONAL
 
+==============================
+
+SECCIÓN: SERIES FACTURACIÓN
+
+==============================
+
+SECCIÓN: SITUACIONES
+
+==============================
 
 SECCIÓN: SUSTRATOS
 DESCRIPCIÓN GENERAL: La sección de sustratos se encarga de la gestión y el registro de los materiales o mezclas que utilizamos como medio de cultivo. Es una parte esencial del sistema para el control de costes, la fijación de precios y la planificación de materiales necesarios en los procesos de producción. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Sustratos
@@ -536,13 +614,16 @@ Denominación: SUST. ESPECIAL INICIO
 PVP por alvéolo: 0.05
 Coste por alvéolo: 0.03
 
+==============================
 
-SECCIÓN: TARIFAS
+SECCIÓN: TARIFAS DE PRECIOS
 DESCRIPCIÓN GENERAL: La sección de Tarifas (tarifas) registra las diferentes tarifas de precios disponibles en el sistema. Cada tarifa tiene un identificador único y una denominación que la describe, permitiendo una clara distinción entre las políticas de precios aplicadas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tarifas de precios
 
 Columnas:
 ID: Identificador único de la tarifa. Es la clave primaria.
 TP_DENO: Denominación o descripción de la tarifa (ej: 'Tarifa A', 'Tarifa por Volumen').
+
+==============================
 
 SECCIÓN: TIPOS DE SIEMBRA
 DESCRIPCIÓN GENERAL: Catálogo de los diferentes tipos de siembra utilizados en los procesos productivos. Define las modalidades y técnicas de siembra aplicadas en la empresa. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Tipos de siembra
@@ -555,6 +636,7 @@ Ejemplo de un Tipo de Siembra:
 ID: 5001
 Denominación: SIEMBRA DIRECTA
 
+==============================
 
 SECCIÓN: UBICACIONES
 DESCRIPCIÓN GENERAL: La sección de ubicaciones es un catálogo centralizado de todas las localizaciones físicas o lógicas relevantes para las operaciones de la empresa, incluyendo invernaderos, semilleros y almacenes. Proporciona una referencia espacial estandarizada, crucial para organizar, trazar y optimizar todas las actividades y recursos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Ubicaciones
@@ -567,6 +649,7 @@ Ejemplo de una Ubicación:
 ID: 003
 Denominación: SEMILLERO C
 
+==============================
 
 SECCIÓN: ZONAS
 DESCRIPCIÓN GENERAL: La sección de zonas es un catálogo diseñado para organizar áreas físicas o lógicas dentro de las operaciones de la empresa, como zonas de trabajo, producción o almacenamiento. Es fundamental para la estructuración espacial, la mejora de la trazabilidad y la optimización de la gestión de inventario y tareas. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Auxiliares – Zonas
@@ -582,6 +665,7 @@ ID: 001
 Denominación: ZONA SEMILLERO A
 Subzona: SUB-A1
 
+==============================
 
 SECCIÓN: DEPARTAMENTOS
 DESCRIPCIÓN GENERAL: La sección de departamentos cataloga las diferentes áreas o unidades funcionales dentro de la empresa, como administración, producción, etc. Es esencial para asignar responsabilidades, gestionar usuarios y roles, clasificar tareas y generar reportes segmentados por área. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Otros – Departamentos
@@ -594,6 +678,7 @@ Ejemplo de un Departamento:
 ID: 002
 Denominación: PRODUCCIÓN
 
+==============================
 
 SECCIÓN: SECCIONES DE TRABAJADORES
 DESCRIPCIÓN GENERAL: La sección de secciones de trabajadores cataloga las áreas funcionales, grupos o secciones internas a las que pertenece el personal de la empresa. Es fundamental para la gestión de Recursos Humanos, la asignación de tareas específicas y la generación de reportes de personal segmentados por su área de trabajo. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Otros – Secciones Trabajadores
@@ -606,7 +691,7 @@ Ejemplo de una Sección de Trabajadores:
 ID: 001
 Denominación: ADMINISTRACION
 
-
+==============================
 
 SECCIÓN: TAREAS DE PERSONAL
 DESCRIPCIÓN GENERAL: La sección de Tareas de Personal (tareas_per) se encarga de la gestión detallada de las tareas internas que realiza el personal de Semilleros Deitana. Cada tarea se vincula a una "Sección de Tarea" específica, que se encuentra en la tabla tareas_seccion. Esta estructura es esencial para la elaboración de partes de trabajo, el seguimiento preciso del tiempo y los recursos invertidos, y para el análisis de la productividad general. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Otros – Tareas Per
@@ -617,13 +702,6 @@ TARP_DENO: Denominación o nombre de la tarea (por ejemplo: "H.CARRETILLERO", "H
 TARP_SECC: Código de la sección de tarea a la que pertenece esta tarea. Este campo es una clave foránea que se relaciona con la tabla tareas_seccion.
 TARP_TIPO: Tipo general de tarea (por ejemplo: 'Otros', 'Siembra', 'Mantenimiento').
 
-Relaciones:
-Tareas_Seccion:
-Tabla Relacionada: tareas_seccion
-Tipo de Relación: Muchos a uno (Varias tareas de personal pueden pertenecer a una misma sección de tarea).
-Campo de Enlace Local: TARP_SECC
-Campo de Enlace Externo: id (o TARS_COD en la tabla tareas_seccion)
-Descripción: Esta relación vincula cada tarea con su sección correspondiente. Permite obtener la denominación de la sección (TARS_DENO) a partir del código TARP_SECC registrado en la tarea.
 
 Ejemplo de una Tarea de Personal:
 ID: 001
@@ -631,10 +709,9 @@ Denominación: H. CARRETILLERO
 Código Sección: 01 (Sección de Logística, por ejemplo)
 Tipo de Tarea: Otros
 
+==========================================================================================
 
-----------------------------------------------
-
-SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE SIEMBRA
+SECCIÓN: PARTES DE SIEMBRA
 DESCRIPCIÓN GENERAL: Gestiona la información relacionada con los partes de siembra realizados en la empresa. Registra datos técnicos y operativos de cada evento de siembra, incluyendo responsables, materiales utilizados, ubicación y estado. Es fundamental para la trazabilidad de la producción agrícola, el control de insumos y el seguimiento de la actividad productiva. Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Siembra.
 
 Columnas:
@@ -661,9 +738,9 @@ Tipo: A
 Lote: R:11776
 Casa Comercial: 12 (AGROINSUMOS DEL NORTE S.A.)
 
+==============================
 
-
-SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE EXTENDIDO
+SECCIÓN: PARTES DE EXTENDIDO
 DESCRIPCIÓN GENERAL: Gestiona la información de los partes de extendido, que documentan los traslados internos de plantas o bandejas entre invernaderos de origen y destino. Registra datos sobre responsables, fechas, horas, tipos de operación, partidas y ubicaciones involucradas. Es fundamental para el control de inventario de plantas en crecimiento, la planificación del espacio en los invernaderos y la trazabilidad de la producción. Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Extendido.
 
 Columnas:
@@ -686,9 +763,9 @@ Tipo: P
 Invernadero Origen: A2 (A2 Pg28-Par1000)
 Invernadero Destino: CA5 (CÁMARA 5)
 
+==============================
 
-
-SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE TRATAMIENTO
+SECCIÓN: PARTES DE TRATAMIENTO
 DESCRIPCIÓN GENERAL: Registra los partes de tratamiento fitosanitario realizados en la empresa. Incluye información general del parte, personal responsable, aplicador y equipo utilizado, así como el problema fitosanitario detectado y el tratamiento aplicado. Contiene además relaciones con las zonas tratadas, los productos utilizados y las familias a tratar. Es fundamental para garantizar la trazabilidad de los tratamientos, el cumplimiento normativo y la correcta gestión fitosanitaria. Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Tratamiento.
 
 Columnas:
@@ -725,16 +802,13 @@ Equipo: 07 (MOCHILA PULVERIZADORA STIHL)
 Problema Fitosanitario: Mildiu en hojas jóvenes
 Tratamiento: 112 (FUNGICIDA SISTÉMICO COBRE 50%)
 
+==============================
 
-
-
--------------------
 Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Injerto
 
-------------------
+==============================
 
-
-SECCIÓN: PRODUCCIÓN – PARTES – PARTES DE VISITA
+SECCIÓN: PARTES DE VISITA
 DESCRIPCIÓN GENERAL: Registra las visitas realizadas, documentando la fecha, hora, el usuario responsable de la gestión, y el cliente o proveedor asociado. Además, permite vincular las partidas específicas que fueron objeto de la visita. Esta información es fundamental para el seguimiento de relaciones comerciales, la trazabilidad de interacciones y la gestión de visitas programadas o realizadas. Se encuentra en el ERP en la sección del menú Producción – Partes – Partes de Visita.
 
 Columnas:
@@ -754,27 +828,147 @@ Cliente Asociado: 120 (HORTALIZAS LA HUERTA S.L.)
 Proveedor Asociado: NULL
 Partidas visitadas: Lote 2235 – Invernadero 4
 
+==============================
 
-
-
--------------------
 Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes Varios
 
-------------------
+==============================
 
--------------------
 Esta información se encuentra en el ERP en la sección del menú Producción – Partes – Partes Extendido Mult
 
-------------------
+==============================
 
--------------------
+partes estructurales
 
+==============================
 
-------------------
+Partes de consumos
 
+==============================
 
---------------------------------------------------------
+SECCIÓN: VALIDAR PREPARTIDA
 
+==============================
+
+SECCIÓN: VALIDAR SIEMBRA
+
+==============================
+
+SECCIÓN: VALIDAR SIEMBRA TACTIL
+
+==============================
+
+SECCIÓN: VALIDAR EXTENDIDO
+
+==============================
+
+SECCIÓN: PARTE MUESTREO
+
+==============================
+
+SECCIÓN: PARTE CORTES CEBOLLA
+
+==============================
+
+SECCIÓN: PLANTA ENFERMA
+
+==============================
+
+SECCIÓN: PREVISION BANDEJAS INV
+
+==============================
+
+SECCIÓN: CALCULADOR FECHAS
+
+==============================
+
+SECCIÓN: CALCULADORA DE PRECIOS
+
+==============================
+
+SECCIÓN: PARTIDAS EN CAMARA
+
+==============================
+
+SECCIÓN: TERMINAR PARTIDAS
+
+==============================
+
+SECCIÓN: PARTES LAVADO
+
+==============================
+
+SECCIÓN: PARTES SACUDIR
+
+==============================
+
+SECCIÓN:PARTE MANIPULADO
+
+==============================
+
+SECCIÓN: ESTADO DE LAS PARTIDAS
+
+==============================
+
+SECCIÓN: LISTA AVISOS DE PARTIDAS
+
+==============================
+
+SECCIÓN:PRODUCCIÓN LAVADO
+
+==============================
+
+SECCIÓN: ESTADO DE LAS CARGAS
+
+==============================
+
+SECCIÓN: COSTES
+
+==============================
+
+SECCIÓN: RESUMEN COSTES
+
+==============================
+
+SECCIÓN: HISTORICO COSTES
+
+==============================
+
+SECCIÓN: PARTES CONSUMO
+
+==========================================================================================
+
+SECCIÓN: PROGRAMACION INJERTOS
+
+==============================
+
+SECCIÓN: VALIDAR PREPARTIDAS INJERTOS
+
+==============================
+
+SECCIÓN: VALIDAR INJERTOS
+
+==============================
+
+SECCIÓN: RESUMEN PORTAINJERTOS
+
+==============================
+
+SECCIÓN: CALCULADOR DE FECHAS INJERTOS
+
+==============================
+
+SECCIÓN: CALCULADOR DE FECHAS INJERTOS
+
+==============================
+
+SECCIÓN: ASIGNACION DE INJERTOS
+
+==============================
+
+SECCIÓN: LIQUIDACION INJERTADORAS
+
+==============================
 
 SECCIÓN: INJERTOS Y ABONADOS – UTILIDADES – MEDIAS BANDEJAS
 DESCRIPCIÓN GENERAL: Registra información sobre medias bandejas, incluyendo el código de la partida, cantidad de alveolos, huecos, etiqueta, cantidad de plantas, fecha y hora de registro, y el operario asociado. El identificador principal suele coincidir con el código de partida. Esta información es fundamental para el seguimiento del inventario de medias bandejas y la trazabilidad de plantas dentro de la producción. Se encuentra en el ERP en la sección del menú Injertos y Abonados – Utilidades – Medias Bandejas.
@@ -800,6 +994,783 @@ Cantidad de Plantas: 0
 Fecha: 2021-06-02
 Hora: 11:48
 Operario: 0002
+
+==============================
+
+SECCIÓN: ESCANDALLO INJERTO
+
+==============================
+
+SECCIÓN: TECNICO FASES 
+
+==============================
+
+SECCIÓN: CAMBIO FASES
+
+==============================
+
+SECCIÓN: PARTES DE FASE DE INJERTO
+
+==============================
+
+SECCIÓN: PARTES INJERTOS SANDIAS
+
+==============================
+
+SECCIÓN: PARTES INJERTOS TOMATES
+
+==============================
+
+SECCIÓN: TEORIA DEL ABONADO
+
+==============================
+
+SECCIÓN: ABONOS
+
+==========================================================================================
+
+SECCIÓN: ENCARGOS DE SIEMBRA
+
+==============================
+
+SECCIÓN: ORDENES PTES
+
+==============================
+
+SECCIÓN: PRE CARGAS
+
+==============================
+
+SECCIÓN: ORDEN DE RECOGIDA
+
+==============================
+
+SECCIÓN: ALBARANES DE VENTA
+
+==============================
+
+SECCIÓN: DEVOLUCIONES CLIENTES
+
+==============================
+
+SECCIÓN: FACTURACIÓN
+
+==============================
+
+SECCIÓN: REGISTRO FACTURAS EMITIDAS
+
+==============================
+
+SECCIÓN: PARTIDAS
+
+==============================
+
+SECCIÓN: PARTIDAS EN VENTA
+
+==============================
+
+SECCIÓN: PROFORMA
+
+==============================
+
+SECCIÓN: RESUMEN PARTIDAS
+
+==============================
+
+SECCIÓN: RESERVAS
+
+==============================
+
+SECCIÓN: TARJETAS
+
+==============================
+
+SECCIÓN: EXTRACTO DE TARJETAS
+
+==============================
+
+SECCIÓN: COMPARATIVA PARTIDAS
+
+==============================
+
+SECCIÓN: CUADRO DE MANDOS
+
+==============================
+
+SECCIÓN: CLASIFICACION CLIENTES
+
+==============================
+
+SECCIÓN: PARTIDAS DE CLIENTE
+
+==============================
+
+SECCIÓN: INFORME TRAT. FITOSANITARIO
+
+==============================
+
+SECCIÓN: CLASIFICACION CLIENTES SOL/SEM
+
+==============================
+
+SECCIÓN: CAMPAÑAS
+
+==============================
+
+SECCIÓN: TIPOS TAREAS CRM
+
+==============================
+
+SECCIÓN: ACCIONES COMERCIALES
+
+==============================
+
+SECCIÓN: TAREAS CRM
+
+==============================
+
+SECCIÓN: PLANNING CRM
+
+==============================
+
+SECCIÓN: NOTAS CRM
+
+==============================
+
+SECCIÓN: FUTUROS CLIENTES
+
+==============================
+
+SECCIÓN: RESULTADOS VENDEDORES
+
+==============================
+
+SECCIÓN: CUADROS RESULTADOS COMERCIAL
+
+==========================================================================================
+
+SECCIÓN: CARTERA DE COBROS
+
+==============================
+
+SECCIÓN: REMESAS DE COBROS
+
+==============================
+
+SECCIÓN: COBRAR
+
+==============================
+
+SECCIÓN: CONTROL DE IMPAGOS
+
+==============================
+
+SECCIÓN: MOVIMIENTO CAJAS BANCO
+
+==============================
+
+SECCIÓN: CUADRANTE DE CAJA
+
+==============================
+
+SECCIÓN: PLAZO MEDIO DE COBRO
+
+==============================
+
+SECCIÓN: PREVISION DE TESORERIA
+
+==============================
+
+SECCIÓN: PREVISION POR BANCO
+
+==========================================================================================
+
+SECCIÓN: ALBARANES COMPRA
+
+==============================
+
+SECCIÓN: PEDIDOS A PROVEEDOR
+
+==============================
+
+SECCIÓN: MARGENES
+
+==============================
+
+SECCIÓN: REGISTRO DE FACTURAS RECIBIDAS
+
+==============================
+
+SECCIÓN: CONFORMACION DE FACTURAS RECIBIDAS
+
+==============================
+
+SECCIÓN: FACTURAS DE GASTOS
+
+==============================
+
+SECCIÓN: SEGUIMIENTO DE FACTURAS RECIBIDAS
+
+==============================
+
+SECCIÓN: RESUMEN LIQUIDACION IVA
+
+==============================
+
+SECCIÓN: PLAZO MEDIO DE PAGO
+
+==============================
+
+SECCIÓN: CARTERA DE PAGOS
+
+==============================
+
+SECCIÓN: REMESAS DE PAGOS
+
+==============================
+
+SECCIÓN: CREAR PAGOS DE FRAS REPOSICION
+
+==========================================================================================
+
+SECCIÓN: ARTICULOS
+
+==============================
+
+SECCIÓN: VENTAS GARDEN
+
+==============================
+
+SECCIÓN: COMP. VENTAS
+
+==============================
+
+SECCIÓN: COMPRAS GARDEN
+
+==============================
+
+SECCIÓN: TRASVASES UBICACIONES
+
+==============================
+
+SECCIÓN: INVENTARIO ORNAMENTAL
+
+==============================
+
+SECCIÓN: SITUACION ARTICULOS ORNAMENTAL
+
+==============================
+
+SECCIÓN: MODIF. DATOS
+
+==============================
+
+SECCIÓN: RECARGA TARJETA
+
+==============================
+
+SECCIÓN: PEDIDO PROVEEDOR ORNAMENTAL
+
+==============================
+
+SECCIÓN: ALBARAN COMPRA ORNAMENTAL
+
+==============================
+
+SECCIÓN: CONFORMACION FACTURAS RECIBIDAS
+
+==============================
+
+SECCIÓN: REGISTRO FACTURAS RECIBIDAS
+
+==============================
+
+SECCIÓN: PROFORMA ORNAMENTAL
+
+==============================
+
+SECCIÓN: PEDIDOS CLIENTES ORNAMENTAL
+
+==============================
+
+SECCIÓN: PEDIDOS WEB
+
+==============================
+
+SECCIÓN: PEDIDOS WEB
+
+==============================
+
+SECCIÓN: ALBARAN VENTA ORNAMENTAL
+
+==============================
+
+SECCIÓN: FACTURACION
+
+==============================
+
+SECCIÓN: REGISTRO FACTURAS EMITIDAS
+
+==============================
+
+SECCIÓN: PARTIDAS ORNAMENTALES
+
+==============================
+
+SECCIÓN: PARTES
+
+==============================
+
+SECCIÓN: PLANIFICACION PRODUCCION
+
+==============================
+
+SECCIÓN: MOVIMIENTOS DE ENVASES
+
+==============================
+
+SECCIÓN: SALIDAS
+
+==============================
+
+SECCIÓN: ENTRADAS
+
+==========================================================================================
+
+SECCIÓN: PROTOCOLOS APLICACION
+
+==============================
+
+SECCIÓN: TIPO DE GASTO
+
+==============================
+
+SECCIÓN: TRATAMIETO FITOSANITARIOS
+
+==============================
+
+SECCIÓN: TELEFONOS
+
+==============================
+
+SECCIÓN: ASIGNACION TELEFONOS
+
+==============================
+
+SECCIÓN: DISPOSITIVOS PDA'S
+
+==============================
+
+SECCIÓN: ASIGNACION DISPOSITIVOS
+
+==============================
+
+SECCIÓN: ASIGNACION DISPOSITIVOS HOY
+
+==============================
+
+SECCIÓN: RECUENTOS DE INVENTARIO
+
+==============================
+
+SECCIÓN: RECUENTO PLANTA
+
+==============================
+
+SECCIÓN: TRAVASES DE ALMACENES
+
+==============================
+
+SECCIÓN: CONSUMO
+
+==============================
+
+SECCIÓN: FALTAS
+
+==============================
+
+SECCIÓN: NECESIDADES SEMILLA
+
+==============================
+
+SECCIÓN: UBICACIONES
+
+==============================
+
+SECCIÓN: EXTRACTO ARTICULOS
+
+==============================
+
+SECCIÓN: REMESAS
+
+==============================
+
+SECCIÓN: TARIFAS DE PRECIOS
+
+==============================
+
+SECCIÓN: VISUALIZADOR DE PRECIOS
+
+==============================
+
+SECCIÓN: MODIFICAR TARIFAS PRECIOS
+
+==============================
+
+SECCIÓN: CARROS 
+
+==============================
+
+SECCIÓN: DEPOSITOS
+
+==============================
+
+SECCIÓN: SITUACION ARTICULOS
+
+==============================
+
+SECCIÓN: MAQUINARIA
+
+==============================
+
+SECCIÓN: TIPO MAQUINARIA
+
+==============================
+
+SECCIÓN: REPARACIONES
+
+==============================
+
+SECCIÓN: PARTES GASOIL
+
+==============================
+
+SECCIÓN: GENERADOR PARTES GASOIL
+
+==============================
+
+SECCIÓN: ENTREGAS MATERIAL(EPI)
+
+==========================================================================================
+
+SECCIÓN: PARTES DE SEMBRAS(PAR_LIS01)
+
+==============================
+
+SECCIÓN: A SEMBTRAR-TSIEMBRA(PAT_INFE1)
+
+==============================
+
+SECCIÓN: PARTE DE EXTENDIDO(PASI_INFO0)
+
+==============================
+
+SECCIÓN: PARTE DE INJERTO(PAR_INFI)
+
+==============================
+
+SECCIÓN: PARTE DE MUESTREO(PAR_LIS020)
+
+==============================
+
+SECCIÓN: PARTIDAS SEMBRADAS(PAR_LIS00)
+
+==============================
+
+SECCIÓN: CANTIDADAS SEMBRADAS(PAR_LIS14B)
+
+==============================
+
+SECCIÓN: LIBRO DE SEMILLAS RECIBIDAS(PAR_LIS001)
+
+==============================
+
+SECCIÓN: SALIDAS POR VARIEDAD(AV_LIS3)
+
+==============================
+
+SECCIÓN: SALIDAS POR VARIEDAD(CLIENTE)(AV_LIS14C)
+
+==============================
+
+SECCIÓN: PRODUCCIÓN MESES(PAR_LIS14C)
+
+==============================
+
+SECCIÓN: PRODUCCIÓN INJERTOS MESES(PAR_LIS14D)
+
+==============================
+
+SECCIÓN: VENTAS MESES(AV_LIS5)
+
+==============================
+
+SECCIÓN: PARTIDAS A REVISAR(PAR_INF10)
+
+==============================
+
+SECCIÓN: PRODUCTOS FITOSANITARIOS
+
+==============================
+
+SECCIÓN: COMBINACIONES
+
+==============================
+
+SECCIÓN: EQUIPOS APLICACION
+
+==============================
+
+SECCIÓN: PARTES DE TRATAMIENTO
+
+==============================
+
+SECCIÓN: CURA INVERNADEROS SECTOR
+
+==============================
+
+SECCIÓN: CURAS INVERNADEROS TRATAMIENTOS
+
+==============================
+
+SECCIÓN: IMPRESION ETIQUETAS PERSONAL
+
+==============================
+
+SECCIÓN: FICHAJES PERSONAL
+
+==============================
+
+SECCIÓN: ACTIVIDAD ACTUAL
+
+==============================
+
+SECCIÓN: ACTIVIDAD HISTORICO
+
+==============================
+
+SECCIÓN: CUADRANTE
+
+==============================
+
+SECCIÓN: CUADRANTE PERSONAL
+
+==========================================================================================
+
+SECCIÓN: MENSAJERIA INTERNA
+
+==============================
+
+SECCIÓN: AGENDA GSBASE
+
+==============================
+
+SECCIÓN: CAMBIO PASSWORD USUARIO
+
+==============================
+
+SECCIÓN: CALCULAR IBAN
+
+==============================
+
+SECCIÓN: CONTROL COSTES
+
+==============================
+
+SECCIÓN: SINCRONIZAR BBDD MYSQL
+
+==============================
+
+SECCIÓN: MENU GESLIVE
+
+==============================
+
+SECCIÓN: EXPORTAR GVT
+
+==============================
+
+SECCIÓN: REGISTROS E-MAIL ENVIADOS
+
+==============================
+
+SECCIÓN: COPIAS DE SEGURIDAD
+
+==============================
+
+SECCIÓN: AVISOS PARTIDA
+
+==============================
+
+SECCIÓN: MODIFICA CAMPOS
+
+==============================
+
+SECCIÓN: COSTE PRODUCCION
+
+==============================
+
+SECCIÓN: DONET SINCRO
+
+==============================
+
+SECCIÓN: TEST DOTNET GARDEN
+
+==============================
+
+SECCIÓN: PARAMETROS GSS
+
+==============================
+
+SECCIÓN: TAREAS GSS
+
+==============================
+
+SECCIÓN: NOTAS GSS
+
+==============================
+
+SECCIÓN: CONEXION GS CONTA(NUEVA)
+
+==============================
+
+SECCIÓN: ASIENTOS MANUALES
+
+==============================
+
+SECCIÓN: TRASAPSO
+
+==============================
+
+SECCIÓN: TRASPASO PRECIOS
+
+==============================
+
+SECCIÓN: TRASPASO DTO CLIENTES
+
+==============================
+
+SECCIÓN: DESFASE PRECIOS
+
+==============================
+
+SECCIÓN: INFORMES FAVORITOS
+
+==============================
+
+SECCIÓN: INFORMES FAVORITOS(ADMINISTRADOR)
+
+==============================
+
+SECCIÓN: INFORMES FAVORITOS USUARIO
+
+==========================================================================================
+
+SECCIÓN: GUARDAR DATOS DE PRESENTE VENTANA
+
+==============================
+
+SECCIÓN: CARGAR DATOS DE ESTA VENTANA
+
+==============================
+
+SECCIÓN: EJECUTAR ACCION
+
+==========================================================================================
+
+SECCIÓN: PREVISIONES VENTA
+
+==============================
+
+SECCIÓN: PREVISIONES VENTA ORNAMENTAL
+
+==============================
+
+SECCIÓN: AGRUPAR ALB
+
+==============================
+
+SECCIÓN: AGRUPACION PREVISIONES
+
+==============================
+
+SECCIÓN: COBROS PREVISIONES VENTA
+
+==============================
+
+SECCIÓN: COBRAR-P
+
+==============================
+
+SECCIÓN: PREVISIONES DE COMPRA
+
+==============================
+
+SECCIÓN: PAGOS DE PREVISIONES DE COMPRA
+
+==============================
+
+SECCIÓN: CONFORMACION PREVISIONES COMPRA
+
+==============================
+
+SECCIÓN: GASTOS DE PREVISIONES
+
+==============================
+
+SECCIÓN: CONEXION NUEVA
+
+==========================================================================================
+
+SECCIÓN: DESCARGAR SDK CONEXION 
+
+==============================
+
+SECCIÓN: CUADRO PRODUCCION
+
+==============================
+
+SECCIÓN: RESUMEN DIA
+
+==============================
+
+SECCIÓN: FICHAJES TEMPORALES
+
+==============================
+
+SECCIÓN: FICHAJE TACTIL
+
+==============================
+
+SECCIÓN: CONTROL DE PRESENCIA
+
+==============================
+
+SECCIÓN: IMPORTAR/EXPORTAR
+
+==============================
+
+SECCIÓN: ORDEN AVISOS
+
+==============================
+
+SECCIÓN: LISTADO DE AVISOS
+
+==========================================================================================
+
+SECCIÓN: PEDIDOS WEB
+
+==============================
+
+SECCIÓN: CARGA ARCHIVO AYUDA
+
+==============================
+
+SECCIÓN: BORRA ARCHIVOS LOCALES AYUDA
+
+==========================================================================================
+
+
+
 
 
 
