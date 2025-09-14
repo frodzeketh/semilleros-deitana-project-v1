@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, ChevronDown, Search, Trash2 } from "lucide-react"
+import { Send, ChevronDown, Search, Trash2, BrainCircuit } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
@@ -1190,24 +1190,41 @@ const Home = () => {
 
 @keyframes gradient-slide {
     0% {
-        background-position: 200% 0;
+        background-position: 400% 0;
     }
     100% {
-        background-position: -200% 0;
+        background-position: -400% 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
     }
 }
 
 .thinking-message {
-    background: linear-gradient(90deg, #4a4a4a, #8a8a8a, #6a6a6a, #4a4a4a);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
+    background-size: 400% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: gradient-slide 3s linear infinite;
+    animation: gradient-slide 4s ease-in-out infinite;
     
     font-size: 15px;
     letter-spacing: 0.5px;
-    white-space: nowrap;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    border-left: 3px solid #cccccc;
+    margin: 8px 0;
 }
 
 .thinking-message::after {
@@ -1215,22 +1232,23 @@ const Home = () => {
     display: inline-block;
     width: 3px;
     height: 1.1em;
-    background: linear-gradient(90deg, #4a4a4a, #8a8a8a, #6a6a6a, #4a4a4a);
-    background-size: 200% 100%;
-    animation: gradient-slide 3s linear infinite,
+    background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
+    background-size: 400% 100%;
+    animation: gradient-slide 4s ease-in-out infinite,
                blink-cursor 0.8s step-end infinite;
     margin-left: 2px;
     vertical-align: middle;
 }
 
 .ai-thinking-text {
-    background: linear-gradient(90deg, #4a4a4a, #8a8a8a, #6a6a6a, #4a4a4a);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
+    background-size: 400% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: gradient-slide 3s linear infinite;
-    font-weight: bold;
+    animation: gradient-slide 4s ease-in-out infinite;
+    font-weight: normal;
+    display: inline-block;
 }
 
 
@@ -1613,6 +1631,12 @@ const Home = () => {
                     <div className="ds-message-content">
                       {msg.sender === "bot" ? (
                         <div className="markdown-content">
+                          {msg.isThinking && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                              <BrainCircuit size={16} style={{ color: "#999999", animation: "pulse 2s infinite" }} />
+                              <span style={{ color: "#999999", fontSize: "14px", fontStyle: "italic" }}>Thinking...</span>
+                            </div>
+                          )}
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
                             rehypePlugins={[
