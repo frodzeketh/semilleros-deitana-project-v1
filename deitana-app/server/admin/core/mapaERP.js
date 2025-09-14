@@ -8,7 +8,7 @@ const mapaERP = {
   /* ================================================*/
   acciones_com: {
     descripcion:
-      "Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido.",
+      "Las acciones comerciales son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Acciones Comerciales",
     columnas: {
       id: "Identificador único de la acción comercial",
       ACCO_DENO: "Denominación o tipo de acción comercial",
@@ -70,7 +70,7 @@ const mapaERP = {
 /* ================================================*/
 articulos: {
     descripcion:
-      "Nuestros artículos son los productos, insumos o bienes con los que trabajamos en Semilleros Deitana. Para cada uno registramos información clave como su descripción, categoría, unidad de medida, precio y características específicas, lo que nos permite asegurar su correcta gestión, control y trazabilidad en cada etapa del proceso. Incluye detalles de stock.",
+      "Nuestros artículos son los productos, insumos o bienes con los que trabajamos en Semilleros Deitana. Para cada uno registramos información clave como su descripción, categoría, unidad de medida, precio y características específicas, lo que nos permite asegurar su correcta gestión, control y trazabilidad en cada etapa del proceso. Incluye detalles de stock. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Artículos",
     tabla: "articulos", // Nombre de tabla inferido
     columnas: {
       id: "Código único del artículo (Clave Primaria). ",
@@ -2983,7 +2983,7 @@ partidas: {
       id: "ID de la partida (Clave Primaria)",
       PAR_FEC: "Fecha de la partida.",
       PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
-      PAR_TIPO: "Tipo de partida: 'N' - Normal, sembrada sin injerto, 'C' - Componente de injerto (pie o cabeza), 'I' - Injerto completo (pie y cabeza ya unidos), 'L' - Planta libre sembrada como reserva o para venta ocasional, 'E' - Ecológica, con procesos certificados, 'D' - Descocada, planta regenerada por exceso de altura, 'R' - Planta libre reservada a nombre de un cliente, 'O' - Comprada a otro semillero en caso de emergencia, 'X' - Componente externo (pie o cabeza comprado a otro semillero para injertar).",
+      PAR_TIPO: "Tipo de partida: 'N' - Normal, sembrada sin injerto, 'C' - Componente de injerto (pie o cabeza), 'I' - Injerto completo (pie y cabeza ya unidos),  'D' - Descocada, planta regenerada por exceso de altura, 'R' - Planta libre reservada a nombre de un cliente, 'O' - Comprada a otro semillero en caso de emergencia, 'X' - Componente externo (pie o cabeza comprado a otro semillero para injertar).",
       PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
       PAR_CCL: "Id del cliente, tiene relacion con la tabla 'clientes'. para obtener la denominación (CL_DENO).",
       PAR_CAS: "Id de casa comercial, tiene relacion con la tabla 'casas_com'. para obtener la denominación (CC_DENO).",
