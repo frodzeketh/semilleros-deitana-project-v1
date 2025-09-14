@@ -1665,7 +1665,7 @@ ${statusReport}
                             
                             response.write(JSON.stringify({
                                 type: 'chunk',
-                                content: `<span style="color: red;">${formattedContent}</span>`,
+                                content: `<span class="ai-thinking-text">${formattedContent}</span>`,
                                 timestamp: Date.now()
                             }) + '\n');
                         }

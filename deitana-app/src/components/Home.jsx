@@ -1188,13 +1188,22 @@ const Home = () => {
     }
 }
 
+@keyframes gradient-slide {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
 .thinking-message {
-    background: linear-gradient(90deg, #707070 0%, #c0c0c0 50%, #707070 100%);
+    background: linear-gradient(90deg, #4a4a4a, #8a8a8a, #6a6a6a, #4a4a4a);
     background-size: 200% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: gradient-shift 2s ease-in-out infinite;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradient-slide 3s linear infinite;
     
     font-size: 15px;
     letter-spacing: 0.5px;
@@ -1206,12 +1215,22 @@ const Home = () => {
     display: inline-block;
     width: 3px;
     height: 1.1em;
-    background: linear-gradient(90deg, #707070, #c0c0c0, #707070);
+    background: linear-gradient(90deg, #4a4a4a, #8a8a8a, #6a6a6a, #4a4a4a);
     background-size: 200% 100%;
-    animation: gradient-shift 2s ease-in-out infinite,
+    animation: gradient-slide 3s linear infinite,
                blink-cursor 0.8s step-end infinite;
     margin-left: 2px;
     vertical-align: middle;
+}
+
+.ai-thinking-text {
+    background: linear-gradient(90deg, #4a4a4a, #8a8a8a, #6a6a6a, #4a4a4a);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradient-slide 3s linear infinite;
+    font-weight: bold;
 }
 
 
