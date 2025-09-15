@@ -46,6 +46,20 @@ const { sqlRules } = require('../prompts/SQL');
 
 const { identidadEmpresa, terminologia } = require('../prompts/DEITANA');
 
+// =====================================
+// VERIFICACIÓN DE IMPORTACIONES
+// =====================================
+console.log('\n🔍 ==========================================');
+console.log('🔍 VERIFICACIÓN DE IMPORTACIONES');
+console.log('🔍 ==========================================');
+console.log(`📄 promptGlobal: ${promptGlobal ? 'OK' : 'ERROR'} - ${promptGlobal ? promptGlobal.length : 0} caracteres`);
+console.log(`📄 comportamientoGlobal: ${comportamientoGlobal ? 'OK' : 'ERROR'} - ${comportamientoGlobal ? comportamientoGlobal.length : 0} caracteres`);
+console.log(`📄 formatoRespuesta: ${formatoRespuesta ? 'OK' : 'ERROR'} - ${formatoRespuesta ? formatoRespuesta.length : 0} caracteres`);
+console.log(`📄 guiaMarkdownCompleta: ${guiaMarkdownCompleta ? 'OK' : 'ERROR'} - ${guiaMarkdownCompleta ? guiaMarkdownCompleta.length : 0} caracteres`);
+console.log(`📄 identidadEmpresa: ${identidadEmpresa ? 'OK' : 'ERROR'} - ${identidadEmpresa ? identidadEmpresa.length : 0} caracteres`);
+console.log(`📄 terminologia: ${terminologia ? 'OK' : 'ERROR'} - ${terminologia ? terminologia.length : 0} caracteres`);
+console.log('🔍 ==========================================\n');
+
 // Importar sistema RAG
 const ragInteligente = require('../data/integrar_rag_nuevo');
 // Removido: analizarIntencionConIA no se usa - usamos analizarIntencionInteligente local
@@ -1781,14 +1795,39 @@ ${statusReport}
                         const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
                         const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
                         
+                        // =====================================
+                        // VERIFICACIÓN ANTES DE CONCATENAR
+                        // =====================================
+                        console.log('\n🔍 ==========================================');
+                        console.log('🔍 VERIFICACIÓN ANTES DE CONCATENAR');
+                        console.log('🔍 ==========================================');
+                        console.log(`📄 comportamientoGlobal type: ${typeof comportamientoGlobal}`);
+                        console.log(`📄 comportamientoGlobal length: ${comportamientoGlobal ? comportamientoGlobal.length : 'UNDEFINED'}`);
+                        console.log(`📄 comportamientoGlobal preview: ${comportamientoGlobal ? comportamientoGlobal.substring(0, 100) + '...' : 'UNDEFINED'}`);
+                        console.log('🔍 ==========================================\n');
+
                         // ⚡ CONSTRUIR SEGUNDA LLAMADA CON MÁXIMA PRIORIDAD CHATGPT
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
                         promptExplicacion += `${comportamientoGlobal}\n\n`;
                         promptExplicacion += `${formatoRespuesta}\n\n`;      // ⚡ FORMATO DE RESPUESTA
                         promptExplicacion += `${guiaMarkdownCompleta}\n\n`;  // ⚡ GUÍA COMPLETA DE MARKDOWN
-                        promptExplicacion += `${formatoRespuesta}\n\n`;      // ⚡ FORMATO DE RESPUESTA
                         promptExplicacion += `${identidadEmpresa}\n\n`;
                         promptExplicacion += `${terminologia}\n\n`;
+                        
+                        // =====================================
+                        // LOGS DETALLADOS DE PROMPTS
+                        // =====================================
+                        console.log('\n🔍 ==========================================');
+                        console.log('🔍 DIAGNÓSTICO DE PROMPTS - SEGUNDA LLAMADA');
+                        console.log('🔍 ==========================================');
+                        console.log(`📄 promptGlobal: ${promptGlobalConFecha.length} caracteres`);
+                        console.log(`📄 comportamientoGlobal: ${comportamientoGlobal ? comportamientoGlobal.length : 'UNDEFINED'} caracteres`);
+                        console.log(`📄 formatoRespuesta: ${formatoRespuesta ? formatoRespuesta.length : 'UNDEFINED'} caracteres`);
+                        console.log(`📄 guiaMarkdownCompleta: ${guiaMarkdownCompleta ? guiaMarkdownCompleta.length : 'UNDEFINED'} caracteres`);
+                        console.log(`📄 identidadEmpresa: ${identidadEmpresa ? identidadEmpresa.length : 'UNDEFINED'} caracteres`);
+                        console.log(`📄 terminologia: ${terminologia ? terminologia.length : 'UNDEFINED'} caracteres`);
+                        console.log(`📄 PROMPT TOTAL: ${promptExplicacion.length} caracteres`);
+                        console.log('🔍 ==========================================\n');
                         
                         // Los prompts organizados ya contienen toda la lógica de formato
                         
@@ -1824,69 +1863,63 @@ ${statusReport}
                             promptExplicacion += `CONTEXTO CONVERSACIONAL RECIENTE:\n\n${contextoConversacional}\n\nINSTRUCCIONES DE CONTINUIDAD:\nMantén la continuidad natural de la conversación. NO te presentes de nuevo si ya has saludado. Usa el contexto previo para dar respuestas coherentes. Si el usuario hace referencia a algo mencionado antes, úsalo. Mantén el tono y estilo de la conversación en curso.\n\n`;
                         }
                         
-                        promptExplicacion += `🚨🚨🚨 ANTI-ROBOT SUPREMO 🚨🚨🚨
+                        // SOLO DATOS - Sin instrucciones hardcodeadas
+                        promptExplicacion += `## 📊 DATOS PARA FORMATEAR:
 
-❌❌❌ JAMÁS DIGAS ESTO ❌❌❌
-- "Aquí tienes una lista de..."
-- "Por supuesto, aquí tienes..."  
-- "Claro, aquí tienes..."
-- "Te muestro los clientes/datos que..."
-- "He revisado en el ERP..."
-
-✅✅✅ USA VARIACIONES NATURALES ✅✅✅
-Reglas de comunicación:
-- Usa un tono humano, cercano y natural, no robótico.
-- Sé comprensivo: reconoce la situación del usuario antes de dar la respuesta.
-- Explica paso a paso y con claridad, no solo muestres datos.
-- Varía tus respuestas completamente, NUNCA uses patrones fijos.
-- RESPONDE directo como ChatGPT, sin introducción explicativa.
-- Ejemplos de INICIOS NATURALES:
-  - "En Almería tenemos estos clientes:"
-  - "Para el miércoles hay 5 partidas programadas:"
-  - "Los técnicos disponibles son:"
-  - "Encontré 3 facturas recientes:"
-- Cuando muestres información, preséntala de manera ordenada (listas, párrafos claros).
-- Si hay un error o limitación, explica la causa y guía al usuario sobre qué hacer.
-- Usa emojis solo cuando sumen empatía o claridad, nunca en exceso.
-- Tu objetivo es que el usuario sienta que habla con una persona experta y atenta, no con un bot rígido.
-
-## 📊 DATOS A FORMATEAR:
-
-CONSULTA: "${message}"  
+CONSULTA ORIGINAL: "${message}"  
 ${Array.isArray(sql) ? 
-    `SQL: ${sql.length} consultas\n${sql.map((q, i) => `${i + 1}. ${q}`).join('\n')}` : 
-    `SQL: ${sql}`}  
-RESULTADOS: ${JSON.stringify(results, null, 2)}
-
-## 🎯 RESPONDE COMO CHATGPT:
-
-NUNCA digas "Convierte" o "Explica" - simplemente RESPONDE directamente.
-Actúa como si fueras ChatGPT respondiendo la consulta original.
-
-- RESPONDE la pregunta directamente
-- USA datos reales de la consulta SQL
-- SÉ natural y conversacional
-- NO menciones "conversión" o "explicación"
-
-🔥 FORMATO OBLIGATORIO:
-📊 **[Título descriptivo]**
-
-• **[Dato]**: [explicación]
-• **[Dato]**: [explicación]
-
-💡 **Observación**: [insight natural sobre los datos]
-📌 **Punto destacado**: [algo importante que los datos revelan]  
-🔍 **Análisis rápido**: [mini análisis de los números]  
-⚡ **Recomendación**: [acción sugerida basada en los datos]
-
+    `SQL EJECUTADO: ${sql.length} consultas\n${sql.map((q, i) => `${i + 1}. ${q}`).join('\n')}` : 
+    `SQL EJECUTADO: ${sql}`}  
+RESULTADOS OBTENIDOS: ${JSON.stringify(results, null, 2)}
 
 ${Array.isArray(results) ? 
-    `⚠️ MÚLTIPLES CONJUNTOS - explica cada uno separadamente` : 
+    `⚠️ MÚLTIPLES CONJUNTOS DE DATOS - formatea cada uno por separado` : 
     ''}
 
-⚡ RECUERDA: JAMÁS uses las frases prohibidas arriba ⚡
+## 🎯 INSTRUCCIONES FINALES:
+- Usa los datos reales de arriba para responder la consulta original
+- Aplica TODO el formato y comportamiento definido en los prompts organizados
+- Sé natural, conversacional y analítico como se especifica en formatoRespuesta
+- NO uses frases robóticas como "Aquí tienes" o "Por supuesto"
 
 `;
+
+                        // =====================================
+                        // LOG ROBUSTO DEL PROMPT FINAL
+                        // =====================================
+                        console.log('\n🔍 ==========================================');
+                        console.log('🔍 ANÁLISIS DEL PROMPT FINAL');
+                        console.log('🔍 ==========================================');
+                        console.log(`📄 Longitud total del prompt: ${promptExplicacion.length} caracteres`);
+                        console.log(`📄 Contiene "formatoRespuesta": ${promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "comportamientoGlobal": ${promptExplicacion.includes('comportamientoGlobal') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "COMPORTAMIENTO Y ESTILO": ${promptExplicacion.includes('COMPORTAMIENTO Y ESTILO') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "PRINCIPIO FUNDAMENTAL": ${promptExplicacion.includes('PRINCIPIO FUNDAMENTAL') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "PRIORIDAD MÁXIMA": ${promptExplicacion.includes('PRIORIDAD MÁXIMA') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "PROHIBIDO ABSOLUTAMENTE": ${promptExplicacion.includes('PROHIBIDO ABSOLUTAMENTE') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "ANÁLISIS INTELIGENTE": ${promptExplicacion.includes('ANÁLISIS INTELIGENTE') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "COMPORTAMIENTO CONVERSACIONAL": ${promptExplicacion.includes('COMPORTAMIENTO CONVERSACIONAL') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "ANTI-ROBOT": ${promptExplicacion.includes('ANTI-ROBOT') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "FORMATO OBLIGATORIO": ${promptExplicacion.includes('FORMATO OBLIGATORIO') ? 'SÍ' : 'NO'}`);
+                        
+                        // Mostrar una muestra del prompt final
+                        const muestraPrompt = promptExplicacion.substring(0, 2000);
+                        console.log('\n📄 MUESTRA DEL PROMPT FINAL (primeros 2000 caracteres):');
+                        console.log('─'.repeat(50));
+                        console.log(muestraPrompt);
+                        console.log('─'.repeat(50));
+                        
+                        // Buscar específicamente comportamientoGlobal en el prompt
+                        const indiceComportamiento = promptExplicacion.indexOf('COMPORTAMIENTO Y ESTILO');
+                        console.log(`\n📄 Índice de "COMPORTAMIENTO Y ESTILO": ${indiceComportamiento}`);
+                        if (indiceComportamiento > -1) {
+                            const muestraComportamiento = promptExplicacion.substring(indiceComportamiento, indiceComportamiento + 500);
+                            console.log('📄 MUESTRA DE COMPORTAMIENTO GLOBAL:');
+                            console.log('─'.repeat(30));
+                            console.log(muestraComportamiento);
+                            console.log('─'.repeat(30));
+                        }
+                        console.log('🔍 ==========================================\n');
 
                         // Segunda llamada con historial para mantener contexto
                         const mensajesSegundaLlamada = [
