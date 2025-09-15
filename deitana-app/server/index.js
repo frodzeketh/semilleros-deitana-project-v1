@@ -192,6 +192,7 @@ app.post('/chat/new', verifyToken, async (req, res) => {
         throw new Error(streamResult.error || 'Error en el procesamiento');
       }
     } else {
+      console.log('🔍 [FLUJO] Usando processQueryEmployee (NO-STREAMING)');
       response = await processQueryEmployee({ message, userId: req.user.uid });
       
       // Guardar respuesta del asistente
@@ -269,6 +270,7 @@ app.post('/chat', verifyToken, async (req, res) => {
                 throw new Error(streamResult.error || 'Error en el procesamiento');
             }
         } else {
+            console.log('🔍 [FLUJO] Usando processQueryEmployee (NO-STREAMING) - Ruta 2');
             response = await processQueryEmployee({ message, userId, conversationId: currentConversationId });
             
             // Agregar respuesta del asistente

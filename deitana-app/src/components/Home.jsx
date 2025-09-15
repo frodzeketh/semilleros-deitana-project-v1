@@ -599,12 +599,7 @@ const Home = () => {
       }
 
       // Función para mostrar contenido de forma más natural
-      const naturalFlush = () => {
-        // Mostrar contenido cuando tengamos al menos 1-2 caracteres
-        if (buffer.length >= 1) {
-          flushBuffer()
-        }
-      }
+      
 
       // Intervalo para mostrar contenido de forma muy fluida (cada 30ms)
       streamingInterval = setInterval(() => {

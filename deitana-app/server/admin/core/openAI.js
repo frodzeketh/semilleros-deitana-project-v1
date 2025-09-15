@@ -1420,6 +1420,7 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
  * - Persistencia asíncrona de respuestas
  */
 async function processQueryStream({ message, userId, conversationId, response }) {
+    console.log('🔍 [FLUJO] Usando processQueryStream (STREAMING) - openAI.js');
     const tiempoInicio = Date.now();
     console.log('🚀 [STREAMING] ===== INICIANDO PROCESO DE CONSULTA CON STREAMING =====');
     console.log('🚀 [STREAMING] Procesando consulta:', message);
@@ -1809,10 +1810,19 @@ ${statusReport}
                         // ⚡ CONSTRUIR SEGUNDA LLAMADA CON MÁXIMA PRIORIDAD CHATGPT
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
                         promptExplicacion += `${comportamientoGlobal}\n\n`;
+                        console.log('🔍 [DEBUG] formatoRespuesta antes de concatenar:', typeof formatoRespuesta, formatoRespuesta ? formatoRespuesta.length : 'UNDEFINED');
                         promptExplicacion += `${formatoRespuesta}\n\n`;      // ⚡ FORMATO DE RESPUESTA
+                        console.log('🔍 [DEBUG] promptExplicacion después de concatenar formatoRespuesta:', promptExplicacion.length, 'caracteres');
+                        console.log('🔍 [DEBUG] guiaMarkdownCompleta type:', typeof guiaMarkdownCompleta, 'length:', guiaMarkdownCompleta ? guiaMarkdownCompleta.length : 'UNDEFINED');
+                        console.log('🔍 [DEBUG] promptExplicacion ANTES de guiaMarkdownCompleta:', promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO');
                         promptExplicacion += `${guiaMarkdownCompleta}\n\n`;  // ⚡ GUÍA COMPLETA DE MARKDOWN
+                        console.log('🔍 [DEBUG] Después de guiaMarkdownCompleta:', promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO');
+                        console.log('🔍 [DEBUG] promptExplicacion length después de guiaMarkdownCompleta:', promptExplicacion.length);
+                        console.log('🔍 [DEBUG] Muestra de promptExplicacion después de guiaMarkdownCompleta:', promptExplicacion.substring(0, 500));
                         promptExplicacion += `${identidadEmpresa}\n\n`;
+                        console.log('🔍 [DEBUG] Después de identidadEmpresa:', promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO');
                         promptExplicacion += `${terminologia}\n\n`;
+                        console.log('🔍 [DEBUG] Después de terminologia:', promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO');
                         
                         // =====================================
                         // LOGS DETALLADOS DE PROMPTS
@@ -1886,6 +1896,8 @@ ${Array.isArray(results) ?
                         console.log('🔍 ==========================================');
                         console.log(`📄 Longitud total del prompt: ${promptExplicacion.length} caracteres`);
                         console.log(`📄 Contiene "formatoRespuesta": ${promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "PROHIBIDO ABSOLUTAMENTE": ${promptExplicacion.includes('PROHIBIDO ABSOLUTAMENTE') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "Aquí tienes": ${promptExplicacion.includes('Aquí tienes') ? 'SÍ' : 'NO'}`);
                         console.log(`📄 Contiene "comportamientoGlobal": ${promptExplicacion.includes('COMPORTAMIENTO Y ESTILO') ? 'SÍ' : 'NO'}`);
                         console.log(`📄 Contiene "COMPORTAMIENTO Y ESTILO": ${promptExplicacion.includes('COMPORTAMIENTO Y ESTILO') ? 'SÍ' : 'NO'}`);
                         console.log(`📄 Contiene "PRINCIPIO FUNDAMENTAL": ${promptExplicacion.includes('PRINCIPIO FUNDAMENTAL') ? 'SÍ' : 'NO'}`);

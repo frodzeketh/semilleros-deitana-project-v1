@@ -249,6 +249,7 @@ let lastRealData = null;
 // =====================================
 
 async function processQuery({ message, userId, conversationId }) {
+    console.log('🔍 [FLUJO] Usando processQuery (EMPLOYEE) - openAIEmployee.js');
     try {
         console.log('🚀 [SISTEMA] ===== INICIANDO PROCESO DE CONSULTA =====');
         console.log('🚀 [SISTEMA] Procesando consulta de empleado:', message);
@@ -502,7 +503,7 @@ ${promptComportamiento}`
                     console.log(`🔄 [AUTO-RESPUESTA] Datos disponibles:`, Object.keys(primerRegistro));
                     
                     // Generar una respuesta automática con los datos
-                    let respuestaConDatos = `¡Por supuesto! Aquí tienes la información solicitada:\n\n`;
+                    
                     
                     // Formatear los datos de manera legible
                     Object.entries(primerRegistro).forEach(([campo, valor]) => {
