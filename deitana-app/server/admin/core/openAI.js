@@ -1677,7 +1677,7 @@ ${statusReport}
                             // Cerrar el bloque del thinking
                             response.write(JSON.stringify({
                                 type: 'chunk',
-                                content: '\n\n---\n\n**🔍 Ejecutando consulta en el ERP...**\n\n',
+                                content: '\n\n---\n\n**🔍 Buscandoo información en el ERP...**\n\n',
                                 timestamp: Date.now()
                             }) + '\n');
                         }

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, ChevronDown, Search, Trash2, BrainCircuit } from "lucide-react"
+import { Send, ChevronDown, Search, Trash2, BrainCircuit, UserSearch } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
@@ -1176,80 +1176,79 @@ const Home = () => {
     <div className="ds-home-container">
       <style>
         {`
-          @keyframes gradient-shift {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
+          @keyframes gradient-slide {
+  0% {
+    background-position: 400% 0;
+  }
+  100% {
+    background-position: -400% 0;
+  }
 }
 
-@keyframes gradient-slide {
-    0% {
-        background-position: 400% 0;
-    }
-    100% {
-        background-position: -400% 0;
-    }
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes pulse {
-    0%, 100% {
-        opacity: 0.6;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 .thinking-message {
-    background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
-    background-size: 400% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: gradient-slide 4s ease-in-out infinite;
-    
-    font-size: 15px;
-    letter-spacing: 0.5px;
-    white-space: pre-wrap;
-    line-height: 1.6;
-    padding: 8px 12px;
-    background-color: rgba(0, 0, 0, 0.02);
-    border-radius: 8px;
-    border-left: 3px solid #cccccc;
-    margin: 8px 0;
+  background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
+  background-size: 400% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: gradient-slide 6s ease-in-out infinite;
+
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.6;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid #cccccc;
+  margin: 8px 0;
+  display: block;
+  width: 100%;
 }
 
-.thinking-message::after {
-    content: '';
-    display: inline-block;
-    width: 3px;
-    height: 1.1em;
-    background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
-    background-size: 400% 100%;
-    animation: gradient-slide 4s ease-in-out infinite,
-               blink-cursor 0.8s step-end infinite;
-    margin-left: 2px;
-    vertical-align: middle;
+.thinking-message p {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  margin: 0 !important;
 }
 
 .ai-thinking-text {
-    background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
-    background-size: 400% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: gradient-slide 4s ease-in-out infinite;
-    font-weight: normal;
-    display: inline-block;
+  background: linear-gradient(90deg, #666666, #cccccc, #999999, #666666);
+  background-size: 400% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: gradient-slide 6s ease-in-out infinite;
+  font-weight: normal;
+  display: inline-block;
 }
+
 
 
 }
@@ -1637,19 +1636,37 @@ const Home = () => {
                               <span style={{ color: "#999999", fontSize: "14px", fontStyle: "italic" }}>Thinking...</span>
                             </div>
                           )}
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
-                            rehypePlugins={[
-                              rehypeKatex,
-                              [rehypeHighlight, { detect: true, ignoreMissing: true }],
-                              rehypeRaw
-                            ]}
-                            // ⚡ CONFIGURACIÓN MINIMALISTA - SOLO ESTILOS BASE
-                            // La IA decide qué estructura usar, frontend solo renderiza
-                            components={{}}
-                          >
-                            {msg.text || ""}
-                          </ReactMarkdown>
+                          <div className={msg.isThinking ? "thinking-message" : ""}>
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
+                              rehypePlugins={[
+                                rehypeKatex,
+                                [rehypeHighlight, { detect: true, ignoreMissing: true }],
+                                rehypeRaw
+                              ]}
+                              // ⚡ CONFIGURACIÓN MINIMALISTA - SOLO ESTILOS BASE
+                              // La IA decide qué estructura usar, frontend solo renderiza
+                              components={{
+                                p: ({ children }) => {
+                                  const text = typeof children === 'string' ? children : 
+                                             Array.isArray(children) ? children.join('') : 
+                                             children?.toString() || '';
+                                  
+                                  if (text.includes('Buscandoo información en el ERP')) {
+                                    return (
+                                      <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <UserSearch size={16} style={{ color: '#007acc', flexShrink: 0 }} />
+                                        {children}
+                                      </p>
+                                    );
+                                  }
+                                  return <p>{children}</p>;
+                                }
+                              }}
+                            >
+                              {msg.text || ""}
+                            </ReactMarkdown>
+                          </div>
                           {msg.isStreaming && !msg.text && (
                             <div className="ds-typing-container">
                               <div className="ds-typing-indicator-inline">
