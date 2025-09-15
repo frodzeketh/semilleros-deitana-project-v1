@@ -1607,6 +1607,17 @@ ${statusReport}
             });
 
             console.log('✅ [STREAMING] Stream iniciado correctamente');
+            
+            // =====================================
+            // LOGS DETALLADOS DEL PROCESO
+            // =====================================
+            console.log('\n🚀 ==========================================');
+            console.log('🚀 INICIO DEL PROCESO DE CONSULTA');
+            console.log('🚀 ==========================================');
+            console.log(`📝 CONSULTA: "${message}"`);
+            console.log(`👤 USUARIO: ${userId}`);
+            console.log(`🆔 CONVERSACIÓN: ${conversationId}`);
+            console.log('🚀 ==========================================\n');
 
             // Variables para tracking del thinking
             let thinkingDetected = false;
@@ -1630,8 +1641,12 @@ ${statusReport}
                     if (!thinkingDetected && (fullResponse.includes('<thinking>') || hasThinkingTag)) {
                         thinkingDetected = true;
                         insideThinking = true;
-                        console.log('🧠 [STREAMING] Thinking detectado - activando modo thinking');
-                        console.log('🔍 [STREAMING] Chunk con thinking:', content.substring(0, 50) + '...');
+                        console.log('\n🧠 ==========================================');
+                        console.log('🧠 THINKING DETECTADO - LLAMADA 1 ACTIVA');
+                        console.log('🧠 ==========================================');
+                        console.log('🧠 La IA está razonando sobre la consulta...');
+                        console.log(`🧠 Chunk con thinking: ${content.substring(0, 50)}...`);
+                        console.log('🧠 ==========================================\n');
                         
                         // Enviar header del thinking inmediatamente
                         if (!thinkingHeaderSent) {
@@ -1682,7 +1697,12 @@ ${statusReport}
                     // Detectar si hay SQL en la respuesta acumulada
                     if (!sqlDetected && fullResponse.includes('<sql>')) {
                         sqlDetected = true;
-                        console.log('🔍 [STREAMING] SQL detectado - ejecutando consulta');
+                        console.log('\n🔍 ==========================================');
+                        console.log('🔍 SQL DETECTADO - LLAMADA 1 COMPLETADA');
+                        console.log('🔍 ==========================================');
+                        console.log('🔍 La IA generó una consulta SQL');
+                        console.log('🔍 Ejecutando consulta en la base de datos...');
+                        console.log('🔍 ==========================================\n');
                     }
                     
                     // Solo enviar chunks normales si NO estamos en thinking y NO se detectó SQL
@@ -1742,11 +1762,21 @@ ${statusReport}
                         // Guardar los resultados reales para contexto futuro
                         lastRealData = JSON.stringify(results);
                         
-                        console.log('✅ [STREAMING] SQL ejecutado exitosamente - haciendo segunda llamada para explicar datos');
+                        console.log('\n✅ ==========================================');
+                        console.log('✅ SQL EJECUTADO EXITOSAMENTE');
+                        console.log('✅ ==========================================');
+                        console.log(`✅ Resultados obtenidos: ${Array.isArray(results) ? results.length : results.length} registros`);
+                        console.log('✅ Iniciando segunda llamada para formatear datos...');
+                        console.log('✅ ==========================================\n');
                         
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
                         // Segunda llamada específica para explicar datos (SIN sqlRules)
-                        console.log('🔄 [STREAMING] Construyendo segunda llamada para explicar datos...');
+                        console.log('\n🔄 ==========================================');
+                        console.log('🔄 FORMATEADOR DE DATOS - LLAMADA 2');
+                        console.log('🔄 ==========================================');
+                        console.log('🔄 Construyendo segunda llamada para explicar datos...');
+                        console.log('🔄 Aplicando formato natural y análisis inteligente...');
+                        console.log('🔄 ==========================================\n');
                         
                         const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
                         const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
@@ -1845,6 +1875,10 @@ Actúa como si fueras ChatGPT respondiendo la consulta original.
 • **[Dato]**: [explicación]
 
 💡 **Observación**: [insight natural sobre los datos]
+📌 **Punto destacado**: [algo importante que los datos revelan]  
+🔍 **Análisis rápido**: [mini análisis de los números]  
+⚡ **Recomendación**: [acción sugerida basada en los datos]
+
 
 ${Array.isArray(results) ? 
     `⚠️ MÚLTIPLES CONJUNTOS - explica cada uno separadamente` : 
@@ -1887,7 +1921,12 @@ ${Array.isArray(results) ?
                         // Reemplazar la respuesta técnica con la explicación natural
                         finalMessage = explicacionNatural;
                         
-                        console.log('✅ [STREAMING] Segunda llamada completada - respuesta natural generada');
+                        console.log('\n✅ ==========================================');
+                        console.log('✅ FORMATEADOR COMPLETADO - LLAMADA 2 FINALIZADA');
+                        console.log('✅ ==========================================');
+                        console.log('✅ Respuesta natural generada exitosamente');
+                        console.log('✅ Datos formateados con análisis inteligente');
+                        console.log('✅ ==========================================\n');
                     } else {
                         // Si no hay resultados, mantener la respuesta original del modelo
                         console.log('📚 [STREAMING] Sin resultados SQL - usar respuesta del modelo');
@@ -1957,6 +1996,17 @@ ${Array.isArray(results) ?
             }) + '\n');
 
             response.end();
+            
+            // =====================================
+            // LOG FINAL DEL PROCESO
+            // =====================================
+            console.log('\n🏁 ==========================================');
+            console.log('🏁 PROCESO COMPLETADO');
+            console.log('🏁 ==========================================');
+            console.log('🏁 Respuesta final enviada al usuario');
+            console.log(`🏁 Longitud de respuesta: ${respuestaPersonalizada.length} caracteres`);
+            console.log(`🏁 Tokens procesados: ${tokenCount}`);
+            console.log('🏁 ==========================================\n');
 
             // =====================================
             // POST-PROCESAMIENTO (ASYNC)
