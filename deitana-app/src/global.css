@@ -3067,6 +3067,23 @@ input:focus {
   /* ⚡ SIN list-style fijo - la IA decide */
 }
 
+.markdown-content ul {
+  list-style-type: disc; /* Viñetas redondas por defecto */
+}
+
+.markdown-content ol {
+  list-style-type: decimal; /* Numeración por defecto */
+}
+
+/* Permitir que ReactMarkdown sobrescriba con estilos inline */
+.markdown-content ul[style*="list-style-type"] {
+  list-style-type: inherit !important;
+}
+
+.markdown-content ol[style*="list-style-type"] {
+  list-style-type: inherit !important;
+}
+
 .markdown-content li {
   margin: 6px 0;
   line-height: 1.6;

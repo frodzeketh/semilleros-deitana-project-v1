@@ -997,6 +997,33 @@ const Home = () => {
       font-size: 15px;
     }
 
+    /* Permitir diferentes estilos de listas según el contexto */
+    .ds-message-content ul li {
+      list-style-type: disc;
+    }
+
+    .ds-message-content ol li {
+      list-style-type: decimal;
+    }
+
+    /* Estilos para tablas */
+    .ds-message-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+    }
+
+    .ds-message-content th, .ds-message-content td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .ds-message-content th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
     .ds-message-content a {
       color: #2964aa;
       text-decoration: none;
@@ -1637,6 +1664,7 @@ const Home = () => {
                             </div>
                           )}
                           <div className={msg.isThinking ? "thinking-message" : ""}>
+                            {console.log("🔍 [FRONTEND] Contenido que recibe ReactMarkdown:", msg.text)}
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
                               rehypePlugins={[
@@ -1644,8 +1672,8 @@ const Home = () => {
                                 [rehypeHighlight, { detect: true, ignoreMissing: true }],
                                 rehypeRaw
                               ]}
-                              // ⚡ CONFIGURACIÓN MINIMALISTA - SOLO ESTILOS BASE
-                              // La IA decide qué estructura usar, frontend solo renderiza
+                              // ⚡ CONFIGURACIÓN INTELIGENTE - LA IA CONTROLA FORMATO
+                              children={msg.text}
                               components={{
                                 p: ({ children }) => {
                                   const text = typeof children === 'string' ? children : 
@@ -1661,6 +1689,61 @@ const Home = () => {
                                     );
                                   }
                                   return <p>{children}</p>;
+                                },
+                                ul: ({ children, ...props }) => {
+                                  // Detectar si la IA quiere viñetas especiales
+                                  const content = typeof children === 'string' ? children : 
+                                                Array.isArray(children) ? children.join('') : 
+                                                children?.toString() || '';
+                                  
+                                  // Si contiene emojis o caracteres especiales, usar viñetas personalizadas
+                                  if (content.includes('•') || content.includes('→') || content.includes('✓')) {
+                                    return <ul style={{ listStyleType: 'none', paddingLeft: '0' }} {...props}>{children}</ul>;
+                                  }
+                                  
+                                  // Por defecto, usar viñetas redondas
+                                  return <ul style={{ listStyleType: 'disc' }} {...props}>{children}</ul>;
+                                },
+                                ol: ({ children, ...props }) => {
+                                  // Numeración por defecto
+                                  return <ol style={{ listStyleType: 'decimal' }} {...props}>{children}</ol>;
+                                },
+                                table: ({ children, ...props }) => {
+                                  return (
+                                    <div style={{ overflowX: 'auto', margin: '12px 0' }}>
+                                      <table style={{ 
+                                        borderCollapse: 'collapse', 
+                                        width: '100%',
+                                        border: '1px solid #ddd'
+                                      }} {...props}>
+                                        {children}
+                                      </table>
+                                    </div>
+                                  );
+                                },
+                                th: ({ children, ...props }) => {
+                                  return (
+                                    <th style={{ 
+                                      border: '1px solid #ddd', 
+                                      padding: '8px', 
+                                      backgroundColor: '#f5f5f5',
+                                      fontWeight: '600',
+                                      textAlign: 'left'
+                                    }} {...props}>
+                                      {children}
+                                    </th>
+                                  );
+                                },
+                                td: ({ children, ...props }) => {
+                                  return (
+                                    <td style={{ 
+                                      border: '1px solid #ddd', 
+                                      padding: '8px',
+                                      textAlign: 'left'
+                                    }} {...props}>
+                                      {children}
+                                    </td>
+                                  );
                                 }
                               }}
                             >

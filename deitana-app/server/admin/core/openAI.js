@@ -1805,7 +1805,7 @@ ${statusReport}
                         console.log(`📄 comportamientoGlobal length: ${comportamientoGlobal ? comportamientoGlobal.length : 'UNDEFINED'}`);
                         console.log(`📄 comportamientoGlobal preview: ${comportamientoGlobal ? comportamientoGlobal.substring(0, 100) + '...' : 'UNDEFINED'}`);
                         console.log('🔍 ==========================================\n');
-
+                        
                         // ⚡ CONSTRUIR SEGUNDA LLAMADA CON MÁXIMA PRIORIDAD CHATGPT
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
                         promptExplicacion += `${comportamientoGlobal}\n\n`;
@@ -1860,10 +1860,10 @@ ${statusReport}
                             
                             // Agregar contexto conversacional (SIN duplicar formatoRespuesta que ya está incluido)
                             console.log('🔍 [DEBUG] formatoRespuesta ya incluido en línea 1042:', formatoRespuesta ? 'SÍ' : 'NO');
-                            promptExplicacion += `CONTEXTO CONVERSACIONAL RECIENTE:\n\n${contextoConversacional}\n\nINSTRUCCIONES DE CONTINUIDAD:\nMantén la continuidad natural de la conversación. NO te presentes de nuevo si ya has saludado. Usa el contexto previo para dar respuestas coherentes. Si el usuario hace referencia a algo mencionado antes, úsalo. Mantén el tono y estilo de la conversación en curso.\n\n`;
+                            promptExplicacion += `CONTEXTO CONVERSACIONAL RECIENTE:\n\n${contextoConversacional}\n\n`;
                         }
                         
-                        // SOLO DATOS - Sin instrucciones hardcodeadas
+                        // SOLO DATOS - Los prompts organizados ya tienen todas las instrucciones
                         promptExplicacion += `## 📊 DATOS PARA FORMATEAR:
 
 CONSULTA ORIGINAL: "${message}"  
@@ -1875,12 +1875,6 @@ RESULTADOS OBTENIDOS: ${JSON.stringify(results, null, 2)}
 ${Array.isArray(results) ? 
     `⚠️ MÚLTIPLES CONJUNTOS DE DATOS - formatea cada uno por separado` : 
     ''}
-
-## 🎯 INSTRUCCIONES FINALES:
-- Usa los datos reales de arriba para responder la consulta original
-- Aplica TODO el formato y comportamiento definido en los prompts organizados
-- Sé natural, conversacional y analítico como se especifica en formatoRespuesta
-- NO uses frases robóticas como "Aquí tienes" o "Por supuesto"
 
 `;
 
