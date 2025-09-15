@@ -1892,7 +1892,7 @@ ${Array.isArray(results) ?
                         console.log('🔍 ==========================================');
                         console.log(`📄 Longitud total del prompt: ${promptExplicacion.length} caracteres`);
                         console.log(`📄 Contiene "formatoRespuesta": ${promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO'}`);
-                        console.log(`📄 Contiene "comportamientoGlobal": ${promptExplicacion.includes('comportamientoGlobal') ? 'SÍ' : 'NO'}`);
+                        console.log(`📄 Contiene "comportamientoGlobal": ${promptExplicacion.includes('COMPORTAMIENTO Y ESTILO') ? 'SÍ' : 'NO'}`);
                         console.log(`📄 Contiene "COMPORTAMIENTO Y ESTILO": ${promptExplicacion.includes('COMPORTAMIENTO Y ESTILO') ? 'SÍ' : 'NO'}`);
                         console.log(`📄 Contiene "PRINCIPIO FUNDAMENTAL": ${promptExplicacion.includes('PRINCIPIO FUNDAMENTAL') ? 'SÍ' : 'NO'}`);
                         console.log(`📄 Contiene "PRIORIDAD MÁXIMA": ${promptExplicacion.includes('PRIORIDAD MÁXIMA') ? 'SÍ' : 'NO'}`);
