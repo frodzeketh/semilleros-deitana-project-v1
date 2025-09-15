@@ -11,3 +11,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@keyframes gradient-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

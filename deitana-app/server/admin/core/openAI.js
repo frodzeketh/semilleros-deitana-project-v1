@@ -37,10 +37,8 @@ const mapaERP = require('./mapaERP');
 // Importaciones desde las carpetas organizadas
 const {
     guiaMarkdownCompleta,
-    estiloVisualChatGPT,
-    prioridadMaximaChatGPT,
     promptGlobal, 
-    comportamientoChatGPT,
+    comportamientoGlobal,
     formatoRespuesta
 } = require('../prompts/GLOBAL');
 
@@ -512,8 +510,6 @@ async function generateIntelligentErrorResponse(originalQuery, sqlError, ragCont
         ).join('\n');
         
         const intelligentPrompt = `
-${prioridadMaximaChatGPT}
-
 Eres un asistente experto en análisis de errores y resolución de problemas. Un usuario hizo una consulta que falló y necesitas proporcionar una respuesta inteligente y útil.
 
 ## 🔍 INFORMACIÓN DEL ERROR:
@@ -1757,9 +1753,8 @@ ${statusReport}
                         
                         // ⚡ CONSTRUIR SEGUNDA LLAMADA CON MÁXIMA PRIORIDAD CHATGPT
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
-                        promptExplicacion += `${prioridadMaximaChatGPT}\n\n`; // ⚡ PRIORIDAD MÁXIMA AL INICIO
-                        promptExplicacion += `${comportamientoChatGPT}\n\n`;
-                        promptExplicacion += `${estiloVisualChatGPT}\n\n`;    // ⚡ ESTILO CHATGPT ANTI-ROBÓTICO
+                        promptExplicacion += `${comportamientoGlobal}\n\n`;
+                        promptExplicacion += `${formatoRespuesta}\n\n`;      // ⚡ FORMATO DE RESPUESTA
                         promptExplicacion += `${guiaMarkdownCompleta}\n\n`;  // ⚡ GUÍA COMPLETA DE MARKDOWN
                         promptExplicacion += `${formatoRespuesta}\n\n`;      // ⚡ FORMATO DE RESPUESTA
                         promptExplicacion += `${identidadEmpresa}\n\n`;
@@ -2144,9 +2139,9 @@ async function generarEmbedding(texto) {
  */
 function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPinecone) {
     // ⚡ PRIORIDAD MÁXIMA AL INICIO - ESTILO CHATGPT
-    let instrucciones = prioridadMaximaChatGPT + '\n\n';  // ⚡ PRIORIDAD MÁXIMA
-    instrucciones += comportamientoChatGPT + '\n\n';
-    instrucciones += estiloVisualChatGPT + '\n\n';       // ⚡ ESTILO VISUAL CHATGPT ANTI-ROBÓTICO
+    let instrucciones = '';
+    instrucciones += comportamientoGlobal + '\n\n';
+    instrucciones += formatoRespuesta + '\n\n';         // ⚡ FORMATO DE RESPUESTA
     instrucciones += guiaMarkdownCompleta + '\n\n';     // ⚡ GUÍA COMPLETA DE MARKDOWN
     instrucciones += identidadEmpresa + '\n\n';
     instrucciones += terminologia + '\n\n';
