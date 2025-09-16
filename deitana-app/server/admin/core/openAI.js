@@ -1985,13 +1985,10 @@ ${Array.isArray(results) ?
                         }
 
                         const segundaLlamada = await openai.chat.completions.create({
-                            model: 'gpt-4o',  // ⚡ MODELO FINE-TUNED ULTRA-NATURAL
+                            model: 'gpt-5-mini',  // ⚡ MODELO FINE-TUNED ULTRA-NATURAL
                             messages: mensajesSegundaLlamada,
-                            max_tokens: 2000,               // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
-                            temperature: 0.9,               // ⚡ MÁXIMA CREATIVIDAD
-                            top_p: 0.95,                    // ⚡ SAMPLING CREATIVO
-                            frequency_penalty: 0.6,         // ⚡ PENALIZAR FUERTEMENTE REPETICIONES
-                            presence_penalty: 0.4           // ⚡ MÁXIMA DIVERSIDAD EN ESTILO
+                            max_completion_tokens: 2000    // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
+                            // ⚠️ gpt-5-mini solo soporta valores por defecto para temperature, top_p, etc.
                         });
 
                         const explicacionNatural = segundaLlamada.choices[0].message.content;
