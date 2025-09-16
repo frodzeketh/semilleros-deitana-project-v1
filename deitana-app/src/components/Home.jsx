@@ -598,9 +598,6 @@ const Home = () => {
         }
       }
 
-      // Función para mostrar contenido de forma más natural
-      
-
       // Intervalo para mostrar contenido de forma muy fluida (cada 30ms)
       streamingInterval = setInterval(() => {
         flushBuffer() // Mostrar cualquier contenido pendiente cada 30ms
@@ -630,11 +627,9 @@ const Home = () => {
                 // Solo agregar contenido que no sea vacío o caracteres extraños
                 if (content && content.trim()) {
                   buffer += content
-                  naturalFlush() // Mostrar cuando tengamos suficientes caracteres
                 } else if (content === ' ' || content === '\n') {
                   // Preservar espacios y saltos de línea
                   buffer += content
-                  naturalFlush() // Mostrar el contenido acumulado
                 }
                 
               } else if (data.type === 'thinking') {
