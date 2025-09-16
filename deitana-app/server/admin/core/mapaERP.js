@@ -2983,7 +2983,7 @@ partidas: {
       id: "ID de la partida (Clave Primaria)",
       PAR_FEC: "Fecha de la partida.",
       PAR_ENC: "Número del encargo asociado. Clave foránea a la tabla 'encargos'.",
-      PAR_TIPO: "Tipo de partida: 'N' - Normal, sembrada sin injerto, 'C' - Componente de injerto (pie o cabeza), 'I' - Injerto completo (pie y cabeza ya unidos),  'D' - Descocada, planta regenerada por exceso de altura, 'R' - Planta libre reservada a nombre de un cliente, 'O' - Comprada a otro semillero en caso de emergencia, 'X' - Componente externo (pie o cabeza comprado a otro semillero para injertar).",
+      PAR_TIPO: "Tipo de partida: 'N' - Normal, sembrada sin injerto, 'C' - Componente de injerto (pie o cabeza), 'I' - Injerto completo (pie y cabeza ya unidos),  'D' - Descocada, planta regenerada por exceso de altura, 'O' - Comprada a otro semillero en caso de emergencia, 'X' - Componente externo (pie o cabeza comprado a otro semillero para injertar).",
       PAR_SEM: "Semilla utilizada. Clave foránea a la tabla 'articulos' para obtener la denominación (AR_DENO).",
       PAR_CCL: "Id del cliente, tiene relacion con la tabla 'clientes'. para obtener la denominación (CL_DENO).",
       PAR_CAS: "Id de casa comercial, tiene relacion con la tabla 'casas_com'. para obtener la denominación (CC_DENO).",
