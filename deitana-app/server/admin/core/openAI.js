@@ -1824,6 +1824,25 @@ ${statusReport}
                         promptExplicacion += `${terminologia}\n\n`;
                         console.log('🔍 [DEBUG] Después de terminologia:', promptExplicacion.includes('formatoRespuesta') ? 'SÍ' : 'NO');
                         
+                        // 🔍 TEST: Verificar si los prompts base contienen patrones robóticos
+                        const patronesRoboticosPrompts = [
+                            'Estas son las',
+                            'Aquí tienes',
+                            'Aquí te presento',
+                            'Te presento'
+                        ];
+                        
+                        let patronPromptsDetectado = null;
+                        for (const patron of patronesRoboticosPrompts) {
+                            if (promptExplicacion.includes(patron)) {
+                                patronPromptsDetectado = patron;
+                                break;
+                            }
+                        }
+                        
+                        console.log('🤖 [PROMPTS-TEST] Patrón robótico en prompts:', patronPromptsDetectado || 'NINGUNO');
+                        console.log('📄 [PROMPTS-TEST] Primeros 500 caracteres de prompts:', promptExplicacion.substring(0, 500));
+                        
                         // =====================================
                         // LOGS DETALLADOS DE PROMPTS
                         // =====================================
@@ -1851,6 +1870,26 @@ ${statusReport}
                             const contextoRAGSegunda = await ragInteligente.recuperarConocimientoRelevante(message, 'sistema');
                             if (contextoRAGSegunda) {
                                 console.log('🎯 [RAG] Incluyendo contexto empresarial en segunda llamada');
+                                
+                                // 🔍 TEST: Verificar si el RAG contiene patrones robóticos
+                                const patronesRoboticosRAG = [
+                                    'Estas son las',
+                                    'Aquí tienes',
+                                    'Aquí te presento',
+                                    'Te presento'
+                                ];
+                                
+                                let patronRAGDetectado = null;
+                                for (const patron of patronesRoboticosRAG) {
+                                    if (contextoRAGSegunda.includes(patron)) {
+                                        patronRAGDetectado = patron;
+                                        break;
+                                    }
+                                }
+                                
+                                console.log('🤖 [RAG-TEST] Patrón robótico en RAG:', patronRAGDetectado || 'NINGUNO');
+                                console.log('📄 [RAG-TEST] Primeros 200 caracteres del RAG:', contextoRAGSegunda.substring(0, 200));
+                                
                                 // Usar el sistema de prompts unificado para el RAG también
                                 promptExplicacion += `\n${contextoRAGSegunda}\n\n`;
                             }
@@ -1957,6 +1996,48 @@ ${Array.isArray(results) ?
 
                         const explicacionNatural = segundaLlamada.choices[0].message.content;
                         
+                        // 🔍 TEST SISTEMÁTICO: RASTREAR TEXTO ROBÓTICO
+                        console.log('\n🔍 ==========================================');
+                        console.log('🔍 TEST SISTEMÁTICO - RASTREO DE TEXTO ROBÓTICO');
+                        console.log('🔍 ==========================================');
+                        
+                        // Detectar patrones robóticos específicos
+                        const patronesRoboticos = [
+                            'Estas son las',
+                            'Aquí tienes',
+                            'Aquí te presento',
+                            'Te presento',
+                            'Según nuestros registros',
+                            'Claro, aquí tienes'
+                        ];
+                        
+                        let patronDetectado = null;
+                        for (const patron of patronesRoboticos) {
+                            if (explicacionNatural.includes(patron)) {
+                                patronDetectado = patron;
+                                break;
+                            }
+                        }
+                        
+                        console.log('🤖 PATRÓN ROBÓTICO DETECTADO:', patronDetectado || 'NINGUNO');
+                        console.log('📄 Longitud:', explicacionNatural.length, 'caracteres');
+                        console.log('📄 Primeros 100 caracteres:', explicacionNatural.substring(0, 100));
+                        console.log('📄 Contiene saltos de línea dobles:', (explicacionNatural.match(/\n\n/g) || []).length);
+                        console.log('📄 Contiene tablas markdown:', explicacionNatural.includes('|') ? 'SÍ' : 'NO');
+                        
+                        // Análisis de estructura
+                        const lineas = explicacionNatural.split('\n');
+                        console.log('📄 Número de líneas:', lineas.length);
+                        console.log('📄 Primera línea:', lineas[0]);
+                        console.log('📄 Segunda línea:', lineas[1] || 'N/A');
+                        console.log('📄 Tercera línea:', lineas[2] || 'N/A');
+                        
+                        console.log('📄 CONTENIDO COMPLETO:');
+                        console.log('─'.repeat(50));
+                        console.log(explicacionNatural);
+                        console.log('─'.repeat(50));
+                        console.log('🔍 ==========================================\n');
+                        
                         // Reemplazar la respuesta técnica con la explicación natural
                         finalMessage = explicacionNatural;
                         
@@ -2024,6 +2105,22 @@ ${Array.isArray(results) ?
 
             // Personalizar respuesta con nombre del usuario
             const respuestaPersonalizada = personalizarRespuesta(finalMessage, infoUsuario.nombre);
+
+            // 🔍 LOG CRÍTICO: Verificar qué se envía al frontend
+            console.log('\n🔍 ==========================================');
+            console.log('🔍 RESPUESTA FINAL ENVIADA AL FRONTEND');
+            console.log('🔍 ==========================================');
+            console.log('📄 Longitud final:', respuestaPersonalizada.length, 'caracteres');
+            console.log('📄 Contiene <p>:', respuestaPersonalizada.includes('<p>') ? 'SÍ' : 'NO');
+            console.log('📄 Contiene <div>:', respuestaPersonalizada.includes('<div>') ? 'SÍ' : 'NO');
+            console.log('📄 Contiene <table>:', respuestaPersonalizada.includes('<table>') ? 'SÍ' : 'NO');
+            console.log('📄 Contiene "Aquí te presento":', respuestaPersonalizada.includes('Aquí te presento') ? 'SÍ' : 'NO');
+            console.log('📄 Contiene "Aquí tienes":', respuestaPersonalizada.includes('Aquí tienes') ? 'SÍ' : 'NO');
+            console.log('📄 MUESTRA COMPLETA:');
+            console.log('─'.repeat(50));
+            console.log(respuestaPersonalizada);
+            console.log('─'.repeat(50));
+            console.log('🔍 ==========================================\n');
 
             // Enviar señal de finalización con conversationId
             response.write(JSON.stringify({
