@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Users, Hash, Scale } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -14,7 +14,6 @@ const API_URL =
 const SemillasEnCamara = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   
   // Estados para datos de semillas
@@ -26,31 +25,14 @@ const SemillasEnCamara = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [modalView, setModalView] = useState("main");
   
   // Estados para el historial
   const [activeSection, setActiveSection] = useState("historial");
   const [historialExpanded, setHistorialExpanded] = useState(true);
   const [chatHistory, setChatHistory] = useState([]);
   const [historialItemsToShow, setHistorialItemsToShow] = useState(10);
-  const [timeUpdate, setTimeUpdate] = useState(0);
   const HISTORIAL_INCREMENT = 10;
 
-  const handleTakePhoto = () => {
-    console.log('Tomando foto...');
-    alert('Función de tomar foto en desarrollo');
-  };
-
-  const handleUploadImage = () => {
-    console.log('Subiendo imagen...');
-    alert('Función de subir imagen en desarrollo');
-  };
-
-  const handleGoToChat = () => {
-    navigate('/home');
-  };
 
   // Función para cargar datos de semillas desde la VPS
   const loadSeedsData = async () => {
@@ -318,7 +300,7 @@ const SemillasEnCamara = () => {
             <div className="ds-sidebar-content">
               {/* Navegación principal */}
               <div className="ds-navigation-menu">
-                <button className="ds-nav-item" onClick={() => setSearchModalOpen(true)}>
+                <button className="ds-nav-item">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
@@ -412,7 +394,7 @@ const SemillasEnCamara = () => {
                                 <div className="ds-date-header">{dateGroup}</div>
                                 {chats.map((chat) => (
                                   <button
-                                    key={`${chat.id}-${timeUpdate}`}
+                                    key={chat.id}
                                     onClick={() => navigate(`/home?chat=${chat.id}`)}
                                     className="ds-historial-item"
                                   >
@@ -463,7 +445,7 @@ const SemillasEnCamara = () => {
             {/* Contenido colapsado */}
             <div className="ds-sidebar-content">
               <div className="ds-navigation-menu">
-                <button className="ds-nav-item" onClick={() => setSearchModalOpen(true)}>
+                <button className="ds-nav-item">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="11" cy="11" r="8"/>
                     <path d="m21 21-4.35-4.35"/>
