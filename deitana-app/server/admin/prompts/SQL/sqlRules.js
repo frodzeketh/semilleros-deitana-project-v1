@@ -279,37 +279,34 @@ Mantener respuesta visual tipo tablas con columna de cabeza y pie para claridad
 
 
 
+Para consultas como: "¿Qué partidas tenemos en el invernadero A1 y cuántas bandejas quedan?"
+Recuerda, que es importante que te enfoques en proporcionar partidas que sean recientes, no partidas que años anteriores o las primeras ya que eso no es factible por ningun motivo.
 
+## 🚨 REGLA CRÍTICA PARA CONSULTAS DE PARTIDAS
 
-**Consulta:** "CUANDO TE CONSULTEN PREGUNTAS COMO:
-"¿Qué hay plantado en el sector 22?"
-"¿Qué partidas tenemos en el invernadero A1?"
-"¿Cuántas bandejas quedan en A2?"
-"¿Qué está en la fila 26 del sector 20?"
-"saber lo que esta en el sector 22 del c2"
-saber lo que esta en el sector 20 del c2
-SE REFIERE A CONSULTAS DE INVERNADEROS Y PARTIDAS. HAZ ESTE TIPO DE CONSULTA:"
+### ⚠️ **OBLIGATORIO PARA TODAS LAS CONSULTAS DE PARTIDAS:**
+**SIEMPRE** enfócate en proporcionar partidas que sean **RECIENTES**, NO partidas de años anteriores o las primeras partidas. Esto es **CRÍTICO** porque las partidas antiguas no son factibles por ningún motivo.
+
+### 📋 **EJEMPLOS DE CONSULTAS DE PARTIDAS:**
+
+**Consulta:** "¿Qué partidas tenemos en el invernadero A1 y cuántas bandejas quedan?"
 
 **SQL CORRECTO (partidas recientes):**
+\`<sql>
 SELECT 
-    ppu.id AS codigo_partida,
-    ppu.id2 AS subpartida,
-    a.AR_DENO AS articulo_plantado,
-    ppu.C0 AS invernadero,
-    ppu.C1 AS sector,
-    ppu.C2 AS fila,
-    ppu.C4 AS quedan
-FROM 
-    partidas_par_ubic ppu
-    INNER JOIN partidas p ON ppu.id = p.id
-    INNER JOIN articulos a ON p.PAR_SEM = a.id
-WHERE 
-    ppu.C1 = '22'
-ORDER BY 
-    ppu.id, ppu.id2;
-
-
-
+    p.id AS partida_id,
+    pu.id2 AS sub_partida,
+    pu.C0 AS invernadero,
+    pu.C1 AS sector,
+    pu.C2 AS fila,
+    pu.C4 AS bandejas_restantes
+FROM partidas p
+INNER JOIN partidas_par_ubic pu 
+    ON p.id = pu.id
+WHERE pu.C0 = 'A1'
+ORDER BY p.id DESC
+LIMIT 10;
+</sql>\`
 
 **IMPORTANTE:** 
 - **SIEMPRE** usa \`ORDER BY p.id DESC\` para obtener las partidas más recientes
@@ -358,62 +355,23 @@ PORTAINJ
 
 
 
-PARA SABER LAS SEMILLAS QUE HAY EN CAMARA: 
-SELECT 
-    ra.id AS remesa,
-    a.AR_DENO AS articulo,
-    c.CL_DENO AS cliente,
-    ra.REA_ORI AS origen,
-    ev.EV_DENO AS envase,
-    SUM(rm.REM_UDS * rm.REM_UXE) AS stock
-FROM 
-    remesas_art ra
-    INNER JOIN remesas_mov rm ON ra.id = rm.REM_REA
-    LEFT JOIN articulos a ON ra.REA_AR = a.id
-    LEFT JOIN clientes c ON ra.REA_CCL = c.id
-    LEFT JOIN envases_vta ev ON ra.REA_SOB = ev.id
-GROUP BY 
-    ra.id, 
-    a.AR_DENO, 
-    c.CL_DENO, 
-    ra.REA_ORI, 
-    ev.EV_DENO
-HAVING 
-    SUM(rm.REM_UDS * rm.REM_UXE) > 0
-ORDER BY 
-    ra.id;
-
-
-
 Por si te preguntan tambien si hay brocoli ares en camara, u otro articulo, semilla, este es la consulta sql para saber el stock exacto, debes aplicarlo en muchas ocaciones que se te solicite saber el stock, semillas en camara, articulos en camara, ya que da el stock exacto.
 Recuerda el diccionario: BROC. ARES y haz esta consulta.
 
-SELECT 
-    ra.id AS remesa,
-    a.AR_DENO AS articulo,
-    c.CL_DENO AS cliente,
-    ra.REA_ORI AS origen,
-    ev.EV_DENO AS envase,
-    SUM(rm.REM_UDS * rm.REM_UXE) AS stock
-FROM 
-    remesas_art ra
-    INNER JOIN remesas_mov rm ON ra.id = rm.REM_REA
+SELECT tipo_semilla, SUM(stock_actual) AS stock_total
+FROM (
+    SELECT a.AR_DENO AS tipo_semilla, 
+           ra.REA_LOTE AS lote_remesa, 
+           SUM(rm.REM_UDS * rm.REM_UXE) AS stock_actual
+    FROM remesas_art ra
     LEFT JOIN articulos a ON ra.REA_AR = a.id
-    LEFT JOIN clientes c ON ra.REA_CCL = c.id
-    LEFT JOIN envases_vta ev ON ra.REA_SOB = ev.id
-WHERE 
-    UPPER(a.AR_DENO) LIKE '%BROC. ARES%'
-    
-GROUP BY 
-    ra.id, 
-    a.AR_DENO, 
-    c.CL_DENO, 
-    ra.REA_ORI, 
-    ev.EV_DENO
-HAVING 
-    SUM(rm.REM_UDS * rm.REM_UXE) > 0
-ORDER BY 
-    ra.id;
+    LEFT JOIN remesas_mov rm ON rm.REM_REA = ra.id
+    WHERE a.AR_DENO LIKE '%BROC. ARES%'
+    GROUP BY a.AR_DENO, ra.REA_LOTE
+    HAVING SUM(rm.REM_UDS * rm.REM_UXE) > 0
+) AS sub
+GROUP BY tipo_semilla;
+
 
 
 PARA SABER EL PRECIO DE UNA SEMILLLA, ARTICULO: 
@@ -581,22 +539,6 @@ WHERE e.id2 = 6  -- Disponible para venta
   -- AND UPPER(a.AR_DENO) LIKE '%PEPINO%'   -- Para buscar pepino
   -- AND UPPER(a.AR_DENO) LIKE '%URANO%'    -- Para buscar urano
 ORDER BY a.AR_DENO, REPLACE(e.C2, ',', '.') + 0 DESC;
-
-
-NUNCA, JAMAS HAGAS ESTA CONSULTA SQL PARA SABER QUE PARTIDAS PLANTAS LIBRES:
-SELECT 
-    id AS partida_id,
-    PAR_DENO AS descripcion,
-    PAR_NMCL AS cliente,
-    PAR_NMSM AS semilla,
-    PAR_FECS AS fecha_siembra
-FROM 
-    partidas
-WHERE 
-    PAR_TIPO = 'L'
-ORDER BY 
-    id DESC
-LIMIT 5;
 
 
 
