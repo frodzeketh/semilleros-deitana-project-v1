@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
 import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
 import remarkEmoji from "remark-emoji"
@@ -23,6 +23,7 @@ const API_URL =
 
 const Home = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [message, setMessage] = useState("")
   const [chatMessages, setChatMessages] = useState([])
@@ -37,7 +38,7 @@ const Home = () => {
 
   // Agregar después de los otros estados
   const [activeSection, setActiveSection] = useState("historial")
-  const [historialExpanded, setHistorialExpanded] = useState(false)
+  const [historialExpanded, setHistorialExpanded] = useState(true)
 
   // Eliminar la línea donde se declara historialExpanded:
   // const [historialExpanded, setHistorialExpanded] = useState(false)
@@ -1345,14 +1346,14 @@ const Home = () => {
                 </button>
 
                 <button
-                  className={`ds-nav-item ${activeSection === "tareas" ? "active" : ""}`}
-                  onClick={() => setActiveSection("tareas")}
+                  className="ds-nav-item"
+                  onClick={() => navigate('/semillasencamara')}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 11l3 3l8-8" />
-                    <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9c1.51 0 2.93.37 4.18 1.03" />
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
                   </svg>
-                  <span>Tareas</span>
+                  <span>Semillar en Cámara</span>
                 </button>
 
                 <button
