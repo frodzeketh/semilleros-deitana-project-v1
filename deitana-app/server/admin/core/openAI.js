@@ -1984,12 +1984,22 @@ ${Array.isArray(results) ?
                             });
                         }
 
+                        console.log('🔄 [SEGUNDA-LLAMADA] Iniciando segunda llamada...');
+                        console.log('📄 [SEGUNDA-LLAMADA] Número de mensajes:', mensajesSegundaLlamada.length);
+                        console.log('📄 [SEGUNDA-LLAMADA] Longitud del prompt:', mensajesSegundaLlamada[0].content.length);
+                        
                         const segundaLlamada = await openai.chat.completions.create({
-                            model: 'gpt-5-mini',  // ⚡ MODELO FINE-TUNED ULTRA-NATURAL
+                            model: 'gpt-4o-mini',  // ⚡ CAMBIAR A GPT-4O-MINI (MÁS CONFIABLE)
                             messages: mensajesSegundaLlamada,
-                            max_completion_tokens: 2000    // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
-                            // ⚠️ gpt-5-mini solo soporta valores por defecto para temperature, top_p, etc.
+                            max_tokens: 2000,
+                            temperature: 0.7
                         });
+
+                        console.log('✅ [SEGUNDA-LLAMADA] Respuesta recibida:');
+                        console.log('📄 [SEGUNDA-LLAMADA] Respuesta completa:', JSON.stringify(segundaLlamada, null, 2));
+                        console.log('📄 [SEGUNDA-LLAMADA] Content type:', typeof segundaLlamada.choices[0].message.content);
+                        console.log('📄 [SEGUNDA-LLAMADA] Content length:', segundaLlamada.choices[0].message.content ? segundaLlamada.choices[0].message.content.length : 'UNDEFINED');
+                        console.log('📄 [SEGUNDA-LLAMADA] Content value:', segundaLlamada.choices[0].message.content);
 
                         const explicacionNatural = segundaLlamada.choices[0].message.content;
                         
@@ -2335,7 +2345,7 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
     }
     
     // ⚡ REFUERZO CRÍTICO PARA CONSULTAS SQL CON THINKING
-    if (intencion && intencion.tipo === 'sql') {
+    if (intencion && (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql')) {
         instrucciones += `
 🚨🚨🚨 CONSULTA SQL DETECTADA - MODO THINKING ACTIVADO 🚨🚨🚨
 
@@ -2380,84 +2390,6 @@ Voy a buscar en nuestro sistema todas las gestiones, visitas, llamadas o cualqui
 
 ⚡ OBLIGATORIO: El thinking debe ser específico y mostrar tu razonamiento real ⚡
 ⚡ RECUERDA: Empezar DIRECTAMENTE con <thinking> sin texto previo ⚡
-`;
-    }
-    
-    // ⚡ REFUERZO ESPECÍFICO PARA CONSULTAS DE CONOCIMIENTO (RAG_SQL)
-    if (intencion && intencion.tipo === 'rag_sql') {
-        instrucciones += `
-🚨🚨🚨 CONSULTA DE CONOCIMIENTO DETECTADA - MODO RAG ACTIVADO 🚨🚨🚨
-
-**PROCESO OBLIGATORIO:**
-
-1. **USAR INFORMACIÓN DEL CONTEXTO EMPRESARIAL:**
-   - ⚡ SIEMPRE prioriza la información del contexto empresarial proporcionado
-   - ⚡ NO des respuestas genéricas cuando tengas información específica
-   - ⚡ Cita y usa la información oficial de Semilleros Deitana
-
-2. **FORMATO DE RESPUESTA ESTRUCTURADO:**
-   - ⚡ Usa títulos con ## para organizar la información
-   - ⚡ Usa listas con - para puntos importantes
-   - ⚡ Usa **texto en negrita** para destacar información clave
-   - ⚡ Sé conversacional y empático
-
-3. **EJEMPLO DE FORMATO CORRECTO:**
-
-## 📋 Título de la Sección
-
-**Información clave:** Descripción importante aquí
-
-- Punto importante 1
-- Punto importante 2
-- Punto importante 3
-
-### 🔍 Detalles Adicionales
-
-Información complementaria con explicación natural y conversacional.
-
-¿Te gustaría que profundice en algún aspecto específico o tienes alguna pregunta adicional?
-
-⚡ OBLIGATORIO: Usar formato estructurado y ser conversacional ⚡
-⚡ CRÍTICO: Priorizar información empresarial específica sobre respuestas genéricas ⚡
-`;
-    }
-    
-    // ⚡ REFUERZO ESPECÍFICO PARA CONSULTAS DE CONVERSACIÓN
-    if (intencion && intencion.tipo === 'conversacion') {
-        instrucciones += `
-🚨🚨🚨 CONSULTA DE CONVERSACIÓN DETECTADA - MODO CONVERSACIONAL 🚨🚨🚨
-
-**PROCESO OBLIGATORIO:**
-
-1. **SER CONVERSACIONAL Y EMPÁTICO:**
-   - ⚡ Usa un tono amigable y natural
-   - ⚡ Sé empático con las necesidades del usuario
-   - ⚡ Ofrece ayuda adicional cuando sea apropiado
-
-2. **FORMATO DE RESPUESTA ESTRUCTURADO:**
-   - ⚡ Usa títulos con ## para organizar la información
-   - ⚡ Usa listas con - para puntos importantes
-   - ⚡ Usa **texto en negrita** para destacar información clave
-   - ⚡ Mantén un tono conversacional
-
-3. **EJEMPLO DE FORMATO CORRECTO:**
-
-## 💬 Título de la Sección
-
-**Información clave:** Descripción importante aquí
-
-- Punto importante 1
-- Punto importante 2
-- Punto importante 3
-
-### 🔍 Detalles Adicionales
-
-Explicación natural y conversacional.
-
-¿Hay algo más en lo que pueda ayudarte? 😊
-
-⚡ OBLIGATORIO: Usar formato estructurado y ser conversacional ⚡
-⚡ CRÍTICO: Mantener tono amigable y empático ⚡
 `;
     }
     
