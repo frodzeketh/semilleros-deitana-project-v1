@@ -1984,14 +1984,32 @@ ${Array.isArray(results) ?
                             });
                         }
 
-                        const segundaLlamada = await openai.chat.completions.create({
-                            model: 'gpt-5-mini',  // ⚡ MODELO FINE-TUNED ULTRA-NATURAL
-                            messages: mensajesSegundaLlamada,
-                            max_completion_tokens: 2000    // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
-                            // ⚠️ gpt-5-mini solo soporta valores por defecto para temperature, top_p, etc.
-                        });
+                        let explicacionNatural = '';
+                        try {
+                            console.log('🔄 [SEGUNDA-LLAMADA] Iniciando segunda llamada...');
+                            const segundaLlamada = await openai.chat.completions.create({
+                                model: 'gpt-5-mini',  // ⚡ MODELO FINE-TUNED ULTRA-NATURAL
+                                messages: mensajesSegundaLlamada,
+                                max_completion_tokens: 2000    // ⚡ MÁS TOKENS PARA RESPUESTAS COMPLETAS
+                                // ⚠️ gpt-5-mini solo soporta valores por defecto para temperature, top_p, etc.
+                            });
 
-                        const explicacionNatural = segundaLlamada.choices[0].message.content;
+                            explicacionNatural = segundaLlamada.choices[0].message.content;
+                            console.log('✅ [SEGUNDA-LLAMADA] Segunda llamada completada exitosamente');
+                        } catch (error) {
+                            console.error('❌ [SEGUNDA-LLAMADA] Error en segunda llamada:', error);
+                            explicacionNatural = 'Error al procesar la respuesta. Por favor, intenta de nuevo.';
+                        }
+                        
+                        // 🔍 DEBUG: Verificar qué está devolviendo la segunda llamada
+                        console.log('\n🔍 ==========================================');
+                        console.log('🔍 DEBUG SEGUNDA LLAMADA');
+                        console.log('🔍 ==========================================');
+                        console.log('📄 Respuesta completa de la segunda llamada:', JSON.stringify(segundaLlamada, null, 2));
+                        console.log('📄 explicacionNatural type:', typeof explicacionNatural);
+                        console.log('📄 explicacionNatural length:', explicacionNatural ? explicacionNatural.length : 'UNDEFINED');
+                        console.log('📄 explicacionNatural content:', explicacionNatural);
+                        console.log('🔍 ==========================================\n');
                         
                         // 🔍 TEST SISTEMÁTICO: RASTREAR TEXTO ROBÓTICO
                         console.log('\n🔍 ==========================================');
