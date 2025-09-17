@@ -3266,8 +3266,623 @@ input:focus {
   text-align: center;
 }
 
+/* ========================================
+   ESTILOS PARA SEMILLAS EN CÁMARA
+   ======================================== */
 
+.semillas-camara-container {
+  flex: 1;
+  padding: 40px 24px;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
+.semillas-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.semillas-logo {
+  margin-bottom: 20px;
+}
+
+.semillas-logo img {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.semillas-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #10b981, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.semillas-header p {
+  font-size: 18px;
+  color: #6b7280;
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.semillas-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.semillas-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  min-width: 180px;
+}
+
+.semillas-capture-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.semillas-capture-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+}
+
+.semillas-upload-btn {
+  background: white;
+  color: #374151;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.semillas-upload-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.semillas-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.semillas-features {
+  margin-bottom: 60px;
+  flex: 1;
+}
+
+.semillas-features h2 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 40px 0;
+  color: #1f2937;
+}
+
+.semillas-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.semillas-feature-card {
+  background: white;
+  padding: 32px 24px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #f3f4f6;
+}
+
+.semillas-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.semillas-feature-card .semillas-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 16px;
+  color: white;
+}
+
+.semillas-feature-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+}
+
+.semillas-feature-card p {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.semillas-recent {
+  margin-bottom: 40px;
+}
+
+.semillas-recent h2 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 40px 0;
+  color: #1f2937;
+}
+
+.semillas-recent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.semillas-recent-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.semillas-recent-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.semillas-recent-card .semillas-recent-thumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.semillas-recent-card .semillas-placeholder-img {
+  font-size: 28px;
+}
+
+.semillas-recent-card .semillas-recent-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.semillas-recent-card h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #1f2937;
+}
+
+.semillas-recent-card p {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 4px 0;
+}
+
+.semillas-recent-card .semillas-recent-date {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.semillas-navigation {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.semillas-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.semillas-nav-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+/* Responsive para semillas en cámara */
+@media (max-width: 768px) {
+  .semillas-camara-container {
+    padding: 20px 16px;
+  }
+  
+  .semillas-header h1 {
+    font-size: 24px;
+  }
+  
+  .semillas-header p {
+    font-size: 16px;
+  }
+  
+  .semillas-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .semillas-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px 24px;
+  }
+  
+  .semillas-features-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .semillas-feature-card {
+    padding: 24px 20px;
+  }
+  
+  .semillas-recent-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .semillas-recent-card {
+    padding: 16px;
+  }
+}
+
+/* ========================================
+   ESTILOS PARA BUSCADOR DE SEMILLAS
+   ======================================== */
+
+.seed-search-container {
+  flex: 1;
+  padding: 40px 24px;
+  overflow-y: auto;
+  background-color: #f8f6f7;
+  min-height: 100vh;
+}
+
+.seed-search-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.seed-search-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.seed-search-header p {
+  font-size: 1.125rem;
+  color: #6b7280;
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.seed-search-bar {
+  max-width: 32rem;
+  margin: 0 auto 2rem;
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  height: 16px;
+  width: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.results-count {
+  margin-bottom: 1.5rem;
+}
+
+.results-count p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.results-table-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-header {
+  background: #f9fafb;
+}
+
+.table-header th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-cell.right {
+  justify-content: flex-end;
+}
+
+.header-icon {
+  height: 16px;
+  width: 16px;
+  color: #6b7280;
+}
+
+.table-row {
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background: #f9fafb;
+}
+
+.table-cell {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.table-cell.article {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.table-cell.client {
+  color: #6b7280;
+}
+
+.table-cell.quantity {
+  text-align: right;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.no-results-icon {
+  width: 6rem;
+  height: 6rem;
+  background: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.search-icon-large {
+  height: 2rem;
+  width: 2rem;
+  color: #6b7280;
+}
+
+.no-results h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.no-results p {
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Estados de carga y error */
+.loading-state {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.error-state {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 8px 0;
+}
+
+.error-state p {
+  color: #6b7280;
+  margin: 0 0 1.5rem 0;
+}
+
+.retry-button {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+/* Responsive para buscador de semillas */
+@media (max-width: 768px) {
+  .seed-search-container {
+    padding: 20px 16px;
+  }
+  
+  .seed-search-header h1 {
+    font-size: 2rem;
+  }
+  
+  .seed-search-header p {
+    font-size: 1rem;
+  }
+  
+  .results-table-container {
+    overflow-x: auto;
+  }
+  
+  .results-table {
+    min-width: 600px;
+  }
+  
+  .table-header th,
+  .table-cell {
+    padding: 12px 8px;
+  }
+  
+  .header-cell {
+    font-size: 0.875rem;
+  }
+  
+  .table-cell.article {
+    font-size: 0.875rem;
+  }
+  
+  .table-cell.client {
+    font-size: 0.875rem;
+  }
+  
+  .table-cell.quantity {
+    font-size: 0.875rem;
+  }
+}
 
 
 
