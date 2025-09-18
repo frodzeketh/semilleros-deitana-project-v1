@@ -1989,7 +1989,7 @@ ${Array.isArray(results) ?
                         console.log('📄 [SEGUNDA-LLAMADA] Longitud del prompt:', mensajesSegundaLlamada[0].content.length);
                         
                         const segundaLlamada = await openai.chat.completions.create({
-                            model: 'gpt-4o-mini',  // ⚡ CAMBIAR A GPT-4O-MINI (MÁS CONFIABLE)
+                            model: 'gpt-4o-mini',  // ⚡ MODELO CONFIABLE Y ESTABLE
                             messages: mensajesSegundaLlamada,
                             max_tokens: 2000,
                             temperature: 0.7

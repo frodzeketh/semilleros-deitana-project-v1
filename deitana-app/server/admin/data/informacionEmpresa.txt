@@ -906,71 +906,67 @@ SECCIÓN: Producción – Utilidades – Parte Manipulado
 
 ==============================
 
-SECCIÓN: ESTADO DE LAS PARTIDAS
+SECCIÓN: Producción – Controles – Estado de las partidas
 
 ==============================
 
-SECCIÓN: LISTA AVISOS DE PARTIDAS
+SECCIÓN: Producción – Controles – Lista avisos de Partidas
 
 ==============================
 
-SECCIÓN:PRODUCCIÓN LAVADO
+SECCIÓN: Producción – Controles – Producción Lavado
 
 ==============================
 
-SECCIÓN: ESTADO DE LAS CARGAS
+SECCIÓN: Producción – Controles – Estado de las cargas
 
 ==============================
 
-SECCIÓN: COSTES
+SECCIÓN: Producción – Controles – Costes
 
 ==============================
 
-SECCIÓN: RESUMEN COSTES
+SECCIÓN: Producción – Controles – Resumen Costes
 
 ==============================
 
-SECCIÓN: HISTORICO COSTES
+SECCIÓN: Producción – Controles – Historico Costes
 
 ==============================
 
-SECCIÓN: PARTES CONSUMO
+SECCIÓN: Producción – Controles – Partes consumo
 
 ==========================================================================================
 
-SECCIÓN: PROGRAMACION INJERTOS
+SECCIÓN: Injertos y Abonados - Injertos - Programacion Injertos
 
 ==============================
 
-SECCIÓN: VALIDAR PREPARTIDAS INJERTOS
+SECCIÓN: Injertos y Abonados - Injertos - Validar prepartida Injertos
 
 ==============================
 
-SECCIÓN: VALIDAR INJERTOS
+SECCIÓN: Injertos y Abonados - Injertos - Validar Injertos
 
 ==============================
 
-SECCIÓN: RESUMEN PORTAINJERTOS
+SECCIÓN: Injertos y Abonados - Injertos - Resumen Portainjertos
 
 ==============================
 
-SECCIÓN: CALCULADOR DE FECHAS INJERTOS
+SECCIÓN: Injertos y Abonados - Utilidades - Calculador de Fechas Injertos
 
 ==============================
 
-SECCIÓN: CALCULADOR DE FECHAS INJERTOS
+SECCIÓN: Injertos y Abonados - Utilidades - Asignacion de Injertos
 
 ==============================
 
-SECCIÓN: ASIGNACION DE INJERTOS
+SECCIÓN: Injertos y Abonados - Utilidades - Liquidacion Injertadoras
 
 ==============================
 
-SECCIÓN: LIQUIDACION INJERTADORAS
-
-==============================
-
-SECCIÓN: INJERTOS Y ABONADOS – UTILIDADES – MEDIAS BANDEJAS
+SECCIÓN: Injertos y Abonados - Utilidades - Medias bandejas
 DESCRIPCIÓN GENERAL: Registra información sobre medias bandejas, incluyendo el código de la partida, cantidad de alveolos, huecos, etiqueta, cantidad de plantas, fecha y hora de registro, y el operario asociado. El identificador principal suele coincidir con el código de partida. Esta información es fundamental para el seguimiento del inventario de medias bandejas y la trazabilidad de plantas dentro de la producción. Se encuentra en el ERP en la sección del menú Injertos y Abonados – Utilidades – Medias Bandejas.
 
 Columnas:
@@ -997,19 +993,19 @@ Operario: 0002
 
 ==============================
 
-SECCIÓN: ESCANDALLO INJERTO
+SECCIÓN: Injertos y Abonados - Utilidades - Escandallo Injerto
 
 ==============================
 
-SECCIÓN: TECNICO FASES 
+SECCIÓN: Injertos y Abonados - Injertos por Fases - Técnico Fases
 
 ==============================
 
-SECCIÓN: CAMBIO FASES
+SECCIÓN: Injertos y Abonados - Injertos por Fases - Cambio Fases
 
 ==============================
 
-SECCIÓN: PARTES DE FASE DE INJERTO
+SECCIÓN: Injertos y Abonados - Injertos por Fases - Partes de Fase Injerto
 
 ==============================
 

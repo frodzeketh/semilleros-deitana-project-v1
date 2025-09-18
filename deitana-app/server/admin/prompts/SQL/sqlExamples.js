@@ -11,6 +11,23 @@
 
 const sqlExamples = `# 📊 EJEMPLOS SQL PRÁCTICOS
 
+Reglas SQL importantes:
+
+Usa siempre nombres de tablas y columnas válidos en MySQL.
+Nunca uses triple backtick en código SQL.
+Si encuentras un guion (-) en un nombre, reemplázalo por guion bajo (_).
+Las tablas con guiones van sin comillas: facturas_e (no facturas-e).
+Si la consulta lleva funciones de agregación, elimina LIMIT innecesarios.
+Siempre valida que la consulta sea ejecutable.
+
+Ejemplo correcto:
+SELECT c.CL_DENO AS cliente, SUM(fe.FE_PTE) AS total_deuda
+FROM facturas_e fe
+LEFT JOIN clientes c ON fe.FE_CCL = c.id
+WHERE UPPER(c.CL_DENO) LIKE '%VARGAS PEREZ%'
+AND fe.FE_PTE > 0
+GROUP BY c.CL_DENO;
+
 ## 🎯 EJEMPLOS POR TIPO DE CONSULTA
 
 ### 📋 CONSULTAS DE LISTADO

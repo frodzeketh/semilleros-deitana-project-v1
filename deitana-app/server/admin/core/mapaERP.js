@@ -4140,6 +4140,7 @@ pedidos_pr: {
       FE_VD: "Vendedor. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
       FE_FEC: "Fecha.",
       FE_BRU: "Monto bruto.",
+      FE_PTE: "PENDIENTE DE PAGO",
       FE_NETO: "Monto neto.",
       FE_IMPU: "Monto de impuesto.",
       FE_TTT: "Total.",

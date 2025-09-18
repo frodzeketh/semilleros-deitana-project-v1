@@ -41,6 +41,23 @@ const sqlRules = `# 🚨 REGLAS SQL CRÍTICAS Y OBLIGATORIAS
 - **Para agrupaciones:** Usa \`GROUP BY\` sin \`LIMIT\`
 - **Para estadísticas:** Usa funciones agregadas
 
+Reglas SQL importantes:
+
+Usa siempre nombres de tablas y columnas válidos en MySQL.
+Nunca uses triple backtick en código SQL.
+Si encuentras un guion (-) en un nombre, reemplázalo por guion bajo (_).
+Las tablas con guiones van sin comillas: facturas_e (no facturas-e).
+Si la consulta lleva funciones de agregación, elimina LIMIT innecesarios.
+Siempre valida que la consulta sea ejecutable.
+
+Ejemplo correcto:
+SELECT c.CL_DENO AS cliente, SUM(fe.FE_PTE) AS total_deuda
+FROM facturas_e fe
+LEFT JOIN clientes c ON fe.FE_CCL = c.id
+WHERE UPPER(c.CL_DENO) LIKE '%VARGAS PEREZ%'
+AND fe.FE_PTE > 0
+GROUP BY c.CL_DENO;
+
 ## 🚨 REGLAS DE SEGURIDAD
 
 ### ✅ PERMITIDO:
@@ -308,6 +325,60 @@ WHERE
 ORDER BY 
     ppu.id, ppu.id2;
 
+
+
+
+**OBLIGATORIO: PARA CONSULTAS DE FACTURAS PENDIENTES DE COBRO**
+
+CUANDO TE PREGUNTEN:
+- "¿Cuántas facturas debe el cliente X?"
+- "¿Cuánto dinero debe el cliente Y?" 
+- "¿Qué facturas tiene pendientes Z?"
+- "¿Cuál es la deuda del cliente W?"
+
+**SIEMPRE USA FE_PTE > 0 (PENDIENTE DE COBRO), NUNCA FE_TTT > 0 (TOTAL FACTURA)**
+
+**ESTRUCTURA OBLIGATORIA:**
+
+Para ver DETALLE de facturas pendientes:
+SELECT 
+    fe.id AS factura,
+    c.CL_DENO AS cliente,
+    fe.FE_FEC AS fecha_factura,
+    fe.FE_TTT AS total_factura,
+    fe.FE_PTE AS pendiente_cobro
+FROM 
+    facturas-e fe
+    LEFT JOIN clientes c ON fe.FE_CCL = c.id
+WHERE 
+    UPPER(c.CL_DENO) LIKE '%NOMBRE_CLIENTE%'
+    AND fe.FE_PTE > 0
+ORDER BY 
+    fe.FE_PTE DESC;
+
+Para CONTAR facturas pendientes:
+SELECT COUNT(*) AS facturas_pendientes
+FROM facturas-e fe 
+JOIN clientes c ON fe.FE_CCL = c.id 
+WHERE UPPER(c.CL_DENO) LIKE '%NOMBRE_CLIENTE%' 
+AND fe.FE_PTE > 0;
+
+Para TOTAL adeudado:
+SELECT 
+    c.CL_DENO AS cliente,
+    COUNT(*) AS cantidad_facturas,
+    SUM(fe.FE_PTE) AS total_deuda
+FROM facturas-e fe
+LEFT JOIN clientes c ON fe.FE_CCL = c.id
+WHERE UPPER(c.CL_DENO) LIKE '%NOMBRE_CLIENTE%'
+AND fe.FE_PTE > 0
+GROUP BY c.CL_DENO;
+
+**DIFERENCIA CRÍTICA:**
+- CORRECTO: FE_PTE > 0 = Facturas que REALMENTE debe dinero
+- INCORRECTO: FE_TTT > 0 = Todas las facturas emitidas (incluye las ya cobradas)
+
+**NUNCA confundas FE_TTT con FE_PTE en consultas de deudas pendientes.**
 
 
 
