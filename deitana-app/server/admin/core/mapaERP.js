@@ -84,7 +84,7 @@ articulos: {
       AR_WEB: "Información adicional para la web.",
       AR_IVAP: "IVA aplicado al precio.",
       AR_PGE: "Porcentaje de germinación.",
-      AR_DCG: "Tiempo de germinacion en dias",
+      AR_DCG: "Tiempo de germinacion en dias en camara",
       
     },
     relaciones: {
