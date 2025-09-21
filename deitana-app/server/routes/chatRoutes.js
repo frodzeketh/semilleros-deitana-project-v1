@@ -238,4 +238,127 @@ router.get('/semillas/stock', async (req, res) => {
     }
 });
 
+// =====================================
+// RUTA PARA OBTENER DATOS DE PARTIDAS DE RIESGO DE LA VPS
+// =====================================
+router.get('/partidas/riesgo', async (req, res) => {
+    try {
+        const userId = req.user.uid;
+        console.log('🚨 [PARTIDAS-RIESGO] Obteniendo datos de partidas de riesgo para usuario:', userId);
+        
+        // Importar la conexión a la base de datos
+        const { query } = require('../db-bridge');
+        
+        // Consulta SQL para obtener partidas de riesgo
+        const sqlQuery = `
+            SELECT 
+                p.id AS id_partida,
+                c.CL_DENO AS cliente,
+                p.PAR_PLAS AS solicitada,
+                a.AR_DENO AS articulo,
+                COALESCE(pe_injertada.C2, 0) AS injertada,
+                (p.PAR_PLAS - COALESCE(pe_injertada.C2, 0)) AS deficit,
+                p.PAR_FECS AS siembra,
+                p.PAR_FECE AS entrega,
+                p.PAR_PLAP AS alto
+            FROM 
+                partidas p
+                LEFT JOIN clientes c ON p.PAR_CCL = c.id
+                LEFT JOIN articulos a ON p.PAR_SEM = a.id
+                LEFT JOIN partidas_par_esta pe_injertada ON p.id = pe_injertada.id AND pe_injertada.id2 = 7
+            WHERE 
+                p.PAR_TISOL LIKE '%U%'
+                AND (p.PAR_EST IS NULL OR p.PAR_EST = '')
+            ORDER BY 
+                p.PAR_FECE DESC
+        `;
+        
+        console.log('🚨 [PARTIDAS-RIESGO] Ejecutando consulta SQL...');
+        
+        // Ejecutar consulta en la VPS
+        const results = await query(sqlQuery);
+        
+        console.log('🚨 [PARTIDAS-RIESGO] Resultados obtenidos:', results.length, 'registros');
+        console.log('🚨 [PARTIDAS-RIESGO] Tipo de results:', typeof results, Array.isArray(results));
+        console.log('🚨 [PARTIDAS-RIESGO] Primer registro raw:', results[0]);
+        
+        // Los resultados vienen como array de arrays, necesitamos acceder al primer elemento
+        const dataArray = Array.isArray(results[0]) ? results[0] : results;
+        console.log('🚨 [PARTIDAS-RIESGO] Data array length:', dataArray.length);
+        
+        // Transformar datos al formato esperado por el frontend
+        const partidasData = dataArray.map((row, index) => {
+            console.log(`🚨 [PARTIDAS-RIESGO] Procesando registro ${index + 1}:`, {
+                id_partida: row.id_partida,
+                cliente: row.cliente,
+                solicitada: row.solicitada,
+                articulo: row.articulo,
+                injertada: row.injertada,
+                siembra: row.siembra,
+                entrega: row.entrega,
+                alto: row.alto,
+                PAR_TISOL: row.PAR_TISOL,
+                PAR_EST: row.PAR_EST
+            });
+            
+            return {
+                id: row.id_partida || `PT-${new Date().getFullYear()}-${String(index + 1).padStart(3, '0')}`,
+                cliente: row.cliente || 'Cliente no especificado',
+                articulo: row.articulo || 'Artículo no especificado',
+                cantidadSolicitada: parseInt(row.solicitada) || 0,
+                cantidadInjertada: parseInt(row.injertada) || 0,
+                fechaSiembra: row.siembra ? new Date(row.siembra).toISOString().split('T')[0] : '2024-01-01',
+                fechaEntrega: row.entrega ? new Date(row.entrega).toISOString().split('T')[0] : '2024-03-01',
+                riskLevel: parseInt(row.alto) > 0 ? 'alto' : 'normal'
+            };
+        });
+        
+        console.log('🚨 [PARTIDAS-RIESGO] Datos transformados:', partidasData.length, 'registros');
+        console.log('🚨 [PARTIDAS-RIESGO] Datos finales:', partidasData);
+        
+        res.json({ 
+            success: true, 
+            data: partidasData,
+            total: partidasData.length,
+            source: 'vps'
+        });
+        
+    } catch (error) {
+        console.error('❌ [PARTIDAS-RIESGO] Error al obtener datos de partidas de riesgo:', error);
+        
+        // Datos de ejemplo en caso de error
+        const datosEjemplo = [
+            {
+                id: "PT-2024-001",
+                cliente: "Agrícola San José",
+                articulo: "Tomate Cherry",
+                cantidadSolicitada: 500,
+                cantidadInjertada: 320,
+                fechaSiembra: "2024-01-15",
+                fechaEntrega: "2024-03-20",
+                riskLevel: "alto"
+            },
+            {
+                id: "PT-2024-002",
+                cliente: "Huertos del Valle",
+                articulo: "Pimiento Rojo",
+                cantidadSolicitada: 300,
+                cantidadInjertada: 180,
+                fechaSiembra: "2024-01-20",
+                fechaEntrega: "2024-03-25",
+                riskLevel: "alto"
+            }
+        ];
+        
+        res.json({ 
+            success: true, 
+            data: datosEjemplo,
+            total: datosEjemplo.length,
+            source: 'ejemplo',
+            error: 'Error al conectar con la VPS, mostrando datos de ejemplo'
+        });
+    }
+});
+
+
 module.exports = router; 

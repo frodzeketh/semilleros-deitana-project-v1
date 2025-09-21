@@ -5,6 +5,7 @@ import SetDisplayName from "../src/components/DisplayName/SetDisplayName"
 import ProtectedRoute from "../src/components/ProtectedRoute"
 import SetupRoute from "../src/components/SetupRoute"
 import SemillasEnCamara from "../src/components/SemillasEnCamara"
+import PartidasRiesgo from "../src/components/PartidasRiesgo"
 import { AuthProvider } from "../src/context/AuthContext"
 
 export default function App() {
@@ -37,6 +38,16 @@ export default function App() {
               <SetupRoute>
                 <ProtectedRoute>
                   <SemillasEnCamara />
+                </ProtectedRoute>
+              </SetupRoute>
+            }
+          />
+          <Route
+            path="/partidasriesgo"
+            element={
+              <SetupRoute>
+                <ProtectedRoute>
+                  <PartidasRiesgo />
                 </ProtectedRoute>
               </SetupRoute>
             }
