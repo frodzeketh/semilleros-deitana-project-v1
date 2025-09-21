@@ -268,9 +268,11 @@ router.get('/partidas/riesgo', async (req, res) => {
                 LEFT JOIN partidas_par_esta pe_injertada ON p.id = pe_injertada.id AND pe_injertada.id2 = 7
             WHERE 
                 p.PAR_TISOL LIKE '%U%'
-                AND (p.PAR_EST IS NULL OR p.PAR_EST = '')
+                AND (p.PAR_EST IS NULL OR p.PAR_EST = '')  -- Solo partidas EN PROCESO
+                AND p.PAR_PLAS > COALESCE(pe_injertada.C2, 0)  -- Solo con déficit
+                AND COALESCE(pe_injertada.C2, 0) > 0  -- Solo las que ya tienen algo injertado
             ORDER BY 
-                p.PAR_FECE DESC
+                (p.PAR_PLAS - COALESCE(pe_injertada.C2, 0)) DESC
         `;
         
         console.log('🚨 [PARTIDAS-RIESGO] Ejecutando consulta SQL...');
