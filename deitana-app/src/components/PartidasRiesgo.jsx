@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Users, Package, User, Calendar, TrendingDown, Clock, AlertTriangle } from 'lucide-react';
+import { Search, Package, User, Calendar, TrendingDown, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../components/Authenticator/firebase';
 
@@ -222,7 +222,7 @@ const PartidasRiesgo = () => {
     setStartY(e.clientY);
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = useCallback((e) => {
     if (!isDragging) return;
 
     const currentY = e.clientY;
@@ -231,9 +231,9 @@ const PartidasRiesgo = () => {
     if (deltaY > 0) {
       setDragY(deltaY);
     }
-  };
+  }, [isDragging, startY]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
 
     if (dragY > 100) {
@@ -243,7 +243,7 @@ const PartidasRiesgo = () => {
     }
 
     setDragY(0);
-  };
+  }, [dragY]);
 
   useEffect(() => {
     if (isDragging) {
