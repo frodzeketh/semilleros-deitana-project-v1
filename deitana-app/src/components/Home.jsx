@@ -15,6 +15,8 @@ import rehypeHighlight from "rehype-highlight"
 import rehypeRaw from "rehype-raw"
 import "katex/dist/katex.min.css"
 import "highlight.js/styles/github.css"
+import "../styles/thinking-styles.css"
+import { AgentTrace } from "./AgentTrace"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -646,6 +648,45 @@ const Home = () => {
                           text: data.message,
                           isStreaming: true,
                           isThinking: true, // Marcar como mensaje de thinking
+                          trace: data.trace || [], // Agregar trace data
+                        }
+                      : msg,
+                  ),
+                )
+                
+              } else if (data.type === 'thinking_complete') {
+                console.log("✅ [FRONTEND] Thinking completado:", data.message)
+                
+                // Actualizar el mensaje con el trace completo
+                const messageId = botMessage.id
+                setChatMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === messageId
+                      ? {
+                          ...msg,
+                          text: data.message,
+                          isStreaming: true,
+                          isThinking: true,
+                          trace: data.trace || [],
+                        }
+                      : msg,
+                  ),
+                )
+                
+              } else if (data.type === 'sql_executing') {
+                console.log("🔍 [FRONTEND] SQL ejecutándose:", data.message)
+                
+                // Actualizar el mensaje con el trace de SQL
+                const messageId = botMessage.id
+                setChatMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === messageId
+                      ? {
+                          ...msg,
+                          text: data.message,
+                          isStreaming: true,
+                          isThinking: true,
+                          trace: data.trace || [],
                         }
                       : msg,
                   ),
@@ -681,6 +722,9 @@ const Home = () => {
                           text: finalResponse,
                           isStreaming: false, // Finalizar streaming
                           isThinking: false, // Limpiar el estado de thinking
+                          trace: prev.find(m => m.id === messageId)?.trace?.map(step => 
+                            step.id === "2" ? { ...step, status: "completed", endTime: new Date().toISOString(), duration: 2 } : step
+                          ) || [], // Mantener trace y marcar SQL como completado
                 }
               : msg,
           ),
@@ -1658,15 +1702,12 @@ const Home = () => {
                     <div className="ds-message-content">
                       {msg.sender === "bot" ? (
                         <div className="markdown-content">
-                          {msg.isThinking && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                              <BrainCircuit size={16} style={{ color: "#999999", animation: "pulse 2s infinite" }} />
-                              <span style={{ color: "#999999", fontSize: "14px", fontStyle: "italic" }}>Thinking...</span>
-                            </div>
-                          )}
-                          <div className={msg.isThinking ? "thinking-message" : ""}>
-                            {console.log("🔍 [FRONTEND] Contenido que recibe ReactMarkdown:", msg.text)}
-                            <ReactMarkdown
+                          {msg.isThinking && msg.trace && msg.trace.length > 0 ? (
+                            <AgentTrace steps={msg.trace} />
+                          ) : (
+                            <div className={msg.isThinking ? "thinking-message" : ""}>
+                              {console.log("🔍 [FRONTEND] Contenido que recibe ReactMarkdown:", msg.text)}
+                              <ReactMarkdown
                               remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
                               rehypePlugins={[
                                 rehypeKatex,
@@ -1750,7 +1791,8 @@ const Home = () => {
                             >
                               {msg.text || ""}
                             </ReactMarkdown>
-                          </div>
+                            </div>
+                          )}
                           {msg.isStreaming && !msg.text && (
                             <div className="ds-typing-container">
                               <div className="ds-typing-indicator-inline">

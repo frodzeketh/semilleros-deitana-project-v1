@@ -1667,44 +1667,57 @@ ${statusReport}
                         if (!thinkingHeaderSent) {
                             response.write(JSON.stringify({
                                 type: 'thinking',
-                                message: 'Buscando información en el ERP',
-                                timestamp: Date.now()
+                                message: 'Analizando consulta en el ERP',
+                                timestamp: Date.now(),
+                                trace: [{
+                                    id: "1",
+                                    type: "thought",
+                                    title: "Analizando consulta en el ERP",
+                                    description: "Procesando información del ERP",
+                                    status: "running",
+                                    startTime: new Date().toISOString(),
+                                    duration: 0
+                                }]
                             }) + '\n');
                             thinkingHeaderSent = true;
                         }
                     }
                     
-                    // Si estamos dentro del thinking, enviar contenido en tiempo real
+                    // Si estamos dentro del thinking, solo acumular contenido (no enviar como chunk)
                     if (insideThinking && thinkingHeaderSent) {
                         thinkingContent += content;
-                        
-                        // Limpiar completamente cualquier tag de thinking del contenido
-                        let cleanContent = content.replace(/<\/?thinking[^>]*>/g, '');
-                        
-                        // Solo enviar si hay contenido limpio después de quitar los tags
-                        if (cleanContent.trim()) {
-                            // Formatear como quote y agregar prefijo para cada línea nueva
-                            let formattedContent = cleanContent;
-                            if (cleanContent.includes('\n')) {
-                                formattedContent = cleanContent.replace(/\n/g, '\n> ');
-                            }
-                            
-                            response.write(JSON.stringify({
-                                type: 'chunk',
-                                content: `<span class="ai-thinking-text">${formattedContent}</span>`,
-                                timestamp: Date.now()
-                            }) + '\n');
-                        }
+                        // No enviar contenido del thinking como chunk cuando usamos trace
                         
                         // Detectar fin del thinking
                         if (thinkingContent.includes('</thinking>')) {
                             insideThinking = false;
                             
-                            // Cerrar el bloque del thinking
+                            // Cerrar el bloque del thinking y enviar paso de consulta SQL
                             response.write(JSON.stringify({
-                                type: 'chunk',
-                                content: '\n\n---\n\n**🔍 Buscandoo información en el ERP...**\n\n',
-                                timestamp: Date.now()
+                                type: 'thinking_complete',
+                                message: 'Consulta SQL completada',
+                                timestamp: Date.now(),
+                                trace: [
+                                    {
+                                        id: "1",
+                                        type: "thought",
+                                        title: "Analizando consulta en el ERP",
+                                        description: thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim(),
+                                        status: "completed",
+                                        startTime: new Date().toISOString(),
+                                        endTime: new Date().toISOString(),
+                                        duration: 3
+                                    },
+                                    {
+                                        id: "2",
+                                        type: "tool",
+                                        title: "Consultando base de datos del ERP",
+                                        description: "Ejecutando consulta SQL en la base de datos",
+                                        status: "running",
+                                        startTime: new Date().toISOString(),
+                                        duration: 0
+                                    }
+                                ]
                             }) + '\n');
                         }
                     }
@@ -1718,6 +1731,34 @@ ${statusReport}
                         console.log('🔍 La IA generó una consulta SQL');
                         console.log('🔍 Ejecutando consulta en la base de datos...');
                         console.log('🔍 ==========================================\n');
+                        
+                        // Enviar actualización del trace con SQL completado
+                        response.write(JSON.stringify({
+                            type: 'sql_executing',
+                            message: 'Ejecutando consulta SQL',
+                            timestamp: Date.now(),
+                            trace: [
+                                {
+                                    id: "1",
+                                    type: "thought",
+                                    title: "Analizando consulta en el ERP",
+                                    description: thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim(),
+                                    status: "completed",
+                                    startTime: new Date().toISOString(),
+                                    endTime: new Date().toISOString(),
+                                    duration: 3
+                                },
+                                {
+                                    id: "2",
+                                    type: "tool",
+                                    title: "Consultando base de datos del ERP",
+                                    description: "Ejecutando consulta SQL en la base de datos",
+                                    status: "running",
+                                    startTime: new Date().toISOString(),
+                                    duration: 0
+                                }
+                            ]
+                        }) + '\n');
                     }
                     
                     // Solo enviar chunks normales si NO estamos en thinking y NO se detectó SQL
