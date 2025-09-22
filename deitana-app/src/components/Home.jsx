@@ -65,6 +65,7 @@ const Home = () => {
   const [searchDragY, setSearchDragY] = useState(0)
   const [searchStartY, setSearchStartY] = useState(0)
 
+
   // Obtener la función de logout del contexto de autenticación
   const { logout, user } = useAuth()
 
@@ -558,7 +559,7 @@ const Home = () => {
           },
         body: JSON.stringify({ 
           message,
-          conversationId: currentConversationId 
+          conversationId: currentConversationId
         }),
         })
 
@@ -1664,6 +1665,7 @@ const Home = () => {
             </button>
           )}
         </div>
+
 
         <div className="ds-chat-layout">
           {isChatEmpty ? (

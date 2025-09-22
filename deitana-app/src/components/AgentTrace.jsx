@@ -114,7 +114,7 @@ export function AgentTrace({ steps }) {
 
                 {step.description && (
                   <p
-                    className={`agent-trace-description ${
+                    className={`agent-trace-description shimmer-text ${
                       step.status === "running" || hoveredStep === step.id ? "text-gray-800" : "text-gray-700"
                     }`}
                   >

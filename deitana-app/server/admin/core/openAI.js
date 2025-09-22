@@ -1419,7 +1419,7 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
  * - Manejo de errores en tiempo real
  * - Persistencia asíncrona de respuestas
  */
-async function processQueryStream({ message, userId, conversationId, response }) {
+async function processQueryStream({ message, userId, conversationId, response, developmentMode = false }) {
     console.log('🔍 [FLUJO] Usando processQueryStream (STREAMING) - openAI.js');
     const tiempoInicio = Date.now();
     console.log('🚀 [STREAMING] ===== INICIANDO PROCESO DE CONSULTA CON STREAMING =====');
@@ -1665,14 +1665,15 @@ ${statusReport}
                         
                         // Enviar header del thinking inmediatamente
                         if (!thinkingHeaderSent) {
+                            // MODO PRODUCCIÓN: Usar thinking real de la IA
                             response.write(JSON.stringify({
                                 type: 'thinking',
-                                message: 'Analizando consulta en el ERP',
+                                message: 'Analizando consulta',
                                 timestamp: Date.now(),
                                 trace: [{
                                     id: "1",
                                     type: "thought",
-                                    title: "Analizando consulta en el ERP",
+                                    title: "Analizando consulta",
                                     description: "Procesando información del ERP",
                                     status: "running",
                                     startTime: new Date().toISOString(),
@@ -1692,7 +1693,9 @@ ${statusReport}
                         if (thinkingContent.includes('</thinking>')) {
                             insideThinking = false;
                             
-                            // Cerrar el bloque del thinking y enviar paso de consulta SQL
+                            // Modo producción: Enviar thinking completo y continuar con la respuesta
+                            const cleanThinkingContent = thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim();
+                            
                             response.write(JSON.stringify({
                                 type: 'thinking_complete',
                                 message: 'Consulta SQL completada',
@@ -1701,8 +1704,8 @@ ${statusReport}
                                     {
                                         id: "1",
                                         type: "thought",
-                                        title: "Analizando consulta en el ERP",
-                                        description: thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim(),
+                                        title: "Analizando consulta",
+                                        description: cleanThinkingContent,
                                         status: "completed",
                                         startTime: new Date().toISOString(),
                                         endTime: new Date().toISOString(),
@@ -1782,6 +1785,7 @@ ${statusReport}
             // =====================================
             // PROCESAMIENTO POST-STREAMING
             // =====================================
+
 
             console.log('🔍 [STREAMING] Procesando respuesta para SQL...');
             
