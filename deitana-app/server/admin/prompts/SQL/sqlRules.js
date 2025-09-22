@@ -307,23 +307,22 @@ Mantener respuesta visual tipo tablas con columna de cabeza y pie para claridad
 saber lo que esta en el sector 20 del c2
 SE REFIERE A CONSULTAS DE INVERNADEROS Y PARTIDAS. HAZ ESTE TIPO DE CONSULTA:"
 
-**SQL CORRECTO (partidas recientes):**
 SELECT 
-    ppu.id AS codigo_partida,
-    ppu.id2 AS subpartida,
-    a.AR_DENO AS articulo_plantado,
-    ppu.C0 AS invernadero,
-    ppu.C1 AS sector,
-    ppu.C2 AS fila,
-    ppu.C4 AS quedan
-FROM 
-    partidas_par_ubic ppu
-    INNER JOIN partidas p ON ppu.id = p.id
-    INNER JOIN articulos a ON p.PAR_SEM = a.id
-WHERE 
-    ppu.C1 = '22'
-ORDER BY 
-    ppu.id, ppu.id2;
+    ppu.id AS codigo_partida, 
+    ppu.id2 AS subpartida, 
+    a.AR_DENO AS articulo_plantado, 
+    ppu.C0 AS invernadero, 
+    ppu.C1 AS sector, 
+    ppu.C2 AS fila, 
+    ppu.C4 AS quedan 
+FROM partidas_par_ubic ppu 
+INNER JOIN partidas p ON ppu.id = p.id 
+INNER JOIN articulos a ON p.PAR_SEM = a.id 
+WHERE ppu.C0 = 'C1'  -- Cambia segun invernadero
+    AND ppu.C1 = '1' -- Cambia segun sector
+    AND (p.PAR_EST != 'T' OR p.PAR_EST IS NULL OR p.PAR_EST = '')
+ORDER BY ppu.id DESC 
+LIMIT 100;
 
 
 

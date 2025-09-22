@@ -3368,7 +3368,7 @@ fclientes: {
   cobros: {
     // Clave principal (nombre de tabla)
     descripcion:
-      "Administra la 'cartera de cobros', registrando documentos o partidas pendientes de cobro a clientes. Permite seguimiento de importes adeudados, fechas de vencimiento y vinculación con vendedor, cliente y banco.",
+      "Administra la 'cartera de cobros', registrando documentos. Permite seguimiento de importes cobrados, fechas de vencimiento y vinculación con vendedor, cliente y banco.",
     tabla: "cobros", // Nombre de tabla original
     columnas: {
       id: "Identificador único de cada partida de cobro (Clave Primaria)",
@@ -3376,7 +3376,7 @@ fclientes: {
       CB_CCL: "Cliente deudor. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
       CB_FEC: "Fecha en la que se generó o registró la cartera de cobro.",
       CB_VTO: "Fecha de vencimiento del cobro.",
-      CB_TIPO: "Tipo de la cartera de cobro (Ej: 'P', 'R').",
+      CB_TIPO: "Tipo de la cartera de cobro: C significa efectivo, J significa tarjeta de credito, T significa talon, L significa letra cambio, P significa pagaré, R signfica Recibo, X significa transferencia, O significa otros",
       CB_IMPO: "Importe monetario del cobro pendiente.",
       CB_BAN: "Entidad bancaria asociada al cobro. Clave foránea a la tabla 'bancos' para obtener la denominación (BA_DENO).",
     },
