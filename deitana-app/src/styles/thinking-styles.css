@@ -78,14 +78,36 @@
   }
   
 .agent-trace-line {
+  display: none; /* Ocultar la línea principal, cada paso tendrá su propia línea */
+}
+
+/* Línea individual para cada paso */
+.agent-trace-step::after {
+  content: '';
   position: absolute;
   left: 14.5px;
   top: 32px;
-  bottom: 0;
+  height: calc(100% - 32px); /* Se extiende hasta el final del contenido, pero se detiene antes del siguiente icono */
   width: 1px;
   background: #e5e7eb;
   opacity: 0.6;
+  z-index: 1;
 }
+
+/* Línea de conexión entre pasos */
+.agent-trace-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 14.5px;
+  bottom: -12px; /* Posicionar en el centro del gap */
+  height: 24px; /* Altura del gap */
+  width: 1px;
+  background: #e5e7eb;
+  opacity: 0.6;
+  z-index: 1;
+}
+
+/* Todos los pasos tendrán línea hasta el final de su contenido */
   
   .agent-trace-steps {
     display: flex;
@@ -101,7 +123,7 @@
     transition: all 0.2s ease;
     cursor: pointer;
     border-radius: 6px;
-    
+    min-height: 60px; /* Altura mínima para asegurar que la línea se vea */
   }
   
   
@@ -250,6 +272,13 @@
      color: #374151;
      animation: iconShimmer 2s infinite 1.5s;
    }
+  
+  .agent-trace-icon-conversation {
+    width: 16px;
+    height: 16px;
+    color: #374151;
+    animation: iconShimmer 2s infinite 1.2s;
+  }
   
   .agent-trace-icon-settings {
     width: 12px;

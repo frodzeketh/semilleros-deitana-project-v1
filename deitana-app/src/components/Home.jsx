@@ -66,6 +66,7 @@ const Home = () => {
   const [searchStartY, setSearchStartY] = useState(0)
 
 
+
   // Obtener la función de logout del contexto de autenticación
   const { logout, user } = useAuth()
 

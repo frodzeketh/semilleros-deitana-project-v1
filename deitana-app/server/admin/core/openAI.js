@@ -1760,8 +1760,8 @@ ${statusReport}
                                 {
                                     id: "2",
                                     type: "tool",
-                                    title: "Consultando base de datos del ERP",
-                                    description: "Ejecutando consulta SQL en la base de datos",
+                                    title: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Procesando respuesta conversacional" : "Consultando base de datos del ERP",
+                                    description: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Generando respuesta en lenguaje natural" : "Ejecutando consulta SQL en la base de datos",
                                     status: "running",
                                     startTime: new Date().toISOString(),
                                     duration: 0
@@ -1816,8 +1816,8 @@ ${statusReport}
                         {
                             id: "2",
                             type: "tool",
-                            title: "Consultando base de datos del ERP",
-                            description: "Ejecutando consulta SQL en la base de datos",
+                            title: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Procesando respuesta conversacional" : "Consultando base de datos del ERP",
+                            description: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Generando respuesta en lenguaje natural" : "Ejecutando consulta SQL en la base de datos",
                             status: "running",
                             startTime: new Date().toISOString(),
                             duration: 0
@@ -1825,6 +1825,7 @@ ${statusReport}
                     ]
                 }) + '\n');
             }
+
 
             // =====================================
             // PROCESAMIENTO POST-STREAMING
@@ -2198,8 +2199,52 @@ ${Array.isArray(results) ?
                 console.log('📚 [STREAMING] Sin SQL - usar respuesta del modelo tal como está');
             }
 
+            // Limpiar el thinking de la respuesta final si está presente
+            let respuestaLimpia = finalMessage;
+            if (respuestaLimpia.includes('<thinking>') && respuestaLimpia.includes('</thinking>')) {
+                // Extraer solo la parte después del thinking
+                const thinkingEnd = respuestaLimpia.indexOf('</thinking>');
+                if (thinkingEnd !== -1) {
+                    respuestaLimpia = respuestaLimpia.substring(thinkingEnd + 11).trim();
+                }
+            }
+            
             // Personalizar respuesta con nombre del usuario
-            const respuestaPersonalizada = personalizarRespuesta(finalMessage, infoUsuario.nombre);
+            const respuestaPersonalizada = personalizarRespuesta(respuestaLimpia, infoUsuario.nombre);
+            
+            // Si tenemos thinking capturado pero no se envió como thinking_complete, enviarlo ahora
+            if (thinkingContent && thinkingContent.includes('</thinking>') && !thinkingHeaderSent) {
+                const cleanThinkingContent = thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim();
+                console.log('🧠 [THINKING] Enviando thinking_complete tardío:', cleanThinkingContent.substring(0, 100) + '...');
+                
+                response.write(JSON.stringify({
+                    type: 'thinking_complete',
+                    message: 'Thinking completado',
+                    timestamp: Date.now(),
+                    trace: [
+                        {
+                            id: "1",
+                            type: "thought",
+                            title: tituloBreve,
+                            description: cleanThinkingContent,
+                            status: "completed",
+                            startTime: new Date().toISOString(),
+                            endTime: new Date().toISOString(),
+                            duration: 3
+                        },
+                        {
+                            id: "2",
+                            type: "tool",
+                            title: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Procesando respuesta conversacional" : "Consultando base de datos del ERP",
+                            description: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Generando respuesta en lenguaje natural" : "Ejecutando consulta SQL en la base de datos",
+                            status: "completed",
+                            startTime: new Date().toISOString(),
+                            endTime: new Date().toISOString(),
+                            duration: 2
+                        }
+                    ]
+                }) + '\n');
+            }
 
             // 🔍 LOG CRÍTICO: Verificar qué se envía al frontend
             console.log('\n🔍 ==========================================');
@@ -2432,9 +2477,10 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
         instrucciones += `## 🧠 CONTEXTO DE MEMORIA:\n${contextoPinecone}\n\n`;
     }
     
-    // ⚡ REFUERZO CRÍTICO PARA CONSULTAS SQL CON THINKING
-    if (intencion && intencion.tipo === 'sql') {
-        instrucciones += `
+    // ⚡ REFUERZO CRÍTICO PARA CONSULTAS SQL Y CONVERSACIONALES CON THINKING
+    if (intencion && (intencion.tipo === 'sql' || intencion.tipo === 'conversacion')) {
+        if (intencion.tipo === 'sql') {
+            instrucciones += `
 🚨🚨🚨 CONSULTA SQL DETECTADA - MODO THINKING ACTIVADO 🚨🚨🚨
 
 **PROCESO OBLIGATORIO:**
@@ -2485,6 +2531,50 @@ El usuario quiere saber cuántas gestiones comerciales ha realizado un cliente e
 ⚡ RECUERDA: Empezar DIRECTAMENTE con <thinking> sin texto previo ⚡
 ⚡ CONECTA: El thinking debe reflejar exactamente lo que vas a consultar en el SQL ⚡
 `;
+        } else if (intencion.tipo === 'conversacion') {
+            instrucciones += `
+🚨🚨🚨 CONSULTA CONVERSACIONAL DETECTADA - MODO THINKING ACTIVADO 🚨🚨🚨
+
+**PROCESO OBLIGATORIO:**
+
+🚨 **CRÍTICO: NO escribas NADA antes de <thinking>. Empieza DIRECTAMENTE con <thinking>** 🚨
+
+1. **PRIMERO - THINKING (Razonamiento en voz alta):**
+   - ⚡ EMPIEZA INMEDIATAMENTE con: <thinking>
+   - ⚡ NO escribas texto introductorio antes del <thinking>
+   - ⚡ NO digas "mirando los datos", "interesante", "puedo ayudarte" ANTES del <thinking>
+   - ⚡ LA PRIMERA PALABRA de tu respuesta debe ser: <thinking>
+   - **ANALIZA** qué tipo de consulta es (saludo, pregunta general, agradecimiento, etc.)
+   - **EXPLICA** cómo entiendes la intención del usuario
+   - **DECIDE** qué tipo de respuesta es más apropiada
+   - **PLANIFICA** cómo estructurar tu respuesta para que sea útil y empática
+   - **USA** el contexto empresarial disponible si es relevante
+   - **SEA HONESTO** sobre tu proceso de razonamiento
+   - Cierra con: </thinking>
+
+2. **SEGUNDO - RESPUESTA CONVERSACIONAL:**
+   - Responde de forma natural y conversacional
+   - Usa el contexto empresarial si es relevante
+   - Sé empático y útil
+   - Mantén un tono amigable
+
+**EJEMPLO DINÁMICO:**
+
+Usuario: "¿Qué día estamos?"
+
+<thinking>
+El usuario está preguntando por la fecha actual. Esta es una consulta conversacional simple que no requiere información de la base de datos. Necesito proporcionar la fecha actual de forma amigable y ofrecer ayuda adicional si es apropiado. Es una pregunta directa que requiere una respuesta clara y útil.
+</thinking>
+
+Hoy es martes, 23 de septiembre de 2025. ¿Hay algo más en lo que pueda ayudarte? 😊
+
+**NOTA:** El thinking debe explicar tu proceso de razonamiento para dar la respuesta más útil.
+
+⚡ OBLIGATORIO: El thinking debe ser específico y mostrar tu razonamiento real ⚡
+⚡ RECUERDA: Empezar DIRECTAMENTE con <thinking> sin texto previo ⚡
+⚡ CONECTA: El thinking debe reflejar exactamente cómo vas a responder ⚡
+`;
+        }
     }
     
     // ⚡ REFUERZO ESPECÍFICO PARA CONSULTAS DE CONOCIMIENTO (RAG_SQL)
@@ -2526,44 +2616,6 @@ Información complementaria con explicación natural y conversacional.
 `;
     }
     
-    // ⚡ REFUERZO ESPECÍFICO PARA CONSULTAS DE CONVERSACIÓN
-    if (intencion && intencion.tipo === 'conversacion') {
-        instrucciones += `
-🚨🚨🚨 CONSULTA DE CONVERSACIÓN DETECTADA - MODO CONVERSACIONAL 🚨🚨🚨
-
-**PROCESO OBLIGATORIO:**
-
-1. **SER CONVERSACIONAL Y EMPÁTICO:**
-   - ⚡ Usa un tono amigable y natural
-   - ⚡ Sé empático con las necesidades del usuario
-   - ⚡ Ofrece ayuda adicional cuando sea apropiado
-
-2. **FORMATO DE RESPUESTA ESTRUCTURADO:**
-   - ⚡ Usa títulos con ## para organizar la información
-   - ⚡ Usa listas con - para puntos importantes
-   - ⚡ Usa **texto en negrita** para destacar información clave
-   - ⚡ Mantén un tono conversacional
-
-3. **EJEMPLO DE FORMATO CORRECTO:**
-
-## 💬 Título de la Sección
-
-**Información clave:** Descripción importante aquí
-
-- Punto importante 1
-- Punto importante 2
-- Punto importante 3
-
-### 🔍 Detalles Adicionales
-
-Explicación natural y conversacional.
-
-¿Hay algo más en lo que pueda ayudarte? 😊
-
-⚡ OBLIGATORIO: Usar formato estructurado y ser conversacional ⚡
-⚡ CRÍTICO: Mantener tono amigable y empático ⚡
-`;
-    }
     
     // ⚡ USAR TABLAS RELEVANTES SI EXISTEN
     if (tablasRelevantes && tablasRelevantes.length > 0) {

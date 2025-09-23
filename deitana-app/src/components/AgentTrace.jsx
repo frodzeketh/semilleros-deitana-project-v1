@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
+import { Brain, TextSelect } from 'lucide-react';
 
-// Iconos simulados (ya que no tenemos lucide-react)
-const Brain = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-  </svg>
-);
+// Iconos simulados para los que no tenemos en Lucide
 
 const Zap = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,18 +34,28 @@ const Settings = ({ className }) => (
   </svg>
 );
 
-const getStepIcon = (type, icon) => {
+
+const getStepIcon = (type, icon, title) => {
   if (icon) {
     return <span className="text-lg">{icon}</span>
   }
 
+  // Detectar si es un paso conversacional por el título
+  const isConversational = title && (
+    title.includes('conversacional') || 
+    title.includes('respuesta') ||
+    title.includes('lenguaje natural')
+  );
+
   switch (type) {
     case "thought":
-      return <Brain className="agent-trace-icon agent-trace-icon-brain" />
+      return <Brain className="agent-trace-icon agent-trace-icon-brain" size={16} />
     case "action":
       return <Zap className="agent-trace-icon agent-trace-icon-zap" />
     case "tool":
-      return <Search className="agent-trace-icon agent-trace-icon-search" />
+      return isConversational ? 
+        <TextSelect className="agent-trace-icon agent-trace-icon-conversation" size={16} /> :
+        <Search className="agent-trace-icon agent-trace-icon-search" />
     case "result":
       return <FileText className="agent-trace-icon agent-trace-icon-file" />
     default:
@@ -88,7 +94,7 @@ export function AgentTrace({ steps }) {
               onMouseLeave={() => setHoveredStep(null)}
             >
               <div className="agent-trace-icon-container">
-                {getStepIcon(step.type, step.icon)}
+                {getStepIcon(step.type, step.icon, step.title)}
               </div>
 
               <div className="agent-trace-content">
