@@ -54,7 +54,7 @@ router.post('/stream', async (req, res) => {
                 message, 
                 userId, 
                 conversationId: currentConversationId,
-                response: res 
+                response: res
             });
         } else {
             // Para empleados, usar función de streaming específica (si existe)
@@ -62,7 +62,7 @@ router.post('/stream', async (req, res) => {
                 message, 
                 userId, 
                 conversationId: currentConversationId,
-                response: res 
+                response: res
             });
         }
         

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, ChevronDown, Search, Trash2, BrainCircuit, UserSearch } from "lucide-react"
+import { Send, ChevronDown, Search, Trash2, UserSearch } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"

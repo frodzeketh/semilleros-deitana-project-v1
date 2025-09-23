@@ -103,12 +103,6 @@ export function AgentTrace({ steps }) {
                     }`}
                   >
                     {step.title}
-                    {step.duration && step.status === "running" && (
-                      <span className="text-gray-500 ml-1">-{step.duration}s</span>
-                    )}
-                    {step.duration && step.status === "completed" && step.duration > 0 && (
-                      <span className="text-gray-500 ml-1">{step.duration}s</span>
-                    )}
                   </h4>
                 </div>
 

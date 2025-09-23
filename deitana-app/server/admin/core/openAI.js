@@ -1134,6 +1134,40 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
 }
 
 /**
+ * Genera un título breve para el thinking basado en la consulta del usuario
+ */
+function generarTituloBreve(consulta) {
+    const palabras = consulta.toLowerCase().split(' ');
+    
+    // Detectar tipos de consulta comunes
+    if (palabras.some(p => ['cliente', 'clientes'].includes(p))) {
+        return 'Consultando clientes';
+    }
+    if (palabras.some(p => ['producto', 'productos', 'artículo', 'artículos'].includes(p))) {
+        return 'Consultando productos';
+    }
+    if (palabras.some(p => ['venta', 'ventas', 'factura', 'facturas'].includes(p))) {
+        return 'Consultando ventas';
+    }
+    if (palabras.some(p => ['stock', 'inventario', 'almacén'].includes(p))) {
+        return 'Consultando stock';
+    }
+    if (palabras.some(p => ['encargo', 'encargos', 'pedido', 'pedidos'].includes(p))) {
+        return 'Consultando encargos';
+    }
+    if (palabras.some(p => ['año', 'años', 'fecha', 'fechas'].includes(p))) {
+        return 'Consultando fechas';
+    }
+    if (palabras.some(p => ['pago', 'pagos', 'forma', 'formas'].includes(p))) {
+        return 'Consultando pagos';
+    }
+    
+    // Si no coincide con ningún patrón, usar las primeras palabras
+    const primerasPalabras = palabras.slice(0, 2).join(' ');
+    return primerasPalabras.charAt(0).toUpperCase() + primerasPalabras.slice(1);
+}
+
+/**
  * Analiza la intención usando IA real (escalable para 900 tablas y 200 usuarios)
  */
 async function analizarIntencionInteligente(mensaje) {
@@ -1419,7 +1453,7 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
  * - Manejo de errores en tiempo real
  * - Persistencia asíncrona de respuestas
  */
-async function processQueryStream({ message, userId, conversationId, response, developmentMode = false }) {
+async function processQueryStream({ message, userId, conversationId, response }) {
     console.log('🔍 [FLUJO] Usando processQueryStream (STREAMING) - openAI.js');
     const tiempoInicio = Date.now();
     console.log('🚀 [STREAMING] ===== INICIANDO PROCESO DE CONSULTA CON STREAMING =====');
@@ -1640,6 +1674,7 @@ ${statusReport}
             let insideThinking = false;
             let thinkingHeaderSent = false;
             let beforeThinkingContent = '';
+            const tituloBreve = generarTituloBreve(message);
 
             // Procesar cada chunk del stream
             for await (const chunk of stream) {
@@ -1668,12 +1703,12 @@ ${statusReport}
                             // MODO PRODUCCIÓN: Usar thinking real de la IA
                             response.write(JSON.stringify({
                                 type: 'thinking',
-                                message: 'Analizando consulta',
+                                message: tituloBreve,
                                 timestamp: Date.now(),
                                 trace: [{
                                     id: "1",
                                     type: "thought",
-                                    title: "Analizando consulta",
+                                    title: tituloBreve,
                                     description: "Procesando información del ERP",
                                     status: "running",
                                     startTime: new Date().toISOString(),
@@ -1692,36 +1727,7 @@ ${statusReport}
                         // Detectar fin del thinking
                         if (thinkingContent.includes('</thinking>')) {
                             insideThinking = false;
-                            
-                            // Modo producción: Enviar thinking completo y continuar con la respuesta
-                            const cleanThinkingContent = thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim();
-                            
-                            response.write(JSON.stringify({
-                                type: 'thinking_complete',
-                                message: 'Consulta SQL completada',
-                                timestamp: Date.now(),
-                                trace: [
-                                    {
-                                        id: "1",
-                                        type: "thought",
-                                        title: "Analizando consulta",
-                                        description: cleanThinkingContent,
-                                        status: "completed",
-                                        startTime: new Date().toISOString(),
-                                        endTime: new Date().toISOString(),
-                                        duration: 3
-                                    },
-                                    {
-                                        id: "2",
-                                        type: "tool",
-                                        title: "Consultando base de datos del ERP",
-                                        description: "Ejecutando consulta SQL en la base de datos",
-                                        status: "running",
-                                        startTime: new Date().toISOString(),
-                                        duration: 0
-                                    }
-                                ]
-                            }) + '\n');
+                            console.log('🧠 [THINKING] Fin del thinking detectado');
                         }
                     }
                     
@@ -1744,7 +1750,7 @@ ${statusReport}
                                 {
                                     id: "1",
                                     type: "thought",
-                                    title: "Analizando consulta en el ERP",
+                                    title: tituloBreve,
                                     description: thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim(),
                                     status: "completed",
                                     startTime: new Date().toISOString(),
@@ -1783,11 +1789,48 @@ ${statusReport}
             }
 
             // =====================================
+            // PROCESAR THINKING COMPLETO
+            // =====================================
+            
+            // Si tenemos thinking capturado, procesarlo ahora
+            if (thinkingContent && thinkingContent.includes('</thinking>')) {
+                const cleanThinkingContent = thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim();
+                console.log('🧠 [THINKING] Procesando thinking completo:', cleanThinkingContent.substring(0, 100) + '...');
+                
+                // MODO PRODUCCIÓN: Enviar thinking completo y continuar con la respuesta
+                response.write(JSON.stringify({
+                    type: 'thinking_complete',
+                    message: 'Consulta SQL completada',
+                    timestamp: Date.now(),
+                    trace: [
+                        {
+                            id: "1",
+                            type: "thought",
+                            title: tituloBreve,
+                            description: cleanThinkingContent,
+                            status: "completed",
+                            startTime: new Date().toISOString(),
+                            endTime: new Date().toISOString(),
+                            duration: 3
+                        },
+                        {
+                            id: "2",
+                            type: "tool",
+                            title: "Consultando base de datos del ERP",
+                            description: "Ejecutando consulta SQL en la base de datos",
+                            status: "running",
+                            startTime: new Date().toISOString(),
+                            duration: 0
+                        }
+                    ]
+                }) + '\n');
+            }
+
+            // =====================================
             // PROCESAMIENTO POST-STREAMING
             // =====================================
 
-
-            console.log('🔍 [STREAMING] Procesando respuesta para SQL...');
+           console.log('🔍 [STREAMING] Procesando respuesta para SQL...');
             
             let finalMessage = fullResponse;
             
@@ -2403,12 +2446,15 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
    - ⚡ NO escribas texto introductorio antes del <thinking>
    - ⚡ NO digas "mirando los datos", "interesante", "puedo ayudarte" ANTES del <thinking>
    - ⚡ LA PRIMERA PALABRA de tu respuesta debe ser: <thinking>
-   - Explica en LENGUAJE NATURAL qué información necesita el usuario
-   - Menciona la sección del ERP donde se encuentra esa información (ej: "Archivos → Generales → Acciones Comerciales")
-   - Explica tu razonamiento como si hablaras con una persona normal
-   - NO menciones nombres técnicos de tablas (como "clientes", "acciones_com")
-   - NO menciones nombres de columnas (como "CL_PAIS", "ACCO_CDCL")
-   - USA términos empresariales naturales (ej: "registro de países", "información comercial")
+   - **ANALIZA el mapaERP disponible** para entender la estructura de datos
+   - **USA las descripciones** de las columnas del mapaERP para explicar qué vas a buscar
+   - **CONECTA** tu razonamiento con la consulta SQL que vas a ejecutar
+   - **EXPLICA** en lenguaje natural qué información específica necesita el usuario
+   - **MENCIÓN** exactamente qué datos vas a consultar usando el lenguaje del mapaERP
+   - **USA** las descripciones naturales de las columnas (ej: "denominaciones", "registro de clientes", "información de fincas")
+   - **NO menciones** nombres técnicos de tablas o columnas
+   - **USA** términos empresariales naturales y específicos del mapaERP
+   - **SEA HONESTO** sobre lo que realmente vas a consultar
    - Cierra con: </thinking>
 
 2. **SEGUNDO - SQL REAL:**
@@ -2416,25 +2462,28 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
    - USA la base de datos real del mapaERP
    - JAMÁS inventes datos falsos
 
-**EJEMPLO COMPLETO:**
+**IMPORTANTE - USO DEL MAPAERP:**
+- El mapaERP contiene 800+ tablas con descripciones de columnas
+- USA las descripciones de las columnas para explicar qué vas a buscar
+- CONECTA el thinking con el SQL real que vas a ejecutar
+- NO uses ejemplos genéricos, usa la información real del mapaERP
+- El thinking debe reflejar EXACTAMENTE lo que hace el SQL
+
+**EJEMPLO DINÁMICO:**
 
 Usuario: "dime cuantas acciones comerciales hizo el cliente hernaez"
 
-
-El usuario quiere saber cuántas gestiones comerciales ha realizado un cliente específico llamado Hernaez. 
-
-Para obtener esta información necesito:
-1. Buscar en la sección de Acciones Comerciales del ERP, que se encuentra en Archivos → Generales → Acciones Comerciales
-2. Localizar todas las actividades registradas para este cliente
-3. Contar el total de interacciones comerciales que se han registrado
-
-Voy a buscar en nuestro sistema todas las gestiones, visitas, llamadas o cualquier actividad comercial que hayamos registrado con este cliente para dar el número total.
+<thinking>
+El usuario quiere saber cuántas gestiones comerciales ha realizado un cliente específico llamado Hernaez. Necesito consultar nuestro registro de acciones comerciales para contar todas las actividades que hemos registrado con este cliente, como visitas, llamadas, reuniones o cualquier gestión comercial, para proporcionarle el número total de interacciones.
 </thinking>
 
 <sql>SELECT COUNT(*) as total_acciones FROM acciones_com ac JOIN clientes c ON ac.ACCO_CDCL = c.id WHERE c.CL_DENO LIKE '%hernaez%'</sql>
 
+**NOTA:** El thinking debe usar las descripciones del mapaERP y conectar con el SQL real que vas a ejecutar.
+
 ⚡ OBLIGATORIO: El thinking debe ser específico y mostrar tu razonamiento real ⚡
 ⚡ RECUERDA: Empezar DIRECTAMENTE con <thinking> sin texto previo ⚡
+⚡ CONECTA: El thinking debe reflejar exactamente lo que vas a consultar en el SQL ⚡
 `;
     }
     
