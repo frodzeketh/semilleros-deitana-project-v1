@@ -906,7 +906,7 @@ async function saveMessageToFirestore(userId, message, isAdmin = true) {
         await conversationRef.set({
             lastUpdated: now,
             messages: messages
-        }, { merge: true });
+        }, { merge: false });
 
         return true;
     } catch (error) {
@@ -916,17 +916,25 @@ async function saveMessageToFirestore(userId, message, isAdmin = true) {
 }
 
 // Función para guardar mensaje del asistente en Firestore
-async function saveAssistantMessageToFirestore(userId, message) {
+async function saveAssistantMessageToFirestore(userId, message, trace = null, conversationId = null) {
     try {
         const now = new Date();
         const messageData = {
             content: message,
             role: 'assistant',
-            timestamp: now
+            timestamp: now,
+            trace: trace // Incluir el trace del thinking
         };
+        
+        console.log('💾 [FIRESTORE] Guardando mensaje del asistente:', {
+            userId,
+            content: message.substring(0, 100) + '...',
+            hasTrace: !!trace,
+            trace: trace
+        });
 
         const userChatRef = chatManager.chatsCollection.doc(userId);
-        const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+        const conversationRef = userChatRef.collection('conversations').doc(conversationId || 'admin_conversation');
         
         // Primero obtenemos el documento actual
         const conversationDoc = await conversationRef.get();
@@ -971,7 +979,7 @@ async function saveAssistantMessageToFirestore(userId, message) {
         await conversationRef.set({
             lastUpdated: now,
             messages: messages
-        }, { merge: true });
+        }, { merge: false });
 
         console.log(`✅ [FIRESTORE] Mensaje guardado. Total mensajes: ${messages.length}`);
         return true;
@@ -983,7 +991,7 @@ async function saveAssistantMessageToFirestore(userId, message) {
             console.log('🔄 [FIRESTORE] Intentando limpiar conversación por tamaño...');
             try {
                 const userChatRef = chatManager.chatsCollection.doc(userId);
-                const conversationRef = userChatRef.collection('conversations').doc('admin_conversation');
+                const conversationRef = userChatRef.collection('conversations').doc(conversationId || 'admin_conversation');
                 
                 // Crear nueva conversación con solo el mensaje actual
                 await conversationRef.set({
@@ -1326,7 +1334,8 @@ async function obtenerHistorialConversacion(userId, conversationId) {
         // Formatear para usar en el prompt
         const contextoFormateado = mensajesRecientes.map(msg => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content,
+            trace: msg.trace // Incluir el trace del thinking
         }));
         
         return contextoFormateado;
@@ -2262,13 +2271,38 @@ ${Array.isArray(results) ?
             console.log('─'.repeat(50));
             console.log('🔍 ==========================================\n');
 
-            // Enviar señal de finalización con conversationId
+            // Preparar el trace del thinking para guardar en Firebase
+            const thinkingTrace = thinkingContent && thinkingContent.includes('</thinking>') ? [
+                {
+                    id: "1",
+                    type: "thought",
+                    title: tituloBreve,
+                    description: thinkingContent.replace(/<\/?thinking[^>]*>/g, '').trim(),
+                    status: "completed",
+                    startTime: new Date().toISOString(),
+                    endTime: new Date().toISOString(),
+                    duration: 3
+                },
+                {
+                    id: "2",
+                    type: "tool",
+                    title: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Procesando respuesta conversacional" : "Consultando base de datos del ERP",
+                    description: promptBuilder.intencion && promptBuilder.intencion.tipo === 'conversacion' ? "Generando respuesta en lenguaje natural" : "Ejecutando consulta SQL en la base de datos",
+                    status: "completed",
+                    startTime: new Date().toISOString(),
+                    endTime: new Date().toISOString(),
+                    duration: 2
+                }
+            ] : null;
+
+            // Enviar señal de finalización con conversationId y trace del thinking
             response.write(JSON.stringify({
                 type: 'end',
                 fullResponse: respuestaPersonalizada,
                 conversationId: conversationId,
                 tokenCount: tokenCount,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                trace: thinkingTrace
             }) + '\n');
 
             response.end();
@@ -2298,8 +2332,9 @@ ${Array.isArray(results) ?
                 );
             }
 
-            // Guardar respuesta completa en Firestore (async)
-            saveAssistantMessageToFirestore(userId, respuestaPersonalizada).catch(err =>
+            // Guardar respuesta completa en Firestore (async) con el trace del thinking
+            console.log('💾 [FIRESTORE] Guardando respuesta con trace:', thinkingTrace)
+            saveAssistantMessageToFirestore(userId, respuestaPersonalizada, thinkingTrace, conversationId).catch(err =>
                 console.error('❌ [FIRESTORE] Error guardando respuesta:', err.message)
             );
 

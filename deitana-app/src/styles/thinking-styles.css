@@ -356,4 +356,81 @@
   .border-blue-200 {
     border-color: #bfdbfe;
   }
-  
+
+/* =====================================
+   THINKING COLLAPSE
+   ===================================== */
+
+
+.thinking-collapse-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  user-select: none;
+  padding: 12px 0px;
+}
+
+
+
+.thinking-collapse-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thinking-collapse-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.thinking-collapse-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.025em;
+}
+
+.thinking-collapse-content {
+  border-top: 1px solid #e5e7eb;
+  animation: thinkingCollapseExpand 0.3s ease-out;
+}
+
+.thinking-collapse-brain {
+  color: #1b1b1b;
+  /* Added transform-origin for better rotation */
+  transform-origin: center;
+}
+
+@keyframes thinkingCollapseExpand {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+.dark .thinking-collapse-text {
+  color: #f3f4f6;
+}
+
+.dark .thinking-collapse-header {
+  border-bottom-color: #374151;
+}
+
+.dark .thinking-collapse-content {
+  border-top-color: #374151;
+}
+
+
+
+
+
+
+

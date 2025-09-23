@@ -477,12 +477,23 @@ const Home = () => {
 
       const data = await response.json()
       if (data.success) {
+        console.log('🔍 [FRONTEND] Mensajes cargados del historial:', data.data)
         // Convertir los mensajes al formato que espera el componente
-        const formattedMessages = data.data.map((msg) => ({
-          id: Date.now() + Math.random(),
-          text: msg.content,
-          sender: msg.role === "user" ? "user" : "bot",
-        }))
+        const formattedMessages = data.data.map((msg, index) => {
+          console.log(`🔍 [FRONTEND] Mensaje ${index}:`, {
+            role: msg.role,
+            content: msg.content?.substring(0, 100) + '...',
+            hasTrace: !!msg.trace,
+            trace: msg.trace
+          })
+          return {
+            id: Date.now() + Math.random(),
+            text: msg.content,
+            sender: msg.role === "user" ? "user" : "bot",
+            trace: msg.trace || null, // Incluir el trace del thinking
+          }
+        })
+        console.log('🔍 [FRONTEND] Mensajes formateados:', formattedMessages)
         setChatMessages(formattedMessages)
       } else {
         throw new Error(data.error || "Error al cargar los mensajes")
@@ -724,9 +735,7 @@ const Home = () => {
                           text: finalResponse,
                           isStreaming: false, // Finalizar streaming
                           isThinking: false, // Limpiar el estado de thinking
-                          trace: prev.find(m => m.id === messageId)?.trace?.map(step => 
-                            step.id === "2" ? { ...step, status: "completed", endTime: new Date().toISOString(), duration: 2 } : step
-                          ) || [], // Mantener trace y marcar SQL como completado
+                          trace: data.trace || [], // Usar trace del backend
                 }
               : msg,
           ),
@@ -1706,11 +1715,15 @@ const Home = () => {
                       {msg.sender === "bot" ? (
                         <div className="markdown-content">
                           {msg.isThinking && msg.trace && msg.trace.length > 0 ? (
-                            <AgentTrace steps={msg.trace} />
+                            <AgentTrace steps={msg.trace} isCollapsed={false} />
                           ) : (
-                            <div className={msg.isThinking ? "thinking-message" : ""}>
-                              {console.log("🔍 [FRONTEND] Contenido que recibe ReactMarkdown:", msg.text)}
-                              <ReactMarkdown
+                            <>
+                              {msg.trace && msg.trace.length > 0 && (
+                                <AgentTrace steps={msg.trace} isCollapsed={true} />
+                              )}
+                              <div className={msg.isThinking ? "thinking-message" : ""}>
+                                {console.log("🔍 [FRONTEND] Contenido que recibe ReactMarkdown:", msg.text)}
+                                <ReactMarkdown
                               remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
                               rehypePlugins={[
                                 rehypeKatex,
@@ -1795,6 +1808,7 @@ const Home = () => {
                               {msg.text || ""}
                             </ReactMarkdown>
                             </div>
+                            </>
                           )}
                           {msg.isStreaming && !msg.text && (
                             <div className="ds-typing-container">

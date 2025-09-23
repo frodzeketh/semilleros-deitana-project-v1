@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, TextSelect } from 'lucide-react';
+import { BrainCircuit, TextSelect, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Iconos simulados para los que no tenemos en Lucide
 
@@ -49,7 +49,7 @@ const getStepIcon = (type, icon, title) => {
 
   switch (type) {
     case "thought":
-      return <Brain className="agent-trace-icon agent-trace-icon-brain" size={16} />
+      return <BrainCircuit className="agent-trace-icon agent-trace-icon-brain" size={16} />
     case "action":
       return <Zap className="agent-trace-icon agent-trace-icon-zap" />
     case "tool":
@@ -77,73 +77,169 @@ const getFileIcon = (filename) => {
   return <File className="agent-trace-icon-settings" />
 }
 
-export function AgentTrace({ steps }) {
-  const [hoveredStep, setHoveredStep] = useState(null)
+export function AgentTrace({ steps, isCollapsed = false }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hoveredStep, setHoveredStep] = useState(null);
 
-  return (
-    <div className="agent-trace-container">
-      <div className="agent-trace-relative">
-        <div className="agent-trace-line"></div>
+  // Si no está colapsado, mostrar el thinking normal
+  if (!isCollapsed) {
+    return (
+      <div className="agent-trace-container">
+        <div className="agent-trace-relative">
+          <div className="agent-trace-line"></div>
 
-        <div className="agent-trace-steps">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className="agent-trace-step interactive-step"
-              onMouseEnter={() => setHoveredStep(step.id)}
-              onMouseLeave={() => setHoveredStep(null)}
-            >
-              <div className="agent-trace-icon-container">
-                {getStepIcon(step.type, step.icon, step.title)}
-              </div>
-
-              <div className="agent-trace-content">
-                <div className="agent-trace-title-container">
-                  <h4
-                    className={`agent-trace-title ${
-                      step.status === "running"
-                        ? "shimmer-text-active"
-                        : hoveredStep === step.id
-                          ? "shimmer-text"
-                          : "text-gray-900"
-                    }`}
-                  >
-                    {step.title}
-                  </h4>
+          <div className="agent-trace-steps">
+            {steps.map((step, index) => (
+              <div
+                key={step.id}
+                className="agent-trace-step interactive-step"
+                onMouseEnter={() => setHoveredStep(step.id)}
+                onMouseLeave={() => setHoveredStep(null)}
+              >
+                <div className="agent-trace-icon-container">
+                  {getStepIcon(step.type, step.icon, step.title)}
                 </div>
 
-                {step.description && (
-                  <p
-                    className={`agent-trace-description shimmer-text ${
-                      step.status === "running" || hoveredStep === step.id ? "text-gray-800" : "text-gray-700"
-                    }`}
-                  >
-                    {step.description}
-                  </p>
-                )}
-
-                {step.files && step.files.length > 0 && (
-                  <div className="agent-trace-files">
-                    {step.files.map((file, fileIndex) => (
-                      <div
-                        key={fileIndex}
-                        className={`agent-trace-file ${
-                          hoveredStep === step.id
-                            ? "bg-blue-50 border-blue-200 text-blue-800"
-                            : "agent-trace-file-normal border-gray-200"
-                        }`}
-                      >
-                        {getFileIcon(file)}
-                        {file}
-                      </div>
-                    ))}
+                <div className="agent-trace-content">
+                  <div className="agent-trace-title-container">
+                    <h4
+                      className={`agent-trace-title ${
+                        step.status === "running"
+                          ? "shimmer-text-active"
+                          : hoveredStep === step.id
+                            ? "shimmer-text"
+                            : "text-gray-900"
+                      }`}
+                    >
+                      {step.title}
+                    </h4>
                   </div>
-                )}
+
+                  {step.description && (
+                    <p
+                      className={`agent-trace-description shimmer-text ${
+                        step.status === "running" || hoveredStep === step.id ? "text-gray-800" : "text-gray-700"
+                      }`}
+                    >
+                      {step.description}
+                    </p>
+                  )}
+
+                  {step.files && step.files.length > 0 && (
+                    <div className="agent-trace-files">
+                      {step.files.map((file, fileIndex) => (
+                        <div
+                          key={fileIndex}
+                          className={`agent-trace-file ${
+                            hoveredStep === step.id
+                              ? "bg-blue-50 border-blue-200 text-blue-800"
+                              : "agent-trace-file-normal border-gray-200"
+                          }`}
+                        >
+                          {getFileIcon(file)}
+                          {file}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+    );
+  }
+
+  // Si está colapsado, mostrar el accordion
+  return (
+    <div className="thinking-collapse">
+      {/* Header del collapse - siempre visible */}
+      <div 
+        className="thinking-collapse-header"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="thinking-collapse-icon">
+          <BrainCircuit className="thinking-collapse-brain" size={20} />
+        </div>
+        
+        <div className="thinking-collapse-chevron">
+          {isExpanded ? 
+            <ChevronUp size={16} className="text-gray-500" /> : 
+            <ChevronDown size={16} className="text-gray-500" />
+          }
+        </div>
+      </div>
+
+      {/* Contenido del collapse - solo visible cuando está expandido */}
+      {isExpanded && (
+        <div className="thinking-collapse-content">
+          <div className="agent-trace-container">
+            <div className="agent-trace-relative">
+              <div className="agent-trace-line"></div>
+
+              <div className="agent-trace-steps">
+                {steps.map((step, index) => (
+                  <div
+                    key={step.id}
+                    className="agent-trace-step interactive-step"
+                    onMouseEnter={() => setHoveredStep(step.id)}
+                    onMouseLeave={() => setHoveredStep(null)}
+                  >
+                    <div className="agent-trace-icon-container">
+                      {getStepIcon(step.type, step.icon, step.title)}
+                    </div>
+
+                    <div className="agent-trace-content">
+                      <div className="agent-trace-title-container">
+                        <h4
+                          className={`agent-trace-title ${
+                            step.status === "running"
+                              ? "shimmer-text-active"
+                              : hoveredStep === step.id
+                                ? "shimmer-text"
+                                : "text-gray-900"
+                          }`}
+                        >
+                          {step.title}
+                        </h4>
+                      </div>
+
+                      {step.description && (
+                        <p
+                          className={`agent-trace-description shimmer-text ${
+                            step.status === "running" || hoveredStep === step.id ? "text-gray-800" : "text-gray-700"
+                          }`}
+                        >
+                          {step.description}
+                        </p>
+                      )}
+
+                      {step.files && step.files.length > 0 && (
+                        <div className="agent-trace-files">
+                          {step.files.map((file, fileIndex) => (
+                            <div
+                              key={fileIndex}
+                              className={`agent-trace-file ${
+                                hoveredStep === step.id
+                                  ? "bg-blue-50 border-blue-200 text-blue-800"
+                                  : "agent-trace-file-normal border-gray-200"
+                              }`}
+                            >
+                              {getFileIcon(file)}
+                              {file}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
