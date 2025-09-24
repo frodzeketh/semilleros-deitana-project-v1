@@ -99,12 +99,6 @@ class ChatManager {
         }
 
         const data = conversation.data();
-        console.log('🔍 [CHAT-MANAGER] Mensajes cargados del historial:', data.messages?.map(msg => ({
-            role: msg.role,
-            content: msg.content?.substring(0, 100) + '...',
-            hasTrace: !!msg.trace,
-            trace: msg.trace
-        })));
         return data.messages;
     }
 
