@@ -570,87 +570,52 @@ GROUP BY pcp.id;
 
 
 PARA SABER QUE PLANTAS ESTAN LIBRES PARA VENTAS, O NO TIENEN DUEÑO, O PLANTAS LIBRES PARA VENDER: 
+SELECT 
+    p.id AS id_partida,
+    c.CL_DENO AS cliente,
+    a.AR_DENO AS articulo,
+    pe.C0 AS bandejas_a_venta,
+    pe.C1 AS alveolos_a_venta,
+    pe.C2 AS plantas_a_venta,
+    p.PAR_FECS AS fecha_siembra,
+    p.PAR_FECE AS fecha_entrega
+FROM 
+    partidas p
+    LEFT JOIN clientes c ON p.PAR_CCL = c.id
+    LEFT JOIN articulos a ON p.PAR_SEM = a.id
+    INNER JOIN partidas_par_esta pe ON p.id = pe.id AND pe.id2 = 6
+WHERE 
+    (p.PAR_EST IS NULL OR p.PAR_EST = '')
+    AND pe.C2 > 0
+ORDER BY 
+    p.PAR_FECS DESC;
+
+
+
+
+
+PARA SABER PLANTAS LIBRES PARA VENTA POR ARTICULO:
 
 SELECT 
-    p.id AS partida_id,
-    p.PAR_DENO AS descripcion_partida,
-    e.C0 AS bandejas_disponibles,
-    e.C1 AS alveolos_disponibles, 
-    e.C2 AS plantas_disponibles,
+    p.id AS id_partida,
+    c.CL_DENO AS cliente,
+    a.AR_DENO AS articulo,
+    pe.C0 AS bandejas_a_venta,
+    pe.C1 AS alveolos_a_venta,
+    pe.C2 AS plantas_a_venta,
     p.PAR_FECS AS fecha_siembra,
-    p.PAR_FECE AS fecha_entrega,
-    p.PAR_NMCL AS nombre_cliente,
-    p.PAR_NMSM AS nombre_semilla
-FROM partidas p
-INNER JOIN partidas_par_esta e ON p.id = e.id
-WHERE e.id2 = 6  -- Disponible para venta
-  AND (
-    (e.C0 IS NOT NULL AND REPLACE(e.C0, ',', '.') + 0 > 0) OR  
-    (e.C1 IS NOT NULL AND REPLACE(e.C1, ',', '.') + 0 > 0) OR  
-    (e.C2 IS NOT NULL AND REPLACE(e.C2, ',', '.') + 0 > 0)     
-  )
-  AND TRIM(COALESCE(p.PAR_EST, '')) IN ('C', 'R', '')  -- Estados C, R o vacío
-ORDER BY REPLACE(e.C2, ',', '.') + 0 DESC;
-
-
-
-PARA SABER QUE PLANTAS ESTAN LIBRES PARA VENTAS, NO TIENEN DUEÑO, O PLANTAS LIBRES PARA VENDER Y SABER EL DUEÑO DE LA PARTIDA O CLIENTE: 
-
-SELECT 
-    p.id AS partida_id,
-    p.PAR_DENO AS descripcion_partida,
-    e.C0 AS bandejas_disponibles,
-    e.C1 AS alveolos_disponibles, 
-    e.C2 AS plantas_disponibles,
-    p.PAR_FECS AS fecha_siembra,
-    p.PAR_FECE AS fecha_entrega,
-    c.CL_DENO AS nombre_cliente_tabla,  -- Cliente desde tabla clientes
-    p.PAR_NMCL AS nombre_cliente_partida,  -- Cliente desde partidas
-    p.PAR_NMSM AS nombre_semilla
-FROM partidas p
-INNER JOIN partidas_par_esta e ON p.id = e.id
-LEFT JOIN clientes c ON p.PAR_CCL = c.id  -- JOIN con tabla clientes
-WHERE e.id2 = 6  -- Disponible para venta
-  AND (
-    (e.C0 IS NOT NULL AND REPLACE(e.C0, ',', '.') + 0 > 0) OR  
-    (e.C1 IS NOT NULL AND REPLACE(e.C1, ',', '.') + 0 > 0) OR  
-    (e.C2 IS NOT NULL AND REPLACE(e.C2, ',', '.') + 0 > 0)     
-  )
-  AND TRIM(COALESCE(p.PAR_EST, '')) IN ('C', 'R', '')  -- Estados C, R o vacío
-ORDER BY REPLACE(e.C2, ',', '.') + 0 DESC;
-
-
-PARA SABER PLANTAS LIBRES PARA VENTA POR ARTICULO 
-
-SELECT 
-    p.id AS partida_id,
-    p.PAR_DENO AS descripcion_partida,
-    e.C0 AS bandejas_disponibles,
-    e.C1 AS alveolos_disponibles, 
-    e.C2 AS plantas_disponibles,
-    p.PAR_FECS AS fecha_siembra,
-    p.PAR_FECE AS fecha_entrega,
-    c.CL_DENO AS nombre_cliente_tabla,
-    p.PAR_NMCL AS nombre_cliente_partida,
-    p.PAR_SEM AS id_articulo,
-    a.AR_DENO AS nombre_articulo,
-    p.PAR_NMSM AS nombre_semilla_partida
-FROM partidas p
-INNER JOIN partidas_par_esta e ON p.id = e.id
-LEFT JOIN clientes c ON p.PAR_CCL = c.id
-LEFT JOIN articulos a ON p.PAR_SEM = a.id
-WHERE e.id2 = 6  -- Disponible para venta
-  AND (
-    (e.C0 IS NOT NULL AND REPLACE(e.C0, ',', '.') + 0 > 0) OR  
-    (e.C1 IS NOT NULL AND REPLACE(e.C1, ',', '.') + 0 > 0) OR  
-    (e.C2 IS NOT NULL AND REPLACE(e.C2, ',', '.') + 0 > 0)     
-  )
-  AND TRIM(COALESCE(p.PAR_EST, '')) IN ('C', 'R', '')
-  -- DESCOMENTA Y AJUSTA LA LÍNEA DE ABAJO CON EL ARTÍCULO QUE QUIERAS BUSCAR:
-  AND UPPER(a.AR_DENO) LIKE '%BROC%'  
-  -- AND UPPER(a.AR_DENO) LIKE '%PEPINO%'   -- Para buscar pepino
-  -- AND UPPER(a.AR_DENO) LIKE '%URANO%'    -- Para buscar urano
-ORDER BY a.AR_DENO, REPLACE(e.C2, ',', '.') + 0 DESC;
+    p.PAR_FECE AS fecha_entrega
+FROM 
+    partidas p
+    LEFT JOIN clientes c ON p.PAR_CCL = c.id
+    LEFT JOIN articulos a ON p.PAR_SEM = a.id
+    INNER JOIN partidas_par_esta pe ON p.id = pe.id AND pe.id2 = 6
+WHERE 
+    (p.PAR_EST IS NULL OR p.PAR_EST = '')
+    AND pe.C2 > 0
+    AND UPPER(a.AR_DENO) LIKE '%TOMATE%'
+ORDER BY 
+    p.PAR_FECS DESC;
 
 
 

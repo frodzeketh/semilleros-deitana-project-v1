@@ -122,7 +122,7 @@ articulos: {
   /* ================================================*/
   clientes: {
     alias: "Clientes",
-    descripcion: "Información de clientes activos",
+    descripcion: "Los clientes son las personas o empresas con las que Semilleros Deitana comercializa sus productos. La información de los clientes incluye sus datos de contacto, ubicación y detalles comerciales relevantes para establecer y mantener informacion del mismo. Es fundamental tener un registro completo para la gestión de partidas, seguimiento y comunicación. Cada cliente tiene un código único que lo identifica en nuestra base de datos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Clientes",
     tabla: "clientes",
     columnas: {
       CL_DENO: "Nombre del cliente",
@@ -158,7 +158,7 @@ articulos: {
 familias: {
     // Clave principal (nombre de tabla)
     descripcion:
-      "Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia.",
+      "Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Familias y Grupos",
     tabla: `familias`, // Nombre de la tabla principal
     columnas: {
       id: "Código único de la familia (Clave Primaria)",
@@ -198,7 +198,7 @@ familias: {
   fpago: {
     // Usamos fpago como clave, ya que es la tabla principal descrita
     descripcion:
-      "Define y gestiona las formas de pago y cobro utilizadas en transacciones comerciales. Actúa como un catálogo maestro para estandarizar operaciones financieras, vincular transacciones y gestionar vencimientos.",
+      "La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Formas de pago/cobro",
     tabla: "fpago", // Nombre de tabla original
     alias: "Formas de pago/cobro",
     columnas: {
@@ -250,7 +250,7 @@ familias: {
   bancos: {
     // Usamos el nombre de la tabla principal, que es la misma
     descripcion:
-      "Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros.",
+      "Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Nuestros bancos",
     tabla: "bancos",
     alias: "Nuestros bancos",
     columnas: {
@@ -3074,50 +3074,46 @@ partidas: {
   },
 
   partidas_par_esta: {
-    // Clave principal (nombre de tabla)
-    descripcion:
-      "Almacena el estado actual y detallado de cada partida de producción. Cada partida tiene exactamente 13 registros (`id2` del 1 al 13) que representan métricas clave como la cantidad de bandejas, alveolos y plantas en diferentes estados del ciclo de vida de la producción y venta.",
-    tabla: `partidas_par_esta`, // Nombre de la tabla principal
+    alias: "Estados de Partidas",
+    descripcion: "Controla y registra todos los estados por los que pasa una partida durante su ciclo de producción. Cada partida puede tener múltiples estados simultáneos con diferentes cantidades de bandejas, alveolos y plantas. Los estados van desde la producción inicial hasta la entrega final al cliente, incluyendo disponibilidad, ventas y descuadres. El sistema permite un seguimiento detallado del flujo de plantas en cada etapa del proceso productivo.",
+    tabla: "partidas_par_esta",
     columnas: {
-      id: "Código de la partida de producción. Clave foránea a la tabla `partidas`.",
-      id2: "Indicador numérico (del 1 al 13) que define el tipo de estado o métrica de la fila.",
-      C0: "Número de bandejas para el estado o métrica especificada en `id2`.",
-      C1: "Número de alveolos para el estado o métrica especificada en `id2`.",
-      C2: "Número de plantas para el estado o métrica especificada en `id2`.",
+        id: "Código de la partida (relacionado con tabla partidas)",
+        id2: "Código del estado (1-13)",
+        C0: "Cantidad de bandejas en este estado",
+        C1: "Cantidad de alveolos en este estado", 
+        C2: "Cantidad de plantas en este estado"
+    },
+    estados: {
+        1: "01. REQUERIDO PRODUCCIÓN - Plantas que se necesitan producir",
+        2: "02. DISPONIBLE CLIENTE - Plantas listas para el cliente",
+        3: "03. RETIRADO CLIENTE - Plantas ya retiradas por el cliente",
+        4: "04. PTE. RETIRAR CLIENTE - Plantas pendientes de retirar por el cliente",
+        5: "05. TIRADAS - Plantas desechadas o perdidas",
+        6: "06. A VENTA - Plantas disponibles para venta libre, plantas a la venta, plantas libres.",
+        7: "07. SEMBRADO/INJERTADO - Plantas sembradas o injertadas exitosamente",
+        8: "08. VENDIDO TOTAL - Total de plantas vendidas",
+        9: "09. ACTUALES - Estado actual de plantas",
+        10: "10. DESCUADRE ACTUAL - Diferencias negativas en el inventario",
+        11: "11. VENTA + DESCUADRE - Combinación de ventas y descuadres",
+        12: "12. EN RECUPERACIÓN - Plantas en proceso de recuperación",
+        13: "13. RESERVAS - Plantas reservadas para futuros pedidos"
     },
     relaciones: {
-      partidas: {
-        tabla_relacionada: "partidas",
-        tipo: "Muchos a uno", // Múltiples registros de estado para una sola partida
-        campo_enlace_local: "id",
-        campo_enlace_externo: "id", // Suponiendo 'id' es la clave primaria de 'partidas'
-        descripcion: "Vincula las métricas de estado con la partida de producción a la que pertenecen.",
-      },
+        partidas: {
+            tabla_relacionada: "partidas",
+            tipo: "Muchos a uno (cada estado pertenece a una partida específica)",
+            campo_enlace_local: "id",
+            campo_enlace_externo: "id",
+            descripcion: "Vincula cada estado con su partida correspondiente para el seguimiento completo del proceso productivo"
+        }
     },
-    descripcion_filas: {
-      1: "Requerido Producción: Cantidad de producción planeada.",
-      2: "Disponible para cliente: Cantidad de plantas listas para ser retiradas por el cliente.",
-      3: "Retiro del cliente: Cantidad que el cliente ha retirado.",
-      4: "Pendiente retirar cliente: Cantidad que el cliente aún no ha retirado.",
-      5: "Tiradas: Plantas desechadas o perdidas.",
-      6: "Disponible para venta: Plantas libres para la venta a cualquier cliente (plantas 'libres').",
-      7: "Sembrado/Injertado: Cantidad total de plantas sembradas o injertadas inicialmente.",
-      8: "Vendido total: Total de plantas que han sido vendidas.",
-      9: "Actuales: Cantidad de plantas actualmente en stock físico.",
-      10: "Descuadre actual: Diferencia o inconsistencia entre el stock físico y los registros (`id2` 9 y `id2` 7).",
-      11: "Venta + Descuadre: Suma de la cantidad vendida y el descuadre.",
-      12: "En recuperación: Plantas que están en proceso de recuperación.",
-      13: "Reservas: Plantas que están reservadas para un cliente o propósito específico.",
-    },
-    ejemplos: {
-      consulta_estado_completo:
-        "Obtener las 13 filas de estado para una partida específica (ej. `25006219`) y analizar cada métrica (bandejas, alveolos, plantas).",
-      analisis_disponibilidad_cliente:
-        "Para una partida, comparar `id2` 2 (disponible para cliente) con `id2` 4 (pendiente retirar) y `id2` 3 (retirado) para entender el progreso de la entrega.",
-      analisis_stock_y_pérdidas:
-        "Comparar el `id2` 9 (actuales) con el `id2` 7 (sembrado/injertado) para evaluar las pérdidas, que se reflejarían en el `id2` 5 (tiradas) y `id2` 10 (descuadre).",
-    },
-  },
+    notas_importantes: {
+        valores_negativos: "Los estados 10 y 11 pueden tener valores negativos indicando descuadres o pérdidas",
+        multiples_estados: "Una partida puede tener simultáneamente varios estados con diferentes cantidades",
+        seguimiento_flujo: "Permite rastrear el movimiento de plantas desde siembra hasta entrega final"
+    }
+},
 
 
 /* ================================================*/
