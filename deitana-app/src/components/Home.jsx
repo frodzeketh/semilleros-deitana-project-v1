@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, ChevronDown, Search, Trash2, UserSearch } from "lucide-react"
+import { Send, ChevronDown, Search, Trash2, UserSearch, AudioLines, ArrowUp, Mic } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
@@ -1840,9 +1840,52 @@ const Home = () => {
                   onChange={(e) => setMessage(e.target.value)}
                   className="ds-chat-input"
                 />
-                <button type="submit" className="ds-send-button" disabled={!message.trim()}>
-                  <Send size={20} />
-                </button>
+                {message.trim() ? (
+                  <button 
+                    type="submit" 
+                    className="ds-send-button" 
+                    disabled={false}
+                  >
+                    <ArrowUp size={20} />
+                  </button>
+                ) : (
+                  <div style={{ 
+                    position: 'absolute', 
+                    right: '12px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px' 
+                  }}>
+                    <button 
+                      type="button" 
+                      className="ds-send-button"
+                      style={{
+                        position: 'relative',
+                        right: 'auto'
+                      }}
+                      onClick={() => {
+                        // Funcionalidad de Mic - por implementar
+                        console.log('🎤 Funcionalidad de voz activada');
+                      }}
+                    >
+                      <Mic size={18} />
+                    </button>
+                    <button 
+                      type="button" 
+                      className="ds-send-button"
+                      style={{
+                        position: 'relative',
+                        right: 'auto'
+                      }}
+                      onClick={() => {
+                        // Funcionalidad de AudioLines - por implementar
+                        console.log('🎵 Funcionalidad AudioLines activada');
+                      }}
+                    >
+                      <AudioLines size={18} />
+                    </button>
+                  </div>
+                )}
               </div>
             </form>
             <div className="ds-disclaimer">Deitana IA</div>
