@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, ChevronDown, Search, Trash2, UserSearch, AudioLines, ArrowUp, Mic } from "lucide-react"
+import { ChevronDown, Search, Trash2, UserSearch, AudioLines, ArrowUp, Mic, Square } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
@@ -64,6 +64,14 @@ const Home = () => {
   const [isSearchDragging, setIsSearchDragging] = useState(false)
   const [searchDragY, setSearchDragY] = useState(0)
   const [searchStartY, setSearchStartY] = useState(0)
+
+  // Estados para grabación de audio
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [isTranscriptionPaused, setIsTranscriptionPaused] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState(null)
+  // eslint-disable-next-line no-unused-vars
+  const [audioChunks, setAudioChunks] = useState([])
 
 
 
@@ -507,6 +515,138 @@ const Home = () => {
       loadConversationMessages(currentConversationId)
     }
   }, [currentConversationId])
+
+
+  // Funciones para grabación de audio con OpenAI Whisper
+  const startRecording = async () => {
+    try {
+      console.log('🎤 Iniciando grabación de audio...');
+      
+      // Solicitar permisos de micrófono
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000
+        } 
+      });
+      
+      // Crear MediaRecorder
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+      
+      const chunks = [];
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+      
+      recorder.onstop = async () => {
+        console.log('🛑 Grabación detenida, procesando audio...');
+        
+        // Crear blob del audio
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        
+        // Detener el stream
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Transcribir audio
+        await transcribeAudio(audioBlob);
+        
+        // Limpiar chunks
+        setAudioChunks([]);
+      };
+      
+      // Iniciar grabación
+      recorder.start();
+      setMediaRecorder(recorder);
+      setAudioChunks(chunks);
+      setIsRecording(true);
+      
+      console.log('✅ Grabación iniciada');
+      
+    } catch (error) {
+      console.error('❌ Error al iniciar grabación:', error);
+      alert('Error al acceder al micrófono. Verifica los permisos.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      console.log('🛑 Deteniendo grabación...');
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob) => {
+    try {
+      setIsTranscribing(true);
+      console.log('🔄 Enviando audio a Whisper API...');
+      
+      // Crear FormData
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.webm');
+      formData.append('model', 'whisper-1');
+      formData.append('language', 'es'); // Español
+      formData.append('response_format', 'text');
+      
+      // Enviar a OpenAI Whisper API
+      const response = await fetch(`${API_URL}/api/transcribe`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.accessToken}` // Usar token del usuario
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error en transcripción: ${response.status}`);
+      }
+      
+      const transcribedText = await response.text();
+      console.log('✅ Audio transcrito:', transcribedText);
+      
+      // Establecer el texto transcrito en el input
+      setMessage(transcribedText.trim());
+      
+    } catch (error) {
+      console.error('❌ Error en transcripción:', error);
+      alert('Error al transcribir el audio. Intenta de nuevo.');
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const handleSquareClick = () => {
+    console.log('⏹️ Deteniendo grabación...');
+    if (isRecording) {
+      stopRecording();
+    } else if (isTranscribing) {
+      // Si está transcribiendo, cancelar la transcripción
+      setIsTranscribing(false);
+      setIsTranscriptionPaused(true);
+    }
+  };
+
+  const handleArrowUpClick = () => {
+    if (message.trim()) {
+      console.log('⬆️ Enviando mensaje transcrito...');
+      // Enviar el mensaje actual
+      handleSubmit({ preventDefault: () => {} });
+    }
+  };
 
   // Modificar la función handleSubmit para usar la conversación actual
   const handleSubmit = async (e) => {
@@ -1833,14 +1973,143 @@ const Home = () => {
           <div className="ds-chat-input-container">
             <form onSubmit={handleSubmit}>
               <div className="ds-input-wrapper">
-                <input
-                  type="text"
-                  placeholder="¿Cómo puede ayudar Deitana IA?"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="ds-chat-input"
-                />
-                {message.trim() ? (
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    type="text"
+                    placeholder={isRecording || isTranscribing ? "" : "¿Cómo puede ayudar Deitana IA?"}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="ds-chat-input"
+                    disabled={isRecording || isTranscribing}
+                    style={{
+                      backgroundColor: isRecording || isTranscribing ? '#f8f9fa' : 'white',
+                      color: 'inherit'
+                    }}
+                  />
+                  
+                  {/* Overlay de ondas de audio con estilo profesional */}
+                  {isRecording && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '50px',
+                      gap: '2px',
+                      opacity: 1,
+                      width: '200px',
+                      pointerEvents: 'none'
+                    }}>
+                      {Array.from({ length: 10 }, (_, index) => {
+                        const heights = [12, 18, 25, 15, 28, 20, 16, 22, 18, 14];
+                        const delays = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+                        const durations = [0.9, 0.7, 1.1, 0.6, 1.3, 0.8, 0.9, 1.0, 0.7, 1.2];
+                        
+                        return (
+                          <div
+                            key={index}
+                            className={`wave wave-${index + 1}`}
+                            style={{
+                              width: '3px',
+                              height: `${heights[index]}px`,
+                              background: 'linear-gradient(to top, #667eea, #764ba2)',
+                              borderRadius: '2px',
+                              animation: `wave-animation ${durations[index]}s ease-in-out infinite`,
+                              animationDelay: `${delays[index]}s`
+                            }}
+                          />
+                        );
+                      })}
+                      <style jsx>{`
+                        @keyframes wave-animation {
+                          0%, 100% {
+                            transform: scaleY(0.5);
+                            opacity: 0.7;
+                          }
+                          50% {
+                            transform: scaleY(1);
+                            opacity: 1;
+                          }
+                        }
+                      `}</style>
+                    </div>
+                  )}
+                  
+                  {/* Texto de transcripción */}
+                  {isTranscribing && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '16px',
+                      transform: 'translateY(-50%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      pointerEvents: 'none'
+                    }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid #0066ff',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      <span style={{
+                        fontSize: '14px',
+                        color: '#0066ff',
+                        fontWeight: '500'
+                      }}>
+                        Transcribiendo audio...
+                      </span>
+                      <style jsx>{`
+                        @keyframes spin {
+                          0% { transform: rotate(0deg); }
+                          100% { transform: rotate(360deg); }
+                        }
+                      `}</style>
+                    </div>
+                  )}
+                </div>
+                {isRecording || isTranscribing ? (
+                  <div style={{ 
+                    position: 'absolute', 
+                    right: '12px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px' 
+                  }}>
+                    <button 
+                      type="button" 
+                      className="ds-send-button"
+                      style={{
+                        position: 'relative',
+                        right: 'auto',
+                        backgroundColor: '#ff4444',
+                        color: 'white'
+                      }}
+                      onClick={handleSquareClick}
+                      disabled={isTranscribing && !isTranscriptionPaused}
+                    >
+                      <Square size={18} />
+                    </button>
+                    <button 
+                      type="button" 
+                      className="ds-send-button"
+                      style={{
+                        position: 'relative',
+                        right: 'auto'
+                      }}
+                      onClick={handleArrowUpClick}
+                      disabled={!message.trim()}
+                    >
+                      <ArrowUp size={18} />
+                    </button>
+                  </div>
+                ) : message.trim() ? (
                   <button 
                     type="submit" 
                     className="ds-send-button" 
@@ -1863,10 +2132,7 @@ const Home = () => {
                         position: 'relative',
                         right: 'auto'
                       }}
-                      onClick={() => {
-                        // Funcionalidad de Mic - por implementar
-                        console.log('🎤 Funcionalidad de voz activada');
-                      }}
+                      onClick={handleMicClick}
                     >
                       <Mic size={18} />
                     </button>
@@ -1888,6 +2154,8 @@ const Home = () => {
                 )}
               </div>
             </form>
+            
+            
             <div className="ds-disclaimer">Deitana IA</div>
           </div>
         </div>

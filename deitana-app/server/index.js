@@ -12,6 +12,7 @@ const { verifyToken } = require('./middleware/authMiddleware');
 const chatManager = require('./utils/chatManager');
 const langfuseRoutes = require('./routes/langfuseMetrics');
 const chatRoutes = require('./routes/chatRoutes');
+const transcribeRoutes = require('./routes/transcribe');
 
 dotenv.config();
 
@@ -87,6 +88,9 @@ app.use('/api/langfuse', langfuseRoutes);
 
 // Rutas de chat con streaming
 app.use('/api/chat', chatRoutes);
+
+// Rutas de transcripción de audio
+app.use('/api/transcribe', transcribeRoutes);
 
 // Middleware para verificar si es empleado
 const isEmployee = (req, res, next) => {
