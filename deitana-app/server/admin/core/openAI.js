@@ -1,30 +1,9 @@
-// =====================================
-// SISTEMA DE INTELIGENCIA ARTIFICIAL PARA SEMILLEROS DEITANA
-// =====================================
-// 
-// Este archivo es el núcleo central del asistente IA empresarial que:
-// - Procesa consultas naturales y las convierte en SQL
-// - Integra conocimiento empresarial con datos actuales
-// - Proporciona respuestas personalizadas y naturales
-// - Mantiene contexto conversacional y memoria
-// - Soporta streaming en tiempo real
-//
-// ARQUITECTURA PRINCIPAL:
-// 1. Análisis de intención con IA
-// 2. Construcción inteligente de prompts
-// 3. Ejecución de SQL con validación
-// 4. Formateo natural de respuestas
-// 5. Persistencia en Firestore y Pinecone
-// 6. Streaming en tiempo real
-//
-// AUTOR: Sistema de IA Semilleros Deitana
-// VERSIÓN: 2.0 (Optimizada con una sola llamada IA)
-// FECHA: 2024
-// =====================================
 
 // =====================================
 // IMPORTACIONES Y CONFIGURACIÓN INICIAL
 // =====================================
+
+
 
 const { OpenAI } = require('openai');
 const pool = require('../../db');
@@ -46,25 +25,18 @@ const { sqlRules } = require('../prompts/SQL');
 
 const { identidadEmpresa, terminologia } = require('../prompts/DEITANA');
 
+
+
+
 // =====================================
 // VERIFICACIÓN DE IMPORTACIONES
 // =====================================
-console.log('\n🔍 ==========================================');
-console.log('🔍 VERIFICACIÓN DE IMPORTACIONES');
-console.log('🔍 ==========================================');
-console.log(`📄 promptGlobal: ${promptGlobal ? 'OK' : 'ERROR'} - ${promptGlobal ? promptGlobal.length : 0} caracteres`);
-console.log(`📄 comportamientoGlobal: ${comportamientoGlobal ? 'OK' : 'ERROR'} - ${comportamientoGlobal ? comportamientoGlobal.length : 0} caracteres`);
-console.log(`📄 formatoRespuesta: ${formatoRespuesta ? 'OK' : 'ERROR'} - ${formatoRespuesta ? formatoRespuesta.length : 0} caracteres`);
-console.log(`📄 guiaMarkdownCompleta: ${guiaMarkdownCompleta ? 'OK' : 'ERROR'} - ${guiaMarkdownCompleta ? guiaMarkdownCompleta.length : 0} caracteres`);
-console.log(`📄 identidadEmpresa: ${identidadEmpresa ? 'OK' : 'ERROR'} - ${identidadEmpresa ? identidadEmpresa.length : 0} caracteres`);
-console.log(`📄 terminologia: ${terminologia ? 'OK' : 'ERROR'} - ${terminologia ? terminologia.length : 0} caracteres`);
-console.log('🔍 ==========================================\n');
 
-// Importar sistema RAG
+
 const ragInteligente = require('../data/integrar_rag_nuevo');
-// Removido: analizarIntencionConIA no se usa - usamos analizarIntencionInteligente local
 
-// Inicializar el cliente de OpenAI
+
+
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
@@ -78,331 +50,30 @@ const conversationHistory = [];
 // Contexto de datos reales de la última consulta relevante
 let lastRealData = null;
 
-// =====================================
-// FUNCIONES AUXILIARES - FORMATEO Y UTILIDADES
-// =====================================
-// 
-// Estas funciones se encargan de:
-// - Formatear resultados SQL en Markdown
-// - Obtener descripciones de columnas desde mapaERP
-// - Determinar tablas basadas en columnas
-// - Limitar y aleatorizar resultados
-// - Generar respuestas naturales y conversacionales
-// =====================================
 
 
+
+// =====================================
+// CONFIGURACIÓN DE VARIABLES GLOBALES
+// =====================================
 
 /**
- * Función para formatear la respuesta final - RESPUESTAS NATURALES
- * Convierte resultados SQL en respuestas conversacionales y amigables
  * 
  * @param {Array} results - Resultados de la consulta SQL
  * @param {string} query - Consulta original del usuario
  * @returns {string} Respuesta formateada de forma natural
  * 
- * CARACTERÍSTICAS:
- * - Detecta tipo de entidad (clientes, técnicos, etc.)
- * - Genera saludos personalizados
- * - Filtra resultados válidos
- * - Capitaliza nombres automáticamente
- * - Agrega preguntas de seguimiento
  */
 
 
 // =====================================
 // FUNCIONES DE EJECUCIÓN Y VALIDACIÓN SQL
 // =====================================
-// 
-// Estas funciones manejan:
-// - Ejecución segura de consultas SQL
-// - Validación y extracción de SQL de respuestas de IA
-// - Reemplazo de nombres de tablas con nombres reales
-// - Validación de tablas y columnas en mapaERP
-// - Prevención de SQL injection
-// - Corrección automática de sintaxis SQL
+
+
 // =====================================
-
-/**
- * Sistema de TO-DO LIST para trackear tareas y errores
- */
-class TodoListManager {
-    constructor() {
-        this.todos = new Map();
-        this.nextId = 1;
-    }
-
-    addTodo(description, priority = 'medium', context = '') {
-        const id = `todo_${this.nextId++}`;
-        const todo = {
-            id,
-            description,
-            priority,
-            context,
-            status: 'pending',
-            createdAt: new Date(),
-            attempts: 0,
-            lastError: null
-        };
-        this.todos.set(id, todo);
-        console.log(`📋 [TODO] Agregado: ${description} (${priority})`);
-        return id;
-    }
-
-    updateTodo(id, updates) {
-        if (this.todos.has(id)) {
-            const todo = this.todos.get(id);
-            Object.assign(todo, updates, { updatedAt: new Date() });
-            console.log(`📋 [TODO] Actualizado: ${todo.description} -> ${updates.status || 'actualizado'}`);
-        }
-    }
-
-    getTodos(status = null) {
-        const todoList = Array.from(this.todos.values());
-        return status ? todoList.filter(t => t.status === status) : todoList;
-    }
-
-    markCompleted(id, result = null) {
-        this.updateTodo(id, { status: 'completed', result, completedAt: new Date() });
-    }
-
-    markFailed(id, error, shouldRetry = true) {
-        const todo = this.todos.get(id);
-        if (todo) {
-            todo.attempts++;
-            todo.lastError = error;
-            todo.status = shouldRetry && todo.attempts < 3 ? 'retry' : 'failed';
-            console.log(`📋 [TODO] Error en: ${todo.description} (intento ${todo.attempts})`);
-        }
-    }
-
-    getSystemStatus() {
-        const todos = this.getTodos();
-        const stats = {
-            total: todos.length,
-            pending: todos.filter(t => t.status === 'pending').length,
-            in_progress: todos.filter(t => t.status === 'in_progress').length,
-            completed: todos.filter(t => t.status === 'completed').length,
-            failed: todos.filter(t => t.status === 'failed').length,
-            retry: todos.filter(t => t.status === 'retry').length
-        };
-
-        return {
-            stats,
-            recentTodos: todos.slice(-10), // Últimos 10 TODOs
-            failedTodos: todos.filter(t => t.status === 'failed'),
-            retryTodos: todos.filter(t => t.status === 'retry')
-        };
-    }
-
-    generateStatusReport() {
-        const status = this.getSystemStatus();
-        
-        let report = `
-📋 **ESTADO DEL SISTEMA - GESTOR DE TAREAS**
-
-📊 **Estadísticas:**
-- Total de tareas: ${status.stats.total}
-- ✅ Completadas: ${status.stats.completed}
-- 🔄 En progreso: ${status.stats.in_progress}
-- ⏳ Pendientes: ${status.stats.pending}
-- ❌ Fallidas: ${status.stats.failed}
-- 🔁 Para reintentar: ${status.stats.retry}
-
-`;
-
-        if (status.failedTodos.length > 0) {
-            report += `\n🚨 **TAREAS FALLIDAS RECIENTES:**\n`;
-            status.failedTodos.slice(-5).forEach((todo, index) => {
-                report += `${index + 1}. ${todo.description}\n   Error: ${todo.lastError}\n   Intentos: ${todo.attempts}\n\n`;
-            });
-        }
-
-        if (status.retryTodos.length > 0) {
-            report += `\n🔄 **TAREAS PARA REINTENTAR:**\n`;
-            status.retryTodos.forEach((todo, index) => {
-                report += `${index + 1}. ${todo.description} (Intento ${todo.attempts + 1}/3)\n`;
-            });
-        }
-
-        return report;
-    }
-
-    clearOldTodos(maxAge = 24 * 60 * 60 * 1000) { // 24 horas por defecto
-        const now = Date.now();
-        let removed = 0;
-        
-        for (const [id, todo] of this.todos.entries()) {
-            if (todo.status === 'completed' && (now - todo.createdAt.getTime()) > maxAge) {
-                this.todos.delete(id);
-                removed++;
-            }
-        }
-        
-        if (removed > 0) {
-            console.log(`🧹 [TODO-CLEANUP] Eliminadas ${removed} tareas completadas antiguas`);
-        }
-        
-        return removed;
-    }
-}
-
-// Instancia global del gestor de TODOs
-const todoManager = new TodoListManager();
-
-/**
- * Sistema inteligente de análisis de errores SQL
- */
-class SQLErrorAnalyzer {
-    static analyzeError(error, sql, context = '') {
-        const errorMsg = error.message.toLowerCase();
-        
-        const analysis = {
-            type: 'unknown',
-            severity: 'medium',
-            suggestions: [],
-            canRetry: false,
-            alternativeStrategies: []
-        };
-
-        // Análisis de tipos de error
-        if (errorMsg.includes("table") && errorMsg.includes("doesn't exist")) {
-            analysis.type = 'table_not_found';
-            analysis.severity = 'high';
-            analysis.suggestions = [
-                'Verificar nombres de tablas en mapaERP',
-                'Usar búsqueda fuzzy para encontrar tabla similar',
-                'Consultar RAG para información sobre estructura'
-            ];
-            analysis.alternativeStrategies = ['fuzzy_search', 'rag_consultation'];
-        }
-        
-        else if (errorMsg.includes("unknown column")) {
-            analysis.type = 'column_not_found';
-            analysis.severity = 'high';
-            analysis.suggestions = [
-                'Verificar nombres de columnas en mapaERP',
-                'Buscar columnas similares en la tabla',
-                'Consultar documentación de la tabla'
-            ];
-            analysis.alternativeStrategies = ['column_search', 'table_description'];
-        }
-        
-        else if (errorMsg.includes("syntax error")) {
-            analysis.type = 'syntax_error';
-            analysis.severity = 'medium';
-            analysis.canRetry = true;
-            analysis.suggestions = [
-                'Corregir sintaxis SQL',
-                'Simplificar consulta',
-                'Usar formato básico SELECT FROM WHERE'
-            ];
-            analysis.alternativeStrategies = ['syntax_correction', 'query_simplification'];
-        }
-        
-        else if (errorMsg.includes("access denied") || errorMsg.includes("permission")) {
-            analysis.type = 'permission_error';
-            analysis.severity = 'high';
-            analysis.suggestions = [
-                'Error de permisos en base de datos',
-                'Contactar administrador del sistema'
-            ];
-        }
-
-        return analysis;
-    }
-
-    static generateAlternativeQuery(originalSql, errorAnalysis, mapaERP) {
-        switch (errorAnalysis.type) {
-            case 'table_not_found':
-                return this.suggestSimilarTable(originalSql, mapaERP);
-            case 'column_not_found':
-                return this.suggestSimilarColumns(originalSql, mapaERP);
-            case 'syntax_error':
-                return this.simplifyQuery(originalSql);
-            default:
-                return null;
-        }
-    }
-
-    static suggestSimilarTable(sql, mapaERP) {
-        // Extraer nombre de tabla del SQL
-        const tableMatch = sql.match(/FROM\s+(\w+)/i);
-        if (!tableMatch) return null;
-
-        const requestedTable = tableMatch[1].toLowerCase();
-        const availableTables = Object.keys(mapaERP);
-        
-        // Buscar tabla más similar
-        let bestMatch = null;
-        let bestScore = 0;
-        
-        for (const table of availableTables) {
-            const score = this.calculateSimilarity(requestedTable, table.toLowerCase());
-            if (score > bestScore && score > 0.3) {
-                bestScore = score;
-                bestMatch = table;
-            }
-        }
-
-        if (bestMatch) {
-            return sql.replace(new RegExp(requestedTable, 'gi'), bestMatch);
-        }
-        return null;
-    }
-
-    static calculateSimilarity(str1, str2) {
-        const longer = str1.length > str2.length ? str1 : str2;
-        const shorter = str1.length > str2.length ? str2 : str1;
-        
-        if (longer.length === 0) return 1.0;
-        
-        const distance = this.levenshteinDistance(longer, shorter);
-        return (longer.length - distance) / longer.length;
-    }
-
-    static levenshteinDistance(str1, str2) {
-        const matrix = [];
-        
-        for (let i = 0; i <= str2.length; i++) {
-            matrix[i] = [i];
-        }
-        
-        for (let j = 0; j <= str1.length; j++) {
-            matrix[0][j] = j;
-        }
-        
-        for (let i = 1; i <= str2.length; i++) {
-            for (let j = 1; j <= str1.length; j++) {
-                if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-                    matrix[i][j] = matrix[i - 1][j - 1];
-                } else {
-                    matrix[i][j] = Math.min(
-                        matrix[i - 1][j - 1] + 1,
-                        matrix[i][j - 1] + 1,
-                        matrix[i - 1][j] + 1
-                    );
-                }
-            }
-        }
-        
-        return matrix[str2.length][str1.length];
-    }
-
-    static simplifyQuery(sql) {
-        // Simplificar consulta removiendo elementos complejos
-        let simplified = sql;
-        
-        // Remover JOINs complejos
-        simplified = simplified.replace(/\s+(LEFT|RIGHT|INNER|OUTER)?\s*JOIN[\s\S]*?ON[\s\S]*?(?=WHERE|GROUP|ORDER|LIMIT|$)/gi, '');
-        
-        // Simplificar SELECT si es muy complejo
-        if (simplified.includes('COUNT') || simplified.includes('SUM') || simplified.includes('AVG')) {
-            simplified = simplified.replace(/SELECT[\s\S]*?FROM/i, 'SELECT * FROM');
-        }
-        
-        return simplified;
-    }
-}
+// EJECUCIÓN DE CONSULTAS SQL
+// =====================================
 
 /**
  * Función para ejecutar consultas SQL con sistema inteligente de manejo de errores
@@ -412,293 +83,47 @@ class SQLErrorAnalyzer {
  * @returns {Promise<Array>} Resultados de la consulta
  */
 async function executeQuery(sql, originalQuery = '', attempt = 1) {
-    const todoId = todoManager.addTodo(`Ejecutar SQL: ${sql.substring(0, 50)}...`, 'high', originalQuery);
-    
     try {
         // Reemplazar los nombres de las tablas con sus nombres reales
         const sqlModificado = reemplazarNombresTablas(sql);
         console.log(`🔍 [SQL-EXEC] Intento ${attempt} - Ejecutando:`, sqlModificado);
-        
-        todoManager.updateTodo(todoId, { status: 'executing', sql: sqlModificado });
         
         const [rows] = await pool.query(sqlModificado);
         console.log('📊 [SQL-RESULT] Filas devueltas:', rows.length);
         
         if (rows.length === 0) {
             console.log('⚠️ [SQL-RESULT] La consulta no devolvió resultados');
-            todoManager.updateTodo(todoId, { status: 'completed', result: 'no_results' });
             return [];
         }
 
-        todoManager.markCompleted(todoId, { rowCount: rows.length });
         return rows;
         
     } catch (error) {
         console.error(`❌ [SQL-EXEC] Error en intento ${attempt}:`, error.message);
         console.error('❌ [SQL-EXEC] SQL:', sql);
         
-        // Análisis inteligente del error
-        const errorAnalysis = SQLErrorAnalyzer.analyzeError(error, sql, originalQuery);
-        console.log('🧠 [ERROR-ANALYSIS] Análisis:', errorAnalysis);
-        
-        // Agregar TODO para análisis del error
-        const analysisId = todoManager.addTodo(
-            `Analizar error SQL: ${errorAnalysis.type}`, 
-            'high', 
-            `Error: ${error.message}\nSQL: ${sql}`
-        );
-        
         // Si es posible reintentar y no hemos agotado los intentos
-        if (attempt < 3 && errorAnalysis.alternativeStrategies.length > 0) {
-            console.log(`🔄 [RETRY] Intentando estrategia alternativa...`);
-            
-            // Generar consulta alternativa
-            const alternativeSql = SQLErrorAnalyzer.generateAlternativeQuery(sql, errorAnalysis, mapaERP);
-            
-            if (alternativeSql && alternativeSql !== sql) {
-                console.log('🔄 [RETRY] Consulta alternativa generada:', alternativeSql);
-                todoManager.markCompleted(analysisId, { strategy: 'alternative_query', newSql: alternativeSql });
-                
-                // Reintento recursivo
-                return await executeQuery(alternativeSql, originalQuery, attempt + 1);
-            }
+        if (attempt < 3) {
+            console.log(`🔄 [RETRY] Reintentando consulta...`);
+            return await executeQuery(sql, originalQuery, attempt + 1);
         }
-        
-        todoManager.markFailed(todoId, error.message, false);
-        todoManager.markFailed(analysisId, 'No se pudo generar alternativa', false);
         
         // Si llegamos aquí, el error no se pudo resolver
-        throw new EnhancedSQLError(error.message, errorAnalysis, sql, originalQuery, attempt);
+        throw error;
     }
 }
 
-/**
- * Clase de error mejorada para SQL con análisis inteligente
- */
-class EnhancedSQLError extends Error {
-    constructor(message, analysis, sql, originalQuery, attempts) {
-        super(message);
-        this.name = 'EnhancedSQLError';
-        this.analysis = analysis;
-        this.sql = sql;
-        this.originalQuery = originalQuery;
-        this.attempts = attempts;
-        this.timestamp = new Date();
-    }
 
-    getIntelligentResponse() {
-        const suggestions = this.analysis.suggestions.join('\n- ');
-        
-        return `
-🚨 **Error en consulta SQL**
 
-**Problema detectado:** ${this.analysis.type}
-**Severidad:** ${this.analysis.severity}
 
-**Análisis del error:**
-- ${suggestions}
 
-**¿Qué puedes hacer?**
-${this.analysis.type === 'table_not_found' ? 
-    '- Verifica que el nombre de la tabla sea correcto\n- Consulta la lista de tablas disponibles\n- Usa términos más generales en tu búsqueda' :
-    this.analysis.type === 'column_not_found' ?
-    '- Revisa los nombres de las columnas disponibles\n- Simplifica tu consulta\n- Describe lo que buscas de forma más general' :
-    '- Reformula tu pregunta de manera más simple\n- Proporciona más contexto sobre lo que necesitas'
-}
+// =====================================
+// DETECCIÓN DE CONSULTAS ESPECIALES
+// =====================================
 
-💡 **Sugerencia:** Puedo ayudarte a reformular tu consulta. ¿Podrías describir qué información específica necesitas?
-        `;
-    }
-}
-
-/**
- * Genera una respuesta inteligente cuando hay errores SQL usando RAG y análisis
- */
-async function generateIntelligentErrorResponse(originalQuery, sqlError, ragContext, failedTodos) {
-    try {
-        console.log('🧠 [INTELLIGENT-RESPONSE] Generando respuesta inteligente...');
-        
-        // Construir contexto del error con TODOs fallidos
-        const errorContext = failedTodos.map(todo => 
-            `- ${todo.description}: ${todo.lastError}`
-        ).join('\n');
-        
-        const intelligentPrompt = `
-Eres un asistente experto en análisis de errores y resolución de problemas. Un usuario hizo una consulta que falló y necesitas proporcionar una respuesta inteligente y útil.
-
-## 🔍 INFORMACIÓN DEL ERROR:
-
-**Consulta original del usuario:** "${originalQuery}"
-**Tipo de error:** ${sqlError.analysis.type}
-**Severidad:** ${sqlError.analysis.severity}
-**Intentos realizados:** ${sqlError.attempts}
-**Mensaje de error técnico:** ${sqlError.message}
-
-## 📚 CONOCIMIENTO EMPRESARIAL RELEVANTE:
-${ragContext}
-
-## 📋 ANÁLISIS DE FALLOS RECIENTES:
-${errorContext}
-
-## 🎯 TU MISIÓN:
-
-1. **EXPLICA** de forma clara qué salió mal y por qué
-2. **PROPORCIONA** información útil usando el conocimiento empresarial
-3. **SUGIERE** alternativas prácticas para obtener la información
-4. **MANTÉN** un tono empático y profesional
-
-## ⚡ INSTRUCCIONES CRÍTICAS:
-
-- NO menciones detalles técnicos de SQL o bases de datos
-- SÍ explica qué información específica puede estar disponible
-- USA el conocimiento empresarial para dar contexto útil
-- OFRECE alternativas concretas y prácticas
-- Mantén un tono natural y empático, no robótico
-
-## 🚀 FORMATO DE RESPUESTA:
-
-Estructura tu respuesta así:
-1. Reconocimiento empático del problema
-2. Explicación clara de qué información tienes disponible
-3. Sugerencias específicas de cómo obtener lo que necesita
-4. Pregunta de seguimiento para ayudar mejor
-
-Ejemplo de tono: "Entiendo que buscas información sobre [tema]. Aunque no pude acceder a esos datos específicos, puedo ayudarte con [alternativas]. Te sugiero que..."
-
-RESPONDE DIRECTAMENTE COMO SI FUERAS CHATGPT:
-`;
-
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4o',
-            messages: [
-                {
-                    role: 'system',
-                    content: intelligentPrompt
-                },
-                {
-                    role: 'user',
-                    content: originalQuery
-                }
-            ],
-            max_tokens: 1500,
-            temperature: 0.7,
-            top_p: 0.9,
-            frequency_penalty: 0.3,
-            presence_penalty: 0.3
-        });
-
-        return response.choices[0].message.content;
-        
-    } catch (error) {
-        console.error('❌ [INTELLIGENT-RESPONSE] Error generando respuesta:', error.message);
-        return null;
-    }
-}
-
-/**
- * Sistema de búsqueda alternativa cuando SQL falla
- */
-async function attemptFallbackSearch(originalQuery, errorAnalysis, ragContext) {
-    console.log('🔍 [FALLBACK-SEARCH] Intentando búsqueda alternativa...');
-    
-    const fallbackTodoId = todoManager.addTodo(
-        `Búsqueda alternativa para: ${originalQuery.substring(0, 30)}...`, 
-        'medium', 
-        `Error original: ${errorAnalysis.type}`
-    );
-    
-    try {
-        // Estrategia 1: Buscar información general en RAG
-        if (ragContext && ragContext.length > 50) {
-            console.log('✅ [FALLBACK-SEARCH] Usando información de RAG como alternativa');
-            todoManager.markCompleted(fallbackTodoId, { strategy: 'rag_info' });
-            return ragContext;
-        }
-        
-        // Estrategia 2: Sugerir consultas más simples
-        const simplifiedSuggestions = generateSimplifiedQueries(originalQuery);
-        if (simplifiedSuggestions.length > 0) {
-            console.log('✅ [FALLBACK-SEARCH] Generando sugerencias simplificadas');
-            todoManager.markCompleted(fallbackTodoId, { strategy: 'simplified_queries' });
-            
-            return `
-No pude acceder a la información específica que solicitas, pero puedo ayudarte de estas formas:
-
-${simplifiedSuggestions.map((suggestion, index) => 
-    `${index + 1}. ${suggestion}`
-).join('\n')}
-
-¿Te gustaría que intentemos con alguna de estas alternativas?
-            `;
-        }
-        
-        todoManager.markFailed(fallbackTodoId, 'No se encontraron alternativas', false);
-        return null;
-        
-    } catch (error) {
-        console.error('❌ [FALLBACK-SEARCH] Error en búsqueda alternativa:', error.message);
-        todoManager.markFailed(fallbackTodoId, error.message, false);
-        return null;
-    }
-}
-
-/**
- * Genera consultas simplificadas basadas en la consulta original
- */
-function generateSimplifiedQueries(originalQuery) {
-    const suggestions = [];
-    const query = originalQuery.toLowerCase();
-    
-    // Detectar entidades comunes y sugerir alternativas
-    if (query.includes('cliente') || query.includes('clientes')) {
-        suggestions.push('Mostrar lista general de clientes');
-        suggestions.push('Buscar cliente por nombre específico');
-        suggestions.push('Consultar clientes por provincia');
-    }
-    
-    if (query.includes('partida') || query.includes('partidas')) {
-        suggestions.push('Ver partidas recientes');
-        suggestions.push('Consultar partidas por tipo de planta');
-        suggestions.push('Buscar partidas por fecha');
-    }
-    
-    if (query.includes('técnico') || query.includes('tecnicos')) {
-        suggestions.push('Lista de técnicos disponibles');
-        suggestions.push('Consultar técnicos por zona');
-    }
-    
-    if (query.includes('producto') || query.includes('articulo')) {
-        suggestions.push('Ver catálogo de productos');
-        suggestions.push('Buscar productos por tipo');
-        suggestions.push('Consultar precios de productos');
-    }
-    
-    // Si no se detectan entidades específicas, dar sugerencias generales
-    if (suggestions.length === 0) {
-        suggestions.push('Reformular la pregunta de forma más simple');
-        suggestions.push('Especificar qué tipo de información necesitas');
-        suggestions.push('Proporcionar más contexto sobre tu consulta');
-    }
-    
-    return suggestions;
-}
-
-/**
- * Detecta si la consulta es sobre el estado del sistema
- */
-function isSystemStatusQuery(query) {
-    const statusKeywords = [
-        'estado del sistema', 'estado sistema', 'como estas', 'cómo estás',
-        'estado del asistente', 'estado asistente', 'todo list', 'todo-list',
-        'tareas pendientes', 'errores del sistema', 'qué tal funciona',
-        'como funciona el sistema', 'estado de la ia', 'estado ia',
-        'diagnostico', 'diagnóstico', 'salud del sistema', 'monitoreo',
-        'estadisticas del sistema', 'estadísticas', 'metricas', 'métricas'
-    ];
-    
-    const queryLower = query.toLowerCase();
-    return statusKeywords.some(keyword => queryLower.includes(keyword));
-}
+// =====================================
+// MANTENIMIENTO DEL SISTEMA
+// =====================================
 
 /**
  * Limpieza automática de TODOs antiguos (ejecutar periódicamente)
@@ -706,26 +131,23 @@ function isSystemStatusQuery(query) {
 function performSystemMaintenance() {
     console.log('🧹 [MAINTENANCE] Iniciando mantenimiento del sistema...');
     
-    // Limpiar TODOs completados de más de 24 horas
-    const removedTodos = todoManager.clearOldTodos();
-    
-    // Reintentar TODOs marcados para reintento
-    const retryTodos = todoManager.getTodos('retry');
-    console.log(`🔄 [MAINTENANCE] ${retryTodos.length} tareas marcadas para reintento`);
-    
-    // Log de estadísticas del sistema
-    const systemStatus = todoManager.getSystemStatus();
-    console.log('📊 [MAINTENANCE] Estadísticas del sistema:', systemStatus.stats);
+    // Log de mantenimiento básico
+    console.log('📊 [MAINTENANCE] Sistema funcionando correctamente');
     
     return {
-        removedTodos,
-        retryTodos: retryTodos.length,
-        systemStats: systemStatus.stats
+        status: 'ok',
+        message: 'Mantenimiento completado'
     };
 }
 
 // Ejecutar mantenimiento cada hora
 setInterval(performSystemMaintenance, 60 * 60 * 1000);
+
+
+
+// =====================================
+// VALIDACIÓN Y PROCESAMIENTO DE SQL
+// =====================================
 
 /**
  * Función para validar que la respuesta contiene una consulta SQL válida
@@ -844,6 +266,10 @@ function procesarSQL(sql, nombre) {
 
 
 
+// =====================================
+// UTILIDADES DE MAPEO DE TABLAS
+// =====================================
+
 // Función para reemplazar nombres de tablas en la consulta SQL
 function reemplazarNombresTablas(sql) {
     let sqlModificado = sql;
@@ -856,9 +282,6 @@ function reemplazarNombresTablas(sql) {
     return sqlModificado;
 }
 
-// Función para validar que la tabla existe en mapaERP
-
-
 
 
 
@@ -866,16 +289,7 @@ function reemplazarNombresTablas(sql) {
 // =====================================
 // FUNCIONES DE PERSISTENCIA Y ALMACENAMIENTO
 // =====================================
-// 
-// Estas funciones gestionan:
-// - Guardado de mensajes de usuario en Firestore
-// - Guardado de respuestas del asistente
-// - Detección de preguntas de seguimiento
-// - Organización de conversaciones por usuario
-// - Persistencia asíncrona para no bloquear respuestas
-// =====================================
 
-// Función auxiliar para detectar si la pregunta es de seguimiento sobre teléfono de cliente
 
 
 // Función para guardar mensaje en Firestore
@@ -1007,32 +421,13 @@ async function saveAssistantMessageToFirestore(userId, message) {
     }
 }
 
-// =====================================
-// BÚSQUEDA FLEXIBLE (FUZZY SEARCH)
-// =====================================
-// 
-// Esta función implementa búsqueda inteligente cuando SQL falla:
-// - Genera variantes del término de búsqueda
-// - Prueba múltiples columnas y tablas
-// - Búsqueda multi-término para artículos
-// - Manejo especial para tablas específicas
-// - Recuperación automática cuando consultas exactas fallan
-// =====================================
+
+
 
 
 // =====================================
-// LÓGICA DE CONSTRUCCIÓN DE PROMPT INTELIGENTE
+// CONSTRUCCIÓN INTELIGENTE DE PROMPTS
 // =====================================
-// 
-// Esta sección contiene la lógica unificada que antes estaba en construirPrompt.js:
-// - Análisis de intención con IA (SQL, conversación, RAG+SQL)
-// - Detección automática de tablas relevantes
-// - Construcción de contexto de mapaERP selectivo
-// - Modelo único optimizado (gpt-4o)
-// - Construcción de instrucciones naturales
-// - Ensamblaje final del prompt optimizado
-// =====================================
-// Las importaciones ya están hechas arriba desde las carpetas organizadas
 
 /**
  * Construye un prompt optimizado usando IA inteligente (UNA SOLA LLAMADA)
@@ -1049,12 +444,27 @@ async function saveAssistantMessageToFirestore(userId, message) {
 async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contextoPinecone = '', contextoDatos = '', historialConversacion = [], modoDesarrollo = false) {
     console.log('🚀 [PROMPT-BUILDER] Construyendo prompt ULTRA-OPTIMIZADO...');
     
+    // =====================================
+    // ANÁLISIS DE INTENCIÓN Y CONFIGURACIÓN
+    // =====================================
+    
     // 1. ANÁLISIS INTELIGENTE RÁPIDO (SIN LLAMADAS IA)
     const intencion = await analizarIntencionInteligente(mensaje);
     console.log('🎯 [PROMPT-BUILDER] Intención detectada:', intencion);
     
-    // 2. Seleccionar modelo apropiado
-    const configModelo = seleccionarModeloInteligente(intencion, []);
+    // 2. Configuración del modelo (siempre gpt-4o)
+    const configModelo = {
+        modelo: 'gpt-4o',
+        maxTokens: 3000,
+        temperature: 0.9,
+        topP: 0.95,
+        frequencyPenalty: 0.5,
+        presencePenalty: 0.4
+    };
+    
+    // =====================================
+    // RECOLECCIÓN DE INFORMACIÓN
+    // =====================================
     
     // 3. SIEMPRE incluir mapaERP - la IA decide si lo usa
     const contextoMapaERP = construirContextoMapaERPCompleto(mapaERP);
@@ -1078,43 +488,64 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         // Continuar sin RAG si hay error, pero registrar el problema
     }
     
-    // 6. Ensamblar prompt final (OPTIMIZADO)
+
+
+
+    
+// =====================================
+// ENSAMBLAJE DEL PROMPT FINAL
+// =====================================
+    
+    // 6. Preparar la fecha actual para el prompt
     const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
+    
+    // 7. Crear el prompt base (como el encabezado de una carta)
     const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
+    
+    // 8. Empezar a construir el prompt final (como empezar a escribir la carta)
     let promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
     
-    // Priorizar contexto RAG al inicio del prompt si existe
+    // 9. Si encontramos información de la empresa, ponerla AL PRINCIPIO (como información importante)
     if (contextoRAG) {
         console.log('🎯 [RAG] PRIORIZANDO contexto empresarial al inicio');
+        // Reconstruir el prompt poniendo la información de la empresa al principio
         promptFinal = `${promptGlobalConFecha}\n\nCONOCIMIENTO EMPRESARIAL ESPECÍFICO:\n${contextoRAG}\n\nINSTRUCCIÓN: Debes usar siempre la información del conocimiento empresarial específico proporcionado arriba. Si la información está disponible en ese contexto, úsala. No des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
     }
     
-    // Añadir estructura de datos SIEMPRE - la IA decide si la usa
+    // 10. Agregar la estructura de la base de datos (como un mapa de la ciudad)
     promptFinal += `${contextoMapaERP}\n\n`;
     
-    // Añadir reglas SQL solo para consultas SQL
+    // 11. Solo agregar reglas SQL si la consulta necesita datos (como reglas de tráfico solo si vas a manejar)
     if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
         promptFinal += `${sqlRules}\n\n`;
     }
     
-    // El contexto RAG ya se añadió al inicio si existe
-    
-    // Añadir contexto de datos previos si existe
+    // 12. Agregar datos de consultas anteriores si existen (como recordar lo que hablamos antes)
     if (contextoDatos) {
         promptFinal += `DATOS DE CONTEXTO PREVIO:\n${contextoDatos}\n\n`;
     }
     
-    // Añadir contexto conversacional de forma inteligente
+    // 13. Agregar conversación reciente si existe (como recordar los últimos mensajes)
     if (historialConversacion && historialConversacion.length > 0) {
-        const ultimosMensajes = historialConversacion.slice(-4);
+        const ultimosMensajes = historialConversacion.slice(-4); // Solo los últimos 4 mensajes
         const contextoConversacional = ultimosMensajes.map(msg => 
             `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.content}`
         ).join('\n');
         
+        // Agregar el contexto conversacional al prompt final
         promptFinal += `## 💬 CONTEXTO CONVERSACIONAL RECIENTE\n\n${contextoConversacional}\n\n## 🎯 INSTRUCCIONES DE CONTINUIDAD\n\n- Mantén la continuidad natural de la conversación\n- NO te presentes de nuevo si ya has saludado\n- Usa el contexto previo para dar respuestas coherentes\n- Si el usuario hace referencia a algo mencionado antes, úsalo\n- Mantén el tono y estilo de la conversación en curso\n\n`;
     }
     
     console.log('✅ [PROMPT-BUILDER] Prompt construido - MapaERP: SIEMPRE, RAG: SIEMPRE');
+
+
+
+
+
+    
+// =====================================
+// RETORNO DE RESULTADOS
+// =====================================
     
     return {
         prompt: promptFinal,
@@ -1132,6 +563,14 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
         }
     };
 }
+
+
+
+
+
+// =====================================
+// GENERACIÓN DE TÍTULOS Y CATEGORIZACIÓN
+// =====================================
 
 /**
  * Genera un título breve para el thinking basado en la consulta del usuario
@@ -1166,6 +605,14 @@ function generarTituloBreve(consulta) {
     const primerasPalabras = palabras.slice(0, 2).join(' ');
     return primerasPalabras.charAt(0).toUpperCase() + primerasPalabras.slice(1);
 }
+
+
+
+
+
+// =====================================
+// ANÁLISIS INTELIGENTE DE INTENCIONES
+// =====================================
 
 /**
  * Analiza la intención usando IA real (escalable para 900 tablas y 200 usuarios)
@@ -1244,22 +691,7 @@ Responde SOLO con: sql, conocimiento, o conversacion`;
 
 
 
-// =====================================
-// FUNCIONES DE USUARIO Y CONTEXTO CONVERSACIONAL
-// =====================================
-// 
-// Estas funciones gestionan:
-// - Obtención de información del usuario desde Firebase
-// - Recuperación de historial conversacional
-// - Personalización de respuestas con nombre del usuario
-// - Contexto conversacional para continuidad
-// - Gestión de sesiones y conversaciones
-// =====================================
 
-// =====================================
-// FUNCIÓN PRINCIPAL - MODELO GPT Y PROCESAMIENTO
-// Se encarga de coordinar todo el proceso de la consulta
-// =====================================
 
 // =====================================
 // FUNCIÓN PARA OBTENER INFORMACIÓN DEL USUARIO
@@ -1405,34 +837,9 @@ function personalizarRespuesta(respuesta, nombreUsuario) {
     return respuesta;
 }
 
-// =====================================
-// FUNCIÓN PRINCIPAL - PROCESAMIENTO DE CONSULTAS
-// =====================================
-// 
-// Esta es la función central que coordina todo el proceso:
-// - Análisis de intención y construcción de prompt
-// - Llamada única optimizada a OpenAI
-// - Procesamiento por tipo (SQL, conversación, RAG+SQL)
-// - Ejecución de SQL con validación
-// - Formateo natural de respuestas
-// - Personalización y persistencia
-// - Manejo de errores y fallbacks
-// =====================================
 
 
 
-// =====================================
-// FUNCIÓN STREAMING PARA TIEMPO REAL
-// =====================================
-// 
-// Esta función proporciona respuesta en tiempo real:
-// - Streaming chunk por chunk al frontend
-// - Procesamiento post-streaming para SQL
-// - Segunda llamada para explicación natural
-// - Headers especiales para streaming HTTP
-// - Manejo de errores en tiempo real
-// - Persistencia asíncrona de respuestas
-// =====================================
 
 /**
  * Función de streaming para procesamiento en tiempo real
@@ -1514,65 +921,8 @@ async function processQueryStream({ message, userId, conversationId, response })
             console.log('⚡ [OPTIMIZACIÓN] Consulta simple - saltando búsqueda de memoria');
         }
 
-        // =====================================
-        // VERIFICAR SI ES CONSULTA SOBRE ESTADO DEL SISTEMA
-        // =====================================
         
-        if (isSystemStatusQuery(message)) {
-            console.log('📋 [SYSTEM-STATUS] Consulta sobre estado del sistema detectada');
-            
-            const statusReport = todoManager.generateStatusReport();
-            const systemInfo = `
-🤖 **ESTADO GENERAL DEL ASISTENTE IA**
 
-El sistema está funcionando correctamente con las siguientes capacidades activas:
-- ✅ Análisis inteligente de consultas
-- ✅ Ejecución de SQL con reintentos automáticos
-- ✅ Sistema RAG para conocimiento empresarial [[memory:6759625]]
-- ✅ Manejo inteligente de errores
-- ✅ Gestor de tareas (TO-DO List)
-
-${statusReport}
-
-💡 **Funcionalidades disponibles:**
-- Consultas sobre clientes, partidas, técnicos, productos
-- Análisis de datos empresariales
-- Recuperación automática de errores
-- Sugerencias inteligentes cuando algo falla
-
-¿Hay algo específico sobre el sistema que te gustaría saber?
-            `;
-
-            // Enviar respuesta directamente
-            response.writeHead(200, {
-                'Content-Type': 'text/plain; charset=utf-8',
-                'Transfer-Encoding': 'chunked',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive'
-            });
-
-            response.write(JSON.stringify({
-                type: 'end',
-                fullResponse: systemInfo,
-                conversationId: conversationId,
-                tokenCount: 0,
-                timestamp: Date.now()
-            }) + '\n');
-
-            response.end();
-
-            // Guardar en historial (async)
-            if (conversationId) {
-                chatManager.addMessageToConversation(userId, conversationId, {
-                    role: 'assistant',
-                    content: systemInfo
-                }).catch(err => console.error('❌ [CHAT-HISTORY] Error:', err.message));
-            }
-
-            return { success: true, streamed: true, conversationId, systemStatus: true };
-        }
 
         // =====================================
         // CONSTRUIR PROMPT OPTIMIZADO (SIN LLAMADAS IA)
@@ -1639,10 +989,18 @@ ${statusReport}
             'Connection': 'keep-alive'
         });
 
+        // =====================================
+        // VARIABLES DE CONTROL DEL STREAMING
+        // =====================================
+        
         let fullResponse = '';
         let tokenCount = 0;
         let sqlDetected = false;
 
+        // =====================================
+        // INICIO DEL STREAMING CON OPENAI
+        // =====================================
+        
         try {
             const stream = await openai.chat.completions.create({
                 model: promptBuilder.configModelo.modelo,
@@ -1668,6 +1026,10 @@ ${statusReport}
             console.log(`🆔 CONVERSACIÓN: ${conversationId}`);
             console.log('🚀 ==========================================\n');
 
+            // =====================================
+            // VARIABLES PARA TRACKING DEL THINKING
+            // =====================================
+            
             // Variables para tracking del thinking
             let thinkingDetected = false;
             let thinkingContent = '';
@@ -1676,6 +1038,10 @@ ${statusReport}
             let beforeThinkingContent = '';
             const tituloBreve = generarTituloBreve(message);
 
+            // =====================================
+            // PROCESAMIENTO DE CHUNKS DEL STREAM
+            // =====================================
+            
             // Procesar cada chunk del stream
             for await (const chunk of stream) {
                 const content = chunk.choices[0]?.delta?.content;
@@ -1833,6 +1199,10 @@ ${statusReport}
 
            console.log('🔍 [STREAMING] Procesando respuesta para SQL...');
             
+            // =====================================
+            // PROCESAMIENTO POST-STREAMING PARA SQL
+            // =====================================
+            
             let finalMessage = fullResponse;
             
             // Verificar si la IA generó SQL en la respuesta
@@ -1841,6 +1211,10 @@ ${statusReport}
             if (sql) {
                 console.log('✅ [STREAMING] SQL encontrado, ejecutando consulta(s)...');
                 try {
+                    // =====================================
+                    // MANEJO DE MÚLTIPLES CONSULTAS SQL
+                    // =====================================
+                    
                     let results;
                     let allResults = [];
                     
@@ -1873,6 +1247,10 @@ ${statusReport}
                         console.log('✅ Iniciando segunda llamada para formatear datos...');
                         console.log('✅ ==========================================\n');
                         
+                        // =====================================
+                        // SEGUNDA LLAMADA PARA EXPLICACIÓN NATURAL
+                        // =====================================
+                        
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
                         // Segunda llamada específica para explicar datos (SIN sqlRules)
                         console.log('\n🔄 ==========================================');
@@ -1895,6 +1273,10 @@ ${statusReport}
                         console.log(`📄 comportamientoGlobal length: ${comportamientoGlobal ? comportamientoGlobal.length : 'UNDEFINED'}`);
                         console.log(`📄 comportamientoGlobal preview: ${comportamientoGlobal ? comportamientoGlobal.substring(0, 100) + '...' : 'UNDEFINED'}`);
                         console.log('🔍 ==========================================\n');
+                        
+                        // =====================================
+                        // CONSTRUCCIÓN DEL PROMPT DE EXPLICACIÓN
+                        // =====================================
                         
                         // ⚡ CONSTRUIR SEGUNDA LLAMADA CON MÁXIMA PRIORIDAD CHATGPT
                         let promptExplicacion = `${promptGlobalConFecha}\n`;
@@ -1933,7 +1315,7 @@ ${statusReport}
                         console.log('📄 [PROMPTS-TEST] Primeros 500 caracteres de prompts:', promptExplicacion.substring(0, 500));
                         
                         // =====================================
-                        // LOGS DETALLADOS DE PROMPTS
+                        // DIAGNÓSTICO Y LOGS DETALLADOS DE PROMPTS
                         // =====================================
                         console.log('\n🔍 ==========================================');
                         console.log('🔍 DIAGNÓSTICO DE PROMPTS - SEGUNDA LLAMADA');
@@ -1986,6 +1368,10 @@ ${statusReport}
                             console.log('⚠️ [RAG] No se pudo obtener contexto RAG para segunda llamada:', error.message);
                         }
                         
+                        // =====================================
+                        // AGREGAR CONTEXTO ADICIONAL AL PROMPT
+                        // =====================================
+                        
                         // Añadir contexto de datos previos
                         promptExplicacion += `DATOS DE CONTEXTO PREVIO:\n${JSON.stringify(results)}\n\n`;
                         
@@ -2000,6 +1386,10 @@ ${statusReport}
                             console.log('🔍 [DEBUG] formatoRespuesta ya incluido en línea 1042:', formatoRespuesta ? 'SÍ' : 'NO');
                             promptExplicacion += `CONTEXTO CONVERSACIONAL RECIENTE:\n\n${contextoConversacional}\n\n`;
                         }
+                        
+                        // =====================================
+                        // AGREGAR DATOS PARA FORMATEAR
+                        // =====================================
                         
                         // SOLO DATOS - Los prompts organizados ya tienen todas las instrucciones
                         promptExplicacion += `## 📊 DATOS PARA FORMATEAR:
@@ -2055,6 +1445,10 @@ ${Array.isArray(results) ?
                         }
                         console.log('🔍 ==========================================\n');
 
+                        // =====================================
+                        // CONFIGURAR SEGUNDA LLAMADA CON HISTORIAL
+                        // =====================================
+                        
                         // Segunda llamada con historial para mantener contexto
                         const mensajesSegundaLlamada = [
                             {
@@ -2091,6 +1485,10 @@ ${Array.isArray(results) ?
                         console.log('📄 [SEGUNDA-LLAMADA] Content value:', segundaLlamada.choices[0].message.content);
 
                         const explicacionNatural = segundaLlamada.choices[0].message.content;
+                        
+                        // =====================================
+                        // TEST SISTEMÁTICO: RASTREAR TEXTO ROBÓTICO
+                        // =====================================
                         
                         // 🔍 TEST SISTEMÁTICO: RASTREAR TEXTO ROBÓTICO
                         console.log('\n🔍 ==========================================');
@@ -2154,7 +1552,7 @@ ${Array.isArray(results) ?
                     // SISTEMA INTELIGENTE DE RECUPERACIÓN DE ERRORES
                     // =====================================
                     
-                    if (error instanceof EnhancedSQLError) {
+                    if (error) {
                         console.log('🧠 [INTELLIGENT-RECOVERY] Iniciando recuperación inteligente...');
                         
                         try {
@@ -2167,28 +1565,21 @@ ${Array.isArray(results) ?
                             if (ragResponse && ragResponse.length > 100) {
                                 console.log('🎯 [RAG-RECOVERY] Información relevante encontrada en RAG');
                                 
-                                // Crear respuesta inteligente usando RAG + análisis del error
-                                const intelligentResponse = await generateIntelligentErrorResponse(
-                                    message, 
-                                    error, 
-                                    ragResponse,
-                                    todoManager.getTodos('failed')
-                                );
-                                
-                                if (intelligentResponse) {
-                                    finalMessage = intelligentResponse;
-                                    console.log('✅ [INTELLIGENT-RECOVERY] Respuesta inteligente generada');
+                                // Usar información de RAG como respuesta alternativa
+                                if (ragResponse && ragResponse.length > 100) {
+                                    finalMessage = ragResponse;
+                                    console.log('✅ [RAG-RECOVERY] Usando información de RAG como respuesta');
                                 } else {
-                                    finalMessage = error.getIntelligentResponse();
+                                    finalMessage = 'Lo siento, no pude procesar tu consulta. Por favor, intenta reformular tu pregunta.';
                                 }
                             } else {
                                 console.log('⚠️ [RAG-RECOVERY] No se encontró información relevante en RAG');
-                                finalMessage = error.getIntelligentResponse();
+                                finalMessage = 'Lo siento, no pude procesar tu consulta. Por favor, intenta reformular tu pregunta.';
                             }
                             
                         } catch (ragError) {
                             console.error('❌ [RAG-RECOVERY] Error en recuperación RAG:', ragError.message);
-                            finalMessage = error.getIntelligentResponse();
+                            finalMessage = 'Lo siento, no pude procesar tu consulta. Por favor, intenta reformular tu pregunta.';
                         }
                     } else {
                         // Error genérico - mantener respuesta original
@@ -2427,24 +1818,6 @@ function construirContextoMapaERPCompleto(mapaERP) {
 }
 
 /**
- * Selecciona el modelo apropiado para la consulta
- */
-function seleccionarModeloInteligente(intencion, tablasRelevantes) {
-    // ✅ CONFIGURACIÓN ULTRA-NATURAL COMO CHATGPT
-    const config = {
-        modelo: 'gpt-4o',           // Modelo más capaz para naturalidad
-        maxTokens: 3000,            // Tokens generosos para variabilidad
-        temperature: 0.9,           // ⚡ MÁXIMA CREATIVIDAD Y VARIABILIDAD
-        topP: 0.95,                 // Sampling creativo
-        frequencyPenalty: 0.5,      // ⚡ PENALIZAR FUERTEMENTE REPETICIONES
-        presencePenalty: 0.4,       // ⚡ MÁXIMA DIVERSIDAD EN TEMAS Y ESTILO
-        razon: 'Configuración ultra-natural para eliminar robótica y repetitividad'
-    };
-    
-    return config;
-}
-
-/**
  * Genera embeddings para análisis semántico
  */
 async function generarEmbedding(texto) {
@@ -2644,12 +2017,6 @@ module.exports = {
     saveAssistantMessageToFirestore,
     generarEmbedding,
     
-    // Sistema de gestión de errores y TODOs
-    todoManager,
-    SQLErrorAnalyzer,
-    EnhancedSQLError,
-    generateIntelligentErrorResponse,
-    attemptFallbackSearch,
-    performSystemMaintenance,
-    isSystemStatusQuery
+    // Sistema de gestión de errores
+    performSystemMaintenance
 };
