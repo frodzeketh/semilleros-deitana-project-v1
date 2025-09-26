@@ -2443,31 +2443,45 @@ Los datos son: ${JSON.stringify(results, null, 2)}
 
 El usuario preguntó: "${message}"
 
-🧠 RECOMENDACIONES INTELIGENTES BASADAS EN ERP:
+🧠 ANÁLISIS DINÁMICO DEL ERP:
 
-PARA ALBARANES DE COMPRA (tabla: albaranes_co):
-- "¿Quieres ver los detalles del proveedor (AC_CPR)?"
-- "¿Te muestro los artículos comprados en estos albaranes?"
-- "¿Necesitas las fechas de recepción y los importes?"
+MÉTODO INTELIGENTE:
+1. ANALIZA las columnas de los datos que recibes
+2. IDENTIFICA qué tabla del ERP se consultó  
+3. BUSCA esa tabla en el mapaERP completo
+4. EXTRAE las columnas más interesantes de esa tabla
+5. OFRECE consultas específicas basadas en esas columnas
 
-PARA PARTIDAS (tabla: partidas):
-- "¿Quieres las fechas de siembra (PAR_FECS) y entrega (PAR_FECE)?"
-- "¿Te muestro los números de encargo (PAR_ENC)?"
-- "¿Necesitas ver el tipo de bandeja (PAR_SSI) y sustrato?"
+EJEMPLO DE RAZONAMIENTO:
+- Si ves columnas como "PAR_FECS", "PAR_ENC" → es tabla PARTIDAS
+- Si ves "AC_CPR", "AC_FEC" → es tabla ALBARANES_CO  
+- Si ves "CL_DENO", "CL_TEL" → es tabla CLIENTES
+- Si ves "FA_NUM", "FA_FEC" → es tabla FACTURAS
 
-PARA CLIENTES (tabla: clientes):
-- "¿Quieres ver las facturas pendientes de este cliente?"
-- "¿Te muestro la información de contacto completa?"
-- "¿Necesitas el historial de pedidos recientes?"
+LUEGO: Basándote en el mapaERP, identifica QUÉ MÁS se puede consultar de esa tabla específica y ofrece opciones coherentes.
 
-PARA FACTURAS (tabla: facturas):
-- "¿Quieres ver el estado de pago de estas facturas?"
-- "¿Te muestro las fechas de vencimiento?"
-- "¿Necesitas los detalles del cliente asociado?"
+MAPAERP COMPLETO DISPONIBLE:
+${JSON.stringify(mapaERP, null, 2)}
 
-ANÁLISIS INTELIGENTE: Detecta qué tipo de datos se están mostrando y ofrece 2-3 opciones específicas relevantes.
+🚨 OBLIGATORIO ABSOLUTO - RECOMENDACIONES INTELIGENTES:
 
-Responde de forma natural y creativa.`
+DESPUÉS de presentar los datos, DEBES hacer 2-3 preguntas específicas basadas en el mapaERP.
+
+PARA TRATAMIENTOS (como el ejemplo que acabas de mostrar):
+- "¿Quieres que te muestre las plagas que ataca cada tratamiento?"
+- "¿Te interesa saber qué productos fitosanitarios utiliza cada uno?"
+- "¿Necesitas ver las familias de plantas afectadas por estos tratamientos?"
+- "¿Quieres conocer el método de aplicación de alguno específico?"
+
+REGLA INQUEBRANTABLE:
+Si muestras tratamientos → DEBES ofrecer consultar plagas, productos, familias, métodos
+Si muestras partidas → DEBES ofrecer consultar fechas, encargos, bandejas, estados
+Si muestras clientes → DEBES ofrecer consultar facturas, contacto, historial
+Si muestras albaranes → DEBES ofrecer consultar proveedores, artículos, fechas
+
+❌ NO es opcional - ES OBLIGATORIO hacer estas recomendaciones SIEMPRE.
+
+Responde de forma natural y creativa CON recomendaciones específicas.`
                             }
                         ];
 
