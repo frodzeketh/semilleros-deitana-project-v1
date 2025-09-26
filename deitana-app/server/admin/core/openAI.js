@@ -2443,7 +2443,31 @@ Los datos son: ${JSON.stringify(results, null, 2)}
 
 El usuario preguntó: "${message}"
 
-Responde de forma natural y creativa, como ChatGPT.`
+🧠 RECOMENDACIONES INTELIGENTES BASADAS EN ERP:
+
+PARA ALBARANES DE COMPRA (tabla: albaranes_co):
+- "¿Quieres ver los detalles del proveedor (AC_CPR)?"
+- "¿Te muestro los artículos comprados en estos albaranes?"
+- "¿Necesitas las fechas de recepción y los importes?"
+
+PARA PARTIDAS (tabla: partidas):
+- "¿Quieres las fechas de siembra (PAR_FECS) y entrega (PAR_FECE)?"
+- "¿Te muestro los números de encargo (PAR_ENC)?"
+- "¿Necesitas ver el tipo de bandeja (PAR_SSI) y sustrato?"
+
+PARA CLIENTES (tabla: clientes):
+- "¿Quieres ver las facturas pendientes de este cliente?"
+- "¿Te muestro la información de contacto completa?"
+- "¿Necesitas el historial de pedidos recientes?"
+
+PARA FACTURAS (tabla: facturas):
+- "¿Quieres ver el estado de pago de estas facturas?"
+- "¿Te muestro las fechas de vencimiento?"
+- "¿Necesitas los detalles del cliente asociado?"
+
+ANÁLISIS INTELIGENTE: Detecta qué tipo de datos se están mostrando y ofrece 2-3 opciones específicas relevantes.
+
+Responde de forma natural y creativa.`
                             }
                         ];
 
