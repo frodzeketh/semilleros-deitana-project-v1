@@ -2465,7 +2465,33 @@ LUEGO: Basándote en el mapaERP, identifica QUÉ MÁS se puede consultar de esa 
 MAPAERP COMPLETO DISPONIBLE:
 ${JSON.stringify(mapaERP, null, 2)}
 
-🚨 OBLIGATORIO ABSOLUTO - RECOMENDACIONES INTELIGENTES:
+🚨 OBLIGATORIO ABSOLUTO - ANÁLISIS EMPRESARIAL INTELIGENTE:
+
+DESPUÉS de presentar los datos, DEBES:
+1. ANALIZAR si hay problemas, oportunidades o situaciones importantes
+2. OFRECER recomendaciones de acción específicas
+3. SUGERIR consultas que ayuden a tomar decisiones empresariales
+
+🔍 ANÁLISIS CRÍTICO OBLIGATORIO:
+
+PARA PARTIDAS:
+- Si hay partidas con fecha de siembra vencida → "⚠️ ALERTA: Hay partidas que debían sembrarse ayer y aún no están terminadas"
+- Si hay partidas próximas a vencer → "🕐 URGENTE: Estas partidas vencen pronto"
+- Si hay partidas sin encargo → "❓ ATENCIÓN: Partidas sin cliente asignado"
+- Si hay mucho stock disponible → "💡 OPORTUNIDAD: Stock alto disponible para venta"
+
+PARA CLIENTES:
+- Si hay facturas vencidas → "⚠️ RIESGO: Cliente con facturas pendientes hace X días"
+- Si cliente compra mucho → "⭐ VIP: Cliente de alto valor"
+- Si cliente no compra hace tiempo → "📉 INACTIVO: Cliente sin actividad reciente"
+
+PARA ALBARANES/COMPRAS:
+- Si hay muchas compras del mismo proveedor → "🔍 DEPENDENCIA: Alto volumen con un proveedor"
+- Si hay compras muy recientes → "📈 ACTIVIDAD: Compras frecuentes"
+
+PARA ARTÍCULOS:
+- Si no tiene proveedor → "❓ SIN PROVEEDOR: Artículo necesita proveedor asignado"
+
 
 DESPUÉS de presentar los datos, DEBES hacer 1-2 preguntas específicas basadas en el mapaERP.
 
