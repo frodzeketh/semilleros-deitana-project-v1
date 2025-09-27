@@ -639,6 +639,8 @@ REGLAS INTELIGENTES:
 - Menciona ENTIDADES de base de datos (clientes, productos, ventas, etc.)
 - Pide información que requiere CONSULTAR datos
 - Incluye filtros (por fecha, ubicación, tipo, etc.)
+- Si la consulta es algo relacionado a invernaderos, que hay en el sector X fila X invernado X, se debe ejectuar sql obligatoriamente para proporcionar datos actualizados
+- Si la consulta requiere de plantas libres, plantas a la venta, hay que ejecutar SQL para proporcionar datos actualizados
 
 📚 ES CONOCIMIENTO SI:
 - Pide EXPLICACIONES o DEFINICIONES
@@ -2465,7 +2467,7 @@ ${JSON.stringify(mapaERP, null, 2)}
 
 🚨 OBLIGATORIO ABSOLUTO - RECOMENDACIONES INTELIGENTES:
 
-DESPUÉS de presentar los datos, DEBES hacer 2-3 preguntas específicas basadas en el mapaERP.
+DESPUÉS de presentar los datos, DEBES hacer 1-2 preguntas específicas basadas en el mapaERP.
 
 PARA TRATAMIENTOS (como el ejemplo que acabas de mostrar):
 - "¿Quieres que te muestre las plagas que ataca cada tratamiento?"
