@@ -635,12 +635,15 @@ REGLAS INTELIGENTES:
 
 🔍 ES SQL SI:
 - Pide DATOS específicos (números, cantidades, listas)
-- Usa palabras como: "cuántos", "dame", "lista de", "muestra", "busca"
+- Usa palabras como: "cuántos", "dame", "lista de", "muestra", "busca", "que hay", "que hay en"
 - Menciona ENTIDADES de base de datos (clientes, productos, ventas, etc.)
 - Pide información que requiere CONSULTAR datos
 - Incluye filtros (por fecha, ubicación, tipo, etc.)
-- Si la consulta es algo relacionado a invernaderos, que hay en el sector X fila X invernado X, se debe ejectuar sql obligatoriamente para proporcionar datos actualizados
-- Si la consulta requiere de plantas libres, plantas a la venta, hay que ejecutar SQL para proporcionar datos actualizados
+- CUALQUIER consulta sobre invernaderos, sectores, filas, ubicaciones físicas
+- CUALQUIER consulta sobre plantas libres, plantas a la venta, partidas, cultivos
+- CUALQUIER consulta que pregunte "que hay en" + ubicación
+- CUALQUIER consulta sobre ubicaciones físicas (invernaderos, sectores, filas, etc.)
+- EJEMPLOS: "que hay en el a1", "que plantas hay libres", "ultimos albaranes", "que hay en el sector 5 del X"
 
 📚 ES CONOCIMIENTO SI:
 - Pide EXPLICACIONES o DEFINICIONES
@@ -654,7 +657,7 @@ REGLAS INTELIGENTES:
 
 ⚡ PRINCIPIO CLAVE: Si hay DUDA, es probablemente SQL (la mayoría de consultas en ERP piden datos)
 
-Analiza la INTENCIÓN SEMÁNTICA, no palabras específicas.
+Analiza la INTENCIÓN SEMÁNTICA, no palabras específicas. Actua lo mas rapido posible
 
 Responde SOLO con: sql, conocimiento, o conversacion`;
 
@@ -2980,6 +2983,15 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
 - CONECTA el thinking con el SQL real que vas a ejecutar
 - NO uses ejemplos genéricos, usa la información real del mapaERP
 - El thinking debe reflejar EXACTAMENTE lo que hace el SQL
+
+**ESPECIAL PARA CONSULTAS DE INVERNADEROS:**
+- Si la consulta menciona invernaderos, sectores, filas, ubicaciones ejemplo: "¿Qué hay plantado en el sector 22?"
+"¿Qué partidas tenemos en el invernadero A1?"
+"¿Cuántas bandejas quedan en A2?"
+"¿Qué está en la fila 26 del sector 20?"
+"saber lo que esta en el sector 22 del c2"
+saber lo que esta en el sector 20 del c2
+
 
 **EJEMPLO DINÁMICO:**
 

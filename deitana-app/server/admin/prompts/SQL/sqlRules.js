@@ -318,8 +318,14 @@ SELECT
 FROM partidas_par_ubic ppu 
 INNER JOIN partidas p ON ppu.id = p.id 
 INNER JOIN articulos a ON p.PAR_SEM = a.id 
-WHERE ppu.C0 = 'C1'  -- Cambia segun invernadero
-    AND ppu.C1 = '1' -- Cambia segun sector
+INNER JOIN (
+    -- Subconsulta para obtener solo la subpartida más reciente de cada partida
+    SELECT id, MAX(id2) as max_subpartida
+    FROM partidas_par_ubic 
+    GROUP BY id
+) latest ON ppu.id = latest.id AND ppu.id2 = latest.max_subpartida
+WHERE ppu.C0 = 'A3'  
+    AND ppu.C1 = '7' 
     AND (p.PAR_EST != 'T' OR p.PAR_EST IS NULL OR p.PAR_EST = '')
 ORDER BY ppu.id DESC 
 LIMIT 100;
