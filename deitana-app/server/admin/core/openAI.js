@@ -7,6 +7,7 @@
 
 const { OpenAI } = require('openai');
 const pool = require('../../db');
+const dbBridge = require('../../db-bridge');
 const chatManager = require('../../utils/chatManager');
 const admin = require('../../firebase-admin');
 const pineconeMemoria = require('../../utils/pinecone');
@@ -1209,6 +1210,7 @@ async function processQueryStream({ message, userId, conversationId, response })
             // =====================================
             
             let finalMessage = fullResponse;
+            let results = null; // Declarar results en el scope correcto
             
             // Verificar si la IA generó SQL en la respuesta
             const sql = validarRespuestaSQL(fullResponse);
@@ -1220,7 +1222,6 @@ async function processQueryStream({ message, userId, conversationId, response })
                     // MANEJO DE MÚLTIPLES CONSULTAS SQL
                     // =====================================
                     
-                    let results;
                     let allResults = [];
                     
                     // Manejar múltiples consultas SQL
@@ -1228,17 +1229,21 @@ async function processQueryStream({ message, userId, conversationId, response })
                         console.log(`🔄 [STREAMING] Ejecutando ${sql.length} consultas SQL...`);
                         for (let i = 0; i < sql.length; i++) {
                             console.log(`🔍 [STREAMING] Ejecutando consulta ${i + 1}/${sql.length}`);
-                            const queryResults = await executeQuery(sql[i]);
+                            const retryResult = await ejecutarSQLConRetry(sql[i], dbBridge, openai, 3);
                             allResults.push({
                                 query: sql[i],
-                                results: queryResults,
-                                index: i + 1
+                                results: retryResult.success ? retryResult.resultados : [],
+                                index: i + 1,
+                                success: retryResult.success,
+                                intentos: retryResult.intentos,
+                                correcciones: retryResult.correcciones
                             });
                         }
                         results = allResults;
                     } else {
                         // Consulta única (compatibilidad)
-                        results = await executeQuery(sql);
+                        const retryResult = await ejecutarSQLConRetry(sql, dbBridge, openai, 3);
+                        results = retryResult.success ? retryResult.resultados : [];
                     }
                     
                     if (results && (Array.isArray(results) ? results.length > 0 : results.length > 0)) {
@@ -2637,7 +2642,7 @@ Responde de forma natural y creativa CON recomendaciones específicas.`
                         try {
                             // Usar RAG para buscar información relacionada con la consulta fallida
                             const ragResponse = await ragInteligente.recuperarConocimientoRelevante(
-                                `${originalQuery} error SQL tabla columna estructura base datos`, 
+                                `${message} error SQL tabla columna estructura base datos`, 
                                 'sistema'
                             );
                             
@@ -2679,8 +2684,23 @@ Responde de forma natural y creativa CON recomendaciones específicas.`
                 }
             }
             
+            // Si hay resultados SQL, procesar con análisis inteligente
+            let respuestaFinal = respuestaLimpia;
+            if (results && results.length > 0) {
+                console.log('🧠 [ANALISIS-INTELIGENTE] Procesando respuesta SQL con análisis inteligente...');
+                try {
+                    const sqlUsado = Array.isArray(sql) ? sql[0] : sql;
+                    const resultadosSQL = Array.isArray(results) ? results[0]?.results || results : results;
+                    respuestaFinal = await procesarRespuestaSQLConAnalisis(sqlUsado, resultadosSQL, openai, message);
+                    console.log('✅ [ANALISIS-INTELIGENTE] Respuesta SQL procesada con análisis inteligente');
+                } catch (error) {
+                    console.error('❌ [ANALISIS-INTELIGENTE] Error en procesamiento:', error.message);
+                    respuestaFinal = respuestaLimpia;
+                }
+            }
+            
             // Personalizar respuesta con nombre del usuario
-            const respuestaPersonalizada = personalizarRespuesta(respuestaLimpia, infoUsuario.nombre);
+            const respuestaPersonalizada = personalizarRespuesta(respuestaFinal, infoUsuario.nombre);
             
             // =====================================
             // 🔍 LOG COMPARATIVO: ANTES Y DESPUÉS DE PERSONALIZACIÓN
@@ -2835,6 +2855,193 @@ Responde de forma natural y creativa CON recomendaciones específicas.`
         }
         
         return { success: false, error: error.message };
+    }
+}
+
+// =====================================
+// SISTEMA DE RETRY LOGIC Y SELF-HEALING
+// =====================================
+
+/**
+ * Analiza una consulta SQL fallida y sugiere correcciones
+ */
+async function analizarYCorregirSQL(sqlOriginal, error, resultados, openaiClient) {
+    console.log('🔧 [SELF-HEALING] Analizando consulta SQL fallida...');
+    console.log('🔧 [SELF-HEALING] SQL original:', sqlOriginal);
+    console.log('🔧 [SELF-HEALING] Error:', error);
+    console.log('🔧 [SELF-HEALING] Resultados:', resultados ? resultados.length : 0, 'filas');
+    
+    try {
+        const promptCorreccion = `Analiza esta consulta SQL que falló o no arrojó resultados y sugiere una corrección:
+
+SQL ORIGINAL:
+${sqlOriginal}
+
+ERROR O PROBLEMA:
+${error || 'No arrojó resultados'}
+
+RESULTADOS OBTENIDOS:
+${resultados ? `${resultados.length} filas` : 'Sin resultados'}
+
+TAREAS:
+1. IDENTIFICA el problema específico
+2. SUGIERE una consulta SQL corregida
+3. EXPLICA qué cambió y por qué
+
+FORMATO DE RESPUESTA:
+PROBLEMA: [Descripción del problema]
+SOLUCION: [SQL corregido]
+EXPLICACION: [Por qué se hizo el cambio]
+
+Responde SOLO con el formato anterior, sin texto adicional.`;
+
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: promptCorreccion }],
+            max_tokens: 500,
+            temperature: 0.3
+        });
+
+        const analisis = response.choices[0].message.content.trim();
+        console.log('🔧 [SELF-HEALING] Análisis obtenido:', analisis);
+
+        // Extraer SQL corregido
+        const matchSolucion = analisis.match(/SOLUCION:\s*(.+?)(?=EXPLICACION:|$)/s);
+        const sqlCorregido = matchSolucion ? matchSolucion[1].trim() : null;
+
+        return {
+            analisis,
+            sqlCorregido,
+            tieneCorreccion: !!sqlCorregido
+        };
+
+    } catch (error) {
+        console.error('❌ [SELF-HEALING] Error en análisis:', error.message);
+        return {
+            analisis: 'Error en análisis automático',
+            sqlCorregido: null,
+            tieneCorreccion: false
+        };
+    }
+}
+
+/**
+ * Ejecuta una consulta SQL con retry logic y self-healing
+ */
+async function ejecutarSQLConRetry(sqlOriginal, dbBridge, openaiClient, maxIntentos = 3) {
+    console.log('🔄 [RETRY-LOGIC] Iniciando ejecución con retry logic...');
+    
+    let sqlActual = sqlOriginal;
+    let ultimoError = null;
+    let ultimosResultados = null;
+    
+    for (let intento = 1; intento <= maxIntentos; intento++) {
+        console.log(`🔄 [RETRY-LOGIC] Intento ${intento}/${maxIntentos}`);
+        console.log(`🔄 [RETRY-LOGIC] SQL a ejecutar:`, sqlActual);
+        
+        try {
+            // Ejecutar consulta
+            const resultados = await dbBridge.query(sqlActual);
+            console.log(`✅ [RETRY-LOGIC] Consulta exitosa en intento ${intento}`);
+            console.log(`📊 [RETRY-LOGIC] Resultados: ${resultados.length} filas`);
+            
+            // Si no hay resultados, intentar corregir
+            if (resultados.length === 0 && intento < maxIntentos) {
+                console.log('⚠️ [RETRY-LOGIC] Sin resultados, intentando corrección...');
+                const correccion = await analizarYCorregirSQL(sqlActual, 'Sin resultados', resultados, openaiClient);
+                
+                if (correccion.tieneCorreccion) {
+                    console.log('🔧 [RETRY-LOGIC] Aplicando corrección automática...');
+                    sqlActual = correccion.sqlCorregido;
+                    continue;
+                }
+            }
+            
+            return {
+                success: true,
+                resultados,
+                intentos: intento,
+                sqlFinal: sqlActual,
+                correcciones: intento > 1
+            };
+            
+        } catch (error) {
+            console.log(`❌ [RETRY-LOGIC] Error en intento ${intento}:`, error.message);
+            ultimoError = error;
+            ultimosResultados = null;
+            
+            // Si no es el último intento, intentar corregir
+            if (intento < maxIntentos) {
+                console.log('🔧 [RETRY-LOGIC] Intentando corrección automática...');
+                const correccion = await analizarYCorregirSQL(sqlActual, error.message, null, openaiClient);
+                
+                if (correccion.tieneCorreccion) {
+                    console.log('🔧 [RETRY-LOGIC] Aplicando corrección:', correccion.sqlCorregido);
+                    sqlActual = correccion.sqlCorregido;
+                } else {
+                    console.log('⚠️ [RETRY-LOGIC] No se pudo corregir automáticamente');
+                    break;
+                }
+            }
+        }
+    }
+    
+    console.log('❌ [RETRY-LOGIC] Todos los intentos fallaron');
+    return {
+        success: false,
+        error: ultimoError,
+        intentos: maxIntentos,
+        sqlFinal: sqlActual,
+        correcciones: true
+    };
+}
+
+/**
+ * Procesa una respuesta SQL con análisis inteligente
+ */
+async function procesarRespuestaSQLConAnalisis(sql, resultados, openaiClient, mensajeOriginal) {
+    console.log('🧠 [ANALISIS-INTELIGENTE] Procesando respuesta SQL...');
+    
+    try {
+        const promptAnalisis = `Analiza estos resultados SQL y proporciona una respuesta natural y útil:
+
+CONSULTA ORIGINAL DEL USUARIO:
+"${mensajeOriginal}"
+
+SQL EJECUTADO:
+${sql}
+
+RESULTADOS OBTENIDOS (${resultados.length} filas):
+${JSON.stringify(resultados, null, 2)}
+
+INSTRUCCIONES:
+1. Si hay resultados: Explica qué se encontró de forma natural y útil
+2. Si no hay resultados: Explica por qué no se encontró nada y sugiere alternativas
+3. Usa un tono conversacional y natural
+4. NO uses frases robóticas como "Aquí tienes" o "Para el [fecha]"
+5. Sé específico sobre los datos encontrados
+6. Si es relevante, proporciona insights o recomendaciones
+
+Responde de forma natural y conversacional:`;
+
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [{ role: 'user', content: promptAnalisis }],
+            max_tokens: 1000,
+            temperature: 0.8,
+            top_p: 0.9,
+            frequency_penalty: 0.6,
+            presence_penalty: 0.4
+        });
+
+        const respuestaNatural = response.choices[0].message.content.trim();
+        console.log('✅ [ANALISIS-INTELIGENTE] Respuesta natural generada');
+        
+        return respuestaNatural;
+
+    } catch (error) {
+        console.error('❌ [ANALISIS-INTELIGENTE] Error:', error.message);
+        return `Se ejecutó la consulta y se obtuvieron ${resultados.length} resultados.`;
     }
 }
 
@@ -3110,6 +3317,11 @@ Información complementaria con explicación natural y conversacional.
 module.exports = {
     // Función principal de consulta
     processQueryStream,
+    
+    // Sistema de retry logic y self-healing
+    analizarYCorregirSQL,
+    ejecutarSQLConRetry,
+    procesarRespuestaSQLConAnalisis,
     
     // Funciones auxiliares
     analizarIntencionInteligente,
