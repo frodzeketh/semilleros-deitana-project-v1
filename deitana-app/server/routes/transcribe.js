@@ -2,7 +2,11 @@
 const express = require('express');
 const multer = require('multer');
 const { OpenAI } = require('openai');
+const { verifyToken } = require('../middleware/authMiddleware');
 const router = express.Router();
+
+// Middleware de autenticación para todas las rutas
+router.use(verifyToken);
 
 // Configurar multer para archivos de audio
 const upload = multer({
@@ -34,6 +38,8 @@ router.post('/', upload.single('file'), async (req, res) => {
   
   try {
     console.log('🎤 [WHISPER] Recibiendo solicitud de transcripción...');
+    console.log('🎤 [WHISPER] Usuario autenticado:', req.user?.uid);
+    console.log('🎤 [WHISPER] Headers recibidos:', req.headers);
     
     // Verificar que se recibió un archivo
     if (!req.file) {

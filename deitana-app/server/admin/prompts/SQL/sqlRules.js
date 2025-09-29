@@ -305,7 +305,8 @@ Mantener respuesta visual tipo tablas con columna de cabeza y pie para claridad
 "¿Qué está en la fila 26 del sector 20?"
 "saber lo que esta en el sector 22 del c2"
 saber lo que esta en el sector 20 del c2
-SE REFIERE A CONSULTAS DE INVERNADEROS Y PARTIDAS. HAZ ESTE TIPO DE CONSULTA:"
+que hay en sector X del X
+SE REFIERE A CONSULTAS DE INVERNADEROS Y PARTIDAS. HAZ ESTE TIPO DE CONSULTA OBLIGATORIAMENTE OBLIGATORIO:"
 
 SELECT 
     ppu.id AS codigo_partida, 

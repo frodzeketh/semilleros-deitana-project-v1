@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { ChevronDown, Search, Trash2, UserSearch, AudioLines, ArrowUp, Mic, Square } from "lucide-react"
+import { ChevronDown, Search, Trash2, UserSearch, AudioLines, ArrowUp, Mic, Square, CirclePlus, X } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { useAuth } from "../context/AuthContext"
 import { auth } from "../components/Authenticator/firebase"
@@ -37,6 +37,7 @@ const Home = () => {
   const mainContentRef = useRef(null)
   const [isMobile, setIsMobile] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
 
   // Agregar después de los otros estados
   const [activeSection, setActiveSection] = useState("historial")
@@ -586,6 +587,10 @@ const Home = () => {
     try {
       setIsTranscribing(true);
       console.log('🔄 Enviando audio a Whisper API...');
+      console.log('🔄 [FRONTEND] Tamaño del audio:', audioBlob.size, 'bytes');
+      console.log('🔄 [FRONTEND] Tipo del audio:', audioBlob.type);
+      console.log('🔄 [FRONTEND] Usuario actual:', user?.uid);
+      console.log('🔄 [FRONTEND] Token disponible:', !!user?.accessToken);
       
       // Crear FormData
       const formData = new FormData();
@@ -604,14 +609,53 @@ const Home = () => {
       });
       
       if (!response.ok) {
-        throw new Error(`Error en transcripción: ${response.status}`);
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: await response.text() };
+        }
+        console.error('❌ [FRONTEND] Error en transcripción:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`Error en transcripción: ${response.status} - ${errorData.error || 'Error desconocido'}`);
       }
       
-      const transcribedText = await response.text();
+      const responseData = await response.json();
+      const transcribedText = responseData.text;
       console.log('✅ Audio transcrito:', transcribedText);
+      console.log('📊 Detalles de transcripción:', {
+        duración: responseData.duration + 'ms',
+        tamañoArchivo: responseData.fileSize + ' bytes'
+      });
       
       // Establecer el texto transcrito en el input
-      setMessage(transcribedText.trim());
+      const cleanText = transcribedText.trim();
+      setMessage(prev => {
+        // Si ya hay texto, agregarlo al final
+        if (prev.trim()) {
+          return prev + ' ' + cleanText;
+        } else {
+          return cleanText;
+        }
+      });
+      
+      // Mostrar mensaje de confirmación
+      console.log('🎤 Transcripción completada. El texto está listo para enviar.');
+      console.log('📝 Texto transcrito:', cleanText);
+      
+      // Enfocar el input para que el usuario pueda editar si quiere
+      setTimeout(() => {
+        const input = document.querySelector('.ds-chat-input');
+        if (input) {
+          input.focus();
+          // Colocar el cursor al final del texto completo
+          const fullText = input.value;
+          input.setSelectionRange(fullText.length, fullText.length);
+        }
+      }, 100);
       
     } catch (error) {
       console.error('❌ Error en transcripción:', error);
@@ -625,6 +669,22 @@ const Home = () => {
     if (isRecording) {
       stopRecording();
     } else {
+      // Si ya hay texto transcrito, preguntar si quiere agregar o reemplazar
+      if (message.trim()) {
+        const shouldAppend = window.confirm(
+          'Ya tienes texto transcrito. ¿Quieres agregar la nueva grabación al texto existente?\n\n' +
+          '• Aceptar: Agregar al texto existente\n' +
+          '• Cancelar: Reemplazar el texto existente'
+        );
+        
+        if (shouldAppend) {
+          // Agregar espacio antes de la nueva grabación
+          setMessage(prev => prev + ' ');
+        } else {
+          // Limpiar el texto existente
+          setMessage('');
+        }
+      }
       startRecording();
     }
   };
@@ -641,17 +701,62 @@ const Home = () => {
   };
 
   const handleArrowUpClick = () => {
-    if (message.trim()) {
+    if (message.trim() || selectedImage) {
       console.log('⬆️ Enviando mensaje transcrito...');
       // Enviar el mensaje actual
       handleSubmit({ preventDefault: () => {} });
     }
   };
 
+  // Función para manejar la selección de imágenes para el chat
+  const handleImageSelectForChat = () => {
+    const fileInput = document.getElementById('chat-image-input')
+    fileInput?.click()
+  }
+
+  const handleImageUploadForChat = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      alert("Por favor selecciona un archivo de imagen válido")
+      return
+    }
+
+    // Validar tamaño (máximo 10MB para chat)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("La imagen debe ser menor a 10MB")
+      return
+    }
+
+    setSelectedImage(file)
+    console.log("Imagen seleccionada para el chat:", file.name)
+  }
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null)
+    // Limpiar el input file
+    const fileInput = document.getElementById('chat-image-input')
+    if (fileInput) {
+      fileInput.value = ''
+    }
+  }
+
+  // Función para convertir archivo a base64
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = error => reject(error)
+    })
+  }
+
   // Modificar la función handleSubmit para usar la conversación actual
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!message.trim()) return
+    if (!message.trim() && !selectedImage) return
 
     console.log("🚀 [FRONTEND] === INICIO ENVÍO DE MENSAJE CON STREAMING ===")
     console.log("🚀 [FRONTEND] Mensaje a enviar:", message)
@@ -659,18 +764,31 @@ const Home = () => {
 
     const userMessage = {
       id: Date.now(),
-      text: message,
+      text: message || (selectedImage ? `📷 Imagen: ${selectedImage.name}` : ""),
       sender: "user",
+      image: selectedImage ? {
+        file: selectedImage,
+        name: selectedImage.name,
+        size: selectedImage.size,
+        type: selectedImage.type
+      } : null,
+      // Guardar referencia a la imagen para mostrar en el chat
+      hasImage: !!selectedImage
     }
 
     setChatMessages((prev) => [...prev, userMessage])
     setMessage("")
     setIsTyping(true)
+    
+    // Si hay imagen, mostrar mensaje especial
+    if (selectedImage) {
+      console.log("🖼️ [FRONTEND] Procesando imagen:", selectedImage.name);
+    }
 
     // Crear mensaje del bot con estado de streaming
     const botMessage = {
       id: Date.now() + 1,
-      text: "",
+      text: selectedImage ? "🖼️ Analizando imagen y generando consulta..." : "",
       sender: "bot",
       isStreaming: true,
     }
@@ -687,6 +805,7 @@ const Home = () => {
       }
 
       console.log("🔑 [FRONTEND] Token obtenido, iniciando streaming...")
+      console.log("🖼️ [FRONTEND] Imagen seleccionada:", selectedImage ? selectedImage.name : "Ninguna")
 
       // =====================================
       // NUEVA IMPLEMENTACIÓN CON STREAMING NATURAL
@@ -700,7 +819,13 @@ const Home = () => {
           },
         body: JSON.stringify({ 
           message,
-          conversationId: currentConversationId
+          conversationId: currentConversationId,
+          image: selectedImage ? await (async () => {
+            console.log("🔄 [FRONTEND] Convirtiendo imagen a base64...");
+            const base64 = await convertFileToBase64(selectedImage);
+            console.log("✅ [FRONTEND] Imagen convertida, tamaño base64:", base64.length);
+            return base64;
+          })() : null
         }),
         })
 
@@ -911,6 +1036,7 @@ const Home = () => {
       )
     } finally {
       setIsTyping(false)
+      setSelectedImage(null) // Limpiar la imagen seleccionada después del procesamiento
       console.log("🏁 [FRONTEND] === FIN ENVÍO DE MENSAJE ===")
     }
   }
@@ -1947,12 +2073,44 @@ const Home = () => {
                           )}
                         </div>
                       ) : (
-                        <p 
-                          style={{ whiteSpace: "pre-line" }}
-                          className={msg.isThinking ? "thinking-message" : ""}
-                        >
-                          {msg.text}
-                        </p>
+                        <div>
+                          {msg.image && (
+                            <div style={{
+                              marginBottom: '8px',
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              maxWidth: '300px'
+                            }}>
+                              <img
+                                src={URL.createObjectURL(msg.image.file)}
+                                alt={msg.image.name}
+                                style={{
+                                  width: '100%',
+                                  height: 'auto',
+                                  display: 'block'
+                                }}
+                              />
+                              <div style={{
+                                fontSize: '12px',
+                                color: '#666',
+                                marginTop: '4px',
+                                padding: '4px 8px',
+                                backgroundColor: '#f8f9fa',
+                                borderRadius: '4px'
+                              }}>
+                                📷 {msg.image.name} ({(msg.image.size / 1024 / 1024).toFixed(1)} MB)
+                              </div>
+                            </div>
+                          )}
+                          {msg.text && (
+                            <p 
+                              style={{ whiteSpace: "pre-line" }}
+                              className={msg.isThinking ? "thinking-message" : ""}
+                            >
+                              {msg.text}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1971,9 +2129,51 @@ const Home = () => {
           )}
 
           <div className="ds-chat-input-container">
+            {/* Input oculto para seleccionar imágenes */}
+            <input
+              type="file"
+              id="chat-image-input"
+              accept="image/*"
+              onChange={handleImageUploadForChat}
+              style={{ display: 'none' }}
+            />
             <form onSubmit={handleSubmit}>
               <div className="ds-input-wrapper">
                 <div style={{ position: 'relative', width: '100%' }}>
+                  {/* Botón para agregar imagen */}
+                  <button
+                    type="button"
+                    onClick={handleImageSelectForChat}
+                    style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: selectedImage ? '#e3f2fd' : 'none',
+                      border: selectedImage ? '2px solid #2196f3' : 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 10,
+                      color: selectedImage ? '#2196f3' : '#666',
+                      transition: 'all 0.2s ease',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.color = selectedImage ? '#1976d2' : '#333'
+                      e.target.style.backgroundColor = selectedImage ? '#bbdefb' : '#f5f5f5'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.color = selectedImage ? '#2196f3' : '#666'
+                      e.target.style.backgroundColor = selectedImage ? '#e3f2fd' : 'transparent'
+                    }}
+                    title="Agregar imagen (JPG, PNG, GIF - máx. 10MB)"
+                  >
+                    <CirclePlus size={20} />
+                  </button>
                   <input
                     type="text"
                     placeholder={isRecording || isTranscribing ? "" : "¿Cómo puede ayudar Deitana IA?"}
@@ -1983,9 +2183,79 @@ const Home = () => {
                     disabled={isRecording || isTranscribing}
                     style={{
                       backgroundColor: isRecording || isTranscribing ? '#f8f9fa' : 'white',
-                      color: 'inherit'
+                      color: 'inherit',
+                      paddingLeft: '45px'
                     }}
                   />
+                  
+                  {/* Vista previa de imagen seleccionada */}
+                  {selectedImage && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: '0',
+                      right: '0',
+                      marginBottom: '8px',
+                      padding: '8px',
+                      backgroundColor: '#f8f9fa',
+                      border: '1px solid #e9ecef',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      zIndex: 20
+                    }}>
+                      <img
+                        src={URL.createObjectURL(selectedImage)}
+                        alt="Vista previa"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          objectFit: 'cover',
+                          borderRadius: '4px'
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          color: '#333',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {selectedImage.name}
+                        </div>
+                        <div style={{
+                          fontSize: '11px',
+                          color: '#666'
+                        }}>
+                          {(selectedImage.size / 1024 / 1024).toFixed(1)} MB
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeSelectedImage}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#666',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          transition: 'background-color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#e9ecef'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        title="Eliminar imagen"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
                   
                   {/* Overlay de ondas de audio con estilo profesional */}
                   {isRecording && (
@@ -2063,7 +2333,7 @@ const Home = () => {
                         color: '#0066ff',
                         fontWeight: '500'
                       }}>
-                        Transcribiendo audio...
+                        🎤 Transcribiendo tu voz a texto...
                       </span>
                       <style jsx>{`
                         @keyframes spin {
@@ -2104,12 +2374,12 @@ const Home = () => {
                         right: 'auto'
                       }}
                       onClick={handleArrowUpClick}
-                      disabled={!message.trim()}
+                      disabled={!message.trim() && !selectedImage}
                     >
                       <ArrowUp size={18} />
                     </button>
                   </div>
-                ) : message.trim() ? (
+                ) : (message.trim() || selectedImage) ? (
                   <button 
                     type="submit" 
                     className="ds-send-button" 
@@ -2130,9 +2400,13 @@ const Home = () => {
                       className="ds-send-button"
                       style={{
                         position: 'relative',
-                        right: 'auto'
+                        right: 'auto',
+                        backgroundColor: message.trim() ? '#e3f2fd' : 'transparent',
+                        border: message.trim() ? '2px solid #2196f3' : 'none',
+                        color: message.trim() ? '#2196f3' : 'inherit'
                       }}
                       onClick={handleMicClick}
+                      title={message.trim() ? "Texto transcrito listo - Haz clic para grabar de nuevo" : "Grabar audio para transcribir"}
                     >
                       <Mic size={18} />
                     </button>

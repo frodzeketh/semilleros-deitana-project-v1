@@ -612,6 +612,94 @@ function generarTituloBreve(consulta) {
 
 
 // =====================================
+// PROCESAMIENTO DE IMÁGENES CON OCR
+// =====================================
+
+/**
+ * Procesa una imagen usando GPT-4 Vision para extraer texto y contexto
+ * @param {string} imageBase64 - Imagen en base64
+ * @returns {Promise<string>} Texto extraído de la imagen
+ */
+async function processImageWithOCR(imageBase64) {
+    console.log('🖼️ [OCR] Iniciando procesamiento de imagen...');
+    console.log('🖼️ [OCR] Tipo de entrada:', typeof imageBase64);
+    console.log('🖼️ [OCR] Tamaño de entrada:', imageBase64 ? imageBase64.length : 'N/A');
+    console.log('🖼️ [OCR] Prefijo de entrada:', imageBase64 ? imageBase64.substring(0, 50) + '...' : 'N/A');
+    
+    try {
+        // Asegurar que la imagen esté en el formato correcto
+        let imageData = imageBase64;
+        if (imageData.startsWith('data:image/')) {
+            // Remover el prefijo data:image/...;base64,
+            imageData = imageData.split(',')[1];
+            console.log('🖼️ [OCR] Prefijo data:image/ detectado y removido');
+        }
+        console.log('🖼️ [OCR] Tamaño de datos de imagen:', imageData.length);
+        
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: "Analiza esta imagen y extrae TODA la información relevante para consultas de ERP/Base de datos. " +
+                                "CONTEXTO: Esta imagen puede contener información de partidas, clientes, productos, ubicaciones de invernaderos, etc. " +
+                                "INSTRUCCIONES ESPECÍFICAS: " +
+                                "1. NÚMEROS DE PARTIDA: Busca números como 19381823, 193932812, etc. " +
+                                "2. CÓDIGOS Y REFERENCIAS: IDs, códigos de cliente, códigos de producto " +
+                                "3. NOMBRES: Clientes, proveedores, productos, variedades " +
+                                "4. UBICACIONES: Invernaderos (A1, B2, C3), sectores, filas " +
+                                "5. FECHAS: Fechas de siembra, entrega, vencimiento " +
+                                "6. CANTIDADES: Plantas, bandejas, unidades " +
+                                "7. ESTADOS: En proceso, terminado, pendiente, etc. " +
+                                "FORMATO DE RESPUESTA: " +
+                                "- Lista clara y organizada de toda la información encontrada " +
+                                "- Mantén los números EXACTOS como aparecen " +
+                                "- Preserva nombres y códigos tal como están escritos " +
+                                "- Si hay tablas o listas, organízalas claramente " +
+                                "- Si ves un número de partida, destácalo especialmente " +
+                                "EJEMPLO: " +
+                                "Información extraída de la imagen: " +
+                                "- Número de partida: 19381823 " +
+                                "- Cliente: Agrícola San José " +
+                                "- Producto: Tomate Cherry " +
+                                "- Cantidad solicitada: 500 plantas " +
+                                "- Fecha de siembra: 15/03/2024 " +
+                                "- Fecha de entrega: 20/04/2024 " +
+                                "- Ubicación: Invernadero A1, Sector 22, Fila 5 " +
+                                "- Estado: En proceso " +
+                                "IMPORTANTE: Si encuentras un número que parece ser una partida (como 19381823, 25003963, etc.), destácalo claramente con el formato 'Número de partida: [número]' ya que será usado para consultas SQL. " +
+                                "Busca específicamente números largos que puedan ser identificadores de partidas."
+
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: {
+                                url: `data:image/jpeg;base64,${imageData}`,
+                                detail: 'high'
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens: 1000,
+            temperature: 0.1
+        });
+
+        const extractedText = response.choices[0].message.content.trim();
+        console.log('✅ [OCR] Texto extraído exitosamente:', extractedText);
+        
+        return extractedText;
+        
+    } catch (error) {
+        console.error('❌ [OCR] Error procesando imagen:', error);
+        throw new Error(`Error al procesar la imagen: ${error.message}`);
+    }
+}
+
+// =====================================
 // ANÁLISIS INTELIGENTE DE INTENCIONES
 // =====================================
 
@@ -620,6 +708,12 @@ function generarTituloBreve(consulta) {
  */
 async function analizarIntencionInteligente(mensaje) {
     console.log('🧠 [INTENCION-IA] Analizando consulta con IA real...');
+    
+    // Detección rápida para imágenes procesadas
+    if (mensaje.includes('📷 Información de la imagen:') || mensaje.includes('📷 Información extraída de la imagen:')) {
+        console.log('🖼️ [INTENCION-IA] Detectada información de imagen - forzando SQL');
+        return { tipo: 'sql', confianza: 0.99 };
+    }
     
     try {
         // Usar IA para analizar la intención de forma inteligente
@@ -631,6 +725,8 @@ OPCIONES:
 1. "sql" - Si la consulta pide datos, números, conteos, listas, información de la base de datos
 2. "conocimiento" - Si la consulta pide explicaciones, definiciones, protocolos, información del archivo .txt  
 3. "conversacion" - Si es un saludo, agradecimiento, o conversación casual
+
+NOTA ESPECIAL: Si el mensaje contiene "📷 Información de la imagen:" o "📷 Información extraída de la imagen:", automáticamente es "sql" ya que indica que se extrajo información de una imagen para consultar en la base de datos.
 
 REGLAS INTELIGENTES:
 
@@ -1246,7 +1342,49 @@ async function processQueryStream({ message, userId, conversationId, response })
                         results = retryResult.success ? retryResult.resultados : [];
                     }
                     
-                    if (results && (Array.isArray(results) ? results.length > 0 : results.length > 0)) {
+                    if (results !== null && results !== undefined) {
+                        // Verificar si realmente hay datos en los resultados (manejar caso [[]])
+                        let tieneDatos = false;
+                        
+                        console.log('🔍 [DEBUG-TIENEDATOS] Analizando estructura de results...');
+                        console.log('🔍 [DEBUG-TIENEDATOS] results:', typeof results, Array.isArray(results));
+                        console.log('🔍 [DEBUG-TIENEDATOS] results.length:', results ? results.length : 'null');
+                        if (results && results.length > 0) {
+                            console.log('🔍 [DEBUG-TIENEDATOS] results[0]:', typeof results[0], Array.isArray(results[0]));
+                            console.log('🔍 [DEBUG-TIENEDATOS] results[0].length:', results[0] ? results[0].length : 'null');
+                            if (results[0] && typeof results[0] === 'object' && 'results' in results[0]) {
+                                console.log('🔍 [DEBUG-TIENEDATOS] Es objeto con propiedad results');
+                            } else {
+                                console.log('🔍 [DEBUG-TIENEDATOS] Es array directo de datos');
+                            }
+                        }
+                        
+                        if (Array.isArray(results)) {
+                            // Si es array de objetos con results
+                            if (results.length > 0 && results[0] && typeof results[0] === 'object' && 'results' in results[0]) {
+                                tieneDatos = results.some(r => r.results && Array.isArray(r.results) && r.results.length > 0);
+                                console.log('🔍 [DEBUG-TIENEDATOS] Caso 1 - Objetos con results:', tieneDatos);
+                            } else if (results.length > 0 && results[0] && Array.isArray(results[0])) {
+                                // Si es array directo de datos (caso [[]])
+                                tieneDatos = results[0].length > 0;
+                                console.log('🔍 [DEBUG-TIENEDATOS] Caso 2 - Array directo:', tieneDatos);
+                            } else if (results.length > 0 && results[0] && typeof results[0] === 'object') {
+                                // Si es array de objetos con datos (caso [{id: 1, name: "test"}])
+                                tieneDatos = true;
+                                console.log('🔍 [DEBUG-TIENEDATOS] Caso 3 - Array de objetos con datos:', tieneDatos);
+                            } else {
+                                tieneDatos = false;
+                                console.log('🔍 [DEBUG-TIENEDATOS] Caso 4 - Sin datos:', tieneDatos);
+                            }
+                        } else {
+                            // Si no es array
+                            tieneDatos = results.length > 0;
+                            console.log('🔍 [DEBUG-TIENEDATOS] Caso 5 - No es array:', tieneDatos);
+                        }
+                        
+                        console.log('🔍 [DEBUG-TIENEDATOS] RESULTADO FINAL tieneDatos:', tieneDatos);
+                        
+                        if (tieneDatos) {
                         // Guardar los resultados reales para contexto futuro
                         lastRealData = JSON.stringify(results);
                         
@@ -1256,11 +1394,19 @@ async function processQueryStream({ message, userId, conversationId, response })
                         console.log(`✅ Resultados obtenidos: ${Array.isArray(results) ? results.length : results.length} registros`);
                         console.log('✅ Iniciando segunda llamada para formatear datos...');
                         console.log('✅ ==========================================\n');
+                        } else {
+                            console.log('\n🧠 ==========================================');
+                            console.log('🧠 SIN RESULTADOS - ACTIVANDO RAZONAMIENTO CONTINUO');
+                            console.log('🧠 ==========================================');
+                            console.log('🧠 No se encontraron datos, iniciando razonamiento inteligente...');
+                            console.log('🧠 ==========================================\n');
+                        }
                         
                         // =====================================
-                        // SEGUNDA LLAMADA PARA EXPLICACIÓN NATURAL
+                        // DECISIÓN: SEGUNDA LLAMADA O RAZONAMIENTO CONTINUO
                         // =====================================
                         
+                        if (tieneDatos) {
                         // Segunda llamada a la IA para explicar los datos reales de forma natural
                         // Segunda llamada específica para explicar datos (SIN sqlRules)
                         console.log('\n🔄 ==========================================');
@@ -1269,7 +1415,16 @@ async function processQueryStream({ message, userId, conversationId, response })
                         console.log('🔄 Construyendo segunda llamada para explicar datos...');
                         console.log('🔄 Aplicando formato natural y análisis inteligente...');
                         console.log('🔄 ==========================================\n');
+                        } else {
+                            // Usar razonamiento continuo para búsquedas alternativas
+                            console.log('\n🧠 ==========================================');
+                            console.log('🧠 RAZONAMIENTO CONTINUO - BÚSQUEDAS ALTERNATIVAS');
+                            console.log('🧠 ==========================================');
+                            console.log('🧠 Iniciando búsquedas alternativas inteligentes...');
+                            console.log('🧠 ==========================================\n');
+                        }
                         
+                        if (tieneDatos) {
                         const fechaActual = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'full', timeStyle: 'short' });
                         const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
                         
@@ -2625,6 +2780,13 @@ Responde de forma natural y creativa CON recomendaciones específicas.`
                         console.log('✅ Respuesta natural generada exitosamente');
                         console.log('✅ Datos formateados con análisis inteligente');
                         console.log('✅ ==========================================\n');
+                        } else {
+                            // Usar razonamiento continuo para búsquedas alternativas
+                            console.log('🧠 [RAZONAMIENTO-CONTINUO] Activando búsquedas alternativas...');
+                            const sqlUsado = Array.isArray(sql) ? sql[0] : sql;
+                            const resultadosSQL = Array.isArray(results) ? results[0]?.results || results : results;
+                            finalMessage = await razonamientoInteligenteContinuo(message, sqlUsado, resultadosSQL, openai, dbBridge);
+                        }
                     } else {
                         // Si no hay resultados, mantener la respuesta original del modelo
                         console.log('📚 [STREAMING] Sin resultados SQL - usar respuesta del modelo');
@@ -2684,20 +2846,8 @@ Responde de forma natural y creativa CON recomendaciones específicas.`
                 }
             }
             
-            // Si hay resultados SQL, procesar con análisis inteligente
+            // El análisis inteligente ya se maneja en el razonamiento continuo o segunda llamada
             let respuestaFinal = respuestaLimpia;
-            if (results && results.length > 0) {
-                console.log('🧠 [ANALISIS-INTELIGENTE] Procesando respuesta SQL con análisis inteligente...');
-                try {
-                    const sqlUsado = Array.isArray(sql) ? sql[0] : sql;
-                    const resultadosSQL = Array.isArray(results) ? results[0]?.results || results : results;
-                    respuestaFinal = await procesarRespuestaSQLConAnalisis(sqlUsado, resultadosSQL, openai, message);
-                    console.log('✅ [ANALISIS-INTELIGENTE] Respuesta SQL procesada con análisis inteligente');
-                } catch (error) {
-                    console.error('❌ [ANALISIS-INTELIGENTE] Error en procesamiento:', error.message);
-                    respuestaFinal = respuestaLimpia;
-                }
-            }
             
             // Personalizar respuesta con nombre del usuario
             const respuestaPersonalizada = personalizarRespuesta(respuestaFinal, infoUsuario.nombre);
@@ -2776,7 +2926,7 @@ Responde de forma natural y creativa CON recomendaciones específicas.`
                 conversationId: conversationId,
                 tokenCount: tokenCount,
                 timestamp: Date.now()
-            }) + '\n');
+            }) + '\n'); 
 
             response.end();
             
@@ -2943,10 +3093,21 @@ async function ejecutarSQLConRetry(sqlOriginal, dbBridge, openaiClient, maxInten
             // Ejecutar consulta
             const resultados = await dbBridge.query(sqlActual);
             console.log(`✅ [RETRY-LOGIC] Consulta exitosa en intento ${intento}`);
-            console.log(`📊 [RETRY-LOGIC] Resultados: ${resultados.length} filas`);
+            console.log(`🔍 [DEBUG] Tipo de resultados:`, typeof resultados);
+            console.log(`🔍 [DEBUG] Es array:`, Array.isArray(resultados));
+            console.log(`🔍 [DEBUG] Contenido:`, JSON.stringify(resultados));
+            
+            // Verificar si realmente hay resultados (manejar caso [[]])
+            const tieneResultados = Array.isArray(resultados) && 
+                resultados.length > 0 && 
+                resultados[0] && 
+                Array.isArray(resultados[0]) && 
+                resultados[0].length > 0;
+            
+            console.log(`📊 [RETRY-LOGIC] Resultados: ${tieneResultados ? resultados[0].length : 0} filas`);
             
             // Si no hay resultados, intentar corregir
-            if (resultados.length === 0 && intento < maxIntentos) {
+            if (!tieneResultados && intento < maxIntentos) {
                 console.log('⚠️ [RETRY-LOGIC] Sin resultados, intentando corrección...');
                 const correccion = await analizarYCorregirSQL(sqlActual, 'Sin resultados', resultados, openaiClient);
                 
@@ -2958,8 +3119,8 @@ async function ejecutarSQLConRetry(sqlOriginal, dbBridge, openaiClient, maxInten
             }
             
             return {
-                success: true,
-                resultados,
+                success: tieneResultados,
+                resultados: tieneResultados ? resultados[0] : [],
                 intentos: intento,
                 sqlFinal: sqlActual,
                 correcciones: intento > 1
@@ -2997,7 +3158,7 @@ async function ejecutarSQLConRetry(sqlOriginal, dbBridge, openaiClient, maxInten
 }
 
 /**
- * Procesa una respuesta SQL con análisis inteligente
+ * Procesa una respuesta SQL con análisis inteligente y razonamiento continuo
  */
 async function procesarRespuestaSQLConAnalisis(sql, resultados, openaiClient, mensajeOriginal) {
     console.log('🧠 [ANALISIS-INTELIGENTE] Procesando respuesta SQL...');
@@ -3042,6 +3203,301 @@ Responde de forma natural y conversacional:`;
     } catch (error) {
         console.error('❌ [ANALISIS-INTELIGENTE] Error:', error.message);
         return `Se ejecutó la consulta y se obtuvieron ${resultados.length} resultados.`;
+    }
+}
+
+/**
+ * Sistema de razonamiento inteligente continuo para consultas sin resultados
+ */
+async function razonamientoInteligenteContinuo(mensajeOriginal, sqlOriginal, resultados, openaiClient, dbBridge) {
+    console.log('🧠 [RAZONAMIENTO-CONTINUO] Iniciando razonamiento inteligente...');
+    
+    try {
+        // Analizar qué tipo de búsqueda se hizo
+        const tipoBusqueda = analizarTipoBusqueda(sqlOriginal);
+        console.log('🔍 [RAZONAMIENTO-CONTINUO] Tipo de búsqueda detectado:', tipoBusqueda);
+        
+        // Generar búsquedas alternativas inteligentes
+        const busquedasAlternativas = await generarBusquedasAlternativas(mensajeOriginal, tipoBusqueda, openaiClient);
+        console.log('🔄 [RAZONAMIENTO-CONTINUO] Búsquedas alternativas generadas:', busquedasAlternativas.length);
+        
+        let resultadosAlternativos = [];
+        let explicacionProceso = `Busqué en ${tipoBusqueda.tabla} pero no encontré resultados. `;
+        
+        // Ejecutar búsquedas alternativas con razonamiento inteligente
+        for (let i = 0; i < busquedasAlternativas.length; i++) {
+            const busqueda = busquedasAlternativas[i];
+            console.log(`🔄 [RAZONAMIENTO-CONTINUO] Intentando búsqueda alternativa ${i + 1}: ${busqueda.tabla}`);
+            console.log(`🧠 [RAZONAMIENTO-CONTINUO] Razonamiento: ${busqueda.razon}`);
+            
+            try {
+                const retryResult = await ejecutarSQLConRetry(busqueda.sql, dbBridge, openaiClient, 2);
+                
+                if (retryResult.success && retryResult.resultados.length > 0) {
+                    console.log(`✅ [RAZONAMIENTO-CONTINUO] ¡Encontrado en ${busqueda.tabla}!`);
+                    console.log(`🎯 [RAZONAMIENTO-CONTINUO] Razonamiento correcto: ${busqueda.razon}`);
+                    resultadosAlternativos.push({
+                        tabla: busqueda.tabla,
+                        razon: busqueda.razon,
+                        resultados: retryResult.resultados,
+                        sql: busqueda.sql
+                    });
+                    explicacionProceso += `Entonces pensé: "${busqueda.razon}" y probé buscando en ${busqueda.tabla} y ¡ahí sí lo encontré! `;
+                    break; // Si encontramos resultados, paramos
+                } else {
+                    console.log(`⚠️ [RAZONAMIENTO-CONTINUO] No encontrado en ${busqueda.tabla}`);
+                    explicacionProceso += `También pensé: "${busqueda.razon}" y busqué en ${busqueda.tabla} pero tampoco apareció. `;
+                }
+            } catch (error) {
+                console.log(`❌ [RAZONAMIENTO-CONTINUO] Error en búsqueda alternativa ${i + 1}:`, error.message);
+                explicacionProceso += `Intenté buscar en ${busqueda.tabla} pensando: "${busqueda.razon}" pero hubo un problema técnico. `;
+            }
+        }
+        
+        // Generar respuesta final con el proceso completo
+        if (resultadosAlternativos.length > 0) {
+            const mejorResultado = resultadosAlternativos[0];
+            const respuestaFinal = await generarRespuestaConProceso(mensajeOriginal, mejorResultado, explicacionProceso, openaiClient);
+            return respuestaFinal;
+        } else {
+            const respuestaFinal = await generarRespuestaSinResultados(mensajeOriginal, explicacionProceso, openaiClient);
+            return respuestaFinal;
+        }
+        
+    } catch (error) {
+        console.error('❌ [RAZONAMIENTO-CONTINUO] Error:', error.message);
+        return `Busqué la información pero no pude encontrarla. Podrías intentar con un nombre alternativo o verificar la ortografía.`;
+    }
+}
+
+/**
+ * Analiza qué tipo de búsqueda se realizó
+ */
+function analizarTipoBusqueda(sql) {
+    const sqlLower = sql.toLowerCase();
+    
+    if (sqlLower.includes('proveedores')) {
+        return { tipo: 'proveedor', tabla: 'proveedores', campo: 'PR_DENO' };
+    } else if (sqlLower.includes('clientes')) {
+        return { tipo: 'cliente', tabla: 'clientes', campo: 'CL_DENO' };
+    } else if (sqlLower.includes('partidas')) {
+        return { tipo: 'partida', tabla: 'partidas', campo: 'PAR_' };
+    } else if (sqlLower.includes('articulos')) {
+        return { tipo: 'articulo', tabla: 'articulos', campo: 'AR_DENO' };
+    }
+    
+    return { tipo: 'desconocido', tabla: 'tabla desconocida', campo: 'campo desconocido' };
+}
+
+/**
+ * Genera búsquedas alternativas inteligentes usando el mapaERP real
+ */
+async function generarBusquedasAlternativas(mensajeOriginal, tipoBusqueda, openaiClient) {
+    console.log('🔄 [BUSQUEDAS-ALTERNATIVAS] Generando búsquedas alternativas usando mapaERP real...');
+    
+    try {
+        // Obtener el mapaERP real
+        const mapaERP = require('./mapaERP');
+        
+        // Construir contexto dinámico del mapaERP completo
+        let contextoMapaERP = 'MAPERP COMPLETO - TODAS LAS TABLAS DISPONIBLES:\n\n';
+        
+        // Incluir TODAS las tablas del mapaERP sin filtros
+        for (const [nombreTabla, infoTabla] of Object.entries(mapaERP)) {
+            if (typeof infoTabla === 'object' && infoTabla.descripcion && infoTabla.columnas) {
+                contextoMapaERP += `TABLA: ${nombreTabla}\n`;
+                contextoMapaERP += `DESCRIPCIÓN: ${infoTabla.descripcion}\n`;
+                contextoMapaERP += `CAMPOS DISPONIBLES:\n`;
+                
+                Object.entries(infoTabla.columnas).forEach(([campo, desc]) => {
+                    contextoMapaERP += `  - ${campo}: ${desc}\n`;
+                });
+                contextoMapaERP += '\n';
+            }
+        }
+        
+        const promptAlternativas = `La consulta inicial no encontró resultados. Genera búsquedas alternativas usando el mapaERP real:
+
+CONSULTA ORIGINAL:
+"${mensajeOriginal}"
+
+BÚSQUEDA INICIAL FALLIDA:
+- Tabla: ${tipoBusqueda.tabla}
+- Tipo: ${tipoBusqueda.tipo}
+
+${contextoMapaERP}
+
+INSTRUCCIONES:
+1. Analiza el mapaERP completo y encuentra tablas alternativas donde podría estar la información
+2. Usa SOLO tablas y campos que existan en el mapaERP
+3. Genera SQL correcto con los campos exactos del mapaERP
+4. Piensa en diferentes formas de registrar la misma información
+5. Considera variaciones en el nombre (abreviaciones, diferentes formatos)
+6. Si no está en una tabla, probablemente esté en otra tabla relacionada
+
+FORMATO DE RESPUESTA:
+ALTERNATIVA1:
+TABLA: [nombre exacto de tabla del mapaERP]
+RAZON: [por qué buscar aquí]
+SQL: [SQL exacto con campos del mapaERP]
+
+ALTERNATIVA2:
+TABLA: [nombre exacto de tabla del mapaERP]
+RAZON: [por qué buscar aquí]
+SQL: [SQL exacto con campos del mapaERP]
+
+ALTERNATIVA3:
+TABLA: [nombre exacto de tabla del mapaERP]
+RAZON: [por qué buscar aquí]
+SQL: [SQL exacto con campos del mapaERP]
+
+Responde SOLO con el formato anterior:`;
+
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: promptAlternativas }],
+            max_tokens: 800,
+            temperature: 0.7
+        });
+
+        const respuesta = response.choices[0].message.content.trim();
+        console.log('🔄 [BUSQUEDAS-ALTERNATIVAS] Respuesta recibida:', respuesta);
+        
+        // Parsear las alternativas
+        const alternativas = [];
+        const lineas = respuesta.split('\n');
+        let alternativaActual = {};
+        
+        for (const linea of lineas) {
+            if (linea.startsWith('ALTERNATIVA')) {
+                if (Object.keys(alternativaActual).length > 0) {
+                    alternativas.push(alternativaActual);
+                }
+                alternativaActual = {};
+            } else if (linea.startsWith('TABLA:')) {
+                alternativaActual.tabla = linea.replace('TABLA:', '').trim();
+            } else if (linea.startsWith('RAZON:')) {
+                alternativaActual.razon = linea.replace('RAZON:', '').trim();
+            } else if (linea.startsWith('SQL:')) {
+                alternativaActual.sql = linea.replace('SQL:', '').trim();
+            }
+        }
+        
+        if (Object.keys(alternativaActual).length > 0) {
+            alternativas.push(alternativaActual);
+        }
+        
+        console.log('✅ [BUSQUEDAS-ALTERNATIVAS] Alternativas parseadas:', alternativas.length);
+        return alternativas;
+        
+    } catch (error) {
+        console.error('❌ [BUSQUEDAS-ALTERNATIVAS] Error:', error.message);
+        return [];
+    }
+}
+
+/**
+ * Genera respuesta final con el proceso completo
+ */
+async function generarRespuestaConProceso(mensajeOriginal, mejorResultado, explicacionProceso, openaiClient) {
+    console.log('✅ [RESPUESTA-CON-PROCESO] Generando respuesta con proceso completo...');
+    
+    try {
+        const promptRespuesta = `Genera una respuesta natural y conversacional que explique el proceso completo de búsqueda con razonamiento inteligente:
+
+CONSULTA ORIGINAL:
+"${mensajeOriginal}"
+
+PROCESO DE BÚSQUEDA CON RAZONAMIENTO:
+${explicacionProceso}
+
+RESULTADO ENCONTRADO:
+Tabla: ${mejorResultado.tabla}
+Razón que funcionó: ${mejorResultado.razon}
+Datos: ${JSON.stringify(mejorResultado.resultados, null, 2)}
+
+INSTRUCCIONES:
+1. Explica el proceso de búsqueda de forma natural y conversacional
+2. Menciona que primero buscó en una tabla y no encontró nada
+3. Explica tu razonamiento inteligente: "Entonces pensé que tal vez..."
+4. Menciona que probó en otra tabla y ahí sí lo encontró
+5. Presenta los datos encontrados de forma útil y clara
+6. Usa un tono conversacional, como si estuvieras explicando a un compañero
+7. Muestra que fuiste inteligente al cambiar de estrategia
+8. NO uses frases robóticas como "Aquí tienes" o "Para el [fecha]"
+
+ESTILO: Natural, conversacional, mostrando inteligencia en el razonamiento
+
+Responde de forma natural:`;
+
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [{ role: 'user', content: promptRespuesta }],
+            max_tokens: 800,
+            temperature: 0.8,
+            top_p: 0.9,
+            frequency_penalty: 0.6,
+            presence_penalty: 0.4
+        });
+
+        const respuestaFinal = response.choices[0].message.content.trim();
+        console.log('✅ [RESPUESTA-CON-PROCESO] Respuesta generada');
+        
+        return respuestaFinal;
+        
+    } catch (error) {
+        console.error('❌ [RESPUESTA-CON-PROCESO] Error:', error.message);
+        return `Después de buscar en diferentes tablas, encontré la información que necesitas.`;
+    }
+}
+
+/**
+ * Genera respuesta cuando no se encuentran resultados en ninguna búsqueda
+ */
+async function generarRespuestaSinResultados(mensajeOriginal, explicacionProceso, openaiClient) {
+    console.log('❌ [RESPUESTA-SIN-RESULTADOS] Generando respuesta sin resultados...');
+    
+    try {
+        const promptRespuesta = `Genera una respuesta natural y conversacional explicando que no se encontró la información después de un proceso de búsqueda inteligente:
+
+CONSULTA ORIGINAL:
+"${mensajeOriginal}"
+
+PROCESO DE BÚSQUEDA INTELIGENTE:
+${explicacionProceso}
+
+INSTRUCCIONES:
+1. Explica que hiciste un proceso de búsqueda inteligente en múltiples lugares
+2. Menciona que probaste diferentes razonamientos y estrategias
+3. Sugiere alternativas útiles y prácticas
+4. Mantén un tono conversacional y comprensivo
+5. Muestra que fuiste exhaustivo en la búsqueda
+6. NO uses frases robóticas como "Aquí tienes" o "Para el [fecha]"
+7. Sé útil y ofrece opciones concretas
+8. Ofrece ayuda adicional
+
+ESTILO: Natural, conversacional, mostrando que fuiste inteligente y exhaustivo
+
+Responde de forma natural:`;
+
+        const response = await openaiClient.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [{ role: 'user', content: promptRespuesta }],
+            max_tokens: 600,
+            temperature: 0.8,
+            top_p: 0.9,
+            frequency_penalty: 0.6,
+            presence_penalty: 0.4
+        });
+
+        const respuestaFinal = response.choices[0].message.content.trim();
+        console.log('✅ [RESPUESTA-SIN-RESULTADOS] Respuesta generada');
+        
+        return respuestaFinal;
+        
+    } catch (error) {
+        console.error('❌ [RESPUESTA-SIN-RESULTADOS] Error:', error.message);
+        return `Busqué en diferentes lugares pero no pude encontrar la información. Podrías intentar con un nombre alternativo o verificar la ortografía.`;
     }
 }
 
@@ -3318,10 +3774,18 @@ module.exports = {
     // Función principal de consulta
     processQueryStream,
     
+    // Procesamiento de imágenes con OCR
+    processImageWithOCR,
+    
     // Sistema de retry logic y self-healing
     analizarYCorregirSQL,
     ejecutarSQLConRetry,
     procesarRespuestaSQLConAnalisis,
+    razonamientoInteligenteContinuo,
+    analizarTipoBusqueda,
+    generarBusquedasAlternativas,
+    generarRespuestaConProceso,
+    generarRespuestaSinResultados,
     
     // Funciones auxiliares
     analizarIntencionInteligente,

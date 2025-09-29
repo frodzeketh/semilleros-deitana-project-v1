@@ -13,7 +13,7 @@ router.use(verifyToken);
 // =====================================
 router.post('/stream', async (req, res) => {
     try {
-        const { message, conversationId } = req.body;
+        const { message, conversationId, image } = req.body;
         const userId = req.user.uid;
         const isAdmin = req.user.isAdmin;
         
@@ -21,6 +21,7 @@ router.post('/stream', async (req, res) => {
         console.log('🚀 [STREAM-ROUTE] Mensaje:', message);
         console.log('🚀 [STREAM-ROUTE] Conversación ID:', conversationId);
         console.log('🚀 [STREAM-ROUTE] Es admin:', isAdmin);
+        console.log('🚀 [STREAM-ROUTE] Tiene imagen:', !!image);
         
         let currentConversationId = conversationId;
 
@@ -41,17 +42,67 @@ router.post('/stream', async (req, res) => {
             });
         }
 
+        // Procesar imagen si existe
+        let processedMessage = message;
+        if (image) {
+            console.log('🖼️ [STREAM-ROUTE] Procesando imagen con OCR...');
+            console.log('🖼️ [STREAM-ROUTE] Tipo de imagen:', typeof image);
+            console.log('🖼️ [STREAM-ROUTE] Tamaño de imagen:', image ? image.length : 'N/A');
+            console.log('🖼️ [STREAM-ROUTE] Prefijo de imagen:', image ? image.substring(0, 50) + '...' : 'N/A');
+            try {
+                const { processImageWithOCR } = require('../admin/core/openAI');
+                const extractedText = await processImageWithOCR(image);
+                console.log('📝 [STREAM-ROUTE] Texto extraído de la imagen:', extractedText);
+                
+                // Combinar el mensaje del usuario con el texto extraído
+                if (extractedText) {
+                    if (message && message.trim()) {
+                        // Si el mensaje pregunta por una partida y hay imagen, extraer el número
+                        if (message.toLowerCase().includes('partida') && extractedText) {
+                            // Buscar diferentes formatos de números de partida
+                            const partidaMatch = extractedText.match(/(?:partida|Partida)[:\s]*(\d+)|Número de partida[:\s]*(\d+)|(\d{8,})/i);
+                            if (partidaMatch) {
+                                const numeroPartida = partidaMatch[1] || partidaMatch[2] || partidaMatch[3];
+                                processedMessage = `De quien es esta partida ${numeroPartida}`;
+                            } else {
+                                processedMessage = `${message}\n\n📷 Información de la imagen:\n${extractedText}`;
+                            }
+                        } else {
+                            processedMessage = `${message}\n\n📷 Información de la imagen:\n${extractedText}`;
+                        }
+                    } else {
+                        // Si no hay mensaje de texto, crear uno automático basado en la imagen
+                        // Extraer el número de partida si existe
+                        const partidaMatch = extractedText.match(/(?:partida|Partida)[:\s]*(\d+)|Número de partida[:\s]*(\d+)|(\d{8,})/i);
+                        if (partidaMatch) {
+                            const numeroPartida = partidaMatch[1] || partidaMatch[2] || partidaMatch[3];
+                            processedMessage = `De quien es esta partida ${numeroPartida}`;
+                        } else {
+                            processedMessage = `📷 Información extraída de la imagen:\n${extractedText}\n\nPor favor, analiza esta información y genera la consulta SQL apropiada.`;
+                        }
+                    }
+                    console.log('📝 [STREAM-ROUTE] Mensaje procesado final:', processedMessage);
+                } else {
+                    console.log('⚠️ [STREAM-ROUTE] No se pudo extraer texto de la imagen');
+                    processedMessage = message || 'No se pudo procesar la imagen correctamente';
+                }
+            } catch (error) {
+                console.error('❌ [STREAM-ROUTE] Error procesando imagen:', error);
+                processedMessage = message || 'Error al procesar la imagen';
+            }
+        }
+
         // Agregar mensaje del usuario al historial
         await chatManager.addMessageToConversation(userId, currentConversationId, {
             role: 'user',
-            content: message
+            content: processedMessage
         });
         
         // Llamar a la función de streaming que maneja la respuesta según el rol
         let streamResult;
         if (isAdmin) {
             streamResult = await processQueryStream({ 
-                message, 
+                message: processedMessage, 
                 userId, 
                 conversationId: currentConversationId,
                 response: res
@@ -59,7 +110,7 @@ router.post('/stream', async (req, res) => {
         } else {
             // Para empleados, usar función de streaming específica (si existe)
             streamResult = await processQueryStream({ 
-                message, 
+                message: processedMessage, 
                 userId, 
                 conversationId: currentConversationId,
                 response: res
