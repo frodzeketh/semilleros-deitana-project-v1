@@ -12,6 +12,10 @@
 
 const sqlRules = `# 🚨 REGLAS SQL CRÍTICAS Y OBLIGATORIAS
 
+🚨🚨🚨 **PRIORIDAD MÁXIMA: CONSULTAS DE INVERNADEROS** 🚨🚨🚨
+
+**ANTES DE CUALQUIER OTRA COSA:** Si la consulta menciona invernaderos, sectores, filas, o ubicaciones físicas, DEBES usar la regla específica de invernaderos que está más abajo en este archivo. NO generes consultas SQL genéricas para invernaderos.
+
 ## 🎯 FORMATO OBLIGATORIO DE CONSULTAS SQL
 
 ### ✅ FORMATO CORRECTO:
@@ -298,16 +302,33 @@ Mantener respuesta visual tipo tablas con columna de cabeza y pie para claridad
 
 
 
-**Consulta:** "CUANDO TE CONSULTEN PREGUNTAS COMO:
+🚨🚨🚨 REGLA CRÍTICA PARA CONSULTAS DE INVERNADEROS 🚨🚨🚨
+
+**OBLIGATORIO ABSOLUTO:** CUANDO TE CONSULTEN PREGUNTAS COMO:
 "¿Qué hay plantado en el sector 22?"
 "¿Qué partidas tenemos en el invernadero A1?"
 "¿Cuántas bandejas quedan en A2?"
 "¿Qué está en la fila 26 del sector 20?"
 "saber lo que esta en el sector 22 del c2"
-saber lo que esta en el sector 20 del c2
-que hay en sector X del X
-SE REFIERE A CONSULTAS DE INVERNADEROS Y PARTIDAS. HAZ ESTE TIPO DE CONSULTA OBLIGATORIAMENTE OBLIGATORIO:"
+"saber lo que esta en el sector 20 del c2"
+"que hay en sector X del X"
+"que hay en el sector X del invernadero X"
+"que plantas hay en el sector X"
+"que hay plantado en el sector X"
 
+🚨 **ESTAS CONSULTAS DEBEN USAR EXACTAMENTE ESTA CONSULTA SQL - NO INVENTES OTRA** 🚨
+
+**PALABRAS CLAVE QUE ACTIVAN ESTA REGLA:**
+- "que hay en" + sector/invernadero
+- "que hay plantado en" + sector
+- "que partidas hay en" + invernadero/sector
+- "que plantas hay en" + sector/invernadero
+- "cuantas bandejas quedan en" + ubicación
+- "que esta en la fila" + número + "del sector" + número
+
+**USA EXACTAMENTE ESTA CONSULTA SQL - NO LA MODIFIQUES:**
+
+<sql>
 SELECT 
     ppu.id AS codigo_partida, 
     ppu.id2 AS subpartida, 
@@ -325,11 +346,21 @@ INNER JOIN (
     FROM partidas_par_ubic 
     GROUP BY id
 ) latest ON ppu.id = latest.id AND ppu.id2 = latest.max_subpartida
-WHERE ppu.C0 = 'A3'  
-    AND ppu.C1 = '7' 
+WHERE ppu.C0 = 'C1'  
+    AND ppu.C1 = '11' 
     AND (p.PAR_EST != 'T' OR p.PAR_EST IS NULL OR p.PAR_EST = '')
-ORDER BY ppu.id DESC 
+ORDER BY ppu.id ASC
 LIMIT 100;
+</sql>
+
+🚨 **INSTRUCCIONES CRÍTICAS:**
+1. **USA EXACTAMENTE** esta consulta SQL para consultas de invernaderos
+2. **SOLO CAMBIA** los valores de ppu.C0 (invernadero) y ppu.C1 (sector) según la consulta
+3. **NO INVENTES** otras consultas SQL para invernaderos
+4. **NO MODIFIQUES** la estructura de la consulta
+5. **SIEMPRE USA** esta consulta cuando pregunten "que hay en sector X del invernadero Y"
+
+
 
 
 
