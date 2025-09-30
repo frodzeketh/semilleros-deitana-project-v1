@@ -55,6 +55,22 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("")
   const [activeHeaderOption, setActiveHeaderOption] = useState("chat")
+  
+  // Estados para modo de voz con AudioLines
+  const [isVoiceMode, setIsVoiceMode] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [voiceRecognition, setVoiceRecognition] = useState(null)
+  const [speechSynthesis, setSpeechSynthesis] = useState(null)
+  
+  // Estados para asistente de voz multimodal con OpenAI
+  const [isVoiceAssistantActive, setIsVoiceAssistantActive] = useState(false)
+  const [isVoiceRecording, setIsVoiceRecording] = useState(false)
+  const [voiceMediaRecorder, setVoiceMediaRecorder] = useState(null)
+  // eslint-disable-next-line no-unused-vars
+  const [voiceAudioChunks, setVoiceAudioChunks] = useState([])
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false)
+  const [currentAudio, setCurrentAudio] = useState(null)
 
   // Estados para el drag del bottom sheet en móvil
   const [isDragging, setIsDragging] = useState(false)
@@ -517,6 +533,266 @@ const Home = () => {
     }
   }, [currentConversationId])
 
+  // Limpiar modo de voz al desmontar
+  useEffect(() => {
+    return () => {
+      if (voiceRecognition) {
+        voiceRecognition.stop()
+      }
+      if (speechSynthesis) {
+        speechSynthesis.cancel()
+      }
+    }
+  }, [voiceRecognition, speechSynthesis])
+
+  // Funciones para modo de voz con AudioLines
+  const initializeVoiceMode = async () => {
+    console.log('🎤 Inicializando modo de voz con AudioLines...')
+    
+    // Si no hay conversación activa, crear una nueva
+    if (!currentConversationId) {
+      console.log('🎤 Creando nueva conversación para modo de voz...')
+      try {
+        await handleNewChat()
+      } catch (error) {
+        console.error('❌ Error al crear nueva conversación:', error)
+      }
+    }
+    
+    // Inicializar Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+      
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = 'es-ES'
+      
+      recognition.onstart = () => {
+        console.log('🎤 Reconocimiento de voz iniciado')
+        setIsListening(true)
+      }
+      
+      recognition.onresult = (event) => {
+        let finalTranscript = ''
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript
+          }
+        }
+        
+        if (finalTranscript) {
+          console.log('🎤 Transcripción final:', finalTranscript)
+          handleVoiceInput(finalTranscript)
+        }
+      }
+      
+      recognition.onerror = (event) => {
+        console.error('❌ Error en reconocimiento de voz:', event.error)
+        setIsListening(false)
+      }
+      
+      recognition.onend = () => {
+        console.log('🛑 Reconocimiento de voz terminado')
+        setIsListening(false)
+        
+        // Reiniciar automáticamente si estamos en modo de voz
+        if (isVoiceMode) {
+          setTimeout(() => {
+            if (isVoiceMode && !isSpeaking) {
+              console.log('🔄 Reiniciando reconocimiento de voz...')
+              recognition.start()
+            }
+          }, 1000)
+        }
+      }
+      
+      setVoiceRecognition(recognition)
+      recognition.start()
+    } else {
+      alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Safari.')
+    }
+    
+    // Inicializar Speech Synthesis
+    if ('speechSynthesis' in window) {
+      setSpeechSynthesis(window.speechSynthesis)
+    }
+  }
+  
+  const stopVoiceMode = () => {
+    console.log('🛑 Deteniendo modo de voz...')
+    
+    if (voiceRecognition) {
+      voiceRecognition.stop()
+      setVoiceRecognition(null)
+    }
+    
+    if (speechSynthesis) {
+      speechSynthesis.cancel()
+      setSpeechSynthesis(null)
+    }
+    
+    setIsListening(false)
+    setIsSpeaking(false)
+  }
+  
+  const handleVoiceInput = async (transcript) => {
+    console.log('🎤 Procesando entrada de voz:', transcript)
+    
+    // Agregar mensaje del usuario
+    const userMessage = {
+      id: Date.now(),
+      text: transcript,
+      sender: "user",
+      timestamp: new Date().toISOString(),
+      isVoice: true
+    }
+    
+    setChatMessages((prev) => [...prev, userMessage])
+    setIsTyping(true)
+    
+    try {
+      // Enviar a la API
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) {
+        throw new Error("No se pudo obtener el token de autenticación")
+      }
+      
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: transcript,
+          conversationId: currentConversationId
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+      
+      // Crear mensaje del bot
+      const botMessage = {
+        id: Date.now() + 1,
+        text: "",
+        sender: "bot",
+        timestamp: new Date().toISOString(),
+        isStreaming: true,
+        isVoice: true
+      }
+      
+      setChatMessages((prev) => [...prev, botMessage])
+      
+      // Procesar streaming
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let fullResponse = ""
+      
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              
+              if (data.type === 'content') {
+                fullResponse += data.content
+                // eslint-disable-next-line no-loop-func
+                setChatMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessage.id
+                      ? { ...msg, text: fullResponse }
+                      : msg
+                  )
+                )
+              } else if (data.type === 'done') {
+                // Finalizar streaming
+                setChatMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessage.id
+                      ? { ...msg, isStreaming: false }
+                      : msg
+                  )
+                )
+                
+                // Reproducir respuesta con voz Alloy
+                speakResponse(fullResponse)
+              }
+            } catch (e) {
+              console.error('Error parsing chunk:', e)
+            }
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Error en modo de voz:', error)
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          text: "Error al procesar tu consulta de voz. Intenta de nuevo.",
+          sender: "bot",
+          timestamp: new Date().toISOString(),
+          isVoice: true
+        }
+      ])
+    } finally {
+      setIsTyping(false)
+    }
+  }
+  
+  const speakResponse = (text) => {
+    if (!speechSynthesis) return
+    
+    console.log('🔊 Reproduciendo respuesta con Alloy:', text)
+    setIsSpeaking(true)
+    
+    // Cancelar cualquier síntesis anterior
+    speechSynthesis.cancel()
+    
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'es-ES'
+    utterance.rate = 0.9
+    utterance.pitch = 1
+    utterance.volume = 0.8
+    
+    // Buscar voz Alloy si está disponible
+    const voices = speechSynthesis.getVoices()
+    const alloyVoice = voices.find(voice => 
+      voice.name.toLowerCase().includes('alloy') || 
+      voice.name.toLowerCase().includes('google') ||
+      voice.name.toLowerCase().includes('español')
+    )
+    
+    if (alloyVoice) {
+      utterance.voice = alloyVoice
+      console.log('🎤 Usando voz:', alloyVoice.name)
+    }
+    
+    utterance.onend = () => {
+      console.log('🔊 Reproducción terminada')
+      setIsSpeaking(false)
+    }
+    
+    utterance.onerror = (event) => {
+      console.error('❌ Error en síntesis de voz:', event.error)
+      setIsSpeaking(false)
+    }
+    
+    speechSynthesis.speak(utterance)
+  }
+
 
   // Funciones para grabación de audio con OpenAI Whisper
   const startRecording = async () => {
@@ -741,6 +1017,332 @@ const Home = () => {
     if (fileInput) {
       fileInput.value = ''
     }
+  }
+
+  // ========================================
+  // FUNCIONES PARA ASISTENTE DE VOZ MULTIMODAL CON OPENAI
+  // ========================================
+
+  /**
+   * Activar/Desactivar el modo de asistente de voz
+   */
+  const toggleVoiceAssistant = async () => {
+    if (isVoiceAssistantActive) {
+      // Desactivar asistente de voz
+      await deactivateVoiceAssistant()
+    } else {
+      // Activar asistente de voz
+      await activateVoiceAssistant()
+    }
+  }
+
+  /**
+   * Activar el asistente de voz
+   */
+  const activateVoiceAssistant = async () => {
+    try {
+      console.log('🎤 [VOICE-ASSISTANT] Activando asistente de voz...')
+      
+      // Detener cualquier audio que esté reproduciéndose
+      if (currentAudio) {
+        currentAudio.pause()
+        currentAudio.currentTime = 0
+      }
+      
+      setIsVoiceAssistantActive(true)
+      
+      // Iniciar grabación automáticamente
+      await startVoiceRecording()
+      
+    } catch (error) {
+      console.error('❌ [VOICE-ASSISTANT] Error al activar:', error)
+      alert('Error al activar el asistente de voz. Verifica los permisos del micrófono.')
+      setIsVoiceAssistantActive(false)
+    }
+  }
+
+  /**
+   * Desactivar el asistente de voz
+   */
+  const deactivateVoiceAssistant = async () => {
+    console.log('🎤 [VOICE-ASSISTANT] Desactivando asistente de voz...')
+    
+    // Detener grabación si está activa
+    if (isVoiceRecording) {
+      stopVoiceRecording(false) // false = no procesar
+    }
+    
+    // Detener audio si está reproduciéndose
+    if (currentAudio) {
+      currentAudio.pause()
+      currentAudio.currentTime = 0
+      setCurrentAudio(null)
+    }
+    
+    setIsVoiceAssistantActive(false)
+    setIsVoiceRecording(false)
+    setIsProcessingVoice(false)
+    setIsSpeaking(false)
+  }
+
+  /**
+   * Iniciar grabación de voz
+   */
+  const startVoiceRecording = async () => {
+    try {
+      console.log('🎤 [VOICE-ASSISTANT] Iniciando grabación...')
+      
+      // Solicitar permisos de micrófono
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 16000
+        } 
+      })
+      
+      // Crear MediaRecorder
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      })
+      
+      const chunks = []
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data)
+        }
+      }
+      
+      recorder.onstop = async () => {
+        console.log('🛑 [VOICE-ASSISTANT] Grabación detenida')
+        
+        // Crear blob del audio
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' })
+        console.log('📦 [VOICE-ASSISTANT] Audio blob creado:', audioBlob.size, 'bytes')
+        
+        // Detener el stream
+        stream.getTracks().forEach(track => track.stop())
+        
+        // Solo procesar si hay audio suficiente (más de 1KB)
+        if (audioBlob.size > 1000) {
+          await processVoiceInput(audioBlob)
+        } else {
+          console.log('⚠️ [VOICE-ASSISTANT] Audio muy corto, ignorando...')
+          // Si el modo sigue activo, volver a grabar
+          if (isVoiceAssistantActive) {
+            setTimeout(() => {
+              if (isVoiceAssistantActive) {
+                startVoiceRecording()
+              }
+            }, 500)
+          }
+        }
+      }
+      
+      recorder.start()
+      setVoiceMediaRecorder(recorder)
+      setVoiceAudioChunks(chunks)
+      setIsVoiceRecording(true)
+      
+      // Auto-detener después de 10 segundos para enviar el mensaje
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          console.log('⏱️ [VOICE-ASSISTANT] Tiempo límite alcanzado, deteniendo grabación...')
+          recorder.stop()
+        }
+      }, 10000) // 10 segundos
+      
+      console.log('✅ [VOICE-ASSISTANT] Grabación iniciada. Habla ahora... (máx 10 seg)')
+      
+    } catch (error) {
+      console.error('❌ [VOICE-ASSISTANT] Error al iniciar grabación:', error)
+      alert('No se pudo acceder al micrófono. Verifica los permisos.')
+      setIsVoiceAssistantActive(false)
+    }
+  }
+
+  /**
+   * Detener grabación de voz
+   */
+  const stopVoiceRecording = (shouldProcess = true) => {
+    console.log('🛑 [VOICE-ASSISTANT] Deteniendo grabación...', shouldProcess ? '(procesando)' : '(cancelando)')
+    
+    if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+      if (!shouldProcess) {
+        // Si no queremos procesar, limpiar el evento onstop
+        voiceMediaRecorder.onstop = () => {
+          console.log('🛑 [VOICE-ASSISTANT] Grabación cancelada')
+        }
+      }
+      voiceMediaRecorder.stop()
+    }
+    
+    setIsVoiceRecording(false)
+    setVoiceMediaRecorder(null)
+  }
+
+  /**
+   * Procesar entrada de voz
+   */
+  const processVoiceInput = async (audioBlob) => {
+    try {
+      setIsProcessingVoice(true)
+      console.log('🔄 [VOICE-ASSISTANT] Procesando entrada de voz...')
+      
+      // Crear FormData
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'voice-input.webm')
+      formData.append('conversationId', currentConversationId || '')
+      
+      // Agregar imagen si existe
+      if (selectedImage) {
+        const reader = new FileReader()
+        const imageBase64 = await new Promise((resolve, reject) => {
+          reader.onload = (e) => resolve(e.target.result)
+          reader.onerror = reject
+          reader.readAsDataURL(selectedImage)
+        })
+        formData.append('image', imageBase64)
+      }
+      
+      // Enviar al backend
+      console.log('📤 [VOICE-ASSISTANT] Enviando al backend...')
+      const response = await fetch(`${API_URL}/api/voice-assistant/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.accessToken}`
+        },
+        body: formData
+      })
+      
+      console.log('📡 [VOICE-ASSISTANT] Respuesta HTTP recibida:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        let errorData
+        try {
+          errorData = await response.json()
+        } catch (e) {
+          errorData = { error: 'Error de conexión con el servidor' }
+        }
+        console.error('❌ [VOICE-ASSISTANT] Error del servidor:', errorData)
+        throw new Error(errorData.error || 'Error al procesar voz')
+      }
+      
+      const data = await response.json()
+      console.log('✅ [VOICE-ASSISTANT] Respuesta recibida:', {
+        conversationId: data.conversationId,
+        transcription: data.transcription,
+        responseLength: data.response?.length || 0,
+        hasAudio: !!data.audio,
+        audioLength: data.audio?.length || 0
+      })
+      
+      // Actualizar conversación
+      if (data.conversationId) {
+        setCurrentConversationId(data.conversationId)
+      }
+      
+      // Agregar mensaje del usuario
+      const userMessage = {
+        role: 'user',
+        content: data.transcription,
+        timestamp: new Date().toISOString(),
+        hasImage: !!selectedImage,
+        isVoice: true
+      }
+      
+      setChatMessages(prev => [...prev, userMessage])
+      
+      // Limpiar imagen seleccionada
+      setSelectedImage(null)
+      
+      // Agregar respuesta del asistente
+      const assistantMessage = {
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date().toISOString(),
+        isVoice: true
+      }
+      
+      setChatMessages(prev => [...prev, assistantMessage])
+      
+      // Reproducir audio de respuesta
+      await playVoiceResponse(data.audio)
+      
+      // Después de reproducir, volver a grabar automáticamente si el modo sigue activo
+      if (isVoiceAssistantActive) {
+        setTimeout(() => {
+          if (isVoiceAssistantActive) {
+            startVoiceRecording()
+          }
+        }, 500)
+      }
+      
+    } catch (error) {
+      console.error('❌ [VOICE-ASSISTANT] Error al procesar voz:', error)
+      alert(`Error: ${error.message}`)
+      
+      // Reintentar grabación si el modo sigue activo
+      if (isVoiceAssistantActive) {
+        setTimeout(() => {
+          if (isVoiceAssistantActive) {
+            startVoiceRecording()
+          }
+        }, 1000)
+      }
+    } finally {
+      setIsProcessingVoice(false)
+    }
+  }
+
+  /**
+   * Reproducir respuesta de voz
+   */
+  const playVoiceResponse = async (audioBase64) => {
+    return new Promise((resolve, reject) => {
+      try {
+        console.log('🔊 [VOICE-ASSISTANT] Reproduciendo respuesta...')
+        setIsSpeaking(true)
+        
+        // Convertir base64 a blob
+        const audioData = atob(audioBase64)
+        const arrayBuffer = new ArrayBuffer(audioData.length)
+        const view = new Uint8Array(arrayBuffer)
+        for (let i = 0; i < audioData.length; i++) {
+          view[i] = audioData.charCodeAt(i)
+        }
+        const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
+        const audioUrl = URL.createObjectURL(blob)
+        
+        // Crear elemento de audio
+        const audio = new Audio(audioUrl)
+        
+        audio.onended = () => {
+          console.log('✅ [VOICE-ASSISTANT] Reproducción finalizada')
+          setIsSpeaking(false)
+          setCurrentAudio(null)
+          URL.revokeObjectURL(audioUrl)
+          resolve()
+        }
+        
+        audio.onerror = (error) => {
+          console.error('❌ [VOICE-ASSISTANT] Error al reproducir:', error)
+          setIsSpeaking(false)
+          setCurrentAudio(null)
+          URL.revokeObjectURL(audioUrl)
+          reject(error)
+        }
+        
+        setCurrentAudio(audio)
+        audio.play()
+        
+      } catch (error) {
+        console.error('❌ [VOICE-ASSISTANT] Error en reproducción:', error)
+        setIsSpeaking(false)
+        reject(error)
+      }
+    })
   }
 
   // Función para convertir archivo a base64
@@ -1906,14 +2508,22 @@ const Home = () => {
           <div className="ds-chat-header-title">
             <button 
               className={`ds-header-option ${activeHeaderOption === "chat" ? "active" : ""}`}
-              onClick={() => setActiveHeaderOption("chat")}
+              onClick={() => {
+                setActiveHeaderOption("chat")
+                setIsVoiceMode(false)
+                stopVoiceMode()
+              }}
             >
               Chat
             </button>
             <div className="ds-header-separator"></div>
             <button 
               className={`ds-header-option ${activeHeaderOption === "voz" ? "active" : ""}`}
-              onClick={() => setActiveHeaderOption("voz")}
+              onClick={async () => {
+                setActiveHeaderOption("voz")
+                setIsVoiceMode(true)
+                await initializeVoiceMode()
+              }}
             >
               Voz
             </button>
@@ -1971,6 +2581,20 @@ const Home = () => {
                     <div className="ds-message-content">
                       {msg.sender === "bot" ? (
                         <div className="markdown-content">
+                          {msg.isVoice && (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              color: '#9c27b0',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              marginBottom: '8px'
+                            }}>
+                              <AudioLines size={14} />
+                              <span>Respuesta de voz con Alloy</span>
+                            </div>
+                          )}
                           {msg.isThinking && msg.trace && msg.trace.length > 0 ? (
                             <AgentTrace steps={msg.trace} />
                           ) : (
@@ -2103,12 +2727,27 @@ const Home = () => {
                             </div>
                           )}
                           {msg.text && (
-                            <p 
-                              style={{ whiteSpace: "pre-line" }}
-                              className={msg.isThinking ? "thinking-message" : ""}
-                            >
-                              {msg.text}
-                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {msg.isVoice && (
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  color: '#2196f3',
+                                  fontSize: '12px',
+                                  fontWeight: '500'
+                                }}>
+                                  <AudioLines size={14} />
+                                  <span>Mensaje de voz</span>
+                                </div>
+                              )}
+                              <p 
+                                style={{ whiteSpace: "pre-line" }}
+                                className={msg.isThinking ? "thinking-message" : ""}
+                              >
+                                {msg.text}
+                              </p>
+                            </div>
                           )}
                         </div>
                       )}
@@ -2174,19 +2813,65 @@ const Home = () => {
                   >
                     <CirclePlus size={20} />
                   </button>
-                  <input
-                    type="text"
-                    placeholder={isRecording || isTranscribing ? "" : "¿Cómo puede ayudar Deitana IA?"}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="ds-chat-input"
-                    disabled={isRecording || isTranscribing}
-                    style={{
-                      backgroundColor: isRecording || isTranscribing ? '#f8f9fa' : 'white',
-                      color: 'inherit',
-                      paddingLeft: '45px'
-                    }}
-                  />
+                  {isVoiceMode ? (
+                    // Interfaz de modo de voz
+                    <div style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '12px 20px',
+                      backgroundColor: isListening ? '#e3f2fd' : isSpeaking ? '#f3e5f5' : '#f8f9fa',
+                      border: `2px solid ${isListening ? '#2196f3' : isSpeaking ? '#9c27b0' : '#e9ecef'}`,
+                      borderRadius: '12px',
+                      transition: 'all 0.3s ease',
+                      minHeight: '48px'
+                    }}>
+                      {isListening ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#2196f3' }}>
+                          <div style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            backgroundColor: '#2196f3',
+                            animation: 'pulse 1.5s infinite'
+                          }}></div>
+                          <span style={{ fontWeight: '500' }}>Escuchando... Habla ahora</span>
+                        </div>
+                      ) : isSpeaking ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#9c27b0' }}>
+                          <div style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            backgroundColor: '#9c27b0',
+                            animation: 'pulse 1s infinite'
+                          }}></div>
+                          <span style={{ fontWeight: '500' }}>Deitana está respondiendo con voz...</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#666' }}>
+                          <AudioLines size={20} />
+                          <span>Modo de voz activo - Habla para consultar</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Interfaz de modo chat normal
+                    <input
+                      type="text"
+                      placeholder={isRecording || isTranscribing ? "" : "¿Cómo puede ayudar Deitana IA?"}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="ds-chat-input"
+                      disabled={isRecording || isTranscribing}
+                      style={{
+                        backgroundColor: isRecording || isTranscribing ? '#f8f9fa' : 'white',
+                        color: 'inherit',
+                        paddingLeft: '45px'
+                      }}
+                    />
+                  )}
                   
                   {/* Vista previa de imagen seleccionada */}
                   {selectedImage && (
@@ -2415,20 +3100,76 @@ const Home = () => {
                       className="ds-send-button"
                       style={{
                         position: 'relative',
-                        right: 'auto'
+                        right: 'auto',
+                        backgroundColor: isVoiceAssistantActive ? '#10a37f' : 'transparent',
+                        color: isVoiceAssistantActive ? 'white' : 'inherit'
                       }}
-                      onClick={() => {
-                        // Funcionalidad de AudioLines - por implementar
-                        console.log('🎵 Funcionalidad AudioLines activada');
-                      }}
+                      onClick={toggleVoiceAssistant}
+                      disabled={isProcessingVoice}
+                      title={isVoiceAssistantActive ? 'Desactivar asistente de voz' : 'Activar asistente de voz'}
                     >
-                      <AudioLines size={18} />
+                      {isVoiceRecording ? (
+                        <div className="pulse-animation">
+                          <AudioLines size={18} />
+                        </div>
+                      ) : (
+                        <AudioLines size={18} />
+                      )}
                     </button>
                   </div>
                 )}
               </div>
             </form>
             
+            {/* Indicador de estado del asistente de voz */}
+            {isVoiceAssistantActive && (
+              <div style={{
+                padding: '8px 16px',
+                backgroundColor: isVoiceRecording ? '#10a37f' : (isSpeaking ? '#0066cc' : '#f3f4f6'),
+                color: isVoiceRecording || isSpeaking ? 'white' : '#374151',
+                borderRadius: '8px',
+                marginBottom: '8px',
+                fontSize: '13px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease'
+              }}>
+                {isProcessingVoice ? (
+                  <>
+                    <div className="spinner" style={{
+                      width: '14px',
+                      height: '14px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}></div>
+                    Procesando...
+                  </>
+                ) : isVoiceRecording ? (
+                  <>
+                    <div className="pulse-animation">
+                      <div style={{
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%'
+                      }}></div>
+                    </div>
+                    Escuchando...
+                  </>
+                ) : isSpeaking ? (
+                  <>
+                    🔊 Hablando...
+                  </>
+                ) : (
+                  'Asistente de voz activo'
+                )}
+              </div>
+            )}
             
             <div className="ds-disclaimer">Deitana IA</div>
           </div>

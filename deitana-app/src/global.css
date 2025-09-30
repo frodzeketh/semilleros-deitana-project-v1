@@ -4364,5 +4364,35 @@ input:focus {
   }
 }
 
+/* ========================================
+   ANIMACIONES PARA ASISTENTE DE VOZ
+   ======================================== */
 
+/* Animación de pulso para el asistente de voz */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
+.pulse-animation {
+  animation: pulse 1.5s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Animación de spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
