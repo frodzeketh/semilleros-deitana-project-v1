@@ -117,6 +117,40 @@ articulos: {
   },
 
 
+  familias_fm_rngt: {
+    alias: "Rangos de Tarifas por Familia",
+    descripcion: "Define los rangos de cantidad para tarifas según la familia del artículo. Cada familia tiene múltiples rangos (subrangos) que determinan la tarifa aplicable según la cantidad de plantas solicitadas. Los rangos son progresivos: D (1-25000), C (25001-500000), B (500001-2000000), A (2000001+). Se utiliza para calcular el precio final según el volumen de pedido.",
+    tabla: "familias_fm_rngt",
+    columnas: {
+        id: "Código de la familia (relacionado con tabla articulos campo AR_FAM)",
+        id2: "Número de rango o subrango (1, 2, 3, 4...)",
+        C0: "Cantidad mínima del rango (desde)",
+        C1: "Cantidad máxima del rango (hasta, 0 significa ilimitado)",
+        C2: "Código de tarifa aplicable (D, C, B, A)"
+    },
+    logica_tarifas: {
+        tarifa_D: "Rango más bajo (1-25,000 plantas) - Tarifa más alta",
+        tarifa_C: "Rango medio-bajo (25,001-500,000 plantas)",
+        tarifa_B: "Rango medio-alto (500,001-2,000,000 plantas)",
+        tarifa_A: "Rango más alto (2,000,001+ plantas) - Tarifa más baja (mayor descuento)"
+    },
+    relaciones: {
+        articulos: {
+            tabla_relacionada: "articulos",
+            tipo: "Uno a muchos (una familia tiene múltiples artículos)",
+            campo_enlace_local: "id",
+            campo_enlace_externo: "AR_FAM",
+            descripcion: "Vincula los rangos de tarifa con la familia del artículo para calcular precios por volumen"
+        }
+    },
+    ejemplos: {
+        consulta_rangos_por_articulo: "Obtener los rangos de tarifa para un artículo específico usando su familia (AR_FAM)",
+        consulta_rangos_por_familia: "Listar todos los rangos de tarifa de una familia completa",
+        calcular_tarifa_por_cantidad: "Determinar qué tarifa aplicar según la cantidad solicitada",
+        comparar_rangos_familias: "Comparar los rangos de tarifas entre diferentes familias de productos"
+    }
+},
+
   /* ================================================*/
   /* Archivos – Generales – Clientes */
   /* ================================================*/

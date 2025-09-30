@@ -657,6 +657,28 @@ ORDER BY
 
 
 
+
+
+PARA SABER EL RANGO DE TARIFA SEGUN CANTIDAD DE PLANTAS QUE UN CLIENTE QUIEDA POR FAMILIA: 
+SELECT 
+    fr.id AS codigo_familia,
+    fr.id2 AS numero_rango,
+    fr.C0 AS cantidad_minima,
+    fr.C1 AS cantidad_maxima,
+    fr.C2 AS tarifa,
+    CASE 
+        WHEN fr.C1 = 0 THEN CONCAT(fr.C0, ' o más plantas')
+        ELSE CONCAT(fr.C0, ' - ', fr.C1, ' plantas')
+    END AS rango_descripcion,
+    COUNT(a.id) AS total_articulos_familia
+FROM familias_fm_rngt fr
+LEFT JOIN articulos a ON fr.id = a.AR_FAM
+WHERE fr.id = '0009'  -- Cambiar por código de familia
+GROUP BY fr.id, fr.id2, fr.C0, fr.C1, fr.C2
+ORDER BY fr.id2;
+
+
+
 PARA LAS CONSULTAS SQL USA LOS BACKTIST CORRESPONDIENTES A MYSQL WORKBRENCH \`\ NO USES '' AUN QUE LOS EJEMPLOS LO MUESTREN ASI.
 
 ---
