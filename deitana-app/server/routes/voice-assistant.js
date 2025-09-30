@@ -7,6 +7,16 @@ const { processQueryStream } = require('../admin/core/openAI');
 const chatManager = require('../utils/chatManager');
 const router = express.Router();
 
+// Helper para crear un objeto File compatible desde Buffer
+function toFile(buffer, filename, mimetype) {
+  // OpenAI SDK acepta buffers con propiedades adicionales
+  const file = buffer;
+  file.name = filename;
+  file.type = mimetype;
+  file.lastModified = Date.now();
+  return file;
+}
+
 // Middleware de autenticación
 router.use(verifyToken);
 
@@ -119,13 +129,15 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
     // ========================================
     console.log('🎤 [VOICE-CHAT] Transcribiendo audio...');
     
-    const audioBlob = new Blob([audioFile.buffer], { type: audioFile.mimetype });
-    const audioFileObj = new File([audioBlob], audioFile.originalname || 'audio.webm', {
-      type: audioFile.mimetype
-    });
+    // Crear objeto compatible con OpenAI API desde el buffer
+    const audioFileForWhisper = toFile(
+      audioFile.buffer,
+      audioFile.originalname || 'audio.webm',
+      audioFile.mimetype
+    );
     
     const transcription = await openai.audio.transcriptions.create({
-      file: audioFileObj,
+      file: audioFileForWhisper,
       model: 'whisper-1',
       language: 'es',
       response_format: 'text'
