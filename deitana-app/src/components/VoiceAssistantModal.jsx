@@ -228,7 +228,7 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backgroundColor: 'rgba(0, 0, 0, 0.85)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -238,146 +238,139 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
       <div style={{
         backgroundColor: 'white',
         borderRadius: '24px',
-        padding: '32px',
-        maxWidth: '500px',
+        padding: '48px 32px',
+        maxWidth: '400px',
         width: '100%',
         position: 'relative',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '32px'
       }}>
-        {/* Botón cerrar */}
-        <button
-          onClick={handleClose}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <X size={24} color="#666" />
-        </button>
-
-        {/* Título */}
-        <h2 style={{
-          margin: '0 0 24px 0',
-          fontSize: '24px',
-          fontWeight: '600',
-          color: '#1a1a1a',
-          textAlign: 'center'
-        }}>
-          Asistente de Voz
-        </h2>
-
-        {/* Indicador visual */}
+        
+        {/* Círculo animado central */}
         <div style={{
+          width: '160px',
+          height: '160px',
+          borderRadius: '50%',
+          backgroundColor: isListening ? '#10a37f' : (isSpeaking ? '#0066cc' : (isProcessing ? '#666' : '#f3f4f6')),
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          gap: '24px',
-          marginBottom: '24px'
+          justifyContent: 'center',
+          animation: isListening || isSpeaking ? 'pulse 1.5s ease-in-out infinite' : 'none',
+          transition: 'background-color 0.3s ease',
+          boxShadow: isListening || isSpeaking ? '0 8px 32px rgba(16, 163, 127, 0.3)' : 'none'
         }}>
-          {/* Círculo animado */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '50%',
-            backgroundColor: isListening ? '#10a37f' : (isSpeaking ? '#0066cc' : '#f3f4f6'),
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            animation: isListening || isSpeaking ? 'pulse 1.5s ease-in-out infinite' : 'none',
-            transition: 'background-color 0.3s ease'
-          }}>
-            {isListening ? (
-              <Mic size={48} color="white" />
-            ) : isSpeaking ? (
-              <Volume2 size={48} color="white" />
-            ) : (
-              <Mic size={48} color="#666" />
-            )}
-          </div>
-
-          {/* Estado */}
-          <div style={{
-            fontSize: '16px',
-            fontWeight: '500',
-            color: '#666',
-            textAlign: 'center'
-          }}>
-            {isProcessing ? 'Procesando...' : 
-             isListening ? 'Escuchando...' : 
-             isSpeaking ? 'Hablando...' : 
-             'Listo'}
-          </div>
+          {isListening ? (
+            <Mic size={64} color="white" strokeWidth={2} />
+          ) : isSpeaking ? (
+            <Volume2 size={64} color="white" strokeWidth={2} />
+          ) : isProcessing ? (
+            <div className="spinner" style={{
+              width: '48px',
+              height: '48px',
+              border: '4px solid rgba(255,255,255,0.3)',
+              borderTop: '4px solid white',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+          ) : (
+            <Mic size={64} color="#999" strokeWidth={2} />
+          )}
         </div>
 
-        {/* Transcripción */}
-        {transcript && (
-          <div style={{
-            padding: '16px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '12px',
-            marginBottom: '12px'
-          }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-              Tú dijiste:
-            </div>
-            <div style={{ fontSize: '14px', color: '#1a1a1a' }}>
-              {transcript}
-            </div>
-          </div>
-        )}
+        {/* Estado del asistente */}
+        <div style={{
+          fontSize: '18px',
+          fontWeight: '500',
+          color: '#333',
+          textAlign: 'center',
+          minHeight: '28px'
+        }}>
+          {isProcessing ? 'Procesando...' : 
+           isListening ? 'Escuchando...' : 
+           isSpeaking ? 'Hablando...' : 
+           'Listo'}
+        </div>
 
-        {/* Respuesta */}
-        {response && (
-          <div style={{
-            padding: '16px',
-            backgroundColor: '#10a37f10',
-            borderRadius: '12px',
-            marginBottom: '12px'
-          }}>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-              Respuesta:
-            </div>
-            <div style={{ fontSize: '14px', color: '#1a1a1a' }}>
-              {response}
-            </div>
-          </div>
-        )}
-
-        {/* Error */}
+        {/* Mensaje de error si existe */}
         {error && (
           <div style={{
-            padding: '12px',
+            padding: '12px 16px',
             backgroundColor: '#fee',
-            borderRadius: '8px',
+            borderRadius: '12px',
             color: '#c00',
-            fontSize: '14px',
-            marginBottom: '12px'
+            fontSize: '13px',
+            textAlign: 'center',
+            maxWidth: '100%'
           }}>
             {error}
           </div>
         )}
 
-        {/* Instrucciones */}
+        {/* Botones de control */}
         <div style={{
-          fontSize: '13px',
-          color: '#999',
-          textAlign: 'center',
-          marginTop: '16px'
+          display: 'flex',
+          gap: '16px',
+          marginTop: '8px'
         }}>
-          Habla naturalmente. El asistente te responderá con voz.
+          {/* Botón silenciar micrófono */}
+          <button
+            onClick={() => {
+              if (isListening) {
+                // Detener escucha
+                if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                  mediaRecorderRef.current.stop();
+                }
+                setIsListening(false);
+              }
+            }}
+            disabled={!isListening}
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              border: 'none',
+              backgroundColor: isListening ? '#fee' : '#f3f4f6',
+              color: isListening ? '#c00' : '#999',
+              cursor: isListening ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+            title="Silenciar micrófono"
+          >
+            <Mic size={24} strokeWidth={2} style={{ textDecoration: 'line-through' }} />
+          </button>
+
+          {/* Botón cerrar */}
+          <button
+            onClick={handleClose}
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              border: 'none',
+              backgroundColor: '#f3f4f6',
+              color: '#666',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+            title="Cerrar asistente"
+          >
+            <X size={24} strokeWidth={2} />
+          </button>
         </div>
       </div>
 
-      {/* Estilos para la animación */}
+      {/* Estilos para animaciones */}
       <style>{`
         @keyframes pulse {
           0%, 100% {
@@ -385,9 +378,14 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
             opacity: 1;
           }
           50% {
-            transform: scale(1.05);
-            opacity: 0.9;
+            transform: scale(1.08);
+            opacity: 0.95;
           }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>
