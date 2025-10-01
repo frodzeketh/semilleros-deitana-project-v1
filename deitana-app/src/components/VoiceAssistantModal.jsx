@@ -17,6 +17,36 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
 
   // Inicializar AudioContext al abrir el modal
   useEffect(() => {
+    const initAudioSystem = async () => {
+      try {
+        console.log('🎤 [MODAL] Inicializando sistema de audio...');
+        
+        // Inicializar AudioContext
+        const ctx = await initializeAudioContext();
+        if (ctx) {
+          audioContextRef.current = ctx;
+          console.log('✅ [MODAL] AudioContext listo');
+        }
+        
+        // Reproducir silencio para desbloquear audio en Safari iOS
+        const warmAudio = new Audio();
+        const silenceDataUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////////////////////////////////////////AAAAAExhdmM1OC4xMzQAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZEwP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+        warmAudio.src = silenceDataUrl;
+        warmAudio.volume = 0;
+        warmAudio.playsInline = true;
+        await warmAudio.play().catch(e => console.log('⚠️ Warm audio:', e.message));
+        
+        console.log('✅ [MODAL] Sistema de audio desbloqueado');
+        
+        // Iniciar escucha automática
+        startListening();
+        
+      } catch (error) {
+        console.error('❌ [MODAL] Error inicializando audio:', error);
+        setError('No se pudo inicializar el sistema de audio');
+      }
+    };
+
     if (isOpen && !audioContextRef.current) {
       initAudioSystem();
     }
@@ -27,37 +57,8 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
         cleanup();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
-
-  const initAudioSystem = async () => {
-    try {
-      console.log('🎤 [MODAL] Inicializando sistema de audio...');
-      
-      // Inicializar AudioContext
-      const ctx = await initializeAudioContext();
-      if (ctx) {
-        audioContextRef.current = ctx;
-        console.log('✅ [MODAL] AudioContext listo');
-      }
-      
-      // Reproducir silencio para desbloquear audio en Safari iOS
-      const warmAudio = new Audio();
-      const silenceDataUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////////////////////////////////////////AAAAAExhdmM1OC4xMzQAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZEwP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
-      warmAudio.src = silenceDataUrl;
-      warmAudio.volume = 0;
-      warmAudio.playsInline = true;
-      await warmAudio.play().catch(e => console.log('⚠️ Warm audio:', e.message));
-      
-      console.log('✅ [MODAL] Sistema de audio desbloqueado');
-      
-      // Iniciar escucha automática
-      startListening();
-      
-    } catch (error) {
-      console.error('❌ [MODAL] Error inicializando audio:', error);
-      setError('No se pudo inicializar el sistema de audio');
-    }
-  };
 
   const startListening = async () => {
     try {
@@ -113,6 +114,7 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const stopListening = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();

@@ -1031,7 +1031,9 @@ const Home = () => {
 
   /**
    * Activar/Desactivar el modo de asistente de voz
+   * (Ya no se usa - ahora usamos el modal)
    */
+  // eslint-disable-next-line no-unused-vars
   const toggleVoiceAssistant = async () => {
     if (isVoiceAssistantActive) {
       // Desactivar asistente de voz
