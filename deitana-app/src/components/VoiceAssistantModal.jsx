@@ -228,146 +228,123 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.85)',
+      backgroundColor: 'white',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 10000,
-      padding: '20px'
+      padding: '40px'
     }}>
+      
+      {/* Círculo negro central */}
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '24px',
-        padding: '48px 32px',
-        maxWidth: '400px',
-        width: '100%',
-        position: 'relative',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+        width: '200px',
+        height: '200px',
+        borderRadius: '50%',
+        backgroundColor: '#000000',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
-        gap: '32px'
+        justifyContent: 'center',
+        animation: isListening || isSpeaking ? 'pulse 1.5s ease-in-out infinite' : 'none',
+        marginBottom: '120px'
       }}>
-        
-        {/* Círculo animado central */}
-        <div style={{
-          width: '160px',
-          height: '160px',
+        {/* Sin ícono dentro - círculo negro sólido como en la imagen */}
+      </div>
+
+      {/* Texto informativo */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        marginBottom: '40px',
+        color: '#666',
+        fontSize: '14px'
+      }}>
+        <span style={{
+          width: '16px',
+          height: '16px',
           borderRadius: '50%',
-          backgroundColor: isListening ? '#10a37f' : (isSpeaking ? '#0066cc' : (isProcessing ? '#666' : '#f3f4f6')),
+          border: '2px solid #999',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          animation: isListening || isSpeaking ? 'pulse 1.5s ease-in-out infinite' : 'none',
-          transition: 'background-color 0.3s ease',
-          boxShadow: isListening || isSpeaking ? '0 8px 32px rgba(16, 163, 127, 0.3)' : 'none'
+          fontSize: '12px',
+          fontWeight: 'bold'
         }}>
-          {isListening ? (
-            <Mic size={64} color="white" strokeWidth={2} />
-          ) : isSpeaking ? (
-            <Volume2 size={64} color="white" strokeWidth={2} />
-          ) : isProcessing ? (
-            <div className="spinner" style={{
-              width: '48px',
-              height: '48px',
-              border: '4px solid rgba(255,255,255,0.3)',
-              borderTop: '4px solid white',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-          ) : (
-            <Mic size={64} color="#999" strokeWidth={2} />
-          )}
-        </div>
-
-        {/* Estado del asistente */}
-        <div style={{
-          fontSize: '18px',
-          fontWeight: '500',
-          color: '#333',
-          textAlign: 'center',
-          minHeight: '28px'
-        }}>
-          {isProcessing ? 'Procesando...' : 
-           isListening ? 'Escuchando...' : 
+          i
+        </span>
+        <span>
+          {isListening ? 'Escuchando...' : 
            isSpeaking ? 'Hablando...' : 
-           'Listo'}
-        </div>
+           isProcessing ? 'Procesando...' :
+           'Enable microphone access in Settings'}
+        </span>
+      </div>
 
-        {/* Mensaje de error si existe */}
-        {error && (
-          <div style={{
-            padding: '12px 16px',
-            backgroundColor: '#fee',
-            borderRadius: '12px',
-            color: '#c00',
-            fontSize: '13px',
-            textAlign: 'center',
-            maxWidth: '100%'
-          }}>
-            {error}
+      {/* Botones de control */}
+      <div style={{
+        display: 'flex',
+        gap: '20px'
+      }}>
+        {/* Botón mutear micrófono */}
+        <button
+          onClick={() => {
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+              mediaRecorderRef.current.stop();
+              setIsListening(false);
+            }
+          }}
+          style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: '#ffe5e5',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+            boxShadow: 'none'
+          }}
+          title="Mutear micrófono"
+        >
+          <div style={{ position: 'relative' }}>
+            <Mic size={24} color="#ff4444" strokeWidth={2} />
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '-4px',
+              right: '-4px',
+              height: '2px',
+              backgroundColor: '#ff4444',
+              transform: 'rotate(-45deg)',
+              transformOrigin: 'center'
+            }}></div>
           </div>
-        )}
+        </button>
 
-        {/* Botones de control */}
-        <div style={{
-          display: 'flex',
-          gap: '16px',
-          marginTop: '8px'
-        }}>
-          {/* Botón silenciar micrófono */}
-          <button
-            onClick={() => {
-              if (isListening) {
-                // Detener escucha
-                if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-                  mediaRecorderRef.current.stop();
-                }
-                setIsListening(false);
-              }
-            }}
-            disabled={!isListening}
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: isListening ? '#fee' : '#f3f4f6',
-              color: isListening ? '#c00' : '#999',
-              cursor: isListening ? 'pointer' : 'not-allowed',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-            title="Silenciar micrófono"
-          >
-            <Mic size={24} strokeWidth={2} style={{ textDecoration: 'line-through' }} />
-          </button>
-
-          {/* Botón cerrar */}
-          <button
-            onClick={handleClose}
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: '#f3f4f6',
-              color: '#666',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-            title="Cerrar asistente"
-          >
-            <X size={24} strokeWidth={2} />
-          </button>
-        </div>
+        {/* Botón cerrar */}
+        <button
+          onClick={handleClose}
+          style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: '#f5f5f5',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+            boxShadow: 'none'
+          }}
+          title="Cerrar asistente"
+        >
+          <X size={24} color="#333" strokeWidth={2} />
+        </button>
       </div>
 
       {/* Estilos para animaciones */}
