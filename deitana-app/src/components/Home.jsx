@@ -73,6 +73,7 @@ const Home = () => {
   const [isProcessingVoice, setIsProcessingVoice] = useState(false)
   const [currentAudio, setCurrentAudio] = useState(null)
   const [audioContext, setAudioContext] = useState(null)
+  // eslint-disable-next-line no-unused-vars
   const [warmAudioElement, setWarmAudioElement] = useState(null)
 
   // Estados para el drag del bottom sheet en móvil
