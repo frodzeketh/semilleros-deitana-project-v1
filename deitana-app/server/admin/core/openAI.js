@@ -450,18 +450,45 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // =====================================
     
     // 1. ANÁLISIS INTELIGENTE RÁPIDO (SIN LLAMADAS IA)
+    const tiempoIntencionInicio = Date.now();
     const intencion = await analizarIntencionInteligente(mensaje);
+    const tiempoIntencion = Date.now() - tiempoIntencionInicio;
+    console.log('⏱️ [TIMING] analizarIntencionInteligente:', tiempoIntencion, 'ms');
     console.log('🎯 [PROMPT-BUILDER] Intención detectada:', intencion);
     
-    // 2. Configuración del modelo (siempre gpt-4o)
-    const configModelo = {
-        modelo: 'gpt-4o',
-        maxTokens: 3000,
-        temperature: 0.9,
-        topP: 0.95,
-        frequencyPenalty: 0.5,
-        presencePenalty: 0.4
-    };
+    // 2. Configuración del modelo optimizada por tipo de consulta
+    let configModelo;
+    
+    if (intencion.tipo === 'conocimiento_general') {
+        // ⚡ Ruta rápida para conocimiento general
+        configModelo = {
+            modelo: 'gpt-4o-mini',  // Modelo más rápido
+            maxTokens: 800,         // Respuestas más concisas
+            temperature: 0.7,
+            topP: 0.9
+        };
+        console.log('⚡ [MODELO] Usando GPT-4o-mini para conocimiento general');
+    } else if (intencion.tipo === 'conversacion') {
+        // ⚡ Ruta ultra-rápida para conversación
+        configModelo = {
+            modelo: 'gpt-4o-mini',  // Modelo más rápido
+            maxTokens: 300,         // Respuestas muy breves
+            temperature: 0.7,
+            topP: 0.9
+        };
+        console.log('⚡ [MODELO] Usando GPT-4o-mini para conversación casual');
+    } else {
+        // Modelo completo para consultas complejas
+        configModelo = {
+            modelo: 'gpt-4o',
+            maxTokens: 3000,
+            temperature: 0.9,
+            topP: 0.95,
+            frequencyPenalty: 0.5,
+            presencePenalty: 0.4
+        };
+        console.log('🤖 [MODELO] Usando GPT-4o para consultas complejas');
+    }
     
     // =====================================
     // RECOLECCIÓN DE INFORMACIÓN
@@ -479,14 +506,21 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 5. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
     let contextoRAG = '';
     
-    // RAG SIEMPRE ACTIVO para evitar alucinaciones
-    try {
-        console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
-        contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
-        console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
-    } catch (error) {
-        console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
-        // Continuar sin RAG si hay error, pero registrar el problema
+    // ⚡ RAG SELECTIVO - Solo cuando es necesario
+    if (intencion.tipo === 'conocimiento_general' || intencion.tipo === 'conversacion') {
+        console.log('⚡ [RAG] Saltando RAG para consulta de conocimiento general/conversación');
+    } else {
+        try {
+            console.log('🧠 [RAG] Recuperando conocimiento empresarial...');
+            const tiempoRAGInicio = Date.now();
+            contextoRAG = await ragInteligente.recuperarConocimientoRelevante(mensaje, 'sistema');
+            const tiempoRAG = Date.now() - tiempoRAGInicio;
+            console.log('⏱️ [TIMING] RAG recuperarConocimientoRelevante:', tiempoRAG, 'ms');
+            console.log('✅ [RAG] Conocimiento recuperado:', contextoRAG ? contextoRAG.length : 0, 'caracteres');
+        } catch (error) {
+            console.error('❌ [RAG] Error recuperando conocimiento:', error.message);
+            // Continuar sin RAG si hay error, pero registrar el problema
+        }
     }
     
 
@@ -503,18 +537,42 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 7. Crear el prompt base (como el encabezado de una carta)
     const promptGlobalConFecha = promptGlobal.replace('{{FECHA_ACTUAL}}', fechaActual);
     
-    // 8. Empezar a construir el prompt final (como empezar a escribir la carta)
-    let promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
+    // 8. Construir prompt final optimizado por tipo de consulta
+    let promptFinal;
     
-    // 9. Si encontramos información de la empresa, ponerla AL PRINCIPIO (como información importante)
-    if (contextoRAG) {
-        console.log('🎯 [RAG] PRIORIZANDO contexto empresarial al inicio');
-        // Reconstruir el prompt poniendo la información de la empresa al principio
-        promptFinal = `${promptGlobalConFecha}\n\nCONOCIMIENTO EMPRESARIAL ESPECÍFICO:\n${contextoRAG}\n\nINSTRUCCIÓN: Debes usar siempre la información del conocimiento empresarial específico proporcionado arriba. Si la información está disponible en ese contexto, úsala. No des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
+    if (intencion.tipo === 'conversacion') {
+        console.log('⚡ [PROMPT] Usando prompt simplificado para conversación casual');
+        promptFinal = `Eres un asistente amigable y profesional de Semilleros Deitana. 
+
+Responde de manera natural y conversacional. Mantén las respuestas breves y amigables.
+
+Usuario: ${mensaje}`;
+    } else if (intencion.tipo === 'conocimiento_general') {
+        console.log('⚡ [PROMPT] Usando prompt optimizado para conocimiento general');
+        promptFinal = `Eres un asistente experto en plantas y jardinería de Semilleros Deitana.
+
+Proporciona información precisa y útil sobre plantas, jardinería y cultivos. Mantén las respuestas informativas pero accesibles.
+
+Consulta: ${mensaje}`;
+    } else {
+        // Prompt completo para consultas complejas
+        promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
+        
+        // 9. Si encontramos información de la empresa, ponerla AL PRINCIPIO (como información importante)
+        if (contextoRAG) {
+            console.log('🎯 [RAG] PRIORIZANDO contexto empresarial al inicio');
+            // Reconstruir el prompt poniendo la información de la empresa al principio
+            promptFinal = `${promptGlobalConFecha}\n\nCONOCIMIENTO EMPRESARIAL ESPECÍFICO:\n${contextoRAG}\n\nINSTRUCCIÓN: Debes usar siempre la información del conocimiento empresarial específico proporcionado arriba. Si la información está disponible en ese contexto, úsala. No des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
+        }
     }
     
-    // 10. Agregar la estructura de la base de datos (como un mapa de la ciudad)
-    promptFinal += `${contextoMapaERP}\n\n`;
+    // 10. Agregar estructura de base de datos solo si es necesario
+    if (intencion.tipo !== 'conversacion' && intencion.tipo !== 'conocimiento_general') {
+        promptFinal += `${contextoMapaERP}\n\n`;
+        console.log('📋 [PROMPT] Incluyendo mapa ERP para consultas complejas');
+    } else {
+        console.log('⚡ [PROMPT] Saltando mapa ERP para consultas simples');
+    }
     
     // 11. Solo agregar reglas SQL si la consulta necesita datos (como reglas de tráfico solo si vas a manejar)
     if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
@@ -708,6 +766,65 @@ async function processImageWithOCR(imageBase64) {
  */
 async function analizarIntencionInteligente(mensaje) {
     console.log('🧠 [INTENCION-IA] Analizando consulta con IA real...');
+    
+    // ⚡ DETECCIÓN INTELIGENTE RÁPIDA - Sin llamadas a IA
+    const mensajeLower = mensaje.toLowerCase().trim();
+    
+    // 1. DETECCIÓN DE CONOCIMIENTO GENERAL (¿qué es X?, ¿cómo funciona Y?)
+    const patronesConocimientoGeneral = [
+        /^qué es /i, /^que es /i, /^what is /i,
+        /^cómo funciona /i, /^como funciona /i, /^how does /i,
+        /^definición de /i, /^definicion de /i, /^definition of /i,
+        /^qué significa /i, /^que significa /i, /^what does /i,
+        /^explica /i, /^explain /i, /^describe /i
+    ];
+    
+    if (patronesConocimientoGeneral.some(patron => patron.test(mensajeLower))) {
+        console.log('⚡ [INTENCION-IA] Detección rápida: Conocimiento general');
+        return { tipo: 'conocimiento_general', confianza: 0.95 };
+    }
+    
+    // 2. DETECCIÓN DE CONVERSACIÓN CASUAL
+    const saludosSimples = [
+        'hola', 'hi', 'hey', 'buenos días', 'buenas tardes', 'buenas noches',
+        'gracias', 'thanks', 'ok', 'okay', 'perfecto', 'genial', 'excelente',
+        'adiós', 'bye', 'hasta luego', 'nos vemos', 'chao', 'ciao'
+    ];
+    
+    if (saludosSimples.some(saludo => mensajeLower.includes(saludo))) {
+        console.log('⚡ [INTENCION-IA] Detección rápida: Conversación casual');
+        return { tipo: 'conversacion', confianza: 0.95 };
+    }
+    
+    // 3. DETECCIÓN DE CONSULTAS SQL (datos, números, listas)
+    const patronesSQL = [
+        /cuántos/i, /cuantas/i, /how many/i,
+        /dame/i, /muestra/i, /lista de/i, /list of/i,
+        /busca/i, /buscar/i, /search/i,
+        /que hay en/i, /que hay/i, /what is in/i,
+        /últimos/i, /ultimos/i, /last/i,
+        /clientes/i, /productos/i, /ventas/i, /pedidos/i,
+        /invernadero/i, /sector/i, /fila/i, /ubicación/i
+    ];
+    
+    if (patronesSQL.some(patron => patron.test(mensajeLower))) {
+        console.log('⚡ [INTENCION-IA] Detección rápida: Consulta SQL');
+        return { tipo: 'sql', confianza: 0.95 };
+    }
+    
+    // 4. DETECCIÓN DE CONOCIMIENTO EMPRESARIAL (protocolos, procesos específicos)
+    const patronesEmpresariales = [
+        /protocolo/i, /proceso/i, /procedimiento/i,
+        /instrucción/i, /instrucciones/i,
+        /pedro muñoz/i, /antonio galera/i,
+        /semilleros deitana/i, /empresa/i,
+        /cultivo/i, /siembra/i, /plantación/i
+    ];
+    
+    if (patronesEmpresariales.some(patron => patron.test(mensajeLower))) {
+        console.log('⚡ [INTENCION-IA] Detección rápida: Conocimiento empresarial');
+        return { tipo: 'conocimiento_empresarial', confianza: 0.95 };
+    }
     
     // Detección rápida para imágenes procesadas
     if (mensaje.includes('📷 Información de la imagen:') || mensaje.includes('📷 Información extraída de la imagen:')) {
@@ -974,8 +1091,15 @@ async function processQueryStream({ message, userId, conversationId, response })
     // OBTENER INFORMACIÓN DEL USUARIO Y CONTEXTO
     // =====================================
     
+    const tiempoUsuarioInicio = Date.now();
     const infoUsuario = await obtenerInfoUsuario(userId);
+    const tiempoUsuario = Date.now() - tiempoUsuarioInicio;
+    console.log('⏱️ [TIMING] obtenerInfoUsuario:', tiempoUsuario, 'ms');
+    
+    const tiempoHistorialInicio = Date.now();
     const historialConversacion = await obtenerHistorialConversacion(userId, conversationId);
+    const tiempoHistorial = Date.now() - tiempoHistorialInicio;
+    console.log('⏱️ [TIMING] obtenerHistorialConversacion:', tiempoHistorial, 'ms');
 
     try {
         // No esperar a que termine de guardar - hacer async
@@ -1031,6 +1155,7 @@ async function processQueryStream({ message, userId, conversationId, response })
         // =====================================
         
         console.log('🧠 [IA-INTELIGENTE] Construyendo prompt OPTIMIZADO...');
+        const tiempoPromptInicio = Date.now();
         const promptBuilder = await construirPromptInteligente(
             message, 
             mapaERP,
@@ -1039,6 +1164,8 @@ async function processQueryStream({ message, userId, conversationId, response })
             lastRealData || '',
             false
         );
+        const tiempoPrompt = Date.now() - tiempoPromptInicio;
+        console.log('⏱️ [TIMING] construirPromptInteligente:', tiempoPrompt, 'ms');
         
         console.log('🧠 [IA-INTELIGENTE] Métricas de construcción:');
         console.log('🧠 [IA-INTELIGENTE] Intención detectada:', promptBuilder.intencion);
@@ -1056,16 +1183,21 @@ async function processQueryStream({ message, userId, conversationId, response })
             }
         ];
 
-        // Agregar historial conversacional como mensajes reales
-        if (historialConversacion && historialConversacion.length > 0) {
-            console.log('💬 [STREAMING-CONTEXTO] Agregando historial conversacional como mensajes reales...');
-            historialConversacion.forEach((msg, index) => {
-                console.log(`💬 [STREAMING-CONTEXTO] Mensaje ${index + 1}: ${msg.role} - "${msg.content.substring(0, 100)}..."`);
-                mensajesLlamada.push({
-                    role: msg.role,
-                    content: msg.content
+        // ⚡ RUTA RÁPIDA: Saltar historial para consultas simples
+        if (promptBuilder.intencion.tipo === 'conversacion' || promptBuilder.intencion.tipo === 'conocimiento_general') {
+            console.log('⚡ [STREAMING-CONTEXTO] Saltando historial para consulta simple - respuesta rápida');
+        } else {
+            // Agregar historial conversacional como mensajes reales
+            if (historialConversacion && historialConversacion.length > 0) {
+                console.log('💬 [STREAMING-CONTEXTO] Agregando historial conversacional como mensajes reales...');
+                historialConversacion.forEach((msg, index) => {
+                    console.log(`💬 [STREAMING-CONTEXTO] Mensaje ${index + 1}: ${msg.role} - "${msg.content.substring(0, 100)}..."`);
+                    mensajesLlamada.push({
+                        role: msg.role,
+                        content: msg.content
+                    });
                 });
-            });
+            }
         }
 
         // Agregar el mensaje actual del usuario
@@ -1104,6 +1236,7 @@ async function processQueryStream({ message, userId, conversationId, response })
         // =====================================
         
         try {
+            const tiempoOpenAIInicio = Date.now();
             const stream = await openai.chat.completions.create({
                 model: promptBuilder.configModelo.modelo,
                 messages: mensajesLlamada,
@@ -1115,6 +1248,8 @@ async function processQueryStream({ message, userId, conversationId, response })
                 stream: true  // ¡AQUÍ ESTÁ LA MAGIA!
             });
 
+            const tiempoOpenAI = Date.now() - tiempoOpenAIInicio;
+            console.log('⏱️ [TIMING] OpenAI chat.completions.create:', tiempoOpenAI, 'ms');
             console.log('✅ [STREAMING] Stream iniciado correctamente');
             
             // =====================================
