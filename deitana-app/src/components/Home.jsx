@@ -18,6 +18,7 @@ import "highlight.js/styles/github.css"
 import "../styles/thinking-styles.css"
 import { AgentTrace } from "./AgentTrace"
 import { initializeAudioContext, playVoiceResponse } from "./VoiceAssistantFunctions"
+import VoiceAssistantModal from "./VoiceAssistantModal"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -66,6 +67,7 @@ const Home = () => {
   
   // Estados para asistente de voz multimodal con OpenAI
   const [isVoiceAssistantActive, setIsVoiceAssistantActive] = useState(false)
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false)
   const [isVoiceRecording, setIsVoiceRecording] = useState(false)
   const [voiceMediaRecorder, setVoiceMediaRecorder] = useState(null)
   // eslint-disable-next-line no-unused-vars
@@ -3116,20 +3118,13 @@ const Home = () => {
                       style={{
                         position: 'relative',
                         right: 'auto',
-                        backgroundColor: isVoiceAssistantActive ? '#10a37f' : 'transparent',
-                        color: isVoiceAssistantActive ? 'white' : 'inherit'
+                        backgroundColor: voiceModalOpen ? '#10a37f' : 'transparent',
+                        color: voiceModalOpen ? 'white' : 'inherit'
                       }}
-                      onClick={toggleVoiceAssistant}
-                      disabled={isProcessingVoice}
-                      title={isVoiceAssistantActive ? 'Desactivar asistente de voz' : 'Activar asistente de voz'}
+                      onClick={() => setVoiceModalOpen(true)}
+                      title="Abrir asistente de voz"
                     >
-                      {isVoiceRecording ? (
-                        <div className="pulse-animation">
-                          <AudioLines size={18} />
-                        </div>
-                      ) : (
-                        <AudioLines size={18} />
-                      )}
+                      <AudioLines size={18} />
                     </button>
                   </div>
                 )}
@@ -3889,6 +3884,16 @@ const Home = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Asistente de Voz */}
+      <VoiceAssistantModal
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        user={user}
+        currentConversationId={currentConversationId}
+        setCurrentConversationId={setCurrentConversationId}
+        API_URL={API_URL}
+      />
     </div>
   )
 }
