@@ -17,7 +17,6 @@ import "katex/dist/katex.min.css"
 import "highlight.js/styles/github.css"
 import "../styles/thinking-styles.css"
 import { AgentTrace } from "./AgentTrace"
-import { initializeAudioContext, playVoiceResponse } from "./VoiceAssistantFunctions"
 import VoiceAssistantModal from "./VoiceAssistantModal"
 
 const API_URL =
@@ -65,18 +64,8 @@ const Home = () => {
   const [voiceRecognition, setVoiceRecognition] = useState(null)
   const [speechSynthesis, setSpeechSynthesis] = useState(null)
   
-  // Estados para asistente de voz multimodal con OpenAI
-  const [isVoiceAssistantActive, setIsVoiceAssistantActive] = useState(false)
+  // Estados para asistente de voz multimodal con OpenAI (Modal)
   const [voiceModalOpen, setVoiceModalOpen] = useState(false)
-  const [isVoiceRecording, setIsVoiceRecording] = useState(false)
-  const [voiceMediaRecorder, setVoiceMediaRecorder] = useState(null)
-  // eslint-disable-next-line no-unused-vars
-  const [voiceAudioChunks, setVoiceAudioChunks] = useState([])
-  const [isProcessingVoice, setIsProcessingVoice] = useState(false)
-  const [currentAudio, setCurrentAudio] = useState(null)
-  const [audioContext, setAudioContext] = useState(null)
-  // eslint-disable-next-line no-unused-vars
-  const [warmAudioElement, setWarmAudioElement] = useState(null)
 
   // Estados para el drag del bottom sheet en móvil
   const [isDragging, setIsDragging] = useState(false)
@@ -1025,344 +1014,7 @@ const Home = () => {
     }
   }
 
-  // ========================================
-  // FUNCIONES PARA ASISTENTE DE VOZ MULTIMODAL CON OPENAI
-  // ========================================
-
-  /**
-   * Activar/Desactivar el modo de asistente de voz
-   * (Ya no se usa - ahora usamos el modal)
-   */
-  // eslint-disable-next-line no-unused-vars
-  const toggleVoiceAssistant = async () => {
-    if (isVoiceAssistantActive) {
-      // Desactivar asistente de voz
-      await deactivateVoiceAssistant()
-    } else {
-      // Activar asistente de voz
-      await activateVoiceAssistant()
-    }
-  }
-
-  /**
-   * Activar el asistente de voz
-   */
-  const activateVoiceAssistant = async () => {
-    try {
-      console.log('🎤 [VOICE-ASSISTANT] Activando asistente de voz...')
-      
-      // Detener cualquier audio que esté reproduciéndose
-      if (currentAudio) {
-        currentAudio.pause()
-        currentAudio.currentTime = 0
-      }
-      
-      // IMPORTANTE: Inicializar y desbloquear AudioContext AQUÍ (durante tap del usuario)
-      const ctx = await initializeAudioContext()
-      if (ctx) {
-        setAudioContext(ctx)
-        console.log('✅ [VOICE-ASSISTANT] AudioContext inicializado y desbloqueado')
-      }
-      
-      // CRÍTICO para Safari iOS: Reproducir silencio AHORA (durante la interacción)
-      // Esto "calienta" el sistema de audio y permite reproducción posterior
-      try {
-        const warmAudio = new Audio()
-        const silenceDataUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////////////////////////////////////////AAAAAExhdmM1OC4xMzQAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZEwP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV'
-        warmAudio.src = silenceDataUrl
-        warmAudio.volume = 0
-        warmAudio.playsInline = true
-        const playPromise = warmAudio.play()
-        if (playPromise) {
-          await playPromise.catch(e => console.log('⚠️ Warm audio:', e.message))
-        }
-        setWarmAudioElement(warmAudio)
-        console.log('✅ [VOICE-ASSISTANT] Audio calentado para Safari iOS')
-      } catch (warmError) {
-        console.warn('⚠️ [VOICE-ASSISTANT] No se pudo calentar audio:', warmError.message)
-      }
-      
-      setIsVoiceAssistantActive(true)
-      
-      // Iniciar grabación automáticamente
-      await startVoiceRecording()
-      
-    } catch (error) {
-      console.error('❌ [VOICE-ASSISTANT] Error al activar:', error)
-      alert('Error al activar el asistente de voz. Verifica los permisos del micrófono.')
-      setIsVoiceAssistantActive(false)
-    }
-  }
-
-  /**
-   * Desactivar el asistente de voz
-   */
-  const deactivateVoiceAssistant = async () => {
-    console.log('🎤 [VOICE-ASSISTANT] Desactivando asistente de voz...')
-    
-    // Detener grabación si está activa
-    if (isVoiceRecording) {
-      stopVoiceRecording(false) // false = no procesar
-    }
-    
-    // Detener audio si está reproduciéndose
-    if (currentAudio) {
-      currentAudio.pause()
-      currentAudio.currentTime = 0
-      setCurrentAudio(null)
-    }
-    
-    setIsVoiceAssistantActive(false)
-    setIsVoiceRecording(false)
-    setIsProcessingVoice(false)
-    setIsSpeaking(false)
-  }
-
-  /**
-   * Iniciar grabación de voz
-   */
-  const startVoiceRecording = async () => {
-    try {
-      console.log('🎤 [VOICE-ASSISTANT] Iniciando grabación...')
-      
-      // Solicitar permisos de micrófono
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000
-        } 
-      })
-      
-      // Crear MediaRecorder
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      })
-      
-      const chunks = []
-      
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data)
-        }
-      }
-      
-      recorder.onstop = async () => {
-        console.log('🛑 [VOICE-ASSISTANT] Grabación detenida')
-        
-        // Crear blob del audio
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' })
-        console.log('📦 [VOICE-ASSISTANT] Audio blob creado:', audioBlob.size, 'bytes')
-        
-        // Detener el stream
-        stream.getTracks().forEach(track => track.stop())
-        
-        // Solo procesar si hay audio suficiente (más de 1KB)
-        if (audioBlob.size > 1000) {
-          await processVoiceInput(audioBlob)
-        } else {
-          console.log('⚠️ [VOICE-ASSISTANT] Audio muy corto, ignorando...')
-          // Si el modo sigue activo, volver a grabar
-          if (isVoiceAssistantActive) {
-            setTimeout(() => {
-              if (isVoiceAssistantActive) {
-                startVoiceRecording()
-              }
-            }, 500)
-          }
-        }
-      }
-      
-      recorder.start()
-      setVoiceMediaRecorder(recorder)
-      setVoiceAudioChunks(chunks)
-      setIsVoiceRecording(true)
-      
-      // Auto-detener después de 10 segundos para enviar el mensaje
-      setTimeout(() => {
-        if (recorder.state === 'recording') {
-          console.log('⏱️ [VOICE-ASSISTANT] Tiempo límite alcanzado, deteniendo grabación...')
-          recorder.stop()
-        }
-      }, 10000) // 10 segundos
-      
-      console.log('✅ [VOICE-ASSISTANT] Grabación iniciada. Habla ahora... (máx 10 seg)')
-      
-    } catch (error) {
-      console.error('❌ [VOICE-ASSISTANT] Error al iniciar grabación:', error)
-      alert('No se pudo acceder al micrófono. Verifica los permisos.')
-      setIsVoiceAssistantActive(false)
-    }
-  }
-
-  /**
-   * Detener grabación de voz
-   */
-  const stopVoiceRecording = (shouldProcess = true) => {
-    console.log('🛑 [VOICE-ASSISTANT] Deteniendo grabación...', shouldProcess ? '(procesando)' : '(cancelando)')
-    
-    if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
-      if (!shouldProcess) {
-        // Si no queremos procesar, limpiar el evento onstop
-        voiceMediaRecorder.onstop = () => {
-          console.log('🛑 [VOICE-ASSISTANT] Grabación cancelada')
-        }
-      }
-      voiceMediaRecorder.stop()
-    }
-    
-    setIsVoiceRecording(false)
-    setVoiceMediaRecorder(null)
-  }
-
-  /**
-   * Procesar entrada de voz
-   */
-  const processVoiceInput = async (audioBlob) => {
-    try {
-      setIsProcessingVoice(true)
-      console.log('🔄 [VOICE-ASSISTANT] Procesando entrada de voz...')
-      
-      // Crear FormData
-      const formData = new FormData()
-      formData.append('audio', audioBlob, 'voice-input.webm')
-      formData.append('conversationId', currentConversationId || '')
-      
-      // Agregar imagen si existe
-      if (selectedImage) {
-        const reader = new FileReader()
-        const imageBase64 = await new Promise((resolve, reject) => {
-          reader.onload = (e) => resolve(e.target.result)
-          reader.onerror = reject
-          reader.readAsDataURL(selectedImage)
-        })
-        formData.append('image', imageBase64)
-      }
-      
-      // Enviar al backend
-      console.log('📤 [VOICE-ASSISTANT] Enviando al backend...')
-      const response = await fetch(`${API_URL}/api/voice-assistant/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user.accessToken}`
-        },
-        body: formData
-      })
-      
-      console.log('📡 [VOICE-ASSISTANT] Respuesta HTTP recibida:', response.status, response.statusText)
-      
-      if (!response.ok) {
-        let errorData
-        try {
-          errorData = await response.json()
-        } catch (e) {
-          errorData = { error: 'Error de conexión con el servidor' }
-        }
-        console.error('❌ [VOICE-ASSISTANT] Error del servidor:', errorData)
-        throw new Error(errorData.error || 'Error al procesar voz')
-      }
-      
-      const data = await response.json()
-      console.log('✅ [VOICE-ASSISTANT] Respuesta recibida:', {
-        conversationId: data.conversationId,
-        transcription: data.transcription,
-        responseLength: data.response?.length || 0,
-        hasAudio: !!data.audio,
-        audioLength: data.audio?.length || 0
-      })
-      
-      // Actualizar conversación
-      if (data.conversationId) {
-        setCurrentConversationId(data.conversationId)
-      }
-      
-      // Agregar mensaje del usuario
-      const userMessage = {
-        role: 'user',
-        content: data.transcription,
-        timestamp: new Date().toISOString(),
-        hasImage: !!selectedImage,
-        isVoice: true
-      }
-      
-      setChatMessages(prev => [...prev, userMessage])
-      
-      // Limpiar imagen seleccionada
-      setSelectedImage(null)
-      
-      // Agregar respuesta del asistente
-      const assistantMessage = {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date().toISOString(),
-        isVoice: true
-      }
-      
-      setChatMessages(prev => [...prev, assistantMessage])
-      
-      // Reproducir audio de respuesta usando Web Audio API
-      try {
-        console.log('🎧 [VOICE-ASSISTANT] Intentando reproducir audio...')
-        console.log('🎧 [VOICE-ASSISTANT] AudioContext disponible:', !!audioContext)
-        console.log('🎧 [VOICE-ASSISTANT] Audio data length:', data.audio?.length || 0)
-        
-        if (!data.audio) {
-          console.error('❌ [VOICE-ASSISTANT] No hay audio en la respuesta')
-          throw new Error('No audio data received')
-        }
-        
-        if (!audioContext) {
-          console.warn('⚠️ [VOICE-ASSISTANT] No hay AudioContext, creando uno nuevo...')
-          const ctx = await initializeAudioContext()
-          if (ctx) {
-            setAudioContext(ctx)
-            await playVoiceResponse(data.audio, ctx, setIsSpeaking, setCurrentAudio)
-          } else {
-            throw new Error('No se pudo crear AudioContext')
-          }
-        } else {
-          await playVoiceResponse(data.audio, audioContext, setIsSpeaking, setCurrentAudio)
-        }
-        
-        console.log('✅ [VOICE-ASSISTANT] Audio reproducido exitosamente')
-      } catch (audioError) {
-        console.error('❌ [VOICE-ASSISTANT] Error al reproducir audio:', audioError)
-        alert(`Error reproduciendo audio: ${audioError.message}`)
-      }
-      
-      // Después de reproducir, volver a grabar automáticamente si el modo sigue activo
-      if (isVoiceAssistantActive) {
-        setTimeout(() => {
-          if (isVoiceAssistantActive) {
-            startVoiceRecording()
-          }
-        }, 500)
-      }
-      
-    } catch (error) {
-      console.error('❌ [VOICE-ASSISTANT] Error al procesar voz:', error)
-      
-      // Mostrar error en pantalla para debugging móvil
-      const errorDiv = document.createElement('div')
-      errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:8px;'
-      errorDiv.textContent = `Error: ${error.message || 'Desconocido'}`
-      document.body.appendChild(errorDiv)
-      setTimeout(() => errorDiv.remove(), 5000)
-      
-      // Reintentar grabación si el modo sigue activo
-      if (isVoiceAssistantActive) {
-        setTimeout(() => {
-          if (isVoiceAssistantActive) {
-            startVoiceRecording()
-          }
-        }, 1000)
-      }
-    } finally {
-      setIsProcessingVoice(false)
-    }
-  }
-
-  // playVoiceResponse ahora es importado desde VoiceAssistantFunctions.js
+  // NOTA: Todas las funciones de voz ahora están en VoiceAssistantModal.jsx
 
   // Función para convertir archivo a base64
   const convertFileToBase64 = (file) => {
@@ -3133,56 +2785,6 @@ const Home = () => {
               </div>
             </form>
             
-            {/* Indicador de estado del asistente de voz */}
-            {isVoiceAssistantActive && (
-              <div style={{
-                padding: '8px 16px',
-                backgroundColor: isVoiceRecording ? '#10a37f' : (isSpeaking ? '#0066cc' : '#f3f4f6'),
-                color: isVoiceRecording || isSpeaking ? 'white' : '#374151',
-                borderRadius: '8px',
-                marginBottom: '8px',
-                fontSize: '13px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease'
-              }}>
-                {isProcessingVoice ? (
-                  <>
-                    <div className="spinner" style={{
-                      width: '14px',
-                      height: '14px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderTop: '2px solid white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
-                    Procesando...
-                  </>
-                ) : isVoiceRecording ? (
-                  <>
-                    <div className="pulse-animation">
-                      <div style={{
-                        width: '8px',
-                        height: '8px',
-                        backgroundColor: 'white',
-                        borderRadius: '50%'
-                      }}></div>
-                    </div>
-                    Escuchando...
-                  </>
-                ) : isSpeaking ? (
-                  <>
-                    🔊 Hablando...
-                  </>
-                ) : (
-                  'Asistente de voz activo'
-                )}
-              </div>
-            )}
-            
             <div className="ds-disclaimer">Deitana IA</div>
           </div>
         </div>
@@ -3888,14 +3490,17 @@ const Home = () => {
       )}
 
       {/* Modal de Asistente de Voz */}
-      <VoiceAssistantModal
-        isOpen={voiceModalOpen}
-        onClose={() => setVoiceModalOpen(false)}
-        user={user}
-        currentConversationId={currentConversationId}
-        setCurrentConversationId={setCurrentConversationId}
-        API_URL={API_URL}
-      />
+      {voiceModalOpen && (
+        <VoiceAssistantModal
+          isOpen={voiceModalOpen}
+          onClose={() => setVoiceModalOpen(false)}
+          user={user}
+          currentConversationId={currentConversationId}
+          setCurrentConversationId={setCurrentConversationId}
+          setChatMessages={setChatMessages}
+          API_URL={API_URL}
+        />
+      )}
     </div>
   )
 }
