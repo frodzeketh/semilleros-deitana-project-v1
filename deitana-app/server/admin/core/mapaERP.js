@@ -4158,7 +4158,7 @@ pedidos_pr: {
   /* ================================================*/
   /* Ornamental – Ventas – Registro Facturas Emitidas */
   /* ================================================*/
-  facturas_e: {
+  "facturas-e": {
     // Clave principal (basada en el nombre de tabla)
     descripcion:
       "Registra las facturas de venta emitidas por la empresa. Incluye información sobre el cliente, almacén, vendedor, fecha, montos y forma de pago.", // Descripción sintetizada de los campos
@@ -4170,7 +4170,7 @@ pedidos_pr: {
       FE_VD: "Vendedor. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
       FE_FEC: "Fecha.",
       FE_BRU: "Monto bruto.",
-      FE_PTE: "PENDIENTE DE PAGO",
+      FE_PTE: "PENDIENTE DE PAGO, LO QUE DEBEN, LO QUE ESTA PENDIENTE DE PAGO DE UNA FACTURA, DEBE DINERO",
       FE_NETO: "Monto neto.",
       FE_IMPU: "Monto de impuesto.",
       FE_TTT: "Total.",

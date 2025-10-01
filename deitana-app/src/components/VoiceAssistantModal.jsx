@@ -11,6 +11,7 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
   
   const audioContextRef = useRef(null);
   const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
   const currentAudioRef = useRef(null);
   const recognitionTimeoutRef = useRef(null);
 
@@ -61,9 +62,9 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
         }
       };
       
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-      mediaRecorderRef.current.stream = stream; // Guardar referencia al stream
+              recorder.start();
+              mediaRecorderRef.current = recorder;
+              mediaStreamRef.current = stream; // Guardar referencia al stream por separado
       
       // Auto-detener después de 10 segundos
       recognitionTimeoutRef.current = setTimeout(() => {
@@ -101,10 +102,14 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
       formData.append('audio', audioBlob, 'voice-input.webm');
       formData.append('conversationId', currentConversationId || '');
       
+      // Obtener token de Firebase
+      const token = await user.getIdToken();
+      console.log('🔑 [MODAL] Token obtenido:', !!token);
+      
       const response = await fetch(`${API_URL}/api/voice-assistant/chat`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${user.accessToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: formData
       });
@@ -184,13 +189,14 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, currentConversationId, set
           mediaRecorderRef.current.stop();
         }
         
-        // CRÍTICO: Detener todos los tracks del stream
-        if (mediaRecorderRef.current.stream) {
-          mediaRecorderRef.current.stream.getTracks().forEach(track => {
-            track.stop();
-            console.log('🛑 [MODAL] Track detenido en cleanup:', track.kind, track.label);
-          });
-        }
+                // CRÍTICO: Detener todos los tracks del stream
+                if (mediaStreamRef.current) {
+                  mediaStreamRef.current.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('🛑 [MODAL] Track detenido en cleanup:', track.kind, track.label);
+                  });
+                  mediaStreamRef.current = null;
+                }
         
         mediaRecorderRef.current = null;
       } catch (e) {
