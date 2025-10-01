@@ -5,17 +5,10 @@ const { OpenAI } = require('openai');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { processQueryStream } = require('../admin/core/openAI');
 const chatManager = require('../utils/chatManager');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 const router = express.Router();
-
-// Helper para crear un objeto File compatible desde Buffer
-function toFile(buffer, filename, mimetype) {
-  // OpenAI SDK acepta buffers con propiedades adicionales
-  const file = buffer;
-  file.name = filename;
-  file.type = mimetype;
-  file.lastModified = Date.now();
-  return file;
-}
 
 // Middleware de autenticación
 router.use(verifyToken);
@@ -129,19 +122,34 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
     // ========================================
     console.log('🎤 [VOICE-CHAT] Transcribiendo audio...');
     
-    // Crear objeto compatible con OpenAI API desde el buffer
-    const audioFileForWhisper = toFile(
-      audioFile.buffer,
-      audioFile.originalname || 'audio.webm',
-      audioFile.mimetype
-    );
+    // Crear archivo temporal para OpenAI (necesario en Node.js)
+    const tempDir = os.tmpdir();
+    const tempFilePath = path.join(tempDir, `voice-${Date.now()}.webm`);
     
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFileForWhisper,
-      model: 'whisper-1',
-      language: 'es',
-      response_format: 'text'
-    });
+    // Escribir el buffer a un archivo temporal
+    fs.writeFileSync(tempFilePath, audioFile.buffer);
+    
+    let transcription;
+    try {
+      // Crear un stream de lectura para OpenAI
+      const audioStream = fs.createReadStream(tempFilePath);
+      
+      transcription = await openai.audio.transcriptions.create({
+        file: audioStream,
+        model: 'whisper-1',
+        language: 'es',
+        response_format: 'text'
+      });
+      
+      // Limpiar archivo temporal
+      fs.unlinkSync(tempFilePath);
+    } catch (error) {
+      // Asegurarse de limpiar el archivo incluso si hay error
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+      }
+      throw error;
+    }
     
     console.log('✅ [VOICE-CHAT] Transcripción:', transcription);
     
