@@ -1280,10 +1280,31 @@ const Home = () => {
       // Reproducir audio de respuesta usando Web Audio API
       try {
         console.log('🎧 [VOICE-ASSISTANT] Intentando reproducir audio...')
-        await playVoiceResponse(data.audio, audioContext, setIsSpeaking, setCurrentAudio)
+        console.log('🎧 [VOICE-ASSISTANT] AudioContext disponible:', !!audioContext)
+        console.log('🎧 [VOICE-ASSISTANT] Audio data length:', data.audio?.length || 0)
+        
+        if (!data.audio) {
+          console.error('❌ [VOICE-ASSISTANT] No hay audio en la respuesta')
+          throw new Error('No audio data received')
+        }
+        
+        if (!audioContext) {
+          console.warn('⚠️ [VOICE-ASSISTANT] No hay AudioContext, creando uno nuevo...')
+          const ctx = await initializeAudioContext()
+          if (ctx) {
+            setAudioContext(ctx)
+            await playVoiceResponse(data.audio, ctx, setIsSpeaking, setCurrentAudio)
+          } else {
+            throw new Error('No se pudo crear AudioContext')
+          }
+        } else {
+          await playVoiceResponse(data.audio, audioContext, setIsSpeaking, setCurrentAudio)
+        }
+        
         console.log('✅ [VOICE-ASSISTANT] Audio reproducido exitosamente')
       } catch (audioError) {
         console.error('❌ [VOICE-ASSISTANT] Error al reproducir audio:', audioError)
+        alert(`Error reproduciendo audio: ${audioError.message}`)
       }
       
       // Después de reproducir, volver a grabar automáticamente si el modo sigue activo
