@@ -1303,42 +1303,96 @@ const Home = () => {
     return new Promise((resolve, reject) => {
       try {
         console.log('🔊 [VOICE-ASSISTANT] Reproduciendo respuesta...')
+        console.log('🔊 [VOICE-ASSISTANT] Audio base64 length:', audioBase64?.length || 0)
+        
+        if (!audioBase64 || audioBase64.length === 0) {
+          console.error('❌ [VOICE-ASSISTANT] No hay audio para reproducir')
+          setIsSpeaking(false)
+          resolve()
+          return
+        }
+        
         setIsSpeaking(true)
         
-        // Convertir base64 a blob
-        const audioData = atob(audioBase64)
-        const arrayBuffer = new ArrayBuffer(audioData.length)
-        const view = new Uint8Array(arrayBuffer)
-        for (let i = 0; i < audioData.length; i++) {
-          view[i] = audioData.charCodeAt(i)
-        }
-        const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
-        const audioUrl = URL.createObjectURL(blob)
-        
-        // Crear elemento de audio
-        const audio = new Audio(audioUrl)
-        
-        audio.onended = () => {
-          console.log('✅ [VOICE-ASSISTANT] Reproducción finalizada')
+        // Convertir base64 a blob con mejor manejo de errores
+        try {
+          const audioData = atob(audioBase64)
+          console.log('✅ [VOICE-ASSISTANT] Base64 decodificado:', audioData.length, 'bytes')
+          
+          const arrayBuffer = new ArrayBuffer(audioData.length)
+          const view = new Uint8Array(arrayBuffer)
+          for (let i = 0; i < audioData.length; i++) {
+            view[i] = audioData.charCodeAt(i)
+          }
+          const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
+          const audioUrl = URL.createObjectURL(blob)
+          
+          console.log('✅ [VOICE-ASSISTANT] Blob creado:', blob.size, 'bytes, tipo:', blob.type)
+          console.log('✅ [VOICE-ASSISTANT] URL creado:', audioUrl)
+          
+          // Crear elemento de audio
+          const audio = new Audio()
+          
+          // Configurar eventos antes de establecer src
+          audio.oncanplay = () => {
+            console.log('✅ [VOICE-ASSISTANT] Audio listo para reproducir')
+          }
+          
+          audio.onloadedmetadata = () => {
+            console.log('✅ [VOICE-ASSISTANT] Metadata cargada, duración:', audio.duration, 'segundos')
+          }
+          
+          audio.onended = () => {
+            console.log('✅ [VOICE-ASSISTANT] Reproducción finalizada')
+            setIsSpeaking(false)
+            setCurrentAudio(null)
+            URL.revokeObjectURL(audioUrl)
+            resolve()
+          }
+          
+          audio.onerror = (event) => {
+            console.error('❌ [VOICE-ASSISTANT] Error al reproducir audio:', {
+              error: event,
+              audioError: audio.error,
+              code: audio.error?.code,
+              message: audio.error?.message
+            })
+            setIsSpeaking(false)
+            setCurrentAudio(null)
+            URL.revokeObjectURL(audioUrl)
+            reject(new Error(`Error de reproducción: ${audio.error?.message || 'Desconocido'}`))
+          }
+          
+          // Establecer source y reproducir
+          audio.src = audioUrl
+          audio.load()
+          setCurrentAudio(audio)
+          
+          // Intentar reproducir con promesa
+          const playPromise = audio.play()
+          
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('✅ [VOICE-ASSISTANT] Reproducción iniciada exitosamente')
+              })
+              .catch(playError => {
+                console.error('❌ [VOICE-ASSISTANT] Error al iniciar reproducción:', playError)
+                setIsSpeaking(false)
+                setCurrentAudio(null)
+                URL.revokeObjectURL(audioUrl)
+                reject(playError)
+              })
+          }
+          
+        } catch (decodeError) {
+          console.error('❌ [VOICE-ASSISTANT] Error al decodificar base64:', decodeError)
           setIsSpeaking(false)
-          setCurrentAudio(null)
-          URL.revokeObjectURL(audioUrl)
-          resolve()
+          reject(new Error('Error al decodificar el audio'))
         }
-        
-        audio.onerror = (error) => {
-          console.error('❌ [VOICE-ASSISTANT] Error al reproducir:', error)
-          setIsSpeaking(false)
-          setCurrentAudio(null)
-          URL.revokeObjectURL(audioUrl)
-          reject(error)
-        }
-        
-        setCurrentAudio(audio)
-        audio.play()
         
       } catch (error) {
-        console.error('❌ [VOICE-ASSISTANT] Error en reproducción:', error)
+        console.error('❌ [VOICE-ASSISTANT] Error general en reproducción:', error)
         setIsSpeaking(false)
         reject(error)
       }
