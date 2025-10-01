@@ -17,6 +17,7 @@ import "katex/dist/katex.min.css"
 import "highlight.js/styles/github.css"
 import "../styles/thinking-styles.css"
 import { AgentTrace } from "./AgentTrace"
+import { initializeAudioContext, playVoiceResponse } from "./VoiceAssistantFunctions"
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -71,6 +72,7 @@ const Home = () => {
   const [voiceAudioChunks, setVoiceAudioChunks] = useState([])
   const [isProcessingVoice, setIsProcessingVoice] = useState(false)
   const [currentAudio, setCurrentAudio] = useState(null)
+  const [audioContext, setAudioContext] = useState(null)
 
   // Estados para el drag del bottom sheet en móvil
   const [isDragging, setIsDragging] = useState(false)
@@ -1049,6 +1051,14 @@ const Home = () => {
         currentAudio.currentTime = 0
       }
       
+      // IMPORTANTE: Inicializar y desbloquear AudioContext AQUÍ (durante tap del usuario)
+      // Esto permite reproducción automática posterior en Safari/iOS
+      const ctx = await initializeAudioContext()
+      if (ctx) {
+        setAudioContext(ctx)
+        console.log('✅ [VOICE-ASSISTANT] AudioContext inicializado y desbloqueado')
+      }
+      
       setIsVoiceAssistantActive(true)
       
       // Iniciar grabación automáticamente
@@ -1267,19 +1277,13 @@ const Home = () => {
       
       setChatMessages(prev => [...prev, assistantMessage])
       
-      // Reproducir audio de respuesta
+      // Reproducir audio de respuesta usando Web Audio API
       try {
         console.log('🎧 [VOICE-ASSISTANT] Intentando reproducir audio...')
-        await playVoiceResponse(data.audio)
+        await playVoiceResponse(data.audio, audioContext, setIsSpeaking, setCurrentAudio)
         console.log('✅ [VOICE-ASSISTANT] Audio reproducido exitosamente')
       } catch (audioError) {
         console.error('❌ [VOICE-ASSISTANT] Error al reproducir audio:', audioError)
-        // Mostrar error en pantalla para debugging móvil
-        const errorDiv = document.createElement('div')
-        errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:8px;'
-        errorDiv.textContent = `Error de audio: ${audioError.message || 'Desconocido'}`
-        document.body.appendChild(errorDiv)
-        setTimeout(() => errorDiv.remove(), 5000)
       }
       
       // Después de reproducir, volver a grabar automáticamente si el modo sigue activo
@@ -1314,125 +1318,7 @@ const Home = () => {
     }
   }
 
-  /**
-   * Reproducir respuesta de voz
-   */
-  const playVoiceResponse = async (audioBase64) => {
-    return new Promise((resolve, reject) => {
-      try {
-        console.log('🔊 [VOICE-ASSISTANT] Reproduciendo respuesta...')
-        console.log('🔊 [VOICE-ASSISTANT] Audio base64 length:', audioBase64?.length || 0)
-        
-        if (!audioBase64 || audioBase64.length === 0) {
-          console.error('❌ [VOICE-ASSISTANT] No hay audio para reproducir')
-          setIsSpeaking(false)
-          resolve()
-          return
-        }
-        
-        setIsSpeaking(true)
-        
-        // Convertir base64 a blob con mejor manejo de errores
-        try {
-          const audioData = atob(audioBase64)
-          console.log('✅ [VOICE-ASSISTANT] Base64 decodificado:', audioData.length, 'bytes')
-          
-          const arrayBuffer = new ArrayBuffer(audioData.length)
-          const view = new Uint8Array(arrayBuffer)
-          for (let i = 0; i < audioData.length; i++) {
-            view[i] = audioData.charCodeAt(i)
-          }
-          const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
-          const audioUrl = URL.createObjectURL(blob)
-          
-          console.log('✅ [VOICE-ASSISTANT] Blob creado:', blob.size, 'bytes, tipo:', blob.type)
-          console.log('✅ [VOICE-ASSISTANT] URL creado:', audioUrl)
-          
-          // Crear elemento de audio
-          const audio = new Audio()
-          
-          // Configurar eventos antes de establecer src
-          audio.oncanplay = () => {
-            console.log('✅ [VOICE-ASSISTANT] Audio listo para reproducir')
-          }
-          
-          audio.onloadedmetadata = () => {
-            console.log('✅ [VOICE-ASSISTANT] Metadata cargada, duración:', audio.duration, 'segundos')
-          }
-          
-          audio.onended = () => {
-            console.log('✅ [VOICE-ASSISTANT] Reproducción finalizada')
-            setIsSpeaking(false)
-            setCurrentAudio(null)
-            URL.revokeObjectURL(audioUrl)
-            resolve()
-          }
-          
-          audio.onerror = (event) => {
-            console.error('❌ [VOICE-ASSISTANT] Error al reproducir audio:', {
-              error: event,
-              audioError: audio.error,
-              code: audio.error?.code,
-              message: audio.error?.message
-            })
-            setIsSpeaking(false)
-            setCurrentAudio(null)
-            URL.revokeObjectURL(audioUrl)
-            reject(new Error(`Error de reproducción: ${audio.error?.message || 'Desconocido'}`))
-          }
-          
-          // Establecer source y reproducir
-          audio.src = audioUrl
-          audio.load()
-          setCurrentAudio(audio)
-          
-          // Intentar reproducir con promesa (compatible con Safari)
-          const playPromise = audio.play()
-          
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                console.log('✅ [VOICE-ASSISTANT] Reproducción iniciada exitosamente')
-                // Mostrar indicador visual de éxito
-                const successDiv = document.createElement('div')
-                successDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:green;color:white;padding:10px;z-index:9999;border-radius:8px;'
-                successDiv.textContent = '🔊 Reproduciendo audio...'
-                document.body.appendChild(successDiv)
-                setTimeout(() => successDiv.remove(), 2000)
-              })
-              .catch(playError => {
-                console.error('❌ [VOICE-ASSISTANT] Error al iniciar reproducción:', playError)
-                setIsSpeaking(false)
-                setCurrentAudio(null)
-                URL.revokeObjectURL(audioUrl)
-                
-                // Mostrar error en pantalla
-                const errorDiv = document.createElement('div')
-                errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:8px;'
-                errorDiv.textContent = `Error play: ${playError.name}: ${playError.message}`
-                document.body.appendChild(errorDiv)
-                setTimeout(() => errorDiv.remove(), 5000)
-                
-                reject(playError)
-              })
-          } else {
-            // Si play() no retorna promesa (navegadores antiguos)
-            console.log('⚠️ [VOICE-ASSISTANT] Navegador sin soporte de promesas en play()')
-          }
-          
-        } catch (decodeError) {
-          console.error('❌ [VOICE-ASSISTANT] Error al decodificar base64:', decodeError)
-          setIsSpeaking(false)
-          reject(new Error('Error al decodificar el audio'))
-        }
-        
-      } catch (error) {
-        console.error('❌ [VOICE-ASSISTANT] Error general en reproducción:', error)
-        setIsSpeaking(false)
-        reject(error)
-      }
-    })
-  }
+  // playVoiceResponse ahora es importado desde VoiceAssistantFunctions.js
 
   // Función para convertir archivo a base64
   const convertFileToBase64 = (file) => {
