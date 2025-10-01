@@ -73,6 +73,7 @@ const Home = () => {
   const [isProcessingVoice, setIsProcessingVoice] = useState(false)
   const [currentAudio, setCurrentAudio] = useState(null)
   const [audioContext, setAudioContext] = useState(null)
+  const [warmAudioElement, setWarmAudioElement] = useState(null)
 
   // Estados para el drag del bottom sheet en móvil
   const [isDragging, setIsDragging] = useState(false)
@@ -1052,11 +1053,28 @@ const Home = () => {
       }
       
       // IMPORTANTE: Inicializar y desbloquear AudioContext AQUÍ (durante tap del usuario)
-      // Esto permite reproducción automática posterior en Safari/iOS
       const ctx = await initializeAudioContext()
       if (ctx) {
         setAudioContext(ctx)
         console.log('✅ [VOICE-ASSISTANT] AudioContext inicializado y desbloqueado')
+      }
+      
+      // CRÍTICO para Safari iOS: Reproducir silencio AHORA (durante la interacción)
+      // Esto "calienta" el sistema de audio y permite reproducción posterior
+      try {
+        const warmAudio = new Audio()
+        const silenceDataUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////////////////////////////////////////AAAAAExhdmM1OC4xMzQAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQZEwP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV'
+        warmAudio.src = silenceDataUrl
+        warmAudio.volume = 0
+        warmAudio.playsInline = true
+        const playPromise = warmAudio.play()
+        if (playPromise) {
+          await playPromise.catch(e => console.log('⚠️ Warm audio:', e.message))
+        }
+        setWarmAudioElement(warmAudio)
+        console.log('✅ [VOICE-ASSISTANT] Audio calentado para Safari iOS')
+      } catch (warmError) {
+        console.warn('⚠️ [VOICE-ASSISTANT] No se pudo calentar audio:', warmError.message)
       }
       
       setIsVoiceAssistantActive(true)

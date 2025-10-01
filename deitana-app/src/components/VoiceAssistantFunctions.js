@@ -119,8 +119,12 @@ export const playAudioWithHTMLElement = async (audioBase64, setIsSpeaking, setCu
       const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' })
       const audioUrl = URL.createObjectURL(blob)
       
-      // Crear elemento de audio
-      const audio = new Audio(audioUrl)
+      // Crear elemento de audio con configuración para Safari iOS
+      const audio = new Audio()
+      
+      // Importante para Safari iOS
+      audio.preload = 'auto'
+      audio.playsInline = true // Crucial para iOS
       
       audio.onended = () => {
         console.log('✅ [VOICE-ASSISTANT] Reproducción finalizada (HTML Audio)')
@@ -138,6 +142,8 @@ export const playAudioWithHTMLElement = async (audioBase64, setIsSpeaking, setCu
         reject(new Error(`Error: ${audio.error?.message || 'Desconocido'}`))
       }
       
+      audio.src = audioUrl
+      audio.load() // Pre-cargar para Safari
       setCurrentAudio(audio)
       
       const playPromise = audio.play()
