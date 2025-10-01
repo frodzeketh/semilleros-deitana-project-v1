@@ -1268,7 +1268,19 @@ const Home = () => {
       setChatMessages(prev => [...prev, assistantMessage])
       
       // Reproducir audio de respuesta
-      await playVoiceResponse(data.audio)
+      try {
+        console.log('🎧 [VOICE-ASSISTANT] Intentando reproducir audio...')
+        await playVoiceResponse(data.audio)
+        console.log('✅ [VOICE-ASSISTANT] Audio reproducido exitosamente')
+      } catch (audioError) {
+        console.error('❌ [VOICE-ASSISTANT] Error al reproducir audio:', audioError)
+        // Mostrar error en pantalla para debugging móvil
+        const errorDiv = document.createElement('div')
+        errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:8px;'
+        errorDiv.textContent = `Error de audio: ${audioError.message || 'Desconocido'}`
+        document.body.appendChild(errorDiv)
+        setTimeout(() => errorDiv.remove(), 5000)
+      }
       
       // Después de reproducir, volver a grabar automáticamente si el modo sigue activo
       if (isVoiceAssistantActive) {
@@ -1281,7 +1293,13 @@ const Home = () => {
       
     } catch (error) {
       console.error('❌ [VOICE-ASSISTANT] Error al procesar voz:', error)
-      alert(`Error: ${error.message}`)
+      
+      // Mostrar error en pantalla para debugging móvil
+      const errorDiv = document.createElement('div')
+      errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:8px;'
+      errorDiv.textContent = `Error: ${error.message || 'Desconocido'}`
+      document.body.appendChild(errorDiv)
+      setTimeout(() => errorDiv.remove(), 5000)
       
       // Reintentar grabación si el modo sigue activo
       if (isVoiceAssistantActive) {
@@ -1368,21 +1386,38 @@ const Home = () => {
           audio.load()
           setCurrentAudio(audio)
           
-          // Intentar reproducir con promesa
+          // Intentar reproducir con promesa (compatible con Safari)
           const playPromise = audio.play()
           
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
                 console.log('✅ [VOICE-ASSISTANT] Reproducción iniciada exitosamente')
+                // Mostrar indicador visual de éxito
+                const successDiv = document.createElement('div')
+                successDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:green;color:white;padding:10px;z-index:9999;border-radius:8px;'
+                successDiv.textContent = '🔊 Reproduciendo audio...'
+                document.body.appendChild(successDiv)
+                setTimeout(() => successDiv.remove(), 2000)
               })
               .catch(playError => {
                 console.error('❌ [VOICE-ASSISTANT] Error al iniciar reproducción:', playError)
                 setIsSpeaking(false)
                 setCurrentAudio(null)
                 URL.revokeObjectURL(audioUrl)
+                
+                // Mostrar error en pantalla
+                const errorDiv = document.createElement('div')
+                errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:red;color:white;padding:10px;z-index:9999;border-radius:8px;'
+                errorDiv.textContent = `Error play: ${playError.name}: ${playError.message}`
+                document.body.appendChild(errorDiv)
+                setTimeout(() => errorDiv.remove(), 5000)
+                
                 reject(playError)
               })
+          } else {
+            // Si play() no retorna promesa (navegadores antiguos)
+            console.log('⚠️ [VOICE-ASSISTANT] Navegador sin soporte de promesas en play()')
           }
           
         } catch (decodeError) {
