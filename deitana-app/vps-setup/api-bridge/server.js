@@ -192,11 +192,27 @@ app.post('/api/query', [
 
     const { sql, params = [], useCache = true } = req.body;
     
-    // Validar que solo sean consultas SELECT
+    // Validar consultas SQL (permitir SELECT, pero evitar DROP, DELETE sin WHERE, etc.)
     const trimmedSql = sql.trim().toLowerCase();
-    if (!trimmedSql.startsWith('select')) {
+    
+    // Lista de comandos peligrosos que NO se permiten
+    const dangerousCommands = ['drop', 'delete', 'truncate', 'create', 'alter', 'insert', 'update'];
+    const hasDangerousCommand = dangerousCommands.some(cmd => trimmedSql.includes(cmd));
+    
+    if (hasDangerousCommand) {
       return res.status(400).json({
-        error: 'Solo se permiten consultas SELECT',
+        error: `Comando SQL no permitido: ${dangerousCommands.find(cmd => trimmedSql.includes(cmd))}`,
+        code: 'DANGEROUS_COMMAND'
+      });
+    }
+    
+    // Permitir SELECT y otras consultas seguras
+    const allowedCommands = ['select', 'show', 'describe', 'explain', 'with'];
+    const hasAllowedCommand = allowedCommands.some(cmd => trimmedSql.startsWith(cmd));
+    
+    if (!hasAllowedCommand && trimmedSql.length > 10) {
+      return res.status(400).json({
+        error: 'Consulta SQL no reconocida o no permitida',
         code: 'INVALID_QUERY_TYPE'
       });
     }

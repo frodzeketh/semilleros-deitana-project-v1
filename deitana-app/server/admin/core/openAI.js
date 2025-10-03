@@ -3179,6 +3179,8 @@ async function analizarYCorregirSQL(sqlOriginal, error, resultados, openaiClient
     try {
         const promptCorreccion = `Analiza esta consulta SQL que falló y sugiere una corrección con RAZONAMIENTO INTELIGENTE:
 
+🚨 ATENCIÓN CRÍTICA: Si el error es "Solo se permiten consultas SELECT" con código "INVALID_QUERY_TYPE", significa que el VPS Bridge rechazó la consulta por contener elementos prohibidos. DEBES generar una consulta SELECT básica SIN subconsultas, SIN funciones complejas.
+
 SQL ORIGINAL:
 ${sqlOriginal}
 
@@ -3189,9 +3191,28 @@ RESULTADOS OBTENIDOS:
 ${resultados ? `${resultados.length} filas` : 'Sin resultados'}
 
 ## 🔍 ANÁLISIS DEL ERROR:
-- **Tipo de error**: ${error ? (error.includes('500') ? 'Error del servidor' : error.includes('400') ? 'Error de sintaxis/validación' : error.includes('ER_') ? 'Error de base de datos' : 'Error desconocido') : 'Sin resultados'}
+- **Tipo de error**: ${error ? (error.includes('500') ? 'Error del servidor' : error.includes('400') ? 'Error de sintaxis/validación' : error.includes('ER_') ? 'Error de base de datos' : error.includes('INVALID_QUERY_TYPE') ? '🚨 CONSULTA RECHAZADA POR VPS BRIDGE' : 'Error desconocido') : 'Sin resultados'}
 - **Código de error**: ${error ? error.split(' ')[0] : 'N/A'}
 - **Descripción**: ${error || 'La consulta no devolvió resultados'}
+
+## 🚨 ANÁLISIS ESPECÍFICO DEL ERROR 400:
+${error && error.includes('INVALID_QUERY_TYPE') ? `
+**🚨 PROBLEMA CRÍTICO DETECTADO:**
+- El VPS Bridge rechazó la consulta SQL
+- **CAUSA**: La consulta contiene comandos peligrosos o no permitidos
+- **SOLUCIÓN**: Usar solo comandos seguros: SELECT, SHOW, DESCRIBE, EXPLAIN, WITH
+
+**❌ COMANDOS PROHIBIDOS:**
+- DROP, DELETE, TRUNCATE, CREATE, ALTER, INSERT, UPDATE
+
+**✅ COMANDOS PERMITIDOS:**
+- SELECT (con subconsultas, funciones, JOINs)
+- SHOW, DESCRIBE, EXPLAIN
+- WITH (CTEs)
+
+**✅ EJEMPLOS CORRECTOS:**
+SELECT f.FM_DENO, fr.C0, fr.C1, fr.C2 FROM familias f JOIN familias_fm_rngt fr ON f.id = fr.id WHERE f.FM_DENO LIKE '%berenjena%';
+` : ''}
 
 ## 🧠 RAZONAMIENTO INTELIGENTE OBLIGATORIO:
 
@@ -3211,19 +3232,35 @@ ${resultados ? `${resultados.length} filas` : 'Sin resultados'}
 - ¿Son campos que no existen?
 
 ### PASO 3: ESTRATEGIA DE CORRECCIÓN INTELIGENTE
+- **Error 400 "Solo se permiten consultas SELECT"**: 🚨 CRÍTICO - El VPS Bridge rechazó la consulta
+  - **CAUSA**: La consulta contiene elementos no permitidos
+  - **SOLUCIÓN**: Usar SOLO SELECT básico, SIN subconsultas, SIN funciones complejas
+  - **FORMATO**: SELECT campo FROM tabla WHERE condición LIMIT 10;
 - **Error ER_SUBQUERY_NO_1_ROW**: Evitar subconsultas, usar JOINs directos
-- **Error 400 "Solo se permiten consultas SELECT"**: El VPS Bridge solo permite SELECT, verificar sintaxis
 - **Error 500**: Simplificar la consulta, evitar subconsultas complejas
 - **Sin resultados**: Ampliar filtros (ej: "lechuga romana" → "lechuga")
-- **Si busca un artículo específico** → buscar en ARTICULOS primero, luego obtener su familia (AR_FAM)
-- **Si busca una familia** → buscar en FAMILIAS primero, luego buscar tarifas
-- **Si busca tarifas** → relacionar ARTICULOS → FAMILIAS → TARIFAS paso a paso
 
 ### 🚨 REGLAS DEL VPS BRIDGE:
-- **SOLO SELECT**: No se permiten INSERT, UPDATE, DELETE
-- **SIN SUBCONSULTAS**: Evitar subconsultas complejas
-- **SIN FUNCIONES COMPLEJAS**: Usar funciones básicas de MySQL
-- **SIN PROCEDIMIENTOS**: Solo consultas SELECT simples
+- **COMANDOS PERMITIDOS**: SELECT, SHOW, DESCRIBE, EXPLAIN, WITH
+- **COMANDOS PROHIBIDOS**: DROP, DELETE, TRUNCATE, CREATE, ALTER, INSERT, UPDATE
+- **SUBCONSULTAS**: Permitidas en consultas SELECT
+- **FUNCIONES**: Permitidas (UPPER, LOWER, COALESCE, etc.)
+- **JOINs**: Permitidos
+- **FORMATO FLEXIBLE**: Puedes usar consultas más complejas
+
+### 🔧 EJEMPLOS DE CONSULTAS CORRECTAS:
+- ✅ SELECT AR_FAM FROM articulos WHERE AR_DENO LIKE '%berenjena%' LIMIT 10;
+- ✅ SELECT f.FM_DENO, fr.C0, fr.C1, fr.C2 FROM familias f JOIN familias_fm_rngt fr ON f.id = fr.id WHERE f.FM_DENO LIKE '%berenjena%';
+- ✅ SELECT * FROM articulos WHERE AR_DENO = (SELECT AR_DENO FROM articulos WHERE AR_DENO LIKE '%berenjena%' LIMIT 1);
+- ✅ SELECT UPPER(AR_DENO) AS nombre_mayuscula FROM articulos WHERE AR_DENO LIKE '%berenjena%';
+- ✅ SHOW TABLES LIKE '%familia%';
+- ✅ DESCRIBE articulos;
+
+### ❌ EJEMPLOS DE CONSULTAS INCORRECTAS:
+- ❌ DROP TABLE articulos;
+- ❌ DELETE FROM articulos WHERE AR_DENO LIKE '%berenjena%';
+- ❌ INSERT INTO articulos (AR_DENO) VALUES ('nueva berenjena');
+- ❌ UPDATE articulos SET AR_DENO = 'berenjena modificada';
 
 ### PASO 4: GENERA SOLUCIÓN INTELIGENTE
 - Usa SOLO tablas y campos que existan
