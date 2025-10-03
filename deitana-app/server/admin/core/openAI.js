@@ -3182,30 +3182,48 @@ async function analizarYCorregirSQL(sqlOriginal, error, resultados, openaiClient
 SQL ORIGINAL:
 ${sqlOriginal}
 
-ERROR O PROBLEMA:
+ERROR ESPECÍFICO:
 ${error || 'No arrojó resultados'}
 
 RESULTADOS OBTENIDOS:
 ${resultados ? `${resultados.length} filas` : 'Sin resultados'}
 
+## 🔍 ANÁLISIS DEL ERROR:
+- **Tipo de error**: ${error ? (error.includes('500') ? 'Error del servidor' : error.includes('400') ? 'Error de sintaxis/validación' : error.includes('ER_') ? 'Error de base de datos' : 'Error desconocido') : 'Sin resultados'}
+- **Código de error**: ${error ? error.split(' ')[0] : 'N/A'}
+- **Descripción**: ${error || 'La consulta no devolvió resultados'}
+
 ## 🧠 RAZONAMIENTO INTELIGENTE OBLIGATORIO:
 
-### PASO 1: ANALIZA EL ERROR
-- ¿Qué tipo de error es?
-- ¿Es un problema de sintaxis, lógica o datos?
-- ¿Por qué no encontró resultados?
+### PASO 1: ANALIZA EL ERROR ESPECÍFICO
+- **Error 500**: Problema del servidor, posible consulta compleja o subconsulta problemática
+- **Error 400**: Error de sintaxis, validación o consulta no permitida
+- **Error ER_SUBQUERY_NO_1_ROW**: La subconsulta no devuelve exactamente 1 fila
+- **Error ER_BAD_FIELD_ERROR**: Campo no existe en la tabla
+- **Error ER_NO_SUCH_TABLE**: Tabla no existe
+- **Sin resultados**: Filtro muy específico o datos no existen
 
-### PASO 2: IDENTIFICA EL PROBLEMA
-- ¿La tabla existe?
-- ¿Los campos son correctos?
-- ¿La relación entre tablas es válida?
-- ¿El filtro es muy específico?
+### PASO 2: IDENTIFICA EL PROBLEMA ESPECÍFICO
+- ¿Es un error de sintaxis SQL?
+- ¿Es un problema de relación entre tablas?
+- ¿Es un filtro muy específico?
+- ¿Es una subconsulta problemática?
+- ¿Son campos que no existen?
 
 ### PASO 3: ESTRATEGIA DE CORRECCIÓN INTELIGENTE
+- **Error ER_SUBQUERY_NO_1_ROW**: Evitar subconsultas, usar JOINs directos
+- **Error 400 "Solo se permiten consultas SELECT"**: El VPS Bridge solo permite SELECT, verificar sintaxis
+- **Error 500**: Simplificar la consulta, evitar subconsultas complejas
+- **Sin resultados**: Ampliar filtros (ej: "lechuga romana" → "lechuga")
 - **Si busca un artículo específico** → buscar en ARTICULOS primero, luego obtener su familia (AR_FAM)
 - **Si busca una familia** → buscar en FAMILIAS primero, luego buscar tarifas
 - **Si busca tarifas** → relacionar ARTICULOS → FAMILIAS → TARIFAS paso a paso
-- **Si el filtro es muy específico** → usar filtros más amplios (ej: "lechuga romana" → "lechuga")
+
+### 🚨 REGLAS DEL VPS BRIDGE:
+- **SOLO SELECT**: No se permiten INSERT, UPDATE, DELETE
+- **SIN SUBCONSULTAS**: Evitar subconsultas complejas
+- **SIN FUNCIONES COMPLEJAS**: Usar funciones básicas de MySQL
+- **SIN PROCEDIMIENTOS**: Solo consultas SELECT simples
 
 ### PASO 4: GENERA SOLUCIÓN INTELIGENTE
 - Usa SOLO tablas y campos que existan
@@ -3291,14 +3309,26 @@ async function ejecutarSQLConRetry(sqlOriginal, dbBridge, openaiClient, maxInten
                 console.log('🧠 [RAZONAMIENTO-IA] Analizando por qué falló la consulta...');
                 console.log('🧠 [RAZONAMIENTO-IA] Consulta original:', sqlActual);
                 console.log('🧠 [RAZONAMIENTO-IA] Resultados obtenidos:', resultados.length, 'filas');
+                console.log('🧠 [RAZONAMIENTO-IA] Error específico:', error);
                 console.log('🧠 [RAZONAMIENTO-IA] Pensando en alternativas...');
                 
-                const correccion = await analizarYCorregirSQL(sqlActual, 'Sin resultados', resultados, openaiClient);
+                const correccion = await analizarYCorregirSQL(sqlActual, error || 'Sin resultados', resultados, openaiClient);
                 
                 if (correccion.tieneCorreccion) {
                     console.log('🔧 [RETRY-LOGIC] Aplicando corrección automática...');
                     console.log('🧠 [RAZONAMIENTO-IA] Corrección aplicada:', correccion.sqlCorregido);
                     console.log('🧠 [RAZONAMIENTO-IA] Explicación:', correccion.explicacion);
+                    
+                    // 🧠 MOSTRAR THINKING DEL INTENTO
+                    console.log(`🧠 ==========================================`);
+                    console.log(`🧠 [THINKING-${intento + 1}] ANÁLISIS DEL FALLO`);
+                    console.log(`🧠 ==========================================`);
+                    console.log(`🧠 [THINKING-${intento + 1}] Fallé en el intento anterior.`);
+                    console.log(`🧠 [THINKING-${intento + 1}] Error específico: ${error}`);
+                    console.log(`🧠 [THINKING-${intento + 1}] Mi análisis: ${correccion.explicacion}`);
+                    console.log(`🧠 [THINKING-${intento + 1}] Nueva estrategia: ${correccion.sqlCorregido}`);
+                    console.log(`🧠 ==========================================`);
+                    
                     sqlActual = correccion.sqlCorregido;
                     continue;
                 }
@@ -3416,6 +3446,15 @@ async function razonamientoInteligenteContinuo(mensajeOriginal, sqlOriginal, res
             console.log(`🔄 [RAZONAMIENTO-CONTINUO] Intentando búsqueda alternativa ${i + 1}: ${busqueda.tabla}`);
             console.log(`🧠 [RAZONAMIENTO-CONTINUO] Razonamiento: ${busqueda.razon}`);
             
+            // 🧠 MOSTRAR THINKING DE LA ALTERNATIVA
+            console.log(`🧠 ==========================================`);
+            console.log(`🧠 [THINKING-ALTERNATIVA-${i + 1}] PROBANDO NUEVA ESTRATEGIA`);
+            console.log(`🧠 ==========================================`);
+            console.log(`🧠 [THINKING-ALTERNATIVA-${i + 1}] Tabla: ${busqueda.tabla}`);
+            console.log(`🧠 [THINKING-ALTERNATIVA-${i + 1}] Razonamiento: ${busqueda.razon}`);
+            console.log(`🧠 [THINKING-ALTERNATIVA-${i + 1}] SQL: ${busqueda.sql}`);
+            console.log(`🧠 ==========================================`);
+            
             try {
                 const retryResult = await ejecutarSQLConRetry(busqueda.sql, dbBridge, openaiClient, 2);
                 
@@ -3480,6 +3519,8 @@ function analizarTipoBusqueda(sql) {
  */
 async function generarBusquedasAlternativas(mensajeOriginal, tipoBusqueda, openaiClient) {
     console.log('🔄 [BUSQUEDAS-ALTERNATIVAS] Generando búsquedas alternativas usando mapaERP real...');
+    console.log('🧠 [THINKING-ALTERNATIVAS] Analizando por qué fallaron todas las consultas...');
+    console.log('🧠 [THINKING-ALTERNATIVAS] Necesito un enfoque diferente...');
     
     try {
         // Obtener el mapaERP real
@@ -3597,6 +3638,16 @@ Responde SOLO con el formato anterior:`;
         }
         
         console.log('✅ [BUSQUEDAS-ALTERNATIVAS] Alternativas parseadas:', alternativas.length);
+        
+        // 🧠 MOSTRAR THINKING DE ALTERNATIVAS
+        console.log('🧠 ==========================================');
+        console.log('🧠 [THINKING-ALTERNATIVAS] ESTRATEGIA NUEVA');
+        console.log('🧠 ==========================================');
+        console.log('🧠 [THINKING-ALTERNATIVAS] Fallé en todas las consultas anteriores');
+        console.log('🧠 [THINKING-ALTERNATIVAS] Generé', alternativas.length, 'alternativas inteligentes');
+        console.log('🧠 [THINKING-ALTERNATIVAS] Voy a probar cada una sistemáticamente');
+        console.log('🧠 ==========================================');
+        
         return alternativas;
         
     } catch (error) {
