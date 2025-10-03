@@ -506,8 +506,10 @@ async function construirPromptInteligente(mensaje, mapaERP, openaiClient, contex
     // 5. RAG INTELIGENTE Y SELECTIVO (OPTIMIZADO)
     let contextoRAG = '';
     
-    // ⚡ RAG SELECTIVO - Solo cuando es necesario
-    if (intencion.tipo === 'conocimiento_general' || intencion.tipo === 'conversacion') {
+    // 🚨 RAG DESHABILITADO PARA CONSULTAS SQL - EVITAR ALUCINACIONES
+    if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
+        console.log('🚫 [RAG] DESHABILITADO para consultas SQL - priorizando datos reales');
+    } else if (intencion.tipo === 'conocimiento_general' || intencion.tipo === 'conversacion') {
         console.log('⚡ [RAG] Saltando RAG para consulta de conocimiento general/conversación');
     } else {
         try {
@@ -559,10 +561,13 @@ Consulta: ${mensaje}`;
         promptFinal = `${promptGlobalConFecha}\n` + instruccionesNaturales;
         
         // 9. Si encontramos información de la empresa, ponerla AL PRINCIPIO (como información importante)
-        if (contextoRAG) {
+        // 🚨 NO INCLUIR RAG PARA CONSULTAS SQL - EVITAR ALUCINACIONES
+        if (contextoRAG && intencion.tipo !== 'sql' && intencion.tipo !== 'rag_sql') {
             console.log('🎯 [RAG] PRIORIZANDO contexto empresarial al inicio');
             // Reconstruir el prompt poniendo la información de la empresa al principio
             promptFinal = `${promptGlobalConFecha}\n\nCONOCIMIENTO EMPRESARIAL ESPECÍFICO:\n${contextoRAG}\n\nINSTRUCCIÓN: Debes usar siempre la información del conocimiento empresarial específico proporcionado arriba. Si la información está disponible en ese contexto, úsala. No des respuestas genéricas cuando tengas información específica de la empresa.\n\n` + instruccionesNaturales;
+        } else if (intencion.tipo === 'sql' || intencion.tipo === 'rag_sql') {
+            console.log('🚫 [RAG] NO INCLUYENDO RAG para consultas SQL - priorizando datos reales');
         }
     }
     
@@ -618,7 +623,8 @@ Consulta: ${mensaje}`;
             optimizado: true,
             modeloUnico: 'gpt-4o',
             mapaERPIncluido: true, // SIEMPRE incluido
-            ragIncluido: true // SIEMPRE incluido para evitar alucinaciones
+            ragIncluido: intencion.tipo !== 'sql' && intencion.tipo !== 'rag_sql', // Deshabilitado para SQL
+            ragDeshabilitadoParaSQL: intencion.tipo === 'sql' || intencion.tipo === 'rag_sql' // Nueva métrica
         }
     };
 }
@@ -3171,7 +3177,7 @@ async function analizarYCorregirSQL(sqlOriginal, error, resultados, openaiClient
     console.log('🔧 [SELF-HEALING] Resultados:', resultados ? resultados.length : 0, 'filas');
     
     try {
-        const promptCorreccion = `Analiza esta consulta SQL que falló o no arrojó resultados y sugiere una corrección:
+        const promptCorreccion = `Analiza esta consulta SQL que falló y sugiere una corrección con RAZONAMIENTO INTELIGENTE:
 
 SQL ORIGINAL:
 ${sqlOriginal}
@@ -3182,15 +3188,37 @@ ${error || 'No arrojó resultados'}
 RESULTADOS OBTENIDOS:
 ${resultados ? `${resultados.length} filas` : 'Sin resultados'}
 
-TAREAS:
-1. IDENTIFICA el problema específico
-2. SUGIERE una consulta SQL corregida
-3. EXPLICA qué cambió y por qué
+## 🧠 RAZONAMIENTO INTELIGENTE OBLIGATORIO:
+
+### PASO 1: ANALIZA EL ERROR
+- ¿Qué tipo de error es?
+- ¿Es un problema de sintaxis, lógica o datos?
+- ¿Por qué no encontró resultados?
+
+### PASO 2: IDENTIFICA EL PROBLEMA
+- ¿La tabla existe?
+- ¿Los campos son correctos?
+- ¿La relación entre tablas es válida?
+- ¿El filtro es muy específico?
+
+### PASO 3: ESTRATEGIA DE CORRECCIÓN INTELIGENTE
+- **Si busca un artículo específico** → buscar en ARTICULOS primero, luego obtener su familia (AR_FAM)
+- **Si busca una familia** → buscar en FAMILIAS primero, luego buscar tarifas
+- **Si busca tarifas** → relacionar ARTICULOS → FAMILIAS → TARIFAS paso a paso
+- **Si el filtro es muy específico** → usar filtros más amplios (ej: "lechuga romana" → "lechuga")
+
+### PASO 4: GENERA SOLUCIÓN INTELIGENTE
+- Usa SOLO tablas y campos que existan
+- Genera SQL que empiece con SELECT
+- **CONECTAR LOS DATOS**: artículo → familia → tarifas
+- Usa JOINs simples y directos
+- Aplica lógica de negocio real
 
 FORMATO DE RESPUESTA:
-PROBLEMA: [Descripción del problema]
-SOLUCION: [SQL corregido]
-EXPLICACION: [Por qué se hizo el cambio]
+PROBLEMA: [Descripción detallada del problema y por qué falló]
+RAZONAMIENTO: [Explicación paso a paso de mi pensamiento]
+SOLUCION: [SQL corregido que empiece con SELECT]
+EXPLICACION: [Explicación paso a paso de por qué esta corrección debería funcionar]
 
 Responde SOLO con el formato anterior, sin texto adicional.`;
 
@@ -3258,10 +3286,19 @@ async function ejecutarSQLConRetry(sqlOriginal, dbBridge, openaiClient, maxInten
             // Si no hay resultados, intentar corregir
             if (!tieneResultados && intento < maxIntentos) {
                 console.log('⚠️ [RETRY-LOGIC] Sin resultados, intentando corrección...');
+                
+                // 🧠 MOSTRAR RAZONAMIENTO DE LA IA
+                console.log('🧠 [RAZONAMIENTO-IA] Analizando por qué falló la consulta...');
+                console.log('🧠 [RAZONAMIENTO-IA] Consulta original:', sqlActual);
+                console.log('🧠 [RAZONAMIENTO-IA] Resultados obtenidos:', resultados.length, 'filas');
+                console.log('🧠 [RAZONAMIENTO-IA] Pensando en alternativas...');
+                
                 const correccion = await analizarYCorregirSQL(sqlActual, 'Sin resultados', resultados, openaiClient);
                 
                 if (correccion.tieneCorreccion) {
                     console.log('🔧 [RETRY-LOGIC] Aplicando corrección automática...');
+                    console.log('🧠 [RAZONAMIENTO-IA] Corrección aplicada:', correccion.sqlCorregido);
+                    console.log('🧠 [RAZONAMIENTO-IA] Explicación:', correccion.explicacion);
                     sqlActual = correccion.sqlCorregido;
                     continue;
                 }
@@ -3465,7 +3502,7 @@ async function generarBusquedasAlternativas(mensajeOriginal, tipoBusqueda, opena
             }
         }
         
-        const promptAlternativas = `La consulta inicial no encontró resultados. Genera búsquedas alternativas usando el mapaERP real:
+        const promptAlternativas = `La consulta inicial no encontró resultados. Necesito que hagas un RAZONAMIENTO INTELIGENTE paso a paso:
 
 CONSULTA ORIGINAL:
 "${mensajeOriginal}"
@@ -3476,29 +3513,52 @@ BÚSQUEDA INICIAL FALLIDA:
 
 ${contextoMapaERP}
 
-INSTRUCCIONES:
-1. Analiza el mapaERP completo y encuentra tablas alternativas donde podría estar la información
-2. Usa SOLO tablas y campos que existan en el mapaERP
-3. Genera SQL correcto con los campos exactos del mapaERP
-4. Piensa en diferentes formas de registrar la misma información
-5. Considera variaciones en el nombre (abreviaciones, diferentes formatos)
-6. Si no está en una tabla, probablemente esté en otra tabla relacionada
+## 🧠 RAZONAMIENTO INTELIGENTE OBLIGATORIO:
 
-FORMATO DE RESPUESTA:
+### PASO 1: ANALIZA QUÉ BUSCÓ EL USUARIO
+- ¿Qué producto específico mencionó?
+- ¿Es un ARTÍCULO específico o una FAMILIA de productos?
+- ¿Qué información necesita exactamente?
+
+### PASO 2: IDENTIFICA EL PROBLEMA
+- ¿Por qué falló la consulta original?
+- ¿Está buscando en la tabla correcta?
+- ¿La relación entre tablas es correcta?
+
+### PASO 3: RAZONAMIENTO LÓGICO
+- Si busca un ARTÍCULO específico → debe ir a tabla ARTICULOS primero
+- Si busca una FAMILIA → debe ir a tabla FAMILIAS primero
+- Si busca TARIFAS → debe relacionar ARTICULOS → FAMILIAS → TARIFAS
+
+### PASO 4: ESTRATEGIA INTELIGENTE
+- Primero: Buscar el artículo/familia específico
+- Segundo: Obtener su ID o código
+- Tercero: Buscar información relacionada (tarifas, precios, etc.)
+- **CONECTAR LOS DATOS**: artículo → familia → tarifas
+- Usar filtros más amplios si es necesario (ej: "lechuga romana" → "lechuga")
+
+## 📋 GENERA 3 ALTERNATIVAS CON RAZONAMIENTO:
+
 ALTERNATIVA1:
 TABLA: [nombre exacto de tabla del mapaERP]
-RAZON: [por qué buscar aquí]
-SQL: [SQL exacto con campos del mapaERP]
+RAZON: [explicación lógica paso a paso de por qué esta tabla es la correcta]
+SQL: [consulta SQL que empiece con SELECT]
 
 ALTERNATIVA2:
 TABLA: [nombre exacto de tabla del mapaERP]
-RAZON: [por qué buscar aquí]
-SQL: [SQL exacto con campos del mapaERP]
+RAZON: [explicación lógica paso a paso de por qué esta tabla es la correcta]
+SQL: [consulta SQL que empiece con SELECT]
 
 ALTERNATIVA3:
 TABLA: [nombre exacto de tabla del mapaERP]
-RAZON: [por qué buscar aquí]
-SQL: [SQL exacto con campos del mapaERP]
+RAZON: [explicación lógica paso a paso de por qué esta tabla es la correcta]
+SQL: [consulta SQL que empiece con SELECT]
+
+## 🚨 REGLAS CRÍTICAS:
+- TODAS las consultas SQL DEBEN empezar con SELECT
+- NO uses subconsultas complejas que puedan fallar
+- RAZONA cada paso antes de generar la consulta
+- Si buscas "lechuga romana" → primero busca en ARTICULOS, luego en FAMILIAS
 
 Responde SOLO con el formato anterior:`;
 
