@@ -2780,8 +2780,11 @@ EJEMPLO DE RAZONAMIENTO:
 
 LUEGO: Basándote en el mapaERP, identifica QUÉ MÁS se puede consultar de esa tabla específica y ofrece opciones coherentes.
 
-MAPAERP COMPLETO DISPONIBLE:
-${JSON.stringify(mapaERP, null, 2)}
+CONOCIMIENTO ERP DISPONIBLE:
+- Usa los nombres humanos de los campos, NO los técnicos
+- Ejemplo: "Nombre del cliente" NO "CL_DENO"
+- Menciona las secciones del ERP: "Archivos → Generales → Clientes"
+- Explica dónde encontraste la información usando lenguaje humano
 
 🚨 OBLIGATORIO ABSOLUTO - ANÁLISIS EMPRESARIAL INTELIGENTE:
 
@@ -3825,34 +3828,30 @@ function construirContextoMapaERPCompleto(mapaERP) {
         return '';
     }
     
-
+    let contexto = '\n🏢 === CONOCIMIENTO COMPLETO DEL ERP SEMILLEROS DEITANA ===\n';
+    contexto += `\n📊 TOTAL DE SECCIONES DISPONIBLES: ${Object.keys(mapaERP).length}\n\n`;
     
-    let contexto = '\n=== ESTRUCTURA COMPLETA DE LA BASE DE DATOS ===\n';
-    contexto += `\nTOTAL DE TABLAS DISPONIBLES: ${Object.keys(mapaERP).length}\n\n`;
-    
-    // Incluir TODAS las tablas del mapaERP para que la IA las analice
-    Object.entries(mapaERP).forEach(([nombreTabla, infoTabla]) => {
-        contexto += `\n## 📊 TABLA: ${nombreTabla}\n`;
-        contexto += `Descripción: ${infoTabla.descripcion || 'Sin descripción'}\n`;
+    // Incluir TODAS las secciones del mapaERP con lenguaje humano
+    Object.entries(mapaERP).forEach(([nombreSeccion, infoSeccion]) => {
+        const aliasSeccion = infoSeccion.alias || nombreSeccion;
+        contexto += `\n## 📋 SECCIÓN: ${aliasSeccion}\n`;
+        contexto += `${infoSeccion.descripcion || 'Sin descripción'}\n`;
         
-        // Columnas disponibles
-        if (infoTabla.columnas) {
-            contexto += `\n### 📋 COLUMNAS:\n`;
-            Object.entries(infoTabla.columnas).forEach(([columna, descripcion]) => {
-                contexto += `- ${columna}: ${descripcion}\n`;
+        // Campos disponibles con nombres humanos
+        if (infoSeccion.columnas) {
+            contexto += `\n### 📝 CAMPOS DISPONIBLES:\n`;
+            Object.entries(infoSeccion.columnas).forEach(([campoTecnico, nombreHumano]) => {
+                contexto += `- ${nombreHumano} (${campoTecnico}): Campo técnico para consultas SQL\n`;
             });
         }
         
-        // Relaciones con otras tablas
-        if (infoTabla.tablas_relacionadas) {
-            contexto += `\n### 🔗 RELACIONES:\n`;
-            Object.entries(infoTabla.tablas_relacionadas).forEach(([tablaRelacionada, infoRelacion]) => {
-                contexto += `- ${tablaRelacionada}: ${infoRelacion.descripcion || 'Relación directa'}\n`;
+        // Relaciones con otras secciones
+        if (infoSeccion.relaciones) {
+            contexto += `\n### 🔗 CONEXIONES CON OTRAS SECCIONES:\n`;
+            Object.entries(infoSeccion.relaciones).forEach(([seccionRelacionada, infoRelacion]) => {
+                contexto += `- ${seccionRelacionada}: ${infoRelacion.descripcion || 'Conexión directa'}\n`;
                 if (infoRelacion.tipo) {
-                    contexto += `  Tipo: ${infoRelacion.tipo}\n`;
-                }
-                if (infoRelacion.campo_enlace_local && infoRelacion.campo_enlace_externo) {
-                    contexto += `  JOIN: ${nombreTabla}.${infoRelacion.campo_enlace_local} = ${tablaRelacionada}.${infoRelacion.campo_enlace_externo}\n`;
+                    contexto += `  Tipo de relación: ${infoRelacion.tipo}\n`;
                 }
             });
         }
@@ -3860,14 +3859,15 @@ function construirContextoMapaERPCompleto(mapaERP) {
         contexto += '\n';
     });
     
-    // Instrucciones para la IA
-    contexto += `\n### 🎯 INSTRUCCIONES PARA LA IA:\n`;
-    contexto += `- Analiza la consulta del usuario\n`;
-    contexto += `- Identifica qué tablas del mapaERP son relevantes\n`;
-    contexto += `- Usa las relaciones definidas para hacer JOINs correctos\n`;
-    contexto += `- NO inventes tablas que no estén en esta lista\n`;
-    contexto += `- Genera SQL usando EXACTAMENTE las columnas mostradas\n`;
-    contexto += `- Formato: <sql>SELECT columnas FROM tabla [JOIN otras_tablas] WHERE condiciones</sql>\n\n`;
+    // Instrucciones específicas para usar lenguaje humano
+    contexto += `\n### 🎯 INSTRUCCIONES CRÍTICAS PARA LA IA:\n`;
+    contexto += `- USA SIEMPRE los nombres humanos de los campos, NO los técnicos\n`;
+    contexto += `- Ejemplo: Di "Nombre del cliente" NO "CL_DENO"\n`;
+    contexto += `- Ejemplo: Di "Tarifa de precios" NO "CL_TARI"\n`;
+    contexto += `- MENCIONA las secciones del ERP: "Archivos → Generales → Clientes"\n`;
+    contexto += `- EXPLICA dónde buscas usando el lenguaje del ERP\n`;
+    contexto += `- Para SQL: Usa los campos técnicos entre paréntesis\n`;
+    contexto += `- Formato SQL: <sql>SELECT campo_tecnico FROM tabla WHERE condiciones</sql>\n\n`;
     
 
     return contexto;
@@ -3922,12 +3922,13 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
    - ⚡ NO digas "mirando los datos", "interesante", "puedo ayudarte" ANTES del <thinking>
    - ⚡ LA PRIMERA PALABRA de tu respuesta debe ser: <thinking>
    - **ANALIZA el mapaERP disponible** para entender la estructura de datos
-   - **USA las descripciones** de las columnas del mapaERP para explicar qué vas a buscar
+   - **USA las descripciones** de las secciones del ERP para explicar dónde vas a buscar
    - **CONECTA** tu razonamiento con la consulta SQL que vas a ejecutar
    - **EXPLICA** en lenguaje natural qué información específica necesita el usuario
-   - **MENCIÓN** exactamente qué datos vas a consultar usando el lenguaje del mapaERP
-   - **USA** las descripciones naturales de las columnas (ej: "denominaciones", "registro de clientes", "información de fincas")
-   - **NO menciones** nombres técnicos de tablas o columnas
+   - **MENCIÓN** exactamente qué datos vas a consultar usando nombres humanos de campos
+   - **USA** los nombres humanos de los campos (ej: "Nombre del cliente" NO "CL_DENO")
+   - **MENCIONA** las secciones del ERP (ej: "Archivos → Generales → Clientes")
+   - **NO menciones** nombres técnicos de campos en el thinking
    - **USA** términos empresariales naturales y específicos del mapaERP
    - **SEA HONESTO** sobre lo que realmente vas a consultar
    - Cierra con: </thinking>
@@ -3938,10 +3939,11 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
    - JAMÁS inventes datos falsos
 
 **IMPORTANTE - USO DEL MAPAERP:**
-- El mapaERP contiene 800+ tablas con descripciones de columnas
-- USA las descripciones de las columnas para explicar qué vas a buscar
+- El mapaERP contiene 800+ secciones con descripciones humanas de campos
+- USA los nombres humanos de los campos para explicar qué vas a buscar
+- MENCIONA las secciones del ERP (Archivos → Generales → Clientes)
 - CONECTA el thinking con el SQL real que vas a ejecutar
-- NO uses ejemplos genéricos, usa la información real del mapaERP
+- NO uses nombres técnicos en el thinking, usa los nombres humanos
 - El thinking debe reflejar EXACTAMENTE lo que hace el SQL
 
 **ESPECIAL PARA CONSULTAS DE INVERNADEROS:**
