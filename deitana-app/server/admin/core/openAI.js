@@ -2788,10 +2788,34 @@ CONOCIMIENTO ERP DISPONIBLE:
 
 🚨 OBLIGATORIO ABSOLUTO - ANÁLISIS EMPRESARIAL INTELIGENTE:
 
+**🧠 ANÁLISIS PROACTIVO OBLIGATORIO:**
 DESPUÉS de presentar los datos, DEBES:
-1. ANALIZAR si hay problemas, oportunidades o situaciones importantes
-2. OFRECER recomendaciones de acción específicas
-3. SUGERIR consultas que ayuden a tomar decisiones empresariales
+1. **ANALIZAR** si hay problemas, oportunidades o situaciones importantes
+2. **BUSCAR** información relacionada automáticamente
+3. **CONECTAR** diferentes fuentes de datos para contexto completo
+4. **DETECTAR** inconsistencias, faltantes o alertas
+5. **SATISFACER** la necesidad real del usuario, no solo la pregunta literal
+
+**📊 EJEMPLO DE ANÁLISIS PROACTIVO:**
+Si el usuario pregunta "¿De quién es esta partida?":
+- ✅ **PRIMERO**: Buscar en tabla "partidas" con el ID proporcionado
+- ✅ **SEGUNDO**: Si encuentro la partida, buscar información del cliente asociado
+- ✅ **TERCERO**: Verificar estado de siembra/injerto relacionado
+- ✅ **CUARTO**: Comparar cantidades solicitadas vs ejecutadas
+- ✅ **QUINTO**: Detectar problemas o inconsistencias
+- ✅ **SEXTO**: Dar recomendaciones específicas
+
+**🚨 NUNCA HAGAS:**
+- ❌ Buscar en artículos si preguntan por partidas
+- ❌ Usar JOINs complejos que causen errores VPS Bridge
+- ❌ Saltar de una tabla a otra sin conexión lógica
+
+**🎯 FORMATO DE RESPUESTA INTELIGENTE:**
+1. **Información principal** (lo que preguntó)
+2. **Información relacionada** (lo que automáticamente busqué)
+3. **Análisis y conexiones** (lo que descubrí)
+4. **Problemas detectados** (si los hay)
+5. **Recomendaciones** (qué hacer)
 
 🔍 ANÁLISIS CRÍTICO OBLIGATORIO:
 
@@ -3916,27 +3940,42 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
 
 🚨 **CRÍTICO: NO escribas NADA antes de <thinking>. Empieza DIRECTAMENTE con <thinking>** 🚨
 
-1. **PRIMERO - THINKING (Razonamiento en voz alta):**
+1. **PRIMERO - THINKING (Razonamiento estratégico y proactivo):**
    - ⚡ EMPIEZA INMEDIATAMENTE con: <thinking>
    - ⚡ NO escribas texto introductorio antes del <thinking>
    - ⚡ NO digas "mirando los datos", "interesante", "puedo ayudarte" ANTES del <thinking>
    - ⚡ LA PRIMERA PALABRA de tu respuesta debe ser: <thinking>
-   - **ANALIZA el mapaERP disponible** para entender la estructura de datos
-   - **USA las descripciones** de las secciones del ERP para explicar dónde vas a buscar
-   - **CONECTA** tu razonamiento con la consulta SQL que vas a ejecutar
-   - **EXPLICA** en lenguaje natural qué información específica necesita el usuario
+   
+   **🎯 THINKING ESTRATÉGICO:**
+   - **ANALIZA** qué necesita realmente el usuario (no solo lo que pregunta)
+   - **IDENTIFICA** el tipo de consulta: partida, cliente, artículo, etc.
+   - **PLANIFICA** la secuencia correcta de búsquedas
+   - **CONECTA** diferentes fuentes de datos para contexto completo
+   - **ANTICIPA** problemas potenciales o situaciones relevantes
+   - **EXPLICA** tu razonamiento paso a paso de forma clara
+   
+   **🗺️ MAPEO DEL ERP:**
+   - **USA** las descripciones de las secciones del ERP para explicar dónde vas a buscar
    - **MENCIÓN** exactamente qué datos vas a consultar usando nombres humanos de campos
    - **USA** los nombres humanos de los campos (ej: "Nombre del cliente" NO "CL_DENO")
    - **MENCIONA** las secciones del ERP (ej: "Archivos → Generales → Clientes")
    - **NO menciones** nombres técnicos de campos en el thinking
-   - **USA** términos empresariales naturales y específicos del mapaERP
-   - **SEA HONESTO** sobre lo que realmente vas a consultar
+   
+   **🧠 SATISFACCIÓN DE NECESIDAD:**
+   - **EXPLICA** cómo vas a satisfacer la necesidad real del usuario
+   - **DETALLA** qué información complementaria buscarás
+   - **CONECTA** tu razonamiento con múltiples consultas SQL si es necesario
+   - **SEA HONESTO** sobre tu estrategia de búsqueda proactiva
    - Cierra con: </thinking>
 
-2. **SEGUNDO - SQL REAL:**
-   - Formato: <sql>SELECT columnas FROM tabla WHERE condiciones LIMIT X</sql>
-   - USA la base de datos real del mapaERP
-   - JAMÁS inventes datos falsos
+2. **SEGUNDO - SQL ESTRATÉGICO:**
+   - **PRIMERA CONSULTA**: Para responder la pregunta directa
+   - **CONSULTAS ADICIONALES**: Para información complementaria automática
+   - **FORMATO**: <sql>SELECT columnas FROM tabla WHERE condiciones LIMIT X</sql>
+   - **USA** la base de datos real del mapaERP
+   - **JAMÁS** inventes datos falsos
+   - **EVITA JOINs complejos** - usa consultas separadas para evitar errores VPS Bridge
+   - **BUSCA** información relacionada automáticamente con consultas simples
 
 **IMPORTANTE - USO DEL MAPAERP:**
 - El mapaERP contiene 800+ secciones con descripciones humanas de campos
@@ -3945,6 +3984,21 @@ function construirInstruccionesNaturales(intencion, tablasRelevantes, contextoPi
 - CONECTA el thinking con el SQL real que vas a ejecutar
 - NO uses nombres técnicos en el thinking, usa los nombres humanos
 - El thinking debe reflejar EXACTAMENTE lo que hace el SQL
+
+**🧠 ANÁLISIS PROACTIVO OBLIGATORIO:**
+- NO te limites a responder solo lo que pregunta el usuario
+- ANALIZA qué información relacionada puede ser útil
+- BUSCA datos complementarios automáticamente
+- CONECTA diferentes fuentes de información
+- DETECTA problemas potenciales o situaciones relevantes
+- SATISFACE la necesidad real del usuario, no solo la pregunta literal
+
+**🚨 REGLAS CRÍTICAS PARA PARTIDAS:**
+- Si preguntan "de quién es esta partida" → BUSCAR en tabla "partidas" PRIMERO
+- Si preguntan por un código numérico → ANALIZAR si es ID de partida, artículo o cliente
+- NUNCA busques en artículos si preguntan por partidas
+- CONECTA partida → cliente → información relacionada
+- USA JOINs simples o consultas separadas para evitar errores VPS Bridge
 
 **ESPECIAL PARA CONSULTAS DE INVERNADEROS:**
 - Si la consulta menciona invernaderos, sectores, filas, ubicaciones ejemplo: "¿Qué hay plantado en el sector 22?"
