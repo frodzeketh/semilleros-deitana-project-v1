@@ -2270,7 +2270,6 @@ const Home = () => {
                             <AgentTrace steps={msg.trace} />
                           ) : (
                             <div className={msg.isThinking ? "thinking-message" : ""}>
-                              {console.log("🔍 [FRONTEND] Contenido que recibe ReactMarkdown:", msg.text)}
                               <ReactMarkdown
                               remarkPlugins={[remarkGfm, remarkMath, remarkEmoji]}
                               rehypePlugins={[

@@ -7,7 +7,6 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const { processQueryStream } = require('./admin/core/openAI');
-const { processQuery: processQueryEmployee } = require('./employee/openAIEmployee');
 const { verifyToken } = require('./middleware/authMiddleware');
 const chatManager = require('./utils/chatManager');
 const langfuseRoutes = require('./routes/langfuseMetrics');
@@ -96,22 +95,9 @@ app.use('/api/transcribe', transcribeRoutes);
 // Rutas de asistente de voz multimodal
 app.use('/api/voice-assistant', voiceAssistantRoutes);
 
-// Middleware para verificar si es empleado
-const isEmployee = (req, res, next) => {
-    if (!req.user.isAdmin) {
-        next();
-    } else {
-        res.status(403).json({ error: 'Acceso denegado. Esta ruta es solo para empleados.' });
-    }
-};
-
-// Middleware para verificar si es admin
+// Middleware para verificar si es admin (todos los usuarios son admin ahora)
 const isAdmin = (req, res, next) => {
-    if (req.user.isAdmin) {
-        next();
-    } else {
-        res.status(403).json({ error: 'Acceso denegado. Esta ruta es solo para administradores.' });
-    }
+    next(); // Todos los usuarios autenticados tienen acceso
 };
 
 // Ruta de prueba
@@ -200,8 +186,10 @@ app.post('/chat/new', verifyToken, async (req, res) => {
         throw new Error(streamResult.error || 'Error en el procesamiento');
       }
     } else {
-      console.log('🔍 [FLUJO] Usando processQueryEmployee (NO-STREAMING)');
-      response = await processQueryEmployee({ message, userId: req.user.uid });
+      console.log('🔍 [FLUJO] Usando processQueryStream (STREAMING)');
+      // Usar processQueryStream para todos los usuarios
+      await processQueryStream({ message, response: res });
+      return; // processQueryStream maneja la respuesta
       
       // Guardar respuesta del asistente
       await chatManager.addMessageToConversation(req.user.uid, conversationId, {
@@ -278,8 +266,10 @@ app.post('/chat', verifyToken, async (req, res) => {
                 throw new Error(streamResult.error || 'Error en el procesamiento');
             }
         } else {
-            console.log('🔍 [FLUJO] Usando processQueryEmployee (NO-STREAMING) - Ruta 2');
-            response = await processQueryEmployee({ message, userId, conversationId: currentConversationId });
+            console.log('🔍 [FLUJO] Usando processQueryStream (STREAMING) - Ruta 2');
+            // Usar processQueryStream para todos los usuarios
+            await processQueryStream({ message, response: res });
+            return; // processQueryStream maneja la respuesta
             
             // Agregar respuesta del asistente
             await chatManager.addMessageToConversation(userId, currentConversationId, {

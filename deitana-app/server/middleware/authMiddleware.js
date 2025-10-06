@@ -1,5 +1,5 @@
 const admin = require('../firebase-admin');
-const { adminEmails } = require('../adminEmails');
+const { isAdmin: checkIsAdmin } = require('../adminEmails');
 
 const verifyToken = async (req, res, next) => {
     try {
@@ -20,7 +20,7 @@ const verifyToken = async (req, res, next) => {
         req.user = {
             uid: decodedToken.uid,
             email: decodedToken.email,
-            isAdmin: adminEmails.includes(decodedToken.email)
+            isAdmin: checkIsAdmin(decodedToken.email)
         };
 
         // console.log('Usuario autenticado:', req.user); // Para debugging
@@ -43,20 +43,7 @@ const isAdmin = async (req, res, next) => {
     }
 };
 
-const isEmployee = async (req, res, next) => {
-    try {
-        if (req.user.isAdmin) {
-            return res.status(403).json({ error: 'Los administradores no pueden acceder a las funcionalidades de empleado.' });
-        }
-        next();
-    } catch (error) {
-        console.error('Error checking employee status:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
-    }
-};
-
 module.exports = {
     verifyToken,
-    isAdmin,
-    isEmployee
+    isAdmin
 }; 

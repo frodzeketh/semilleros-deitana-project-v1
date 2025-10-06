@@ -1,55 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Package, User, Calendar, TrendingDown, Clock, AlertTriangle, Download } from 'lucide-react';
+import { Search, AlertTriangle, Download, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../components/Authenticator/firebase';
-import * as XLSX from 'xlsx';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
+// import * as XLSX from 'xlsx'; // Comentado - no se usa actualmente
+import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 
 const API_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3001"
     : "https://semilleros-deitana-project-v1-production.up.railway.app";
 
-// Datos de ejemplo para vendedores
-const vendedoresData = [
-  {
-    id: "VEN-001",
-    codigoVendedor: "001",
-    nombreCompleto: "Juan Pérez García",
-    domicilio: "Calle Mayor, 123",
-    poblacion: "Madrid",
-    provincia: "Madrid",
-    numeroTecnico: "TEC001"
-  },
-  {
-    id: "VEN-002",
-    codigoVendedor: "002",
-    nombreCompleto: "María López Martínez",
-    domicilio: "Avenida Diagonal, 456",
-    poblacion: "Barcelona",
-    provincia: "Barcelona",
-    numeroTecnico: "TEC002"
-  },
-  {
-    id: "VEN-003",
-    codigoVendedor: "003",
-    nombreCompleto: "Carlos Rodríguez Sánchez",
-    domicilio: "Paseo de la Castellana, 789",
-    poblacion: "Valencia",
-    provincia: "Valencia",
-    numeroTecnico: "TEC003"
-  },
-  {
-    id: "VEN-004",
-    codigoVendedor: "004",
-    nombreCompleto: "Ana Martín Fernández",
-    domicilio: "Calle San Juan, 321",
-    poblacion: "Sevilla",
-    provincia: "Sevilla",
-    numeroTecnico: "TEC004"
-  }
-];
+// Datos de ejemplo para vendedores (comentados - se obtienen del servidor)
+// const vendedoresData = [
+//   {
+//     id: "VEN-001",
+//     codigoVendedor: "001",
+//     nombreCompleto: "Juan Pérez García",
+//     domicilio: "Calle Mayor, 123",
+//     poblacion: "Madrid",
+//     provincia: "Madrid",
+//     numeroTecnico: "TEC001"
+//   },
+//   // ... más datos de ejemplo
+// ];
 
 const PartidasRiesgo = () => {
   const navigate = useNavigate();
@@ -59,7 +33,7 @@ const PartidasRiesgo = () => {
   const [error, setError] = useState(null);
   
   // Función para obtener datos de vendedores
-  const fetchVendedoresData = async () => {
+  const fetchVendedoresData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -93,17 +67,17 @@ const PartidasRiesgo = () => {
     } catch (error) {
       console.error('❌ [FRONTEND] Error al cargar datos de vendedores:', error);
       setError(error.message);
-      // En caso de error, usar datos de ejemplo
-      setVendedoresData(vendedoresData);
+      // En caso de error, usar array vacío (los datos se obtienen del servidor)
+      setVendedoresData([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   
   // Cargar datos al montar el componente
   useEffect(() => {
     fetchVendedoresData();
-  }, []);
+  }, [fetchVendedoresData]);
 
   // Función para exportar datos a Word con formato estructurado
   const exportToWord = async () => {
