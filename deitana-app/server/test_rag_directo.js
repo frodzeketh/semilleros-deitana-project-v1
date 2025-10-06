@@ -1,34 +1,28 @@
 // =====================================
-// TEST DEL NUEVO SISTEMA RAG
+// TEST DIRECTO DEL RAG
 // =====================================
 
-const ragNuevo = require('./rag_nuevo');
+// Cargar variables de entorno
+require('dotenv').config();
 
-async function testRagNuevo() {
-    console.log('🧪 [TEST] Probando nuevo sistema RAG...\n');
+const ragInteligente = require('./admin/core/ragInteligente');
+
+async function testRagDirecto() {
+    console.log('🧪 [TEST DIRECTO] Probando sistema RAG...\n');
     
     try {
-        // Verificar estado del índice
-        console.log('📊 [TEST] Verificando estado del índice...');
-        await ragNuevo.verificarIndice();
-        
-        // Probar búsquedas
+        // Consultas específicas sobre teorías de plantas grandes
         const consultas = [
-            "¿Cuál es la función del Cabezal B en los invernaderos?",
-            "¿Qué información hay sobre Pedro Muñoz?",
-            "¿Cuántos alvéolos defectuosos hacen que una bandeja se tire?",
-            "¿Quién es el Responsable de la sección de Siembra?",
-            "¿Qué son los tratamientos extraordinarios?",
-            "¿Cómo funcionan los cultivos ecológicos?",
-            "¿Qué información hay sobre B1 B2 B3 sectores?",
             "¿Cuál es la teoría en plantas grandes?",
             "¿Qué son las teorías TPG1 TPG2 TPG3?",
             "¿Qué información hay sobre SOLANACEAE Y APIACEAE?",
             "¿Cuál es la información sobre zanahorias?",
-            "¿Qué son las teorías de planta grande para zanahorias?"
+            "¿Qué son las teorías de planta grande para zanahorias?",
+            "FAMILIA: ZANAHORIAS",
+            "TPG1 SOLANACEAE Y APIACEAE 1"
         ];
         
-        console.log('\n🔍 [TEST] Probando búsquedas...\n');
+        console.log('🔍 [TEST] Probando búsquedas específicas...\n');
         
         for (let i = 0; i < consultas.length; i++) {
             const consulta = consultas[i];
@@ -36,14 +30,15 @@ async function testRagNuevo() {
             console.log('─'.repeat(80));
             
             try {
-                const resultado = await ragNuevo.buscarInformacion(consulta);
-                console.log(resultado);
+                // Usar el sistema RAG existente
+                const resultado = await ragInteligente.recuperarConocimientoRelevante(consulta, 'test_user');
                 
-                // Verificar si encontró información relevante
-                if (resultado && !resultado.includes('No se encontró información')) {
-                    console.log(`✅ [ÉXITO] Consulta ${i + 1} encontró información`);
+                if (resultado && resultado.length > 0) {
+                    console.log('✅ [ÉXITO] Información encontrada:');
+                    console.log(resultado.substring(0, 500) + '...');
+                    console.log(`📊 Longitud total: ${resultado.length} caracteres`);
                 } else {
-                    console.log(`❌ [FALLO] Consulta ${i + 1} no encontró información`);
+                    console.log('❌ [FALLO] No se encontró información');
                 }
                 
             } catch (error) {
@@ -66,7 +61,7 @@ async function testRagNuevo() {
 
 // Ejecutar test
 if (require.main === module) {
-    testRagNuevo().then(() => {
+    testRagDirecto().then(() => {
         console.log('\n🎉 Test completado');
         process.exit(0);
     }).catch(error => {
@@ -75,4 +70,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { testRagNuevo };
+module.exports = { testRagDirecto };

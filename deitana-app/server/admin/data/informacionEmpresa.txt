@@ -4053,3 +4053,2746 @@ Finalmente, la Formación y trazabilidad del personal son clave. Es necesario pr
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+FAMILIAS Y GRUPOS QUE EXISTEN, PARA SABER SU TEORIA PLANTA PEQUEÑA ES EN LA PESTANA QUE OTROS DATOS:
+
+
+INFORMACIÓN COMPLETA DE FAMILIAS DE SEMILLEROS DEITANA
+Generado el: lunes, 6 de octubre de 2025
+NOTA: Se muestran TODAS las 253 familias disponibles con información completa de rangos de tarifa y teorías.
+================================================================================
+1. FAMILIA: Sin denominación
+Código de Familia: PLANU6 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+2. FAMILIA: Sin denominación
+Código de Familia: PLANUL | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+3. FAMILIA: Sin denominación
+Código de Familia: PLANUC | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+4. FAMILIA: Sin denominación
+Código de Familia: 140123 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+5. FAMILIA: ABONOS Y FERTILIZANTES
+Código de Familia: 1800 | Nombre Latin: Sin nombre latín | Total Artículos: 69
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+6. FAMILIA: ABONOS Y FERTILIZANTES VIEJOS
+Código de Familia: 1801 | Nombre Latin: Sin nombre latín | Total Artículos: 27
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+7. FAMILIA: ACELGA
+Código de Familia: 0001 | Nombre Latin: BETA VULGARIS VAR.CICLA (Acelga) | Total Artículos: 17
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 2000000 plantas = Tarifa B || Rango 4: 2000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+8. FAMILIA: AGUA
+Código de Familia: 16 | Nombre Latin: Sin nombre latín | Total Artículos: 36
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+9. FAMILIA: AJO PUERRO
+Código de Familia: 0002 | Nombre Latin: ALLIUM PORRUM (Ajo puerro) | Total Artículos: 38
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 2000000 plantas = Tarifa B || Rango 4: 2000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: ALLIACEAE 1 (Pulverización) - ALLIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - CARUSOL C. || TPG2: ALLIACEAE 2 (Pulverización) - ALLIACEAE 2/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - TOMATE GORDO, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: ALLIACEAE 3 (Pulverización) - ALLIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - LECHUGA BIX. || TPG4: ALLIACEAE 4 (Pulverización) - ALLIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.CECILLIO/SPIRIT.
+------------------------------------------------------------
+10. FAMILIA: ALBAHACA
+Código de Familia: 1416 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+11. FAMILIA: ALCACHOFA
+Código de Familia: 0021 | Nombre Latin: CYNARA SCOLYMUS | Total Artículos: 14
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PREVICUR ENERGY, 0.0% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - STOP3 ACID, 0.0% - MOSPILAN MAX, 0.0% - ORTIVA  TOP, 0.0% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - MOSPILAN MAX, 0.0% - MINECTO alpha, 0.0% - PREVICUR ENERGY, 0.0% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - STOP3 ACID, 0.0% - ARMETIL 25 WP, 0.0% - MOSPILAN MAX, 0.0% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - STOP3 ACID, 0.0% - AFFIRM, 0.0% - MOVENTO GOLD, 0.0% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - MOSPILAN MAX, 0.0% - TELDOR, 0.0% - SPINTOR 480 SC, 0.0% - PREVICUR ENERGY, 0.0% - DESIGNER.
+------------------------------------------------------------
+12. FAMILIA: ALQUILERES
+Código de Familia: AA | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+13. FAMILIA: APIO
+Código de Familia: 0003 | Nombre Latin: APIUM GRAVEOLENS | Total Artículos: 22
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 2000000 plantas = Tarifa B || Rango 4: 2000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+14. FAMILIA: ARBOLES JARDIN
+Código de Familia: 9F | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+15. FAMILIA: ARBUSTOS
+Código de Familia: 9O | Nombre Latin: Sin nombre latín | Total Artículos: 66
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+16. FAMILIA: AROMATICAS
+Código de Familia: 0026 | Nombre Latin: Sin nombre latín | Total Artículos: 100
+RANGOS DE TARIFAS:
+Rango 1: 1 - 15000 plantas = Tarifa D || Rango 2: 15001 - 150000 plantas = Tarifa C || Rango 3: 150001 - 300000 plantas = Tarifa B || Rango 4: 300001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: AROMÁTICAS 1 (Pulverización) - AROMÁTICAS 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - CALABACIN DIAMANTE, 0.0% - JUDIA CALIMA. || TPG2: AROMÁTICAS 2 (Pulverización) - AROMÁTICAS 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG. || TPG3: AROMÁTICAS 3 (Pulverización) - AROMÁTICAS 3/ 0.0% - CALABACIN DIAMANTE, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG4: AROMÁTICAS 4 (Pulverización) - AROMÁTICAS 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG, 0.0% - JUDIA CALIMA.
+------------------------------------------------------------
+17. FAMILIA: ARRENDAMIENTO FOTOCOPIADORAS
+Código de Familia: 20000 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+18. FAMILIA: ARRENDAMIENTOS
+Código de Familia: AI | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+19. FAMILIA: BANDEJAS
+Código de Familia: 0070 | Nombre Latin: Sin nombre latín | Total Artículos: 16
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+20. FAMILIA: BERENJENA
+Código de Familia: 0017 | Nombre Latin: SOLANUM MELONGENA | Total Artículos: 54
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 2000000 plantas = Tarifa B || Rango 4: 2000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+21. FAMILIA: BIENES DE INVERSION
+Código de Familia: 1000 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+22. FAMILIA: BONO DTO PROMOCIONAL
+Código de Familia: 1438 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+23. FAMILIA: BONSAI
+Código de Familia: 9E | Nombre Latin: Sin nombre latín | Total Artículos: 12
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+24. FAMILIA: bonsai
+Código de Familia: PLANUF | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+25. FAMILIA: BROCOLI
+Código de Familia: 0004 | Nombre Latin: BRASSICA OLERACEA VAR.ITALICA | Total Artículos: 225
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 2000000 plantas = Tarifa B || Rango 4: 2000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: BRASSICACEAE 1 (Pulverización) - BRASSICACEAE 1/ 0.03% - STOP3 ACID, 0.1% - ORTIVA  TOP, 0.05% - AMPLIGO 150 ZC. || TPG2: BRASSICACEAE 2 (Pulverización) - BRASSICACEAE 2/ 0.03% - STOP3 ACID, 0.075% - MOVENTO GOLD, 0.05% - CYTHRIN 100, 0.25% - PIKAR. || TPG3: BRASSICACEAE 3 (Pulverización) - BRASSICACEAE 3/ 0.03% - STOP3 ACID, 0.2% - AFFIRM, 0.1% - ORTIVA  TOP, 0.075% - MOSPILAN MAX. || TPG4: BRASSICACEAE 4 (Pulverización) - BRASSICACEAE 4/ 0.025% - KARATE ZEON, 0.03% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+26. FAMILIA: BULBOS SOBRE
+Código de Familia: 9K | Nombre Latin: Sin nombre latín | Total Artículos: 23
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+27. FAMILIA: CACTUS Y CRASULAS
+Código de Familia: 1440 | Nombre Latin: Sin nombre latín | Total Artículos: 21
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+28. FAMILIA: CALABACIN
+Código de Familia: 0005 | Nombre Latin: CUCURBITA PEPO | Total Artículos: 90
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.03% - STOP3 ACID, 0.1% - VERTIMEC, 0.075% - MOVENTO GOLD, 0.1% - CIDELY TOP. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.03% - STOP3 ACID, 0.1% - ORTIVA  TOP, 0.2% - PIKAR. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.03% - STOP3 ACID, 0.03% - XANILO 45 WG, 0.1% - MINECTO alpha, 0.025% - KARATE ZEON. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.125% - TELDOR, 0.1% - ORTIVA  TOP, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+29. FAMILIA: calabacin
+Código de Familia: PLANUK | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+30. FAMILIA: CALABAZA
+Código de Familia: 1501 | Nombre Latin: CUCURBITA MAXIMA Y MOSCHATA | Total Artículos: 28
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+31. FAMILIA: CAMIONES- MANTENIMIENTO
+Código de Familia: 17001 | Nombre Latin: Sin nombre latín | Total Artículos: 200
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+32. FAMILIA: CARBURANTES
+Código de Familia: 1413 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+33. FAMILIA: CARBURANTES
+Código de Familia: 1600 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+34. FAMILIA: CARNIVORAS
+Código de Familia: 9G | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+35. FAMILIA: CEBOLLA
+Código de Familia: 0020 | Nombre Latin: ALLIUM CEPA | Total Artículos: 465
+RANGOS DE TARIFAS:
+Rango 1: 1 - 80000 plantas = Tarifa D || Rango 2: 80001 - 4000000 plantas = Tarifa C || Rango 3: 4000001 - 8000000 plantas = Tarifa B || Rango 4: 8000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: ALLIACEAE 1 (Pulverización) - ALLIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - CARUSOL C. || TPG2: ALLIACEAE 2 (Pulverización) - ALLIACEAE 2/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - TOMATE GORDO, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: ALLIACEAE 3 (Pulverización) - ALLIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - LECHUGA BIX. || TPG4: ALLIACEAE 4 (Pulverización) - ALLIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.CECILLIO/SPIRIT.
+------------------------------------------------------------
+36. FAMILIA: CITRICOS
+Código de Familia: 1423 | Nombre Latin: Sin nombre latín | Total Artículos: 39
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+37. FAMILIA: CLIENTE DE GARDEN
+Código de Familia: A6 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+38. FAMILIA: COCHES - MANTEMIENTO
+Código de Familia: 17002 | Nombre Latin: Sin nombre latín | Total Artículos: 19
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+39. FAMILIA: COL
+Código de Familia: 0006 | Nombre Latin: BRASSICA OLERACEA VAR.CAPITATA | Total Artículos: 89
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 3000000 plantas = Tarifa B || Rango 4: 3000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: BRASSICACEAE 1 (Pulverización) - BRASSICACEAE 1/ 0.03% - STOP3 ACID, 0.1% - ORTIVA  TOP, 0.05% - AMPLIGO 150 ZC. || TPG2: BRASSICACEAE 2 (Pulverización) - BRASSICACEAE 2/ 0.03% - STOP3 ACID, 0.075% - MOVENTO GOLD, 0.05% - CYTHRIN 100, 0.25% - PIKAR. || TPG3: BRASSICACEAE 3 (Pulverización) - BRASSICACEAE 3/ 0.03% - STOP3 ACID, 0.2% - AFFIRM, 0.1% - ORTIVA  TOP, 0.075% - MOSPILAN MAX. || TPG4: BRASSICACEAE 4 (Pulverización) - BRASSICACEAE 4/ 0.025% - KARATE ZEON, 0.03% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+40. FAMILIA: col
+Código de Familia: PLANU5 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+41. FAMILIA: COLIFLOR
+Código de Familia: 0007 | Nombre Latin: BRASSICA OLERACEA VAR.BOTRYTIS | Total Artículos: 159
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 3000000 plantas = Tarifa B || Rango 4: 3000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: BRASSICACEAE 1 (Pulverización) - BRASSICACEAE 1/ 0.03% - STOP3 ACID, 0.1% - ORTIVA  TOP, 0.05% - AMPLIGO 150 ZC. || TPG2: BRASSICACEAE 2 (Pulverización) - BRASSICACEAE 2/ 0.03% - STOP3 ACID, 0.075% - MOVENTO GOLD, 0.05% - CYTHRIN 100, 0.25% - PIKAR. || TPG3: BRASSICACEAE 3 (Pulverización) - BRASSICACEAE 3/ 0.03% - STOP3 ACID, 0.2% - AFFIRM, 0.1% - ORTIVA  TOP, 0.075% - MOSPILAN MAX. || TPG4: BRASSICACEAE 4 (Pulverización) - BRASSICACEAE 4/ 0.025% - KARATE ZEON, 0.03% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+42. FAMILIA: CONIFERAS
+Código de Familia: 1431 | Nombre Latin: Sin nombre latín | Total Artículos: 47
+RANGOS DE TARIFAS:
+Rango 1: 1 - 10000 plantas = Tarifa D || Rango 2: 10001 - 25000 plantas = Tarifa C || Rango 3: 25001 - 50000 plantas = Tarifa B || Rango 4: 50001 - 100000 plantas = Tarifa A
+------------------------------------------------------------
+43. FAMILIA: CONSTRUCCION
+Código de Familia: 0050 | Nombre Latin: Sin nombre latín | Total Artículos: 319
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+44. FAMILIA: CONTADOR IMPRESORAS
+Código de Familia: 1603 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+45. FAMILIA: CUPRESSUS
+Código de Familia: 0030 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+46. FAMILIA: CYPRESES Y SETOS
+Código de Familia: 0029 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+47. FAMILIA: DECORACION
+Código de Familia: 9L | Nombre Latin: Sin nombre latín | Total Artículos: 7
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+48. FAMILIA: DECORACION NAVIDAD
+Código de Familia: 9H | Nombre Latin: Sin nombre latín | Total Artículos: 10
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+49. FAMILIA: DESCUENTOS INJERTO-TOMATE
+Código de Familia: 1433 | Nombre Latin: Sin nombre latín | Total Artículos: 22
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+50. FAMILIA: DESCUENTOS PRONTO PAGO
+Código de Familia: AH | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+51. FAMILIA: DEVOLUCIONES
+Código de Familia: PLANUH | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+52. FAMILIA: ENDIVIA
+Código de Familia: 0033 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+53. FAMILIA: ENVASES
+Código de Familia: 0055 | Nombre Latin: Sin nombre latín | Total Artículos: 86
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+54. FAMILIA: ESPARRAGO
+Código de Familia: 0014 | Nombre Latin: ASPARAGUS OFFICINALIS | Total Artículos: 13
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 200000 plantas = Tarifa B || Rango 4: 200001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+55. FAMILIA: ESPINACAS
+Código de Familia: 1426 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+56. FAMILIA: ESQUEJES
+Código de Familia: 1009 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+57. FAMILIA: EXTINTORES
+Código de Familia: 12 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+58. FAMILIA: FAUNA AUXILIAR - BICHOS
+Código de Familia: 1011 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+59. FAMILIA: FERRETERIA
+Código de Familia: 1418 | Nombre Latin: Sin nombre latín | Total Artículos: 1599
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+60. FAMILIA: FLORES
+Código de Familia: 1437 | Nombre Latin: Sin nombre latín | Total Artículos: 185
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+61. FAMILIA: FLORES (15-30 dias de ciclo)
+Código de Familia: 1010 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+62. FAMILIA: FLORES (20-30 dias de ciclo)
+Código de Familia: 1014 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+63. FAMILIA: FLORES (20-40 dias de ciclo)
+Código de Familia: 1013 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+64. FAMILIA: FLORES (30-45 dias de ciclo)
+Código de Familia: 1012 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+65. FAMILIA: FLORES (35-60 dias de ciclo)
+Código de Familia: 1006 | Nombre Latin: Sin nombre latín | Total Artículos: 42
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+66. FAMILIA: FLORES (45-80 dias de ciclo)
+Código de Familia: 1008 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+67. FAMILIA: FLORES (50-80 dias de ciclo)
+Código de Familia: 1007 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+68. FAMILIA: FORESTALES
+Código de Familia: 1439 | Nombre Latin: Sin nombre latín | Total Artículos: 97
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+------------------------------------------------------------
+69. FAMILIA: FRESAS
+Código de Familia: 1412 | Nombre Latin: FRAGARIA VESCA | Total Artículos: 9
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+70. FAMILIA: FRUTALES
+Código de Familia: 1434 | Nombre Latin: Sin nombre latín | Total Artículos: 132
+RANGOS DE TARIFAS:
+Rango 1: 1 - 250 plantas = Tarifa D || Rango 2: 251 - 3500 plantas = Tarifa C || Rango 3: 3501 - 13000 plantas = Tarifa B || Rango 4: 13001 o más plantas = Tarifa A
+------------------------------------------------------------
+71. FAMILIA: FUNDAS BANDEJAS
+Código de Familia: 00701 | Nombre Latin: Sin nombre latín | Total Artículos: 14
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+72. FAMILIA: GARDEN
+Código de Familia: 1422 | Nombre Latin: Sin nombre latín | Total Artículos: 627
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA GRANDE:
+TPG1: GARDEN 1 (Pistolete) - GARDEN 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - MELON CANARIO, 0.0% - TOMATE VICTORIO, 0.0% - CARUSOL C. || TPG2: GARDEN 2 (Pistolete) - GARDEN 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - TOMATE MAR-50. || TPG3: GARDEN 3 (Pistolete) - GARDEN 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG, 0.0% - TOMATE MAR-50, 0.0% - INJ-TOM.BOLUDO/OPTIFORT. || TPG4: GARDEN 4 (Pistolete) - GARDEN 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - SANDIA REINA DE CORAZONES.
+------------------------------------------------------------
+73. FAMILIA: GAS NATURAL LICUADO
+Código de Familia: 0103 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+74. FAMILIA: GASES
+Código de Familia: 16004 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+75. FAMILIA: GASOLEO A
+Código de Familia: 16001 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+76. FAMILIA: GASOLEO A
+Código de Familia: A9 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+77. FAMILIA: GASOLEO B
+Código de Familia: AC | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+78. FAMILIA: GASOLEO B
+Código de Familia: 16002 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+79. FAMILIA: GASOLEO C
+Código de Familia: 16005 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+80. FAMILIA: GASOLINAS
+Código de Familia: 16003 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+81. FAMILIA: GUISANTES
+Código de Familia: 0019 | Nombre Latin: PISUM SATIVUM | Total Artículos: 13
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 200000 plantas = Tarifa B || Rango 4: 200001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+82. FAMILIA: HABAS
+Código de Familia: 1407 | Nombre Latin: VICIA FABA | Total Artículos: 10
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+83. FAMILIA: HERRAMIENTAS
+Código de Familia: 9D | Nombre Latin: Sin nombre latín | Total Artículos: 28
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+84. FAMILIA: HINOJOS
+Código de Familia: 0023 | Nombre Latin: Sin nombre latín | Total Artículos: 15
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+85. FAMILIA: HORTALIZAS ORIENTALES
+Código de Familia: 1406 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+86. FAMILIA: IMPUESTO S/ACTIVIDADES ECONOMICAS
+Código de Familia: 1442 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+87. FAMILIA: IMPUESTO VEHICULOS TRACCION MECANICA
+Código de Familia: AB | Nombre Latin: Sin nombre latín | Total Artículos: 31
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+88. FAMILIA: IMPUESTOS Y TASAS
+Código de Familia: 1419 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+89. FAMILIA: INDEMNIZACIONES
+Código de Familia: 1490 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+90. FAMILIA: INDEMNIZACIONES INCEND
+Código de Familia: 1491 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+91. FAMILIA: INFORMATICA
+Código de Familia: 111 | Nombre Latin: Sin nombre latín | Total Artículos: 155
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+92. FAMILIA: INJ
+Código de Familia: PLANU9 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+93. FAMILIA: inje
+Código de Familia: PLANUI | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+94. FAMILIA: injerto
+Código de Familia: PLANU7 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+95. FAMILIA: INJERTO
+Código de Familia: PLANU3 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+96. FAMILIA: INJERTO BERENJENA/BERENJENA PUA
+Código de Familia: 0102 | Nombre Latin: SOLANUM MELONGENA | Total Artículos: 9
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+97. FAMILIA: INJERTO BERENJENA/TOMATE PUA
+Código de Familia: 1702 | Nombre Latin: SOLANUM MELONGENA | Total Artículos: 10
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+98. FAMILIA: INJERTO-MELON / CALABAZA APROX
+Código de Familia: 1004 | Nombre Latin: CUCUMIS MELO | Total Artículos: 22
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+99. FAMILIA: INJERTO-MELON / MELON APROX
+Código de Familia: 1002 | Nombre Latin: CUCUMIS MELO | Total Artículos: 45
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+100. FAMILIA: INJERTO-PEPINO
+Código de Familia: 1403 | Nombre Latin: CUCUMIS SATIVUS | Total Artículos: 32
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+101. FAMILIA: INJERTO-PEPINO APROX
+Código de Familia: 14031 | Nombre Latin: CUCUMIS SATIVUS | Total Artículos: 17
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+102. FAMILIA: INJERTO-PEPINO PUA
+Código de Familia: 14032 | Nombre Latin: CUCUMIS SATIVUS | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+103. FAMILIA: INJERTO-PIMIENTO/PIMIENTO
+Código de Familia: 13014 | Nombre Latin: Sin nombre latín | Total Artículos: 15
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+104. FAMILIA: INJERTO-PIMIENTO/TOMATE (NO HACER, NO AFINIDAD)
+Código de Familia: 1425 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+105. FAMILIA: INJERTO-SANDIA
+Código de Familia: 1402 | Nombre Latin: CITRULLUS LANATUS | Total Artículos: 390
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+106. FAMILIA: INJERTO-SANDIA DIPLOIDE
+Código de Familia: 14021 | Nombre Latin: Citrullus lanatus | Total Artículos: 0
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+107. FAMILIA: INJERTO-SANDIA PLANTULA
+Código de Familia: 14024 | Nombre Latin: Citrullus lanatus | Total Artículos: 1
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+108. FAMILIA: INJERTO-SANDIA POLINIZADOR
+Código de Familia: 14023 | Nombre Latin: Citrullus lanatus | Total Artículos: 1
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+109. FAMILIA: INJERTO-SANDIA TRIPLOIDE
+Código de Familia: 14022 | Nombre Latin: Citrullus lanatus | Total Artículos: 2
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+110. FAMILIA: INJERTO-TOMATE
+Código de Familia: 0010 | Nombre Latin: LYCOPERSICUM ESCULENTUM (Tomate) | Total Artículos: 3106
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.03% - STOP3 ACID, 0.075% - MOSPILAN MAX, 0.1% - ORTIVA  TOP, 0.1% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.075% - MOSPILAN MAX, 0.1% - MINECTO alpha, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.03% - STOP3 ACID, 0.08% - ARMETIL 25 WP, 0.075% - MOSPILAN MAX, 0.025% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.03% - STOP3 ACID, 0.15% - AFFIRM, 0.075% - MOVENTO GOLD, 0.1% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.075% - MOSPILAN MAX, 0.125% - TELDOR, 0.025% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+111. FAMILIA: INJERTO-TOMATE LANA-ROCA
+Código de Familia: 00102 | Nombre Latin: LYCOPERSICUM ESCULENTUM | Total Artículos: 0
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+112. FAMILIA: INULA VISCOSA
+Código de Familia: A5 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+113. FAMILIA: JUDIA
+Código de Familia: 0008 | Nombre Latin: PHASEOLUS VULGARIS VAR.VULGARIS | Total Artículos: 34
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+114. FAMILIA: LEASINGS
+Código de Familia: 0097 | Nombre Latin: Sin nombre latín | Total Artículos: 10
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+115. FAMILIA: LECHUGA
+Código de Familia: 0009 | Nombre Latin: LACTUCA SATIVA | Total Artículos: 357
+RANGOS DE TARIFAS:
+Rango 1: 1 - 25000 plantas = Tarifa D || Rango 2: 25001 - 500000 plantas = Tarifa C || Rango 3: 500001 - 2000000 plantas = Tarifa B || Rango 4: 2000001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: BRASSICACEAE 1 (Pulverización) - BRASSICACEAE Y ASTERACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - COLIFLOR GLACIER. || TPG2: BRASSICACEAE 2 (Pulverización) - BRASSICACEAE Y ASTERACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE GORDO, 0.0% - JUDIA CALIMA. || TPG3: BRASSICACEAE 3 (Pulverización) - BRASSICACEAE Y ASTERACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - INJ-TOM.BOLUDO/OPTIFORT. || TPG4: BRASSICACEAE 4 (Pulverización) - BRASSICACEAE Y ASTERACEAE 4/ 0.0% - CARUSOL C, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+116. FAMILIA: LOTES DE NAVIDAD
+Código de Familia: PLANTZ | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+117. FAMILIA: MAIZ
+Código de Familia: 0016 | Nombre Latin: ZEA MAYS VAR.SACCHARATA | Total Artículos: 6
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+118. FAMILIA: MANTENIMIENTO
+Código de Familia: 1700 | Nombre Latin: Sin nombre latín | Total Artículos: 28
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+119. FAMILIA: MANTENIMIENTO (INVERNADEROS)
+Código de Familia: 1441 | Nombre Latin: Sin nombre latín | Total Artículos: 285
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+120. FAMILIA: MANTENIMIENTO (MAQUINARIA)
+Código de Familia: AF | Nombre Latin: Sin nombre latín | Total Artículos: 414
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+121. FAMILIA: MANTENIMIENTO-VEHICULOS
+Código de Familia: B | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+122. FAMILIA: MANZANO
+Código de Familia: 1424 | Nombre Latin: MALUS DOMESTICA | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+123. FAMILIA: MARCAJE Y TRAZABILIDAD
+Código de Familia: 14 | Nombre Latin: Sin nombre latín | Total Artículos: 11
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+124. FAMILIA: MASCOTAS COMPLEMENTO
+Código de Familia: 9C | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+125. FAMILIA: MATERIAL OFICINA
+Código de Familia: 1414 | Nombre Latin: Sin nombre latín | Total Artículos: 443
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+126. FAMILIA: MATERIALES DE RIEGO
+Código de Familia: 1411 | Nombre Latin: Sin nombre latín | Total Artículos: 613
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+127. FAMILIA: MELON
+Código de Familia: 1001 | Nombre Latin: CUCUMIS MELO | Total Artículos: 348
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+128. FAMILIA: melon
+Código de Familia: PLANU8 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+129. FAMILIA: MELON
+Código de Familia: PLANUE | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+130. FAMILIA: no -
+Código de Familia: PLANU1 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+131. FAMILIA: NO BOLA
+Código de Familia: PLANUB | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+132. FAMILIA: NO HORTICOLAS
+Código de Familia: 0028 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+133. FAMILIA: no-b
+Código de Familia: PLANU0 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+134. FAMILIA: no-b
+Código de Familia: PLANUG | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+135. FAMILIA: OLIVOS
+Código de Familia: 028 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+136. FAMILIA: ORNAMENTALES
+Código de Familia: 0049 | Nombre Latin: Sin nombre latín | Total Artículos: 81
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+137. FAMILIA: OTROS - MANTENIMIENTO
+Código de Familia: 17003 | Nombre Latin: Sin nombre latín | Total Artículos: 17
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+138. FAMILIA: OTROS APROVISIONAMIENTOS
+Código de Familia: 0058 | Nombre Latin: Sin nombre latín | Total Artículos: 237
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+139. FAMILIA: PALMERAS
+Código de Familia: 0027 | Nombre Latin: Sin nombre latín | Total Artículos: 82
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+140. FAMILIA: PAPELERIA
+Código de Familia: 0059 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+141. FAMILIA: PENALIZACIONES
+Código de Familia: 105 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+142. FAMILIA: PEPINO
+Código de Familia: 0011 | Nombre Latin: CUCUMIS SATIVUS | Total Artículos: 166
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.03% - STOP3 ACID, 0.1% - VERTIMEC, 0.075% - MOVENTO GOLD, 0.1% - CIDELY TOP. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.03% - STOP3 ACID, 0.1% - ORTIVA  TOP, 0.2% - PIKAR. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.03% - STOP3 ACID, 0.03% - XANILO 45 WG, 0.1% - MINECTO alpha, 0.025% - KARATE ZEON. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.125% - TELDOR, 0.1% - ORTIVA  TOP, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+143. FAMILIA: PEREJIL
+Código de Familia: 50 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+144. FAMILIA: PIENSO MASCOTAS
+Código de Familia: 9A | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+145. FAMILIA: PILDORACION SEMILLA
+Código de Familia: 1417 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+146. FAMILIA: pim
+Código de Familia: PLANU2 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+147. FAMILIA: PIMIENT
+Código de Familia: PLANU4 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+148. FAMILIA: PIMIENTO
+Código de Familia: 1301 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Rango 1: 1 - 27000 plantas = Tarifa D || Rango 2: 27001 - 540000 plantas = Tarifa C || Rango 3: 540001 - 1350000 plantas = Tarifa B || Rango 4: 1350001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.03% - STOP3 ACID, 0.075% - MOSPILAN MAX, 0.1% - ORTIVA  TOP, 0.1% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.075% - MOSPILAN MAX, 0.1% - MINECTO alpha, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.03% - STOP3 ACID, 0.08% - ARMETIL 25 WP, 0.075% - MOSPILAN MAX, 0.025% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.03% - STOP3 ACID, 0.15% - AFFIRM, 0.075% - MOVENTO GOLD, 0.1% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.075% - MOSPILAN MAX, 0.125% - TELDOR, 0.025% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+149. FAMILIA: PIMIENTO NO BO
+Código de Familia: PLANUA | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+150. FAMILIA: PIMIENTO-NO-BOLA
+Código de Familia: 13011 | Nombre Latin: CAPSICUM ANNUUM | Total Artículos: 323
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.03% - STOP3 ACID, 0.075% - MOSPILAN MAX, 0.1% - ORTIVA  TOP, 0.1% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.075% - MOSPILAN MAX, 0.1% - MINECTO alpha, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.03% - STOP3 ACID, 0.08% - ARMETIL 25 WP, 0.075% - MOSPILAN MAX, 0.025% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.03% - STOP3 ACID, 0.15% - AFFIRM, 0.075% - MOVENTO GOLD, 0.1% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.075% - MOSPILAN MAX, 0.125% - TELDOR, 0.025% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+151. FAMILIA: PIMIENTO-SI-BOLA
+Código de Familia: 13012 | Nombre Latin: CAPSICUM ANNUUM | Total Artículos: 107
+RANGOS DE TARIFAS:
+Rango 1: 1 - 27000 plantas = Tarifa D || Rango 2: 27001 - 540000 plantas = Tarifa C || Rango 3: 540001 - 1350000 plantas = Tarifa B || Rango 4: 1350001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.03% - STOP3 ACID, 0.075% - MOSPILAN MAX, 0.1% - ORTIVA  TOP, 0.1% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.075% - MOSPILAN MAX, 0.1% - MINECTO alpha, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.03% - STOP3 ACID, 0.08% - ARMETIL 25 WP, 0.075% - MOSPILAN MAX, 0.025% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.03% - STOP3 ACID, 0.15% - AFFIRM, 0.075% - MOVENTO GOLD, 0.1% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.075% - MOSPILAN MAX, 0.125% - TELDOR, 0.025% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+152. FAMILIA: PINOS
+Código de Familia: 0018 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+153. FAMILIA: PINZAS PORTAINJERTOS
+Código de Familia: 1404 | Nombre Latin: Sin nombre latín | Total Artículos: 62
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+154. FAMILIA: PIPAS
+Código de Familia: 0022 | Nombre Latin: Sin nombre latín | Total Artículos: 8
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+155. FAMILIA: PISCINA
+Código de Familia: 9M | Nombre Latin: Sin nombre latín | Total Artículos: 7
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+156. FAMILIA: PLANTULA 
+Código de Familia: PLANTU | Nombre Latin: PLANTULA | Total Artículos: 48
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+157. FAMILIA: PLANTULAS DE MELON
+Código de Familia: AE | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+158. FAMILIA: PLANTULAS DE TOMATE
+Código de Familia: AD | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+159. FAMILIA: PLANTULAS INJERTO DE SANDIA
+Código de Familia: AG | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+160. FAMILIA: PLASTICOS
+Código de Familia: 0054 | Nombre Latin: Sin nombre latín | Total Artículos: 98
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+161. FAMILIA: PLASTICOS INVERNADERO A1
+Código de Familia: 622001 | Nombre Latin: Sin nombre latín | Total Artículos: 17
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+162. FAMILIA: PLASTICOS INVERNADERO A2
+Código de Familia: 622002 | Nombre Latin: Sin nombre latín | Total Artículos: 104
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+163. FAMILIA: PLASTICOS INVERNADERO A3
+Código de Familia: 622003 | Nombre Latin: Sin nombre latín | Total Artículos: 30
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+164. FAMILIA: PLASTICOS INVERNADERO A4
+Código de Familia: 622004 | Nombre Latin: Sin nombre latín | Total Artículos: 17
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+165. FAMILIA: PLASTICOS INVERNADERO B1
+Código de Familia: 622005 | Nombre Latin: Sin nombre latín | Total Artículos: 14
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+166. FAMILIA: PLASTICOS INVERNADERO B2
+Código de Familia: 622006 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+167. FAMILIA: PLASTICOS INVERNADERO B3
+Código de Familia: 622007 | Nombre Latin: Sin nombre latín | Total Artículos: 35
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+168. FAMILIA: PLASTICOS INVERNADERO C1
+Código de Familia: 622008 | Nombre Latin: Sin nombre latín | Total Artículos: 35
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+169. FAMILIA: PLASTICOS INVERNADERO C2
+Código de Familia: 622009 | Nombre Latin: Sin nombre latín | Total Artículos: 11
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+170. FAMILIA: PORTAINJERTO BERENJENA
+Código de Familia: 0101 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+171. FAMILIA: PORTAINJERTO CALABAZA
+Código de Familia: 0025 | Nombre Latin: Sin nombre latín | Total Artículos: 39
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.03% - STOP3 ACID, 0.1% - VERTIMEC, 0.0% - MOVENTO GOLD, 0.1% - CIDELY TOP. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.03% - STOP3 ACID, 0.1% - ORTIVA  TOP, 0.2% - PIKAR. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.03% - STOP3 ACID, 0.03% - XANILO 45 WG, 0.1% - MINECTO alpha, 0.0% - KARATE ZEON. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - TELDOR, 0.1% - ORTIVA  TOP, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+172. FAMILIA: PORTAINJERTO MELON (MELON)
+Código de Familia: 0031 | Nombre Latin: CUCUMIS MELO | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+173. FAMILIA: PORTAINJERTO PEPINO
+Código de Familia: 0068 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+174. FAMILIA: PORTAINJERTO PIMIENTO
+Código de Familia: 13013 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+175. FAMILIA: PORTAINJERTO SANDIA
+Código de Familia: 0032 | Nombre Latin: CITRULLUS LANATUS | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+176. FAMILIA: PORTAINJERTO TOMATE
+Código de Familia: 0067 | Nombre Latin: LYCOPERSICUM ESCULENTUM | Total Artículos: 134
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.03% - STOP3 ACID, 0.075% - MOSPILAN MAX, 0.1% - ORTIVA  TOP, 0.1% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.075% - MOSPILAN MAX, 0.1% - MINECTO alpha, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.03% - STOP3 ACID, 0.08% - ARMETIL 25 WP, 0.075% - MOSPILAN MAX, 0.025% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.03% - STOP3 ACID, 0.15% - AFFIRM, 0.075% - MOVENTO GOLD, 0.1% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.075% - MOSPILAN MAX, 0.125% - TELDOR, 0.025% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+177. FAMILIA: PRESTACION SERVICIOS SIEMBRA ACELGA
+Código de Familia: 60726 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+178. FAMILIA: PRESTACION SERVICIOS SIEMBRA ALCACHOFA
+Código de Familia: 60740 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+179. FAMILIA: PRESTACION SERVICIOS SIEMBRA APIO
+Código de Familia: 60743 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+180. FAMILIA: PRESTACION SERVICIOS SIEMBRA AROMATICAS
+Código de Familia: 60730 | Nombre Latin: Sin nombre latín | Total Artículos: 14
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+181. FAMILIA: PRESTACION SERVICIOS SIEMBRA BERENJENA
+Código de Familia: 60724 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+182. FAMILIA: PRESTACION SERVICIOS SIEMBRA BROCOLI
+Código de Familia: 60728 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+183. FAMILIA: PRESTACION SERVICIOS SIEMBRA CALABACIN
+Código de Familia: 60715 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+184. FAMILIA: PRESTACION SERVICIOS SIEMBRA CALABAZA
+Código de Familia: 60762 | Nombre Latin: Sin nombre latín | Total Artículos: 7
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+185. FAMILIA: PRESTACION SERVICIOS SIEMBRA CEBOLLA
+Código de Familia: 60732 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+186. FAMILIA: PRESTACION SERVICIOS SIEMBRA COL
+Código de Familia: 60725 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+187. FAMILIA: PRESTACION SERVICIOS SIEMBRA COLIFLOR
+Código de Familia: 60723 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+188. FAMILIA: PRESTACION SERVICIOS SIEMBRA GUISANTES
+Código de Familia: 60748 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+189. FAMILIA: PRESTACION SERVICIOS SIEMBRA JUDIA
+Código de Familia: 60712 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+190. FAMILIA: PRESTACION SERVICIOS SIEMBRA LECHUGA
+Código de Familia: 60718 | Nombre Latin: Sin nombre latín | Total Artículos: 9
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+191. FAMILIA: PRESTACION SERVICIOS SIEMBRA MELON
+Código de Familia: 60717 | Nombre Latin: Sin nombre latín | Total Artículos: 12
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+192. FAMILIA: PRESTACION SERVICIOS SIEMBRA PEPINO
+Código de Familia: 60716 | Nombre Latin: Sin nombre latín | Total Artículos: 11
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+193. FAMILIA: PRESTACION SERVICIOS SIEMBRA PIMIENTO
+Código de Familia: 60734 | Nombre Latin: Sin nombre latín | Total Artículos: 8
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+194. FAMILIA: PRESTACION SERVICIOS SIEMBRA PORT.BERENJ
+Código de Familia: 60759 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+195. FAMILIA: PRESTACION SERVICIOS SIEMBRA PORT.SANDIA
+Código de Familia: 60752 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+196. FAMILIA: PRESTACION SERVICIOS SIEMBRA PORT.TOMATE
+Código de Familia: 60741 | Nombre Latin: Sin nombre latín | Total Artículos: 11
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+197. FAMILIA: PRESTACION SERVICIOS SIEMBRA REMOLACHA
+Código de Familia: 60745 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+198. FAMILIA: PRESTACION SERVICIOS SIEMBRA SANDIA
+Código de Familia: 60721 | Nombre Latin: Sin nombre latín | Total Artículos: 19
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+199. FAMILIA: PRESTACION SERVICIOS SIEMBRA TOMATE
+Código de Familia: 60720 | Nombre Latin: Sin nombre latín | Total Artículos: 66
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+200. FAMILIA: PRESTACION SERVICIOS SIEMBRA TOMATE
+Código de Familia: PLANTX | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+201. FAMILIA: PRODUCTOS FITOSANITARIOS 1
+Código de Familia: 0051 | Nombre Latin: Sin nombre latín | Total Artículos: 999
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+202. FAMILIA: PRODUCTOS FITOSANITARIOS 2 (FUERA USO)
+Código de Familia: 0052 | Nombre Latin: Sin nombre latín | Total Artículos: 184
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+203. FAMILIA: PRODUCTOS FITOSANITARIOS 3 (CANCELADOS)
+Código de Familia: 0053 | Nombre Latin: Sin nombre latín | Total Artículos: 12
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+204. FAMILIA: PUBLICIDAD Y PROPAGANDA
+Código de Familia: 0056 | Nombre Latin: Sin nombre latín | Total Artículos: 62
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+205. FAMILIA: RABANOS Y NABOS
+Código de Familia: 1409 | Nombre Latin: RAPHANUS SATIVUS | Total Artículos: 9
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+206. FAMILIA: RECAMBIOS
+Código de Familia: 1421 | Nombre Latin: Sin nombre latín | Total Artículos: 5
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+207. FAMILIA: RECICLADA TURBA
+Código de Familia: 0066 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+208. FAMILIA: REMOLACHAS
+Código de Familia: 0013 | Nombre Latin: Sin nombre latín | Total Artículos: 13
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+209. FAMILIA: RENTINGS
+Código de Familia: 0065 | Nombre Latin: Sin nombre latín | Total Artículos: 28
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+210. FAMILIA: ROMERO
+Código de Familia: A2 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: AROMÁTICAS 1 (Pulverización) - AROMÁTICAS 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - CALABACIN DIAMANTE, 0.0% - JUDIA CALIMA. || TPG2: AROMÁTICAS 2 (Pulverización) - AROMÁTICAS 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG. || TPG3: AROMÁTICAS 3 (Pulverización) - AROMÁTICAS 3/ 0.0% - CALABACIN DIAMANTE, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG4: AROMÁTICAS 4 (Pulverización) - AROMÁTICAS 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG, 0.0% - JUDIA CALIMA.
+------------------------------------------------------------
+211. FAMILIA: SALVIAS Y ESPLIEGOS
+Código de Familia: 1005 | Nombre Latin: Sin nombre latín | Total Artículos: 16
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: AROMÁTICAS 1 (Pulverización) - AROMÁTICAS 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - CALABACIN DIAMANTE, 0.0% - JUDIA CALIMA. || TPG2: AROMÁTICAS 2 (Pulverización) - AROMÁTICAS 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG. || TPG3: AROMÁTICAS 3 (Pulverización) - AROMÁTICAS 3/ 0.0% - CALABACIN DIAMANTE, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG4: AROMÁTICAS 4 (Pulverización) - AROMÁTICAS 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SABUESO 1 KG, 0.0% - JUDIA CALIMA.
+------------------------------------------------------------
+212. FAMILIA: SANDI
+Código de Familia: PLANUD | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+213. FAMILIA: sandia
+Código de Familia: PLANUJ | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+214. FAMILIA: SANDIA
+Código de Familia: 1401 | Nombre Latin: CITRULLUS LANATUS | Total Artículos: 3
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+215. FAMILIA: SANDIA DIPLOIDE
+Código de Familia: 14011 | Nombre Latin: Citrullus lanatus | Total Artículos: 40
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+216. FAMILIA: SANDIA POLINIZADOR
+Código de Familia: 14013 | Nombre Latin: Citrullus lanatus | Total Artículos: 28
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+217. FAMILIA: SANDIA TRIPLOIDE
+Código de Familia: 14012 | Nombre Latin: Citrullus lanatus | Total Artículos: 111
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: CUCURBITACEAE 1 (Pulverización) - CUCURBITACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PEPINO ROYAL, 0.0% - TOMATE VICTORIO, 0.0% - TOMATE LEOPARDO. || TPG2: CUCURBITACEAE 2 (Pulverización) - CUCURBITACEAE 2/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - JUDIA CALIMA. || TPG3: CUCURBITACEAE 3 (Pulverización) - CUCURBITACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - PIMIENTO LIPARI, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - CARUSOL C. || TPG4: CUCURBITACEAE 4 (Pulverización) - CUCURBITACEAE 4/ 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+------------------------------------------------------------
+218. FAMILIA: SEGURO CREDITO Y CAUCION
+Código de Familia: 0063 | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+219. FAMILIA: SEGUROS AGRICOLAS
+Código de Familia: 0062 | Nombre Latin: Sin nombre latín | Total Artículos: 14
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+220. FAMILIA: SERVICIO SEGAR PIMIENTO
+Código de Familia: 70534 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+221. FAMILIA: SERVICIOS
+Código de Familia: 0057 | Nombre Latin: Sin nombre latín | Total Artículos: 32
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+222. FAMILIA: SERVICIOS CRIANZA PLANTA
+Código de Familia: 107 | Nombre Latin: Sin nombre latín | Total Artículos: 7
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+223. FAMILIA: SERVICIOS DE TRANSPORTE
+Código de Familia: 101 | Nombre Latin: Sin nombre latín | Total Artículos: 8
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+224. FAMILIA: SERVICIOS ESQUEJAR PLANTA
+Código de Familia: 106 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+225. FAMILIA: SERVICIOS LIMPIEZA DE PLANTA
+Código de Familia: 104 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+226. FAMILIA: SERVICIOS PODADO PLANTA
+Código de Familia: 103 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+227. FAMILIA: SERVICIOS RETIRADA FUERA DE PLAZO
+Código de Familia: 102 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+228. FAMILIA: SINIESTROS CESCE Y COFACE
+Código de Familia: 0100 | Nombre Latin: Sin nombre latín | Total Artículos: 3
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+229. FAMILIA: SOBRE SEMILLAS
+Código de Familia: 9B | Nombre Latin: Sin nombre latín | Total Artículos: 206
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+230. FAMILIA: SOLANACEAE
+Código de Familia: 9N | Nombre Latin: SOLANACEAE | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+231. FAMILIA: SUMINISTROS AGUA
+Código de Familia: 9U | Nombre Latin: Sin nombre latín | Total Artículos: 7
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+232. FAMILIA: SUMINISTROS COMBUSTIBLE
+Código de Familia: 9V | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+233. FAMILIA: SUMINISTROS DE LUZ
+Código de Familia: 9T | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+234. FAMILIA: SUMINISTROS GAS CORGON 15
+Código de Familia: 1420 | Nombre Latin: Sin nombre latín | Total Artículos: 4
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+235. FAMILIA: SUMINISTROS GAS NATURAL
+Código de Familia: 9W | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+236. FAMILIA: TABACO
+Código de Familia: 110 | Nombre Latin: Sin nombre latín | Total Artículos: 1
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+237. FAMILIA: TELEFONIA
+Código de Familia: 9S | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+238. FAMILIA: THYMUS MASTICHINA
+Código de Familia: A3 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+239. FAMILIA: THYMUS ZYGIS
+Código de Familia: A4 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+240. FAMILIA: TOMATE
+Código de Familia: 0015 | Nombre Latin: LYCOPERSICUM ESCULENTUM | Total Artículos: 1622
+RANGOS DE TARIFAS:
+Rango 1: 1 - 5000 plantas = Tarifa D || Rango 2: 5001 - 50000 plantas = Tarifa C || Rango 3: 50001 - 100000 plantas = Tarifa B || Rango 4: 100001 o más plantas = Tarifa A
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)/ 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.03% - STOP3 ACID, 0.075% - MOSPILAN MAX, 0.1% - ORTIVA  TOP, 0.1% - VERTIMEC. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.075% - MOSPILAN MAX, 0.1% - MINECTO alpha, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER. || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.03% - STOP3 ACID, 0.08% - ARMETIL 25 WP, 0.075% - MOSPILAN MAX, 0.025% - SPINTOR 480 SC. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.03% - STOP3 ACID, 0.15% - AFFIRM, 0.075% - MOVENTO GOLD, 0.1% - ORTIVA  TOP. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.075% - MOSPILAN MAX, 0.125% - TELDOR, 0.025% - SPINTOR 480 SC, 0.2% - PREVICUR ENERGY, 0.03% - DESIGNER.
+------------------------------------------------------------
+241. FAMILIA: TREPADORAS
+Código de Familia: 9P | Nombre Latin: Sin nombre latín | Total Artículos: 22
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+242. FAMILIA: TROPICALES
+Código de Familia: 9Q | Nombre Latin: Sin nombre latín | Total Artículos: 2
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+243. FAMILIA: TURBAS Y SUSTRATOS
+Código de Familia: 0060 | Nombre Latin: Sin nombre latín | Total Artículos: 189
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+244. FAMILIA: UTILLAJE
+Código de Familia: 58 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+245. FAMILIA: VARIOS
+Código de Familia: 0099 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+246. FAMILIA: VEGETALES SIN DEFINIR
+Código de Familia: 0098 | Nombre Latin: Sin nombre latín | Total Artículos: 12
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+247. FAMILIA: VEHICULOS -- ACEITES
+Código de Familia: 11 | Nombre Latin: Sin nombre latín | Total Artículos: 11
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+248. FAMILIA: VEHICULOS -- ACEITES
+Código de Familia: 1601 | Nombre Latin: Sin nombre latín | Total Artículos: 19
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+249. FAMILIA: VEHICULOS -- NEUMATICOS
+Código de Familia: 10 | Nombre Latin: Sin nombre latín | Total Artículos: 57
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+250. FAMILIA: VEHICULOS -- SEGUROS
+Código de Familia: 0061 | Nombre Latin: Sin nombre latín | Total Artículos: 35
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+251. FAMILIA: VERMICULITA Y PERLITA
+Código de Familia: 1500 | Nombre Latin: Sin nombre latín | Total Artículos: 0
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+252. FAMILIA: VESTUARIO Y EPIS
+Código de Familia: 1405 | Nombre Latin: Sin nombre latín | Total Artículos: 288
+RANGOS DE TARIFAS:
+Sin rangos especificados
+------------------------------------------------------------
+253. FAMILIA: ZANAHORIAS
+Código de Familia: 0024 | Nombre Latin: Sin nombre latín | Total Artículos: 6
+RANGOS DE TARIFAS:
+Sin rangos especificados
+TEORÍAS PLANTA PEQUEÑA:
+TPP1: PREVICUR (EXTENDIDO) (Pulverización) - PREVICUR (EXTENDIDO)0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+TEORÍAS PLANTA GRANDE:
+TPG1: SOLANACEAE Y APIACEAE 1 (Pulverización) - SOLANACEAE Y APIACEAE 1/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - SANDIA REINA DE CORAZONES, 0.0% - PEPINO ROYAL. || TPG2: SOLANACEAE Y APIACEAE 2 (Pulverización) - SOLANACEAE Y APIACEAE 2/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.VENTERO/ARNOLD, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA). || TPG3: SOLANACEAE Y APIACEAE 3 (Pulverización) - SOLANACEAE Y APIACEAE 3/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - INJ-TOM.TRINITY/BEAUFORT, 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - LECHUGA BIX. || TPG4: SOLANACEAE Y APIACEAE 4 (Pulverización) - SOLANACEAE Y APIACEAE 4/ 0.0% - LECHUGA WITEN SUPREM, 0.0% - LECHUGA YUMA, 0.0% - TOMATE VICTORIO, 0.0% - SANDIA REINA DE CORAZONES. || TPG5: SOLANACEAE Y APIACEAE 5 (Pulverización) - SOLANACEAE Y APIACEAE 5/ 0.0% - INJ-TOM.BOLUDO/OPTIFORT, 0.0% - INJ-TOM.CECILLIO/SPIRIT, 0.0% - LECHUGA BIX, 0.0% - PIMIENTO HERMINIO, 0.0% - COLIFLOR DIPLOMAT (DESCATALOGADA).
+
+
+
+
+
+
+
+
+
+
+
+
+
+FORMAS DE PAGO Y VENCIMIENTO CON DIAS:
+INFORMACIÓN COMPLETA DE FORMAS DE PAGO DE SEMILLEROS DEITANA
+Generado el: lunes, 6 de octubre de 2025
+NOTA: Se muestran TODAS las 59 formas de pago disponibles con información completa de vencimientos.
+================================================================================
+1. FORMA DE PAGO: RECIBO 90 DIAS F.F.
+Código: 0001 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días
+------------------------------------------------------------
+2. FORMA DE PAGO: TRANSFERENCIA 90 Y 120 F.F
+Código: 0010 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días | Vto 2: 120 días
+------------------------------------------------------------
+3. FORMA DE PAGO: PAGARE A 60, 90 Y 120 DIAS
+Código: 0011 | Número de Vencimientos: 3 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días | Vto 2: 90 días | Vto 3: 120 días
+------------------------------------------------------------
+4. FORMA DE PAGO: 30 DIAS FECHA ALBARAN 
+Código: 0030 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días
+------------------------------------------------------------
+5. FORMA DE PAGO: PAGARE 30,60,90 DIAS F.F.
+Código: 0032 | Número de Vencimientos: 3 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días | Vto 2: 60 días | Vto 3: 90 días
+------------------------------------------------------------
+6. FORMA DE PAGO: PAGARE 30 Y 60 DIAS F.F.
+Código: 0033 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días | Vto 2: 60 días
+------------------------------------------------------------
+7. FORMA DE PAGO: PAGARE 120,150,180 DIAS F.F.
+Código: 0034 | Número de Vencimientos: 3 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 120 días | Vto 2: 150 días | Vto 3: 180 días
+------------------------------------------------------------
+8. FORMA DE PAGO: PAGARE 120 Y 150 DIAS F.F.
+Código: 0035 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 120 días | Vto 2: 150 días
+------------------------------------------------------------
+9. FORMA DE PAGO: PAGARE 60 Y 90 DIAS F.F.
+Código: 0036 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días | Vto 2: 90 días
+------------------------------------------------------------
+10. FORMA DE PAGO: PAGARE 60 Y 75 DIAS F.F.
+Código: 0037 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días | Vto 2: 75 días
+------------------------------------------------------------
+11. FORMA DE PAGO: RECIBO 40 DIAS F.F.
+Código: 0040 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 40 días
+------------------------------------------------------------
+12. FORMA DE PAGO: RECIBO 60 DIAS F.F.
+Código: 0060 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días
+------------------------------------------------------------
+13. FORMA DE PAGO: RECIBO 75 DIAS F.F.
+Código: 0075 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 75 días
+------------------------------------------------------------
+14. FORMA DE PAGO: RECIBO 90 DIAS F.F.
+Código: 0090 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días
+------------------------------------------------------------
+15. FORMA DE PAGO: RECIBO INMEDIATO
+Código: 0099 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+16. FORMA DE PAGO: TRANSFERENCIA INMEDIATA
+Código: 0100 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Transferencia | Referencia Web: Pagos por transferencia bancaria
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+17. FORMA DE PAGO: PAGARE 105 DIAS F.F.
+Código: 0105 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 105 días
+------------------------------------------------------------
+18. FORMA DE PAGO: PAGARE 120 DIAS F.F.
+Código: 0120 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 120 días
+------------------------------------------------------------
+19. FORMA DE PAGO: PAGARE 135 DIAS F.F.
+Código: 0135 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 135 días
+------------------------------------------------------------
+20. FORMA DE PAGO: PAGARE 150 DIAS F.F.
+Código: 0150 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 150 días
+------------------------------------------------------------
+21. FORMA DE PAGO: PAGARE 150 Y 180 DIAS F.F.
+Código: 0151 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 150 días | Vto 2: 180 días
+------------------------------------------------------------
+22. FORMA DE PAGO: PAGARE 180 DIAS F.F.
+Código: 0180 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 180 días
+------------------------------------------------------------
+23. FORMA DE PAGO: PAGARE 240 DIAS F.F.
+Código: 0240 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 240 días
+------------------------------------------------------------
+24. FORMA DE PAGO: PAGARE 90 DIAS F/F
+Código: 1090 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días
+------------------------------------------------------------
+25. FORMA DE PAGO: PAGARE 30 DIAS F/F
+Código: 1091 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días
+------------------------------------------------------------
+26. FORMA DE PAGO: REPOSICION
+Código: 1092 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+27. FORMA DE PAGO: PAGARE 60 DIAS F/F
+Código: 1093 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días
+------------------------------------------------------------
+28. FORMA DE PAGO: CONTADO 
+Código: 1094 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Efectivo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+29. FORMA DE PAGO: TRANSFERENCIA 60 DIAS F.F.
+Código: 1095 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días
+------------------------------------------------------------
+30. FORMA DE PAGO: PAGARE 15 DIAS F/F
+Código: 1096 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 15 días
+------------------------------------------------------------
+31. FORMA DE PAGO: DOMICILLIACION BANCARIA
+Código: 1097 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+32. FORMA DE PAGO: VTO. FECHA FACTURA
+Código: 1098 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+33. FORMA DE PAGO: INGRESO EN Nº CCC ES8404870042142000513026 BMN
+Código: 1099 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+34. FORMA DE PAGO: INGRESO EN Nº CCC ES1000750163400600328266 B.POPULAR
+Código: 1100 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+35. FORMA DE PAGO: INGRESO EN Nº CCC ES9230580205422720014506 CAJAMAR
+Código: 1101 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+36. FORMA DE PAGO: INGRESO EN Nº CCC ES4100495435902216105095 B.SANTANDER
+Código: 1102 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+37. FORMA DE PAGO: 120 DIAS FECHA ALBARAN
+Código: 1103 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 120 días
+------------------------------------------------------------
+38. FORMA DE PAGO: 60 DIAS FECHA ALBARAN
+Código: 1104 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 60 días
+------------------------------------------------------------
+39. FORMA DE PAGO: 90 DIAS FECHA ALBARAN
+Código: 1105 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días
+------------------------------------------------------------
+40. FORMA DE PAGO: PRONTO PAGO
+Código: 1106 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días
+------------------------------------------------------------
+41. FORMA DE PAGO: ANTICIPADO
+Código: 1107 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Otros | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+42. FORMA DE PAGO: ANTICIPADO 50% Y CONTADO 50%
+Código: 1108 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Efectivo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+43. FORMA DE PAGO: RECIBO 30 DIAS F.F.
+Código: 1109 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días
+------------------------------------------------------------
+44. FORMA DE PAGO: TARJETA
+Código: 1110 | Número de Vencimientos: 0 | A Cartera: Sí | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+45. FORMA DE PAGO: TRANSFERENCIA 10 DIAS F.F.
+Código: 1112 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 10 días
+------------------------------------------------------------
+46. FORMA DE PAGO: A NEGOCIAR
+Código: 1113 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+47. FORMA DE PAGO: TRANSFERENCIA 15 DIAS F.F.
+Código: 1114 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 15 días
+------------------------------------------------------------
+48. FORMA DE PAGO: TRANSFERENCIA 90 DIAS F.F.
+Código: 1115 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días
+------------------------------------------------------------
+49. FORMA DE PAGO: RECIBO 15 Y 30 DIAS F.F.
+Código: 1116 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 15 días
+------------------------------------------------------------
+50. FORMA DE PAGO: Paypal
+Código: 1118 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Transferencia | Referencia Web: PayPal
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+51. FORMA DE PAGO: REDSYS
+Código: 1119 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Tarjeta Crédito | Referencia Web: Redsys
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+52. FORMA DE PAGO: PAGARE 30,60,90 Y 120 DIAS F.F.
+Código: 1120 | Número de Vencimientos: 4 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días | Vto 2: 60 días | Vto 3: 90 días | Vto 4: 120 días
+------------------------------------------------------------
+53. FORMA DE PAGO: PAGARE 30 Y 90 DIAS F.F.
+Código: 1121 | Número de Vencimientos: 2 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 30 días | Vto 2: 90 días
+------------------------------------------------------------
+54. FORMA DE PAGO: PAGARE 90 DIAS F.F.
+Código: 1122 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Pagaré | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 90 días
+------------------------------------------------------------
+55. FORMA DE PAGO: BIZUM
+Código: 1123 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+56. FORMA DE PAGO: TRANSFERENCIA 30 DIAS F.F.
+Código: 1124 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+57. FORMA DE PAGO: CONTADO
+Código: 1125 | Número de Vencimientos: 0 | A Cartera: Sí | Tipo: Efectivo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+58. FORMA DE PAGO: AMAZON
+Código: 1126 | Número de Vencimientos: 0 | A Cartera: No | Tipo: Transferencia | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Sin vencimientos especificados
+------------------------------------------------------------
+59. FORMA DE PAGO: RECIBO 7 DIAS F.F.
+Código: 1127 | Número de Vencimientos: 1 | A Cartera: No | Tipo: Recibo | Referencia Web: Sin referencia web
+VENCIMIENTOS:
+Vto 1: 7 días
+------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+INFORMACIÓN COMPLETA DE BANCOS DE SEMILLEROS DEITANA
+Generado el: lunes, 6 de octubre de 2025
+NOTA: Se muestran TODOS los 39 bancos disponibles con información completa de contacto y datos bancarios.
+================================================================================
+1. BANCO: ANTICIPOS
+Código: 33 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+2. BANCO: BANCO SANTANDER
+Código: 05 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968420165 | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES41
+Código Entidad: 0049 | Código Oficina: 5435 | Número Cuenta: 2216105095
+SWIFT/BIC: BSCHESMMXXX
+------------------------------------------------------------
+3. BANCO: BANCO SANTANDER (ES27 0049 5435 98 2516152824
+Código: 30 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+4. BANCO: BANCO SANTANDER (GARDEN)
+Código: 04 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968420300 | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES10
+Código Entidad: 0075 | Código Oficina: 0163 | Número Cuenta: 0600328266
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+5. BANCO: BANCO SANTANDER(CTA.INVERSION)
+Código: 06 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+6. BANCO: BANCO SANTANDER(POLIZA CREDITO)
+Código: 08 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+7. BANCO: BANKIA
+Código: 01 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968420750 | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES80
+Código Entidad: 2100 | Código Oficina: 8205 | Número Cuenta: 1300263581
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+8. BANCO: BANKINTER
+Código: 28 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968826029 | Fax: Sin fax | Email: jarguezco@bankinter.es
+INFORMACIÓN BANCARIA:
+IBAN: ES58
+Código Entidad: 0128 | Código Oficina: 7642 | Número Cuenta: 0100002656
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+9. BANCO: BANKINTER (POLIZA CREDITO)
+Código: 29 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES02
+Código Entidad: 0128 | Código Oficina: 7642 | Número Cuenta: 0500001206
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+10. BANCO: BBVA
+Código: 07 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968424652 | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES45
+Código Entidad: 0182 | Código Oficina: 6418 | Número Cuenta: 0201586067
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+11. BANCO: CAJA
+Código: 00 | Tipo: CAJA | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+12. BANCO: CAJA GARDEN
+Código: 09 | Tipo: CAJA | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+13. BANCO: CAJAMAR
+Código: 02 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968418001 | Fax: WEB 902365656 | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES92
+Código Entidad: 3058 | Código Oficina: 0205 | Número Cuenta: 2720014506
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+14. BANCO: CTA. CORRIENTE ANTONIO GALERA
+Código: 19 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+15. BANCO: CTA. CORRIENTE FELIPE GALERA
+Código: 26 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+16. BANCO: CTA. CORRIENTE JOSE LUIS GALERA
+Código: 20 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+17. BANCO: CTA.AMAZON
+Código: 36 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+18. BANCO: CUADRE CAJA GARDEN
+Código: 32 | Tipo: CAJA | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+19. BANCO: CUENTA CON SOCIOS
+Código: 24 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+20. BANCO: DESCUENTO S/VENTAS PRONTO PAGO
+Código: 10 | Tipo: CAJA | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+21. BANCO: DESCUENTOS S/COMPRAS PRONTO PAGO
+Código: 18 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+22. BANCO: DIFERENCIAS CAJA
+Código: 37 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+23. BANCO: DIFERENCIAS CAJA EFECTOS
+Código: 38 | Tipo: CAJA | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+24. BANCO: DTO. SOBRE VENTAS P.P.
+Código: 23 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+25. BANCO: GASTOS EXCEPCIONALES
+Código: 17 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+26. BANCO: INGRESOS EXCEPCIONALES
+Código: 25 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+27. BANCO: INGRESOS FINANCIEROS
+Código: 22 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+28. BANCO: LA CAIXA
+Código: 03 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: 968480830 | Fax: Sin fax | Email: 8615@caixabank.com
+INFORMACIÓN BANCARIA:
+IBAN: ES47
+Código Entidad: 2100 | Código Oficina: 7871 | Número Cuenta: 2200017891
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+29. BANCO: PARTIDAS PENDIENTES DE APLICACION
+Código: 12 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+30. BANCO: PAYPAL
+Código: 11 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+31. BANCO: PERDIDAS CREDITOS COM.INCOBRABLES
+Código: 21 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+32. BANCO: REMUNERACIONES PTES. PAGO
+Código: 34 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+33. BANCO: RENTA 4
+Código: 31 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: ES11
+Código Entidad: 0083 | Código Oficina: 0001 | Número Cuenta: 0077198229
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+34. BANCO: SERVICIOS BANCARIOS AMAZON
+Código: 35 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+35. BANCO: SERVICIOS BANCARIOS B.POPULAR
+Código: 16 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+36. BANCO: SERVICIOS BANCARIOS B.SANTANDER
+Código: 14 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+37. BANCO: SERVICIOS BANCARIOS PAYPAL
+Código: 15 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+38. BANCO: TARJETA E-SHOPPING CAJAMAR
+Código: 27 | Tipo: BANCO | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+39. BANCO: TARJETA GARDEN
+Código: 13 | Tipo: CAJA | Nivel de Riesgo: 0.00
+INFORMACIÓN DE CONTACTO:
+Domicilio: Sin domicilio | Población: Sin población | Provincia: Sin provincia | Código Postal: Sin código postal
+Teléfono: Sin teléfono | Fax: Sin fax | Email: Sin email
+INFORMACIÓN BANCARIA:
+IBAN: Sin IBAN
+Código Entidad: Sin código entidad | Código Oficina: Sin código oficina | Número Cuenta: Sin número cuenta
+SWIFT/BIC: Sin SWIFT/BIC
+------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+INFORMACIÓN COMPLETA DE VENDEDORES DE SEMILLEROS DEITANA
+Generado el: lunes, 6 de octubre de 2025
+NOTA: Se muestran TODOS los 77 vendedores disponibles con información completa de ubicación y datos técnicos.
+================================================================================
+1. VENDEDOR: ADRIAN SANCHEZ
+Código: 10 | Número Técnico: 0443
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+2. VENDEDOR: ALEJANDRO LUNA SANCHEZ
+Código: 57 | Número Técnico: 0706
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+3. VENDEDOR: ALICIA LOPEZ
+Código: 67 | Número Técnico: 0834
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+4. VENDEDOR: ANA B. PEREZ
+Código: 17 | Número Técnico: 0176
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+5. VENDEDOR: ANA BELEN SANCHEZ
+Código: 69 | Número Técnico: 0851
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+6. VENDEDOR: ANA GOMEZ
+Código: 62 | Número Técnico: 0820
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+7. VENDEDOR: ANA MARIA
+Código: 70 | Número Técnico: 0853
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+8. VENDEDOR: ANA SANCHEZ
+Código: 36 | Número Técnico: 0500
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+9. VENDEDOR: ANGEL GALERA
+Código: 11 | Número Técnico: 0431
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+10. VENDEDOR: ANGEL MIÑARRO
+Código: 51 | Número Técnico: 0643
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+11. VENDEDOR: ANTONIO
+Código: 01 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+12. VENDEDOR: ANTONIO JIMENEZ
+Código: 64 | Número Técnico: 0821
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+13. VENDEDOR: ANTONIO M.
+Código: 09 | Número Técnico: 0330
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+14. VENDEDOR: Byron Heras
+Código: 47 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+15. VENDEDOR: DMYTRO KACHKA
+Código: 65 | Número Técnico: 0830
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+16. VENDEDOR: DOMINGO FERNANDEZ LOPEZ
+Código: 26 | Número Técnico: 0023
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+17. VENDEDOR: EFRAIN FRANCISCO SAMANIEGO ESPINOSA
+Código: 06 | Número Técnico: 0407
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+18. VENDEDOR: Elisabeth Egea
+Código: 21 | Número Técnico: 0454
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+19. VENDEDOR: Elvia Beatriz
+Código: 30 | Número Técnico: 0047
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+20. VENDEDOR: EMMA
+Código: 73 | Número Técnico: 0890
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+21. VENDEDOR: FRANCISCO BARRIOS
+Código: 66 | Número Técnico: 0825
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+22. VENDEDOR: FRANCISCO JESUS BALLESTA ORTIN
+Código: 71 | Número Técnico: 0804
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+23. VENDEDOR: ISABEL ROMERO
+Código: 39 | Número Técnico: 0548
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+24. VENDEDOR: Javier Cerezuela
+Código: 42 | Número Técnico: 0492
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+25. VENDEDOR: Jefferson
+Código: 18 | Número Técnico: 0192
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+26. VENDEDOR: Jonatan J. Gonzalez
+Código: 15 | Número Técnico: 0484
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+27. VENDEDOR: JOSE AGUAR
+Código: 68 | Número Técnico: 0848
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+28. VENDEDOR: JOSE DAVID SANCHEZ
+Código: 63 | Número Técnico: 0802
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+29. VENDEDOR: JOSE LUIS
+Código: 02 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+30. VENDEDOR: JOSE LUIS GIL
+Código: 41 | Número Técnico: 0563
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+31. VENDEDOR: Jose Maria Blanco
+Código: 12 | Número Técnico: 0479
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+32. VENDEDOR: José Paredes
+Código: 19 | Número Técnico: 0470
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+33. VENDEDOR: Jose Riquelme
+Código: 29 | Número Técnico: 0469
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+34. VENDEDOR: JUAN ANTONIO
+Código: 34 | Número Técnico: 0538
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+35. VENDEDOR: Juan Carlos López Martínez
+Código: 27 | Número Técnico: 0035
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+36. VENDEDOR: Juan Zamora
+Código: 20 | Número Técnico: 0021
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+37. VENDEDOR: JUANA MARIA MUÑOZ SERRANO
+Código: 54 | Número Técnico: 0696
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+38. VENDEDOR: Juanjo Piernas
+Código: 03 | Número Técnico: 0476
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+39. VENDEDOR: Julieth Martinez
+Código: 24 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: lorca | Provincia: murcia
+------------------------------------------------------------
+40. VENDEDOR: LILIAN GUERRERO
+Código: 38 | Número Técnico: 0728
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+41. VENDEDOR: LORENA MARTINEZ
+Código: 75 | Número Técnico: 0895
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+42. VENDEDOR: Luis Montiel
+Código: 16 | Número Técnico: 0491
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+43. VENDEDOR: MARCELO FUENTES
+Código: 50 | Número Técnico: 0505
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+44. VENDEDOR: Mari Carmen López
+Código: 23 | Número Técnico: 0473
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+45. VENDEDOR: Maria del Carmen
+Código: 04 | Número Técnico: 0358
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+46. VENDEDOR: MARIA FAINITA
+Código: 43 | Número Técnico: 0316
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+47. VENDEDOR: MARIA JOSE SANCHEZ SERNA
+Código: 13 | Número Técnico: 0478
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: TOTANA | Provincia: MURCIA
+------------------------------------------------------------
+48. VENDEDOR: Mario Reinoso
+Código: 28 | Número Técnico: 0356
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+49. VENDEDOR: MARTA
+Código: 59 | Número Técnico: 0742
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+50. VENDEDOR: Mateo Salas López
+Código: 58 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+51. VENDEDOR: MIGUEL GALERA
+Código: 05 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: PARIS | Provincia: Sin provincia
+------------------------------------------------------------
+52. VENDEDOR: Nada Moute
+Código: 37 | Número Técnico: 0903
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+53. VENDEDOR: OSCAR - ROPO 143050136SA-A/2489/MU 
+Código: 46 | Número Técnico: 0468
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+54. VENDEDOR: OSCAR ENRIQUE MARTINEZ ARIAS
+Código: 08 | Número Técnico: 0446
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+55. VENDEDOR: Paco Peraba
+Código: 22 | Número Técnico: 0477
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+56. VENDEDOR: PATRICIA 
+Código: 60 | Número Técnico: 0750
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+57. VENDEDOR: PEDRO MUÑOZ SANCHEZ
+Código: 25 | Número Técnico: 0399
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+58. VENDEDOR: PURI GARCIA
+Código: 40 | Número Técnico: 0549
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+59. VENDEDOR: RAMON CORBALAN
+Código: 48 | Número Técnico: 0636
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+60. VENDEDOR: ROSA MULERO
+Código: 61 | Número Técnico: 0793
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+61. VENDEDOR: SEMILLEROS DEITANA S.L.U.
+Código: 00 | Número Técnico: 0000
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+62. VENDEDOR: SIEMBRA
+Código: 33 | Número Técnico: 0529
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+63. VENDEDOR: SONIA 
+Código: 72 | Número Técnico: 0860
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+64. VENDEDOR: TPV GARDEN
+Código: 07 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+65. VENDEDOR: TRATAMIENTOS
+Código: 14 | Número Técnico: 0520
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+66. VENDEDOR: VENDEDOR GARDEN AGROTERRA
+Código: 52 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+67. VENDEDOR: VENDEDOR GARDEN AMAZON
+Código: 49 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+68. VENDEDOR: VENDEDOR GARDEN JARDINES
+Código: 56 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+69. VENDEDOR: VENDEDOR GARDEN MILANUNCIOS
+Código: 53 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+70. VENDEDOR: VENDEDOR GARDEN PROFESIONAL
+Código: 55 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+71. VENDEDOR: VENDEDOR GARDEN TELF
+Código: 31 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+72. VENDEDOR: VENDEDOR GARDEN WEB
+Código: 32 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+73. VENDEDOR: VENDEDOR ZONA 1
+Código: 44 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+74. VENDEDOR: VENDEDOR ZONA 2
+Código: 45 | Número Técnico: Sin número técnico
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+75. VENDEDOR: VERONICA CORTES
+Código: 35 | Número Técnico: 0520
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+76. VENDEDOR: VIRGINIA GALERA
+Código: 74 | Número Técnico: 0891
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+77. VENDEDOR: YILBER
+Código: 76 | Número Técnico: 0907
+INFORMACIÓN DE UBICACIÓN:
+Domicilio: Sin domicilio
+Población: Sin población | Provincia: Sin provincia
+------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

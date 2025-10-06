@@ -300,79 +300,63 @@ router.get('/partidas/riesgo', async (req, res) => {
         // Importar la conexión a la base de datos
         const { query } = require('../db-bridge');
         
-        // Consulta SQL para obtener partidas de riesgo
+        // Consulta SQL para obtener datos de usuarios vendedores
         const sqlQuery = `
             SELECT 
-                p.id AS id_partida,
-                c.CL_DENO AS cliente,
-                p.PAR_PLAS AS solicitada,
-                a.AR_DENO AS articulo,
-                COALESCE(pe_injertada.C2, 0) AS injertada,
-                (p.PAR_PLAS - COALESCE(pe_injertada.C2, 0)) AS deficit,
-                p.PAR_FECS AS siembra,
-                p.PAR_FECE AS entrega,
-                p.PAR_PLAP AS alto
+                id AS Codigo,
+                VD_DENO AS Nombre_Completo,
+                VD_DOM AS Domicilio,
+                VD_POB AS Poblacion,
+                VD_PROV AS Provincia,
+                VD_PDA AS Numero_Tecnico
             FROM 
-                partidas p
-                LEFT JOIN clientes c ON p.PAR_CCL = c.id
-                LEFT JOIN articulos a ON p.PAR_SEM = a.id
-                LEFT JOIN partidas_par_esta pe_injertada ON p.id = pe_injertada.id AND pe_injertada.id2 = 7
-            WHERE 
-                p.PAR_TISOL LIKE '%U%'
-                AND (p.PAR_EST IS NULL OR p.PAR_EST = '')  -- Solo partidas EN PROCESO
-                AND p.PAR_PLAS > COALESCE(pe_injertada.C2, 0)  -- Solo con déficit
-                AND COALESCE(pe_injertada.C2, 0) > 0  -- Solo las que ya tienen algo injertado
+                vendedores
             ORDER BY 
-                (p.PAR_PLAS - COALESCE(pe_injertada.C2, 0)) DESC
+                VD_DENO
         `;
         
-        console.log('🚨 [PARTIDAS-RIESGO] Ejecutando consulta SQL...');
+        console.log('🚨 [VENDEDORES] Ejecutando consulta SQL...');
         
         // Ejecutar consulta en la VPS
         const results = await query(sqlQuery);
         
-        console.log('🚨 [PARTIDAS-RIESGO] Resultados obtenidos:', results.length, 'registros');
-        console.log('🚨 [PARTIDAS-RIESGO] Tipo de results:', typeof results, Array.isArray(results));
-        console.log('🚨 [PARTIDAS-RIESGO] Primer registro raw:', results[0]);
+        console.log('🚨 [VENDEDORES] Resultados obtenidos:', results.length, 'registros');
+        console.log('🚨 [VENDEDORES] Tipo de results:', typeof results, Array.isArray(results));
+        console.log('🚨 [VENDEDORES] Primer registro raw:', results[0]);
         
         // Los resultados vienen como array de arrays, necesitamos acceder al primer elemento
         const dataArray = Array.isArray(results[0]) ? results[0] : results;
-        console.log('🚨 [PARTIDAS-RIESGO] Data array length:', dataArray.length);
+        console.log('🚨 [VENDEDORES] Data array length:', dataArray.length);
         
         // Transformar datos al formato esperado por el frontend
-        const partidasData = dataArray.map((row, index) => {
-            console.log(`🚨 [PARTIDAS-RIESGO] Procesando registro ${index + 1}:`, {
-                id_partida: row.id_partida,
-                cliente: row.cliente,
-                solicitada: row.solicitada,
-                articulo: row.articulo,
-                injertada: row.injertada,
-                siembra: row.siembra,
-                entrega: row.entrega,
-                alto: row.alto,
-                PAR_TISOL: row.PAR_TISOL,
-                PAR_EST: row.PAR_EST
+        const vendedoresData = dataArray.map((row, index) => {
+            console.log(`🚨 [VENDEDORES] Procesando registro ${index + 1}:`, {
+                Codigo: row.Codigo,
+                Nombre_Completo: row.Nombre_Completo,
+                Domicilio: row.Domicilio,
+                Poblacion: row.Poblacion,
+                Provincia: row.Provincia,
+                Numero_Tecnico: row.Numero_Tecnico
             });
             
             return {
-                id: row.id_partida || `PT-${new Date().getFullYear()}-${String(index + 1).padStart(3, '0')}`,
-                cliente: row.cliente || 'Cliente no especificado',
-                articulo: row.articulo || 'Artículo no especificado',
-                cantidadSolicitada: parseInt(row.solicitada) || 0,
-                cantidadInjertada: parseInt(row.injertada) || 0,
-                fechaSiembra: row.siembra ? new Date(row.siembra).toISOString().split('T')[0] : '2024-01-01',
-                fechaEntrega: row.entrega ? new Date(row.entrega).toISOString().split('T')[0] : '2024-03-01',
-                riskLevel: parseInt(row.alto) > 0 ? 'alto' : 'normal'
+                id: row.Codigo || `VEN-${String(index + 1).padStart(3, '0')}`,
+                codigoVendedor: row.Codigo || 'SIN CÓDIGO',
+                nombreCompleto: row.Nombre_Completo || 'Sin nombre',
+                domicilio: row.Domicilio || 'Sin domicilio',
+                poblacion: row.Poblacion || 'Sin población',
+                provincia: row.Provincia || 'Sin provincia',
+                numeroTecnico: row.Numero_Tecnico || 'Sin número técnico'
             };
         });
         
-        console.log('🚨 [PARTIDAS-RIESGO] Datos transformados:', partidasData.length, 'registros');
-        console.log('🚨 [PARTIDAS-RIESGO] Datos finales:', partidasData);
+        console.log('🚨 [VENDEDORES] Datos transformados:', vendedoresData.length, 'registros');
+        console.log('🚨 [VENDEDORES] Datos finales:', vendedoresData);
         
         res.json({ 
             success: true, 
-            data: partidasData,
-            total: partidasData.length,
+            data: vendedoresData,
+            total: vendedoresData.length,
             source: 'vps'
         });
         
@@ -382,24 +366,31 @@ router.get('/partidas/riesgo', async (req, res) => {
         // Datos de ejemplo en caso de error
         const datosEjemplo = [
             {
-                id: "PT-2024-001",
-                cliente: "Agrícola San José",
-                articulo: "Tomate Cherry",
-                cantidadSolicitada: 500,
-                cantidadInjertada: 320,
-                fechaSiembra: "2024-01-15",
-                fechaEntrega: "2024-03-20",
-                riskLevel: "alto"
+                id: "VEN-001",
+                codigoVendedor: "001",
+                nombreCompleto: "Juan Pérez García",
+                domicilio: "Calle Mayor, 123",
+                poblacion: "Madrid",
+                provincia: "Madrid",
+                numeroTecnico: "TEC001"
             },
             {
-                id: "PT-2024-002",
-                cliente: "Huertos del Valle",
-                articulo: "Pimiento Rojo",
-                cantidadSolicitada: 300,
-                cantidadInjertada: 180,
-                fechaSiembra: "2024-01-20",
-                fechaEntrega: "2024-03-25",
-                riskLevel: "alto"
+                id: "VEN-002",
+                codigoVendedor: "002",
+                nombreCompleto: "María López Martínez",
+                domicilio: "Avenida Diagonal, 456",
+                poblacion: "Barcelona",
+                provincia: "Barcelona",
+                numeroTecnico: "TEC002"
+            },
+            {
+                id: "VEN-003",
+                codigoVendedor: "003",
+                nombreCompleto: "Carlos Rodríguez Sánchez",
+                domicilio: "Paseo de la Castellana, 789",
+                poblacion: "Valencia",
+                provincia: "Valencia",
+                numeroTecnico: "TEC003"
             }
         ];
         

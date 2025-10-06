@@ -1,77 +1,65 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Package, User, Calendar, TrendingDown, Clock, AlertTriangle } from 'lucide-react';
+import { Search, Package, User, Calendar, TrendingDown, Clock, AlertTriangle, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../components/Authenticator/firebase';
+import * as XLSX from 'xlsx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 
 const API_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:3001"
     : "https://semilleros-deitana-project-v1-production.up.railway.app";
 
-// Datos de ejemplo para partidas de riesgo
-const riskBatchesData = [
+// Datos de ejemplo para vendedores
+const vendedoresData = [
   {
-    id: "PT-2024-001",
-    cliente: "Agrícola San José",
-    articulo: "Tomate Cherry",
-    cantidadSolicitada: 500,
-    cantidadInjertada: 320,
-    fechaSiembra: "2024-01-15",
-    fechaEntrega: "2024-03-20",
-    riskLevel: "alto",
+    id: "VEN-001",
+    codigoVendedor: "001",
+    nombreCompleto: "Juan Pérez García",
+    domicilio: "Calle Mayor, 123",
+    poblacion: "Madrid",
+    provincia: "Madrid",
+    numeroTecnico: "TEC001"
   },
   {
-    id: "PT-2024-002",
-    cliente: "Huertos del Valle",
-    articulo: "Pimiento Rojo",
-    cantidadSolicitada: 300,
-    cantidadInjertada: 180,
-    fechaSiembra: "2024-01-20",
-    fechaEntrega: "2024-03-25",
-    riskLevel: "crítico",
+    id: "VEN-002",
+    codigoVendedor: "002",
+    nombreCompleto: "María López Martínez",
+    domicilio: "Avenida Diagonal, 456",
+    poblacion: "Barcelona",
+    provincia: "Barcelona",
+    numeroTecnico: "TEC002"
   },
   {
-    id: "PT-2024-003",
-    cliente: "Cultivos Modernos",
-    articulo: "Lechuga Romana",
-    cantidadSolicitada: 450,
-    cantidadInjertada: 280,
-    fechaSiembra: "2024-01-10",
-    fechaEntrega: "2024-03-15",
-    riskLevel: "alto",
+    id: "VEN-003",
+    codigoVendedor: "003",
+    nombreCompleto: "Carlos Rodríguez Sánchez",
+    domicilio: "Paseo de la Castellana, 789",
+    poblacion: "Valencia",
+    provincia: "Valencia",
+    numeroTecnico: "TEC003"
   },
   {
-    id: "PT-2024-004",
-    cliente: "Invernaderos del Norte",
-    articulo: "Pepino Holandés",
-    cantidadSolicitada: 600,
-    cantidadInjertada: 250,
-    fechaSiembra: "2024-01-25",
-    fechaEntrega: "2024-03-30",
-    riskLevel: "crítico",
-  },
-  {
-    id: "PT-2024-005",
-    cliente: "Agrícola San José",
-    articulo: "Berenjena Larga",
-    cantidadSolicitada: 350,
-    cantidadInjertada: 200,
-    fechaSiembra: "2024-01-18",
-    fechaEntrega: "2024-03-22",
-    riskLevel: "alto",
-  },
+    id: "VEN-004",
+    codigoVendedor: "004",
+    nombreCompleto: "Ana Martín Fernández",
+    domicilio: "Calle San Juan, 321",
+    poblacion: "Sevilla",
+    provincia: "Sevilla",
+    numeroTecnico: "TEC004"
+  }
 ];
 
 const PartidasRiesgo = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const [partidasData, setPartidasData] = useState([]);
+  const [vendedoresData, setVendedoresData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Función para obtener datos de partidas de riesgo
-  const fetchPartidasData = async () => {
+  // Función para obtener datos de vendedores
+  const fetchVendedoresData = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -81,7 +69,7 @@ const PartidasRiesgo = () => {
         throw new Error('No hay usuario autenticado');
       }
 
-      console.log('🚨 [FRONTEND] Cargando datos de partidas de riesgo desde VPS...');
+      console.log('🚨 [FRONTEND] Cargando datos de vendedores desde VPS...');
       
       const response = await fetch(`${API_URL}/api/chat/partidas/riesgo`, {
         headers: {
@@ -98,15 +86,15 @@ const PartidasRiesgo = () => {
       if (data.success) {
         console.log('🚨 [FRONTEND] Datos cargados exitosamente:', data.data.length, 'registros');
         console.log('🚨 [FRONTEND] Datos recibidos:', data.data);
-        setPartidasData(data.data);
+        setVendedoresData(data.data);
       } else {
         throw new Error(data.error || 'Error al cargar los datos');
       }
     } catch (error) {
-      console.error('❌ [FRONTEND] Error al cargar datos de partidas de riesgo:', error);
+      console.error('❌ [FRONTEND] Error al cargar datos de vendedores:', error);
       setError(error.message);
       // En caso de error, usar datos de ejemplo
-      setPartidasData(riskBatchesData);
+      setVendedoresData(vendedoresData);
     } finally {
       setLoading(false);
     }
@@ -114,8 +102,220 @@ const PartidasRiesgo = () => {
   
   // Cargar datos al montar el componente
   useEffect(() => {
-    fetchPartidasData();
+    fetchVendedoresData();
   }, []);
+
+  // Función para exportar datos a Word con formato estructurado
+  const exportToWord = async () => {
+    if (vendedoresData.length === 0) {
+      alert('No hay datos para exportar');
+      return;
+    }
+
+    try {
+      console.log('🚀 Iniciando generación de documento Word...');
+      console.log('📊 Datos a procesar:', vendedoresData.length, 'vendedores');
+
+      // Función para formatear texto (sin truncamiento)
+      const formatText = (text) => {
+        if (!text || text === 'Sin información especificada') return text;
+        return text;
+      };
+
+      // Crear párrafos básicos para cada vendedor
+      const vendedoresParagraphs = [];
+      
+      // Procesar TODOS los vendedores
+      const allVendedores = vendedoresData;
+      
+      allVendedores.forEach((vendedor, index) => {
+        // Título del vendedor
+        vendedoresParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `${index + 1}. VENDEDOR: ${vendedor.nombreCompleto}`,
+                bold: true,
+                size: 28,
+              }),
+            ],
+            spacing: { before: 400, after: 200 },
+          })
+        );
+
+        // Información básica
+        vendedoresParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Código: ${vendedor.codigoVendedor} | `,
+                bold: true,
+                size: 24,
+              }),
+              new TextRun({
+                text: `Número Técnico: ${vendedor.numeroTecnico}`,
+                size: 24,
+              }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+
+        // Información de ubicación
+        vendedoresParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "INFORMACIÓN DE UBICACIÓN:",
+                bold: true,
+                size: 26,
+                color: "A23B72",
+              }),
+            ],
+            spacing: { before: 200, after: 100 },
+          })
+        );
+
+        vendedoresParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Domicilio: ${formatText(vendedor.domicilio)}`,
+                size: 22,
+              }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+
+        vendedoresParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Población: ${formatText(vendedor.poblacion)} | `,
+                size: 22,
+              }),
+              new TextRun({
+                text: `Provincia: ${formatText(vendedor.provincia)}`,
+                size: 22,
+              }),
+            ],
+            spacing: { after: 200 },
+          })
+        );
+
+        // Separador
+        vendedoresParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "-".repeat(60),
+                size: 20,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+          })
+        );
+      });
+
+      // Crear el documento Word
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            // Título del documento
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "INFORMACIÓN COMPLETA DE VENDEDORES DE SEMILLEROS DEITANA",
+                  bold: true,
+                  size: 32,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
+            
+            // Fecha de generación
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Generado el: ${new Date().toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}`,
+                  italics: true,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 600 },
+            }),
+
+            // Nota informativa
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `NOTA: Se muestran TODOS los ${allVendedores.length} vendedores disponibles con información completa de ubicación y datos técnicos.`,
+                  italics: true,
+                  size: 18,
+                  color: "666666",
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
+
+            // Separador
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "=".repeat(80),
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
+
+            // Contenido de vendedores
+            ...vendedoresParagraphs,
+          ],
+        }],
+      });
+
+      console.log('📝 Documento Word creado, generando blob...');
+
+      // Generar el archivo Word como blob directamente
+      const blob = await Packer.toBlob(doc);
+      
+      console.log('💾 Blob generado exitosamente');
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generar el nombre del archivo con fecha actual
+      const fechaActual = new Date().toISOString().split('T')[0];
+      link.download = `Vendedores_Completos_${fechaActual}.docx`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ Documento Word generado exitosamente');
+      alert(`Documento Word generado exitosamente con ${allVendedores.length} vendedores.`);
+      
+    } catch (error) {
+      console.error('❌ Error al generar el documento Word:', error);
+      console.error('❌ Detalles del error:', error.message);
+      alert(`Error al generar el documento Word: ${error.message}`);
+    }
+  };
   
   // Estados para el sidebar
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -647,12 +847,12 @@ const PartidasRiesgo = () => {
               </svg>
             </button>
             <div className="ds-chat-header-title">
-              <h1>Partidas de Riesgo</h1>
+              <h1>Vendedores</h1>
             </div>
           </div>
         )}
 
-        {/* Contenido de Partidas de Riesgo */}
+        {/* Contenido de Vendedores */}
         <div className="ds-partidas-riesgo-content">
           {/* Header de la página */}
           <div className="ds-partidas-header">
@@ -663,118 +863,89 @@ const PartidasRiesgo = () => {
                 <Search className="ds-search-icon" size={16} />
                 <input
                   type="text"
-                  placeholder="Buscar por ID de partida, cliente..."
+                  placeholder="Buscar por código de vendedor, nombre..."
                   className="ds-search-input"
                   disabled
                 />
               </div>
             </div>
+
+            {/* Botón de exportación a Word */}
+            <div className="ds-export-section">
+              <button 
+                className="ds-export-button"
+                onClick={exportToWord}
+                disabled={loading || vendedoresData.length === 0}
+                title="Exportar a Word"
+              >
+                <Download size={16} />
+                <span>Exportar Word</span>
+              </button>
+            </div>
           </div>
 
-          {/* Lista de partidas de riesgo */}
+          {/* Lista de vendedores */}
           <div className="ds-partidas-list">
             {loading ? (
               <div className="loading-state">
                 <div className="loading-spinner"></div>
-                <p>Cargando partidas de riesgo...</p>
+                <p>Cargando vendedores...</p>
               </div>
             ) : error ? (
               <div className="error-state">
                 <h3>Error al cargar los datos</h3>
                 <p>{error}</p>
-                <button onClick={fetchPartidasData} className="retry-button">
+                <button onClick={fetchVendedoresData} className="retry-button">
                   Reintentar
                 </button>
               </div>
-            ) : partidasData.length === 0 ? (
+            ) : vendedoresData.length === 0 ? (
               <div className="no-results">
                 <div className="no-results-icon">
                   <AlertTriangle size={48} />
                 </div>
-                <h3>No hay partidas de riesgo</h3>
-                <p>No se encontraron partidas con alto riesgo de incumplimiento.</p>
+                <h3>No hay vendedores disponibles</h3>
+                <p>No se encontraron vendedores con información completa.</p>
               </div>
             ) : (
-              partidasData.map((batch) => (
+              vendedoresData.map((vendedor) => (
               <div
-                key={batch.id}
-                className={`ds-partida-card ${batch.riskLevel === "crítico" ? "ds-partida-critica" : "ds-partida-alta"}`}
+                key={vendedor.id}
+                className="ds-familia-completa-card"
               >
-                <div className="ds-partida-grid">
-                  {/* ID Section */}
-                  <div className="ds-partida-id">
-                    <div className="ds-partida-id-icon">
-                      <Package size={16} />
+                <div className="ds-familia-completa-grid">
+                  {/* Header del vendedor */}
+                  <div className="ds-familia-header">
+                    <div className="ds-familia-header-icon">
+                      <User size={20} />
                     </div>
-                    <div>
-                      <p className="ds-partida-label">ID DE PARTIDA</p>
-                      <p className="ds-partida-id-text">{batch.id}</p>
+                    <div className="ds-familia-header-info">
+                      <h3 className="ds-familia-nombre">{vendedor.nombreCompleto}</h3>
+                      <p className="ds-familia-codigo">Código: {vendedor.codigoVendedor}</p>
+                      <p className="ds-familia-latin">Número Técnico: {vendedor.numeroTecnico}</p>
                     </div>
-                  </div>
-
-                  {/* Cliente Section */}
-                  <div className="ds-partida-cliente">
-                    <div className="ds-partida-field-header">
-                      <User size={12} />
-                      <span>CLIENTE</span>
-                    </div>
-                    <p className="ds-partida-cliente-text">{batch.cliente}</p>
-                  </div>
-
-                  {/* Artículo Section */}
-                  <div className="ds-partida-articulo">
-                    <div className="ds-partida-field-header">
-                      <Package size={12} />
-                      <span>ARTICULO</span>
-                    </div>
-                    <p className="ds-partida-articulo-text">{batch.articulo}</p>
-                  </div>
-
-                  {/* Cantidades Section */}
-                  <div className="ds-partida-cantidades">
-                    <div className="ds-cantidad-item ds-cantidad-solicitada">
-                      <p className="ds-cantidad-label">PLANTAS SOLICITADAS</p>
-                      <p className="ds-cantidad-value">{batch.cantidadSolicitada}</p>
-                    </div>
-                    <div className="ds-cantidad-item ds-cantidad-injertada">
-                      <p className="ds-cantidad-label">PLANTAS APROXIMADAS</p>
-                      <p className="ds-cantidad-value">{batch.cantidadInjertada}</p>
-                    </div>
-                    <div className="ds-cantidad-item ds-cantidad-deficit">
-                      <TrendingDown size={12} />
-                      <p className="ds-cantidad-label">INJERTADAS</p>
-                      <p className="ds-cantidad-value">{batch.cantidadInjertada}</p>
-                    </div>
-                    <div className="ds-cantidad-item ds-cantidad-deficit">
-                      <TrendingDown size={12} />
-                      <p className="ds-cantidad-label">DEFICIT</p>
-                      <p className="ds-cantidad-value">{batch.cantidadSolicitada - batch.cantidadInjertada}</p>
+                    <div className="ds-familia-articulos">
+                      <span className="ds-articulos-count">{vendedor.provincia}</span>
+                      <span className="ds-articulos-label">provincia</span>
                     </div>
                   </div>
 
-                  {/* Fechas Section */}
-                  <div className="ds-partida-fechas">
-                    <div className="ds-fecha-item">
-                      <div className="ds-fecha-header">
-                        <Calendar size={12} />
-                        <span>SIEMBRA</span>
+                  {/* Información de ubicación */}
+                  <div className="ds-familia-tarifas">
+                    <h4 className="ds-seccion-titulo">Información de Ubicación</h4>
+                    <div className="ds-tarifa-info">
+                      <div className="ds-tarifa-item">
+                        <span className="ds-tarifa-label">Domicilio:</span>
+                        <span className="ds-tarifa-value">{vendedor.domicilio}</span>
                       </div>
-                      <p className="ds-fecha-value">{batch.fechaSiembra}</p>
-                    </div>
-                    <div className="ds-fecha-item ds-fecha-entrega">
-                      <div className="ds-fecha-header">
-                        <Clock size={12} />
-                        <span>ENTREGA</span>
+                      <div className="ds-tarifa-item">
+                        <span className="ds-tarifa-label">Población:</span>
+                        <span className="ds-tarifa-value">{vendedor.poblacion}</span>
                       </div>
-                      <p className="ds-fecha-value">{batch.fechaEntrega}</p>
-                    </div>
-                  </div>
-
-                  {/* Acciones Section */}
-                  <div className="ds-partida-acciones">
-                    <div className={`ds-risk-badge ${batch.riskLevel === "crítico" ? "ds-risk-critico" : "ds-risk-alto"}`}>
-                      <AlertTriangle size={12} />
-                      <span>{batch.riskLevel === "crítico" ? "CRÍTICO" : "ALTO"}</span>
+                      <div className="ds-tarifa-item">
+                        <span className="ds-tarifa-label">Provincia:</span>
+                        <span className="ds-tarifa-value">{vendedor.provincia}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

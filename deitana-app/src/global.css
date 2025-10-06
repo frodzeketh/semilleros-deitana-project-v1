@@ -3983,6 +3983,54 @@ input:focus {
   text-align: center;
 }
 
+/* Estilos para la sección de exportación */
+.ds-export-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.ds-export-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.ds-export-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.ds-export-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.ds-export-button:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.ds-export-button svg {
+  width: 16px;
+  height: 16px;
+}
+
 .ds-partidas-list {
   display: flex;
   flex-direction: column;
@@ -4395,4 +4443,236 @@ input:focus {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   ESTILOS PARA FAMILIAS COMPLETAS
+   ======================================== */
+
+.ds-familia-completa-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ds-familia-completa-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.ds-familia-completa-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  border-radius: 16px 16px 0 0;
+}
+
+.ds-familia-completa-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+/* Header de la familia */
+.ds-familia-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.ds-familia-header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.ds-familia-header-info {
+  flex: 1;
+}
+
+.ds-familia-nombre {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.ds-familia-codigo {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 2px 0;
+}
+
+.ds-familia-latin {
+  font-size: 14px;
+  font-style: italic;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.ds-familia-articulos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.ds-articulos-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: #3b82f6;
+  line-height: 1;
+}
+
+.ds-articulos-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Secciones de información */
+.ds-familia-tarifas,
+.ds-familia-teorias-pequena,
+.ds-familia-teorias-grande {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.ds-seccion-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ds-seccion-titulo::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+}
+
+/* Información de tarifas */
+.ds-tarifa-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ds-tarifa-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ds-tarifa-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-tarifa-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ds-tarifa-precio {
+  font-size: 16px;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Contenido de teorías */
+.ds-teorias-content {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.ds-teorias-texto {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4b5563;
+  margin: 0;
+  word-wrap: break-word;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ds-familia-completa-card {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .ds-familia-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .ds-familia-header-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .ds-familia-nombre {
+    font-size: 20px;
+  }
+  
+  .ds-familia-articulos {
+    align-self: stretch;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .ds-articulos-count {
+    font-size: 24px;
+  }
+  
+  .ds-tarifa-info {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .ds-tarifa-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
