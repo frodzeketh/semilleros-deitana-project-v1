@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuración
-const PINECONE_API_KEY = 'pcsk_ctXEB_EytPZdg6HJhk2HPbfvEfknyuM671AZUmwz82YSMVgjYfGfR3QfsLMXC8BcRjUvY';
+
+
 // Leer API key desde .env
 require('dotenv').config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -18,7 +19,7 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 class PineconeLoader {
     constructor() {
         this.index = pinecone.index(INDEX_NAME);
-        this.batchSize = 100; // Procesar en lotes para eficiencia
+        this.batchSize = 100; // Procesar en lotes para eficiencias
         this.chunkSize = 500; // Chunks más pequeños para capturar información específica
         this.overlap = 100; // Menos solapamiento
     }

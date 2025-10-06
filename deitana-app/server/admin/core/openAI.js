@@ -1,5 +1,6 @@
 const { OpenAI } = require('openai');
 const { Pinecone } = require('@pinecone-database/pinecone');
+const { addMessage, getHistory } = require('../../utils/ramMemory');
 require('dotenv').config();
 
 const openai = new OpenAI({
@@ -51,9 +52,18 @@ async function searchRelevantInfo(query) {
     }
 }
 
-async function processQueryStream({ message, response }) {
+async function processQueryStream({ message, conversationId, response }) {
     try {
-        // Buscar información relevante en Pinecone
+        console.log('🚀 [OPENAI] Procesando con memoria RAM');
+        
+        // 1. MEMORIA RAM SIMPLE
+        const conversationIdFinal = conversationId || `temp_${Date.now()}`;
+        const history = getHistory(conversationIdFinal);
+        
+        // 2. AGREGAR MENSAJE DEL USUARIO
+        addMessage(conversationIdFinal, 'user', message);
+        
+        // 3. BUSCAR INFORMACIÓN RELEVANTE EN RAG
         const relevantInfo = await searchRelevantInfo(message);
         
         // Crear el prompt con contexto de la empresa
@@ -191,27 +201,43 @@ El propósito último es que **CADA USUARIO QUEDE CONFORME CON LA EXPERIENCIA DE
 
 IMPORTANTE: La información de arriba es específica de Semilleros Deitana. Úsala para dar respuestas precisas sobre la empresa.`;
 
-        const stream = await openai.chat.completions.create({
+        // 4. PREPARAR MENSAJES CON HISTORIAL
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            ...history, // Historial completo desde RAM
+            { role: 'user', content: message }
+        ];
+
+        console.log(`💬 [RAM] Enviando ${messages.length} mensajes a GPT-4o`);
+
+            const stream = await openai.chat.completions.create({
             model: 'gpt-4o',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: message }
-            ],
+            messages: messages,
             stream: true,
-            max_tokens: 2000  // Aumentar de 1000 a 2000 para respuestas completas
+            max_tokens: 2000
         });
 
+        // 5. STREAMING CON ACUMULACIÓN
+        let assistantResponse = '';
+        
         for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || '';
             if (content) {
+                assistantResponse += content;
                 const jsonChunk = JSON.stringify({ type: 'chunk', content }) + '\n';
                 response.write(jsonChunk);
             }
         }
 
-        response.end();
+        // 6. GUARDAR RESPUESTA EN RAM
+        if (assistantResponse.trim()) {
+            addMessage(conversationIdFinal, 'assistant', assistantResponse);
+            console.log('💾 [RAM] Respuesta guardada en memoria');
+        }
 
-    } catch (error) {
+        response.end();
+            
+                } catch (error) {
         console.error('Error:', error);
         if (!response.headersSent) {
             response.status(500).json({ error: 'Error al procesar la consulta' });

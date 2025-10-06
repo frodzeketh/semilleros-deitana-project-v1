@@ -15,8 +15,12 @@ router.post('/stream', async (req, res) => {
             return res.status(400).json({ error: 'Mensaje requerido' });
         }
 
-        // Respuesta directa con GPT-4o
-        await processQueryStream({ message, response: res });
+        // Respuesta con memoria RAM
+        await processQueryStream({ 
+            message, 
+            conversationId: req.body.conversationId || `temp_${Date.now()}`,
+            response: res 
+        });
         
     } catch (error) {
         console.error('Error:', error);
@@ -26,4 +30,4 @@ router.post('/stream', async (req, res) => {
     }
 });
 
-module.exports = router;
+module.exports = router; 
