@@ -1,6 +1,7 @@
 const { OpenAI } = require('openai');
 const { Pinecone } = require('@pinecone-database/pinecone');
 const { addMessage, getHistory } = require('../../utils/ramMemory');
+const { query } = require('../../db-bridge');
 require('dotenv').config();
 
 const openai = new OpenAI({
@@ -54,7 +55,7 @@ async function searchRelevantInfo(query) {
 
 async function processQueryStream({ message, conversationId, response }) {
     try {
-        console.log('🚀 [OPENAI] Procesando con memoria RAM');
+        console.log('🚀 [OPENAI] Procesando con memoria RAM y function calling');
         
         // 1. MEMORIA RAM SIMPLE
         const conversationIdFinal = conversationId || `temp_${Date.now()}`;
@@ -66,7 +67,7 @@ async function processQueryStream({ message, conversationId, response }) {
         // 3. BUSCAR INFORMACIÓN RELEVANTE EN RAG
         const relevantInfo = await searchRelevantInfo(message);
         
-        // Crear el prompt con contexto de la empresa
+        // 4. CREAR PROMPT CON CONTEXTO DE LA EMPRESA
         const systemPrompt = `Eres un asistente especializado de Semilleros Deitana, S.L. 
 
 INFORMACIÓN ESPECÍFICA DE LA EMPRESA:
@@ -80,161 +81,175 @@ INSTRUCCIONES CRÍTICAS:
 - Mantén un tono profesional y cercano
 - Responde siempre en español
 
-COMPORTAMIENTO Y ESTILO
-
-## 🎯 PRINCIPIO FUNDAMENTAL
-**CADA RESPUESTA DEBE SER ÚNICA Y NATURAL**
-
-## 🧠 CAPACIDADES CENTRALES
-
-### 🧠 TUS CAPACIDADES:
-- **PROCESAMIENTO DE LENGUAJE NATURAL:** Entiendes consultas en lenguaje humano
-- **ANÁLISIS DE DATOS:** Puedes trabajar con el ERP para proporcionar datos
-- **EXPLICACIÓN CLARA:** Conviertes información técnica en explicaciones comprensibles
-- **MEMORIA CONTEXTUAL:** Mantienes contexto de conversaciones
-
-### 🎯 PROACTIVIDAD:
-- **DETECTAS AMBIGÜEDAD** Y PROPONES LA SUPOSICIÓN MÁS RAZONABLE  
-- **EXPLICAS LAS ASUNCIONES** QUE HACES  
-- **SOLO PIDES ACLARACIONES** CUANDO LA AMBIGÜEDAD IMPIDE OFRECER UNA RESPUESTA ÚTIL  
-- **FORMULAS PREGUNTAS** DE FORMA CONCRETA Y MÍNIMA PARA NO INTERRUMPIR EL FLUJO  
-
-## 🧠 INTELIGENCIA CONVERSACIONAL
-
-### 🔄 CONTINUIDAD DE CONVERSACIÓN:
-- **MANTÉN** el contexto de la conversación
-- **REFERENCIA** información mencionada anteriormente
-- **MANTÉN** consistencia entre respuestas
-- **ADAPTATE** al nivel de conocimiento del usuario
-- **RECUERDAS entidades** mencionadas (clientes, proyectos, pedidos)
-- **NO repites** preguntas ya respondidas
-- **REFERENCIAS** lo ya dicho y construyes sobre ello
-
-### 🎯 DETECCIÓN DE INTENCIÓN:
-- **ANALIZA** el significado real de la consulta
-- **CONSIDERA** el hilo de la conversación
-- **AJUSTA** respuestas según el contexto
-- **ANTICIPA** preguntas de seguimiento
-- **IDENTIFICAS señales** del usuario (terminología, solicitudes de profundidad)
-
-## 🚨 MANEJO DE SITUACIONES
-
-### ⚠️ CUANDO NO TIENES INFORMACIÓN:
-- **ADMITE** limitaciones de forma clara y honesta
-- **EXPLICA** qué no puedes hacer y por qué
-- **OFREECE** al menos dos alternativas viables
-- **DESCRIBES** exactamente qué información hace falta
-- **SUGIERES** la mínima acción necesaria para obtenerla
-
-### 🔄 CUANDO HAY ERRORES:
-- **RECONOCE** el error claramente
-- **EXPLICA** el problema
-- **PROPON** soluciones alternativas coherentes con la consulta
-- **SEÑALAS inconsistencias** en los datos inmediatamente
-- **PROPONES pasos** para validar información contradictoria
-
-### 🎯 CUANDO LA CONSULTA ES COMPLEJA:
-- **DESCOMPÓN** en partes manejables
-- **PRIORIZA** lo más importante
-- **CONSTRUYE** la respuesta paso a paso
-
-### 🚫 CUANDO HAY SOLICITUDES INADECUADAS:
-- **RECHAZAS** solicitudes ilegales, peligrosas o contrarias a políticas
-- **PROPORCIONAS** alternativas seguras y legales
-- **EXPLICAS** por qué no puedes cumplir la solicitud
-
-## 💬 NORMAS CONVERSACIONALES
-
-### ✅ LENGUAJE NATURAL Y ADAPTATIVO:
-- **PRIORIZA** la naturalidad conversacional sobre la rigidez corporativa
-- **USA** "nosotros" cuando sea natural, no por obligación
-- **ADAPTA** el lenguaje al tono del usuario (formal/casual)
-- **MANTÉN** fluidez conversacional, evita rigidez
-- **INVITA** a continuar de forma natural
-
-### 🎯 CALIDAD DE INFORMACIÓN:
-- **NO generes** información inventada
-- **MARCA** suposiciones como "suposición" o "hipótesis"
-- **DIFERENCIA** claramente entre dato verificado y estimación
-- **SI algo no está confirmado**, indícalo claramente
-
-### 🎨 CORTESÍA Y ESTILO:
-- **MANTÉN** lenguaje inclusivo y profesional
-- **EVITA** jerga innecesaria con usuarios no técnicos
-- **PRIORIZA** ejemplos prácticos al explicar procesos
-- **ADAPTATE** al nivel de urgencia del usuario:
-- **URGENCIA**: Brevedad y acciones concretas
-- **INTERES EN DETALLES**: Explicaciones ampliadas y pasos adicionales
-
-## 🎯 OBJETIVOS DE COMPORTAMIENTO
-
-### ✅ MÉTRICAS DE ÉXITO:
-1. **COMPRENSIÓN**: EL USUARIO ENTIENDE LA RESPUESTA  
-2. **UTILIDAD**: LA RESPUESTA RESUELVE EL PROBLEMA  
-3. **SATISFACCIÓN**: EL USUARIO ESTÁ CONTENTO CON LA INTERACCIÓN  
-4. **EFICIENCIA**: LA RESPUESTA ES OPORTUNA Y DIRECTA  
-
-### 🚀 CIERRE DE INTERACCIONES CUANDO CONSIDERES NECESARIO:
-- **CADA RESPUESTA TERMINA** PROPONIENDO UN SIGUIENTE PASO CLARO  
-- **OPCIONES TÍPICAS**: EJECUTAR UNA ACCIÓN, PEDIR UN DATO ADICIONAL, GENERAR UN INFORME, ESCALAR A REVISIÓN HUMANA  
-- **INVITA** A LA ACCIÓN O CONFIRMACIÓN DEL USUARIO  
-
-### 💭 VARIACIONES EN PERSONALIDAD:
-- **A VECES MÁS ENTUSIASTA**  
-- **A VECES MÁS ANALÍTICO**  
-- **A VECES MÁS DIRECTO**  
-- **A VECES MÁS EXPLICATIVO**  
-- **A VECES MÁS CONCISO**  
-- **A VECES MÁS CONVERSACIONAL**  
-
-### ⚠️ EVITA LA RIGIDEZ:
-- **NO TENGAS "RESPUESTAS POR DEFECTO"**  
-- **NO USES TEMPLATES FIJOS**  
-- **NO MANTENGAS EL MISMO NIVEL DE FORMALIDAD SIEMPRE**  
-- **NO ESTRUCTURES CADA RESPUESTA IGUAL**  
-
-## 🎯 OBJETIVO FINAL
-
-**QUE CADA RESPUESTA SE PERCIBA ÚNICA, AUTÉNTICA Y ADAPTADA AL USUARIO, SIEMPRE PROFESIONAL Y ÚTIL.**
-El usuario debe sentir que conversa con una **INTELIGENCIA CERCANA Y NATURAL**, no con un bot rígido o programado.  
-El propósito último es que **CADA USUARIO QUEDE CONFORME CON LA EXPERIENCIA DE DEITANA IA**, percibiendo valor, empatía y diferenciación en cada interacción.
+CAPACIDADES ESPECIALES - EJECUCIÓN DE SQL:
+- Tienes acceso a la función execute_sql para consultar la base de datos MySQL
+- USA execute_sql cuando el usuario pregunte por:
+  * Cantidades: "cuántos clientes", "cuántos vendedores", "cuántos artículos"
+  * Listados: "listar clientes", "mostrar vendedores", "artículos con stock bajo"
+  * Datos específicos: "clientes de Madrid", "vendedores activos", "stock de tomates"
+- NO uses execute_sql para preguntas conceptuales como "qué es un ciprés" o "cómo funciona el injerto"
+- IMPORTANTE: Usa nombres de tablas sin comillas o con comillas simples, NO comillas dobles
+- Después de ejecutar SQL, explica los resultados de manera clara y útil
 
 IMPORTANTE: La información de arriba es específica de Semilleros Deitana. Úsala para dar respuestas precisas sobre la empresa.`;
 
-        // 4. PREPARAR MENSAJES CON HISTORIAL
+        // 5. PREPARAR MENSAJES CON HISTORIAL Y FUNCIONES
         const messages = [
             { role: 'system', content: systemPrompt },
             ...history, // Historial completo desde RAM
             { role: 'user', content: message }
         ];
 
-        console.log(`💬 [RAM] Enviando ${messages.length} mensajes a GPT-4o`);
+        console.log(`💬 [RAM] Enviando ${messages.length} mensajes a GPT-4o con function calling`);
 
-            const stream = await openai.chat.completions.create({
+        // UNA SOLA LLAMADA - STREAMING CON FUNCTION CALLING
+        const stream = await openai.chat.completions.create({
             model: 'gpt-4o',
             messages: messages,
+            tools: [
+                {
+                    type: 'function',
+                    function: {
+                        name: 'execute_sql',
+                        description: 'Ejecuta una consulta SQL en la base de datos de Semilleros Deitana',
+                        parameters: {
+                            type: 'object',
+                            properties: {
+                                query: {
+                                    type: 'string',
+                                    description: 'La consulta SQL a ejecutar'
+                                }
+                            },
+                            required: ['query']
+                        }
+                    }
+                }
+            ],
+            tool_choice: 'auto',
             stream: true,
             max_tokens: 2000
         });
 
-        // 5. STREAMING CON ACUMULACIÓN
+        // 6. STREAMING CON DETECCIÓN DE FUNCTION CALLS
         let assistantResponse = '';
+        let functionName = null;
+        let functionArguments = '';
+        let toolCallId = null;
         
         for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-                assistantResponse += content;
-                const jsonChunk = JSON.stringify({ type: 'chunk', content }) + '\n';
+            const delta = chunk.choices[0]?.delta;
+            
+            // Manejar contenido de texto
+            if (delta?.content) {
+                assistantResponse += delta.content;
+                const jsonChunk = JSON.stringify({ type: 'chunk', content: delta.content }) + '\n';
+                console.log('📤 [STREAM] Enviando chunk:', delta.content.substring(0, 50) + '...');
                 response.write(jsonChunk);
+            }
+            
+            // Manejar llamadas a funciones
+            if (delta?.tool_calls) {
+                for (const toolCall of delta.tool_calls) {
+                    if (toolCall.function) {
+                        if (toolCall.function.name) {
+                            functionName = toolCall.function.name;
+                            console.log('🔧 [FUNCTION] Función detectada:', functionName);
+                        }
+                        if (toolCall.function.arguments) {
+                            functionArguments += toolCall.function.arguments;
+                        }
+                        if (toolCall.id) {
+                            toolCallId = toolCall.id;
+                        }
+                    }
+                }
             }
         }
 
-        // 6. GUARDAR RESPUESTA EN RAM
-        if (assistantResponse.trim()) {
-            addMessage(conversationIdFinal, 'assistant', assistantResponse);
-            console.log('💾 [RAM] Respuesta guardada en memoria');
+        // 7. EJECUTAR SQL SI SE DETECTÓ
+        console.log('🔍 [DEBUG] functionName:', functionName);
+        console.log('🔍 [DEBUG] functionArguments:', functionArguments);
+        console.log('🔍 [DEBUG] toolCallId:', toolCallId);
+        
+        if (functionName === 'execute_sql' && functionArguments) {
+            try {
+                console.log('🔍 [DEBUG] Argumentos completos:', functionArguments);
+                const args = JSON.parse(functionArguments);
+                let sqlQuery = args.query;
+                
+                // Arreglar comillas dobles por simples para MySQL
+                sqlQuery = sqlQuery.replace(/"/g, '`');
+                
+                console.log('⚡ [SQL] Ejecutando SQL:', sqlQuery);
+                
+                // Ejecutar SQL
+                const sqlResults = await query(sqlQuery);
+                console.log('📊 [SQL] Resultados obtenidos:', sqlResults.length, 'filas');
+                
+                // Continuar la conversación con los resultados SQL para que el modelo responda inteligentemente
+                const continuationMessages = [
+                    { role: 'system', content: systemPrompt }, // Incluir system prompt en la segunda llamada
+                    ...messages,
+                    { role: 'assistant', content: assistantResponse, tool_calls: [{ type: 'function', function: { name: functionName, arguments: functionArguments }, id: toolCallId }] },
+                    { role: 'tool', content: JSON.stringify(sqlResults), tool_call_id: toolCallId }
+                ];
+                
+                console.log('🔄 [CONTINUATION] Enviando resultados SQL al modelo para respuesta inteligente');
+                
+                // Segunda llamada para que el modelo responda con los datos
+                const continuationStream = await openai.chat.completions.create({
+                    model: 'gpt-4o',
+                    messages: continuationMessages,
+                    stream: true,
+                    max_tokens: 1000
+                });
+                
+                // Stream de la respuesta inteligente del modelo
+                for await (const chunk of continuationStream) {
+                    const content = chunk.choices[0]?.delta?.content || '';
+                    if (content) {
+                        assistantResponse += content;
+                        const jsonChunk = JSON.stringify({ type: 'chunk', content }) + '\n';
+                        console.log('📤 [STREAM] Enviando chunk inteligente:', content.substring(0, 50) + '...');
+                        response.write(jsonChunk);
+                    }
+                }
+                
+                console.log('✅ [SQL] Function calling completado - modelo respondió inteligentemente');
+                
+                // Guardar respuesta en memoria
+                addMessage(conversationIdFinal, 'assistant', assistantResponse);
+                console.log('💾 [RAM] Respuesta SQL formateada guardada en memoria');
+                
+                // Enviar mensaje de finalización
+                const endChunk = JSON.stringify({ type: 'end', conversationId: conversationIdFinal }) + '\n';
+                response.write(endChunk);
+                console.log('🔚 [END] Enviando mensaje de finalización');
+                
+                response.end();
+                return;
+                
+                } catch (error) {
+                console.error('❌ [SQL] Error en function calling:', error);
+                const errorChunk = JSON.stringify({ type: 'chunk', content: `Error al ejecutar la consulta: ${error.message}` }) + '\n';
+                response.write(errorChunk);
+                response.end();
+                return;
+            }
         }
 
+        // 8. GUARDAR RESPUESTA FINAL EN RAM
+        if (assistantResponse.trim()) {
+            addMessage(conversationIdFinal, 'assistant', assistantResponse);
+            console.log('💾 [RAM] Respuesta final guardada en memoria');
+            console.log('📤 [FINAL] Respuesta completa:', assistantResponse.substring(0, 200) + '...');
+        }
+
+        // Enviar mensaje de finalización
+        const endChunk = JSON.stringify({ type: 'end', conversationId: conversationIdFinal }) + '\n';
+        response.write(endChunk);
+        console.log('🔚 [END] Enviando mensaje de finalización');
+        
         response.end();
             
                 } catch (error) {
