@@ -67,11 +67,18 @@ async function processQueryStream({ message, conversationId, response }) {
         // 3. BUSCAR INFORMACIÓN RELEVANTE EN RAG
         const relevantInfo = await searchRelevantInfo(message);
         
+        // 3.1. BUSCAR INFORMACIÓN RELEVANTE DEL MAPA ERP
+        const mapaERPInfo = await searchMapaERPInfo(message);
+        console.log(`🗺️ [MAPERP] Información del mapa ERP encontrada: ${mapaERPInfo.length} caracteres`);
+        
         // 4. CREAR PROMPT CON CONTEXTO DE LA EMPRESA
         const systemPrompt = `Eres un asistente especializado de Semilleros Deitana, S.L. 
 
 INFORMACIÓN ESPECÍFICA DE LA EMPRESA:
 ${relevantInfo}
+
+ESTRUCTURA DE LA BASE DE DATOS (MAPERP):
+${mapaERPInfo}
 
 INSTRUCCIONES CRÍTICAS:
 - SIEMPRE usa la información específica de Deitana que se te proporciona arriba
@@ -207,7 +214,7 @@ IMPORTANTE: La información de arriba es específica de Semilleros Deitana. Úsa
                 // Stream de la respuesta inteligente del modelo
                 for await (const chunk of continuationStream) {
                     const content = chunk.choices[0]?.delta?.content || '';
-                    if (content) {
+                if (content) {
                         assistantResponse += content;
                         const jsonChunk = JSON.stringify({ type: 'chunk', content }) + '\n';
                         console.log('📤 [STREAM] Enviando chunk inteligente:', content.substring(0, 50) + '...');
@@ -249,14 +256,97 @@ IMPORTANTE: La información de arriba es específica de Semilleros Deitana. Úsa
         const endChunk = JSON.stringify({ type: 'end', conversationId: conversationIdFinal }) + '\n';
         response.write(endChunk);
         console.log('🔚 [END] Enviando mensaje de finalización');
-        
-        response.end();
+
+            response.end();
             
                 } catch (error) {
         console.error('Error:', error);
         if (!response.headersSent) {
             response.status(500).json({ error: 'Error al procesar la consulta' });
         }
+    }
+}
+
+// Función para buscar información relevante del mapaERP
+async function searchMapaERPInfo(query) {
+    try {
+        const mapaERP = require('./mapaERP.js');
+        
+        // Convertir el mapaERP a texto para búsqueda semántica
+        const mapaERPText = JSON.stringify(mapaERP, null, 2);
+        
+        // Buscar términos relevantes en el query
+        const queryLower = query.toLowerCase();
+        const relevantTables = [];
+        
+        // Buscar tablas relevantes basándose en palabras clave
+        for (const [tableName, tableInfo] of Object.entries(mapaERP)) {
+            const tableNameLower = tableName.toLowerCase();
+            const description = tableInfo.descripcion ? tableInfo.descripcion.toLowerCase() : '';
+            
+            // Si el query menciona la tabla o palabras relacionadas
+            if (queryLower.includes(tableNameLower) || 
+                queryLower.includes(tableNameLower.replace('_', ' ')) ||
+                description.includes(queryLower.split(' ')[0])) {
+                relevantTables.push({ tableName, tableInfo });
+            }
+        }
+        
+        // Si no encontramos tablas específicas, buscar por palabras clave comunes
+        if (relevantTables.length === 0) {
+            const keywords = {
+                'clientes': ['cliente', 'clientes', 'customer', 'customers'],
+                'articulos': ['artículo', 'artículos', 'producto', 'productos', 'item', 'items'],
+                'vendedores': ['vendedor', 'vendedores', 'sales', 'seller'],
+                'partidas': ['partida', 'partidas', 'order', 'orders'],
+                'facturas': ['factura', 'facturas', 'invoice', 'invoices']
+            };
+            
+            for (const [tableName, tableInfo] of Object.entries(mapaERP)) {
+                for (const [key, words] of Object.entries(keywords)) {
+                    if (tableName.includes(key) || words.some(word => queryLower.includes(word))) {
+                        relevantTables.push({ tableName, tableInfo });
+                    break;
+                }
+            }
+        }
+    }
+    
+        // Limitar a las 3 tablas más relevantes para no sobrecargar el contexto
+        const topTables = relevantTables.slice(0, 3);
+        
+        // Formatear la información relevante
+        let relevantInfo = '';
+        for (const { tableName, tableInfo } of topTables) {
+            relevantInfo += `\n=== TABLA: ${tableName.toUpperCase()} ===\n`;
+            relevantInfo += `Descripción: ${tableInfo.descripcion || 'Sin descripción'}\n`;
+            
+            if (tableInfo.columnas) {
+                relevantInfo += `Columnas:\n`;
+                for (const [colName, colDesc] of Object.entries(tableInfo.columnas)) {
+                    relevantInfo += `- ${colName}: ${colDesc}\n`;
+                }
+            }
+            
+            if (tableInfo.relaciones && tableInfo.relaciones.length > 0) {
+                relevantInfo += `Relaciones:\n`;
+                for (const rel of tableInfo.relaciones) {
+                    relevantInfo += `- ${rel.tablaDestino} (${rel.campoOrigen} -> ${rel.campoDestino})\n`;
+                }
+            }
+            
+            if (tableInfo.ejemplos && tableInfo.ejemplos.length > 0) {
+                relevantInfo += `Ejemplo de consulta:\n${tableInfo.ejemplos[0].query}\n`;
+            }
+            
+            relevantInfo += '\n';
+        }
+        
+        return relevantInfo || 'No se encontró información relevante del mapaERP para esta consulta.';
+        
+    } catch (error) {
+        console.error('Error buscando información del mapaERP:', error);
+        return 'Error al acceder al mapaERP.';
     }
 }
 
