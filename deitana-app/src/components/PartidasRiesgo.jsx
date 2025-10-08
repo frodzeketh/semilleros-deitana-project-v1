@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, AlertTriangle, Download, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../components/Authenticator/firebase';
-// import * as XLSX from 'xlsx'; // Comentado - no se usa actualmente
-import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
+import * as XLSX from 'xlsx'; // Reactivado para exportación a Excel
+// import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx'; // Comentado - ahora usamos Excel
 
 const API_URL =
   process.env.NODE_ENV === "development"
@@ -28,12 +28,12 @@ const API_URL =
 const PartidasRiesgo = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const [vendedoresData, setVendedoresData] = useState([]);
+  const [formasPagoData, setFormasPagoData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Función para obtener datos de vendedores
-  const fetchVendedoresData = useCallback(async () => {
+  // Función para obtener datos de formas de pago
+  const fetchFormasPagoData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,7 +43,7 @@ const PartidasRiesgo = () => {
         throw new Error('No hay usuario autenticado');
       }
 
-      console.log('🚨 [FRONTEND] Cargando datos de vendedores desde VPS...');
+      console.log('💳 [FRONTEND] Cargando datos de formas de pago desde VPS...');
       
       const response = await fetch(`${API_URL}/api/chat/partidas/riesgo`, {
         headers: {
@@ -58,17 +58,17 @@ const PartidasRiesgo = () => {
       const data = await response.json();
       
       if (data.success) {
-        console.log('🚨 [FRONTEND] Datos cargados exitosamente:', data.data.length, 'registros');
-        console.log('🚨 [FRONTEND] Datos recibidos:', data.data);
-        setVendedoresData(data.data);
+        console.log('💳 [FRONTEND] Datos cargados exitosamente:', data.data.length, 'registros');
+        console.log('💳 [FRONTEND] Datos recibidos:', data.data);
+        setFormasPagoData(data.data);
       } else {
         throw new Error(data.error || 'Error al cargar los datos');
       }
     } catch (error) {
-      console.error('❌ [FRONTEND] Error al cargar datos de vendedores:', error);
+      console.error('❌ [FRONTEND] Error al cargar datos de formas de pago:', error);
       setError(error.message);
       // En caso de error, usar array vacío (los datos se obtienen del servidor)
-      setVendedoresData([]);
+      setFormasPagoData([]);
     } finally {
       setLoading(false);
     }
@@ -76,218 +76,74 @@ const PartidasRiesgo = () => {
   
   // Cargar datos al montar el componente
   useEffect(() => {
-    fetchVendedoresData();
-  }, [fetchVendedoresData]);
+    fetchFormasPagoData();
+  }, [fetchFormasPagoData]);
 
-  // Función para exportar datos a Word con formato estructurado
-  const exportToWord = async () => {
-    if (vendedoresData.length === 0) {
+  // Función para exportar datos a Excel (.xlsx) - formato tabular perfecto para formas de pago
+  const exportToExcel = async () => {
+    if (formasPagoData.length === 0) {
       alert('No hay datos para exportar');
       return;
     }
 
     try {
-      console.log('🚀 Iniciando generación de documento Word...');
-      console.log('📊 Datos a procesar:', vendedoresData.length, 'vendedores');
+      console.log('🚀 Iniciando generación de archivo Excel...');
+      console.log('📊 Datos a procesar:', formasPagoData.length, 'formas de pago');
 
-      // Función para formatear texto (sin truncamiento)
-      const formatText = (text) => {
-        if (!text || text === 'Sin información especificada') return text;
-        return text;
-      };
-
-      // Crear párrafos básicos para cada vendedor
-      const vendedoresParagraphs = [];
+      // Preparar datos para Excel
+      const allFormasPago = formasPagoData;
       
-      // Procesar TODOS los vendedores
-      const allVendedores = vendedoresData;
+      // Crear el workbook de Excel
+      const wb = XLSX.utils.book_new();
       
-      allVendedores.forEach((vendedor, index) => {
-        // Título del vendedor
-        vendedoresParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `${index + 1}. VENDEDOR: ${vendedor.nombreCompleto}`,
-                bold: true,
-                size: 28,
-              }),
-            ],
-            spacing: { before: 400, after: 200 },
-          })
-        );
-
-        // Información básica
-        vendedoresParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Código: ${vendedor.codigoVendedor} | `,
-                bold: true,
-                size: 24,
-              }),
-              new TextRun({
-                text: `Número Técnico: ${vendedor.numeroTecnico}`,
-                size: 24,
-              }),
-            ],
-            spacing: { after: 100 },
-          })
-        );
-
-        // Información de ubicación
-        vendedoresParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "INFORMACIÓN DE UBICACIÓN:",
-                bold: true,
-                size: 26,
-                color: "A23B72",
-              }),
-            ],
-            spacing: { before: 200, after: 100 },
-          })
-        );
-
-        vendedoresParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Domicilio: ${formatText(vendedor.domicilio)}`,
-                size: 22,
-              }),
-            ],
-            spacing: { after: 100 },
-          })
-        );
-
-        vendedoresParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Población: ${formatText(vendedor.poblacion)} | `,
-                size: 22,
-              }),
-              new TextRun({
-                text: `Provincia: ${formatText(vendedor.provincia)}`,
-                size: 22,
-              }),
-            ],
-            spacing: { after: 200 },
-          })
-        );
-
-        // Separador
-        vendedoresParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "-".repeat(60),
-                size: 20,
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          })
-        );
-      });
-
-      // Crear el documento Word
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            // Título del documento
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "INFORMACIÓN COMPLETA DE VENDEDORES DE SEMILLEROS DEITANA",
-                  bold: true,
-                  size: 32,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-            
-            // Fecha de generación
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Generado el: ${new Date().toLocaleDateString('es-ES', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}`,
-                  italics: true,
-                  size: 20,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 600 },
-            }),
-
-            // Nota informativa
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `NOTA: Se muestran TODOS los ${allVendedores.length} vendedores disponibles con información completa de ubicación y datos técnicos.`,
-                  italics: true,
-                  size: 18,
-                  color: "666666",
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-
-            // Separador
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "=".repeat(80),
-                  size: 20,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-
-            // Contenido de vendedores
-            ...vendedoresParagraphs,
-          ],
-        }],
-      });
-
-      console.log('📝 Documento Word creado, generando blob...');
-
-      // Generar el archivo Word como blob directamente
-      const blob = await Packer.toBlob(doc);
+      // Preparar los datos para la hoja de cálculo
+      const excelData = allFormasPago.map((formaPago, index) => ({
+        'Nº': index + 1,
+        'Código Forma Pago': formaPago.codigoFormaPago,
+        'Denominación': formaPago.denominacion,
+        'Número Vencimientos': formaPago.numeroVencimientos,
+        'A Cartera': formaPago.aCartera,
+        'Tipo Pago': formaPago.tipoPago,
+        'Código Tipo': formaPago.tipoPagoCodigo,
+        'Referencia Web': formaPago.referenciaWeb,
+        'Vencimientos Días': formaPago.vencimientosDias
+      }));
       
-      console.log('💾 Blob generado exitosamente');
+      // Crear la hoja de cálculo
+      const ws = XLSX.utils.json_to_sheet(excelData);
       
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
+      // Configurar anchos de columna
+      const colWidths = [
+        { wch: 5 },   // Nº
+        { wch: 15 },  // Código Forma Pago
+        { wch: 30 },  // Denominación
+        { wch: 18 },  // Número Vencimientos
+        { wch: 12 },  // A Cartera
+        { wch: 20 },  // Tipo Pago
+        { wch: 12 },  // Código Tipo
+        { wch: 20 },  // Referencia Web
+        { wch: 40 }   // Vencimientos Días
+      ];
+      ws['!cols'] = colWidths;
       
-      // Generar el nombre del archivo con fecha actual
+      // Agregar la hoja al workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Formas de Pago');
+      
+      console.log('📝 Archivo Excel creado, generando descarga...');
+
+      // Generar el archivo Excel
       const fechaActual = new Date().toISOString().split('T')[0];
-      link.download = `Vendedores_Completos_${fechaActual}.docx`;
+      const fileName = `Formas_De_Pago_Con_Vencimientos_${fechaActual}.xlsx`;
       
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      XLSX.writeFile(wb, fileName);
       
-      console.log('✅ Documento Word generado exitosamente');
-      alert(`Documento Word generado exitosamente con ${allVendedores.length} vendedores.`);
+      console.log('✅ Archivo Excel generado exitosamente');
+      alert(`Archivo Excel generado exitosamente con ${allFormasPago.length} formas de pago.`);
       
     } catch (error) {
-      console.error('❌ Error al generar el documento Word:', error);
+      console.error('❌ Error al generar el archivo Excel:', error);
       console.error('❌ Detalles del error:', error.message);
-      alert(`Error al generar el documento Word: ${error.message}`);
+      alert(`Error al generar el archivo Excel: ${error.message}`);
     }
   };
   
@@ -821,12 +677,12 @@ const PartidasRiesgo = () => {
               </svg>
             </button>
             <div className="ds-chat-header-title">
-              <h1>Vendedores</h1>
+              <h1>Formas de Pago</h1>
             </div>
           </div>
         )}
 
-        {/* Contenido de Vendedores */}
+        {/* Contenido de Formas de Pago */}
         <div className="ds-partidas-riesgo-content">
           {/* Header de la página */}
           <div className="ds-partidas-header">
@@ -837,91 +693,99 @@ const PartidasRiesgo = () => {
                 <Search className="ds-search-icon" size={16} />
                 <input
                   type="text"
-                  placeholder="Buscar por código de vendedor, nombre..."
+                  placeholder="Buscar por denominación, tipo de pago, vencimientos..."
                   className="ds-search-input"
                   disabled
                 />
               </div>
             </div>
 
-            {/* Botón de exportación a Word */}
+            {/* Botón de exportación a Excel */}
             <div className="ds-export-section">
               <button 
                 className="ds-export-button"
-                onClick={exportToWord}
-                disabled={loading || vendedoresData.length === 0}
-                title="Exportar a Word"
+                onClick={exportToExcel}
+                disabled={loading || formasPagoData.length === 0}
+                title="Exportar a Excel (formato tabular perfecto para formas de pago)"
               >
                 <Download size={16} />
-                <span>Exportar Word</span>
+                <span>Exportar Excel</span>
               </button>
             </div>
           </div>
 
-          {/* Lista de vendedores */}
+          {/* Lista de formas de pago */}
           <div className="ds-partidas-list">
             {loading ? (
               <div className="loading-state">
                 <div className="loading-spinner"></div>
-                <p>Cargando vendedores...</p>
+                <p>Cargando formas de pago...</p>
               </div>
             ) : error ? (
               <div className="error-state">
                 <h3>Error al cargar los datos</h3>
                 <p>{error}</p>
-                <button onClick={fetchVendedoresData} className="retry-button">
+                <button onClick={fetchFormasPagoData} className="retry-button">
                   Reintentar
                 </button>
               </div>
-            ) : vendedoresData.length === 0 ? (
+            ) : formasPagoData.length === 0 ? (
               <div className="no-results">
                 <div className="no-results-icon">
                   <AlertTriangle size={48} />
                 </div>
-                <h3>No hay vendedores disponibles</h3>
-                <p>No se encontraron vendedores con información completa.</p>
+                <h3>No hay formas de pago disponibles</h3>
+                <p>No se encontraron formas de pago con información de vencimientos.</p>
               </div>
             ) : (
-              vendedoresData.map((vendedor) => (
+              formasPagoData.map((formaPago) => (
               <div
-                key={vendedor.id}
+                key={formaPago.id}
                 className="ds-familia-completa-card"
               >
                 <div className="ds-familia-completa-grid">
-                  {/* Header del vendedor */}
+                  {/* Header de la forma de pago */}
                   <div className="ds-familia-header">
                     <div className="ds-familia-header-icon">
                       <User size={20} />
                     </div>
                     <div className="ds-familia-header-info">
-                      <h3 className="ds-familia-nombre">{vendedor.nombreCompleto}</h3>
-                      <p className="ds-familia-codigo">Código: {vendedor.codigoVendedor}</p>
-                      <p className="ds-familia-latin">Número Técnico: {vendedor.numeroTecnico}</p>
+                      <h3 className="ds-familia-nombre">{formaPago.denominacion}</h3>
+                      <p className="ds-familia-codigo">Código: {formaPago.codigoFormaPago} | Tipo: {formaPago.tipoPago}</p>
+                      <p className="ds-familia-latin">Vencimientos: {formaPago.numeroVencimientos} | A Cartera: {formaPago.aCartera}</p>
                     </div>
                     <div className="ds-familia-articulos">
-                      <span className="ds-articulos-count">{vendedor.provincia}</span>
-                      <span className="ds-articulos-label">provincia</span>
+                      <span className="ds-articulos-count">{formaPago.numeroVencimientos}</span>
+                      <span className="ds-articulos-label">vencimientos</span>
+                  </div>
+                  </div>
+
+                  {/* Información de la forma de pago */}
+                  <div className="ds-familia-tarifas">
+                    <h4 className="ds-seccion-titulo">Información de la Forma de Pago</h4>
+                    <div className="ds-tarifa-info">
+                      <div className="ds-tarifa-item">
+                        <span className="ds-tarifa-label">Tipo Pago:</span>
+                        <span className="ds-tarifa-value">{formaPago.tipoPago} ({formaPago.tipoPagoCodigo})</span>
+                    </div>
+                      <div className="ds-tarifa-item">
+                        <span className="ds-tarifa-label">A Cartera:</span>
+                        <span className="ds-tarifa-value">{formaPago.aCartera}</span>
+                  </div>
+                      <div className="ds-tarifa-item">
+                        <span className="ds-tarifa-label">Referencia Web:</span>
+                        <span className="ds-tarifa-value">{formaPago.referenciaWeb}</span>
+                    </div>
                     </div>
                   </div>
 
-                  {/* Información de ubicación */}
-                  <div className="ds-familia-tarifas">
-                    <h4 className="ds-seccion-titulo">Información de Ubicación</h4>
-                    <div className="ds-tarifa-info">
-                      <div className="ds-tarifa-item">
-                        <span className="ds-tarifa-label">Domicilio:</span>
-                        <span className="ds-tarifa-value">{vendedor.domicilio}</span>
-                      </div>
-                      <div className="ds-tarifa-item">
-                        <span className="ds-tarifa-label">Población:</span>
-                        <span className="ds-tarifa-value">{vendedor.poblacion}</span>
-                      </div>
-                      <div className="ds-tarifa-item">
-                        <span className="ds-tarifa-label">Provincia:</span>
-                        <span className="ds-tarifa-value">{vendedor.provincia}</span>
+                  {/* Vencimientos */}
+                  <div className="ds-familia-teorias-pequena">
+                    <h4 className="ds-seccion-titulo">Vencimientos</h4>
+                    <div className="ds-teorias-content">
+                      <p className="ds-teorias-texto">{formaPago.vencimientosDias}</p>
                       </div>
                     </div>
-                  </div>
                 </div>
               </div>
               ))
@@ -1270,3 +1134,4 @@ const PartidasRiesgo = () => {
 };
 
 export default PartidasRiesgo;
+

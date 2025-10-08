@@ -197,7 +197,7 @@ familias: {
     columnas: {
       id: "Código único de la familia (Clave Primaria)",
       FM_DENO: "Nombre del Grupo/Familia.",
-      FM_LAT: "Nombre en Latín.",
+      FM_NLAT: "Nombre en Latín.",
       FM_PGER: "Porcentaje de germinación.",
     },
     relaciones: {
@@ -1228,7 +1228,7 @@ t_siembras: {
     columnas: {
       id: "Código único de la tarea (Clave Primaria)",
       TARP_DENO: "Denominación o nombre de la tarea (Ej: H.CARRETILLERO, H.LIMPIEZA GENERAL)",
-      TARP_SECC: "Código de la sección de tarea a la que pertenece. Clave foránea a la tabla 'tareas_seccion'.",
+      TAP_SECC: "Código de la sección de tarea a la que pertenece. Clave foránea a la tabla 'tareas_seccion'.",
       TARP_TIPO: "Tipo general de tarea (Ej: 'Otros', 'Siembra', 'Mantenimiento')",
     },
     relaciones: {

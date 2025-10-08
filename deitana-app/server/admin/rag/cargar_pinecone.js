@@ -5,12 +5,27 @@ const path = require('path');
 
 // Configuración
 
+// Leer API key desde .env (ubicado en server/.env)
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-// Leer API key desde .env
-require('dotenv').config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY || 'pcsk_ctXEB_EytPZdg6HJhk2HPbfvEfknyuM671AZUmwz82YSMVgjYfGfR3QfsLMXC8BcRjUvY';
 const INDEX_NAME = 'deitana-knowledge';
 const RAG_FILE_PATH = path.join(__dirname, 'rag.txt');
+
+// Validar configuración
+if (!OPENAI_API_KEY) {
+    console.error('❌ Error: OPENAI_API_KEY no encontrada');
+    console.error('📁 Ruta del .env:', path.join(__dirname, '../../.env'));
+    console.error('💡 Asegúrate de que el archivo server/.env existe y contiene OPENAI_API_KEY');
+    process.exit(1);
+}
+
+console.log('✅ Configuración cargada:');
+console.log(`   📁 Archivo RAG: ${RAG_FILE_PATH}`);
+console.log(`   🔑 OpenAI API Key: ${OPENAI_API_KEY ? '✓ Configurada' : '✗ No encontrada'}`);
+console.log(`   🔑 Pinecone API Key: ${PINECONE_API_KEY ? '✓ Configurada' : '✗ No encontrada'}`);
+console.log(`   📊 Índice Pinecone: ${INDEX_NAME}\n`);
 
 // Inicializar clientes
 const pinecone = new Pinecone({ apiKey: PINECONE_API_KEY });
