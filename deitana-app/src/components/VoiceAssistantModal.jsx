@@ -1,160 +1,198 @@
-import React, { useState, useRef } from 'react';
-import { X, Mic, MicOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Mic } from 'lucide-react';
 
-const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversationId, setCurrentConversationId, setChatMessages }) => {
-  const [status, setStatus] = useState('Mantén presionado para hablar');
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+let globalActive = false;
+
+const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
+  const [status, setStatus] = useState('Conectando...');
+  const [isActive, setIsActive] = useState(false);
   
-  const mediaRecorderRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  const pcRef = useRef(null);
+  const dcRef = useRef(null);
+  const audioElRef = useRef(null);
 
-  const startRecording = async () => {
-    if (isProcessing) return;
+  useEffect(() => {
+    if (!isOpen || globalActive) return;
     
+    globalActive = true;
+    console.log('🚀 [VOICE] Iniciando Realtime API');
+    init();
+
+    return () => {
+      console.log('🧹 [VOICE] Cleanup');
+      cleanup();
+      globalActive = false;
+    };
+  }, [isOpen]);
+
+  const init = async () => {
     try {
-      console.log('🎤 [VOICE] Iniciando grabación');
+      if (pcRef.current) return;
       
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
+      const pc = new RTCPeerConnection();
+      pcRef.current = pc;
+      
+      const token = await user.getIdToken();
+      const res = await fetch(`${API_URL}/api/voice-assistant/session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
       
-      mediaStreamRef.current = stream;
+      const data = await res.json();
+      const KEY = data.client_secret.value;
       
-      // Configuración optimizada para Whisper
-      const options = { mimeType: 'audio/webm;codecs=opus' };
-      const recorder = new MediaRecorder(stream, options);
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
+      const audioEl = document.createElement('audio');
+      audioEl.autoplay = true;
+      audioElRef.current = audioEl;
       
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
+      pc.ontrack = (e) => {
+        audioEl.srcObject = e.streams[0];
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true }
+      });
+      
+      pc.addTrack(stream.getTracks()[0]);
+      
+      const dc = pc.createDataChannel('oai-events');
+      dcRef.current = dc;
+      
+      dc.onopen = () => {
+        console.log('✅ [VOICE] Conectado');
+        setStatus('Habla cuando quieras');
+        setIsActive(true);
+        
+        // Cargar información de la empresa desde el backend
+        fetch(`${API_URL}/api/chat/company-context`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(contextData => {
+          // Configurar con información de la empresa
+          dc.send(JSON.stringify({
+            type: 'session.update',
+            session: {
+              modalities: ['text', 'audio'],
+              instructions: contextData.instructions || `Eres un asistente de Semilleros Deitana, S.L. Responde de manera natural, amigable y profesional con emojis. Usa la información de la empresa cuando sea relevante.`,
+              voice: 'alloy',
+              input_audio_format: 'pcm16',
+              output_audio_format: 'pcm16',
+              input_audio_transcription: { model: 'whisper-1' },
+              turn_detection: {
+                type: 'server_vad',
+                threshold: 0.5,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 500
+              },
+              tools: [
+                {
+                  type: 'function',
+                  name: 'query_backend',
+                  description: 'Consulta información específica de Semilleros Deitana (base de datos, políticas, etc.)',
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      query: { type: 'string', description: 'La consulta a realizar' }
+                    },
+                    required: ['query']
+                  }
+                }
+              ]
+            }
+          }));
+          
+          console.log('✅ [VOICE] Configurado con contexto de empresa');
+        });
+      };
+      
+      dc.onmessage = async (e) => {
+        const event = JSON.parse(e.data);
+        
+        // Manejar function calling
+        if (event.type === 'response.function_call_arguments.done') {
+          console.log('🔧 [VOICE] Function call:', event.name, event.arguments);
+          
+          try {
+            const args = JSON.parse(event.arguments);
+            const token = await user.getIdToken();
+            
+            const res = await fetch(`${API_URL}/api/chat/process-voice`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ message: args.query })
+            });
+            
+            const data = await res.json();
+            
+            // Devolver resultado
+            dc.send(JSON.stringify({
+              type: 'conversation.item.create',
+              item: {
+                type: 'function_call_output',
+                call_id: event.call_id,
+                output: data.response
+              }
+            }));
+            
+            dc.send(JSON.stringify({ type: 'response.create' }));
+            
+            console.log('✅ [VOICE] Function ejecutada');
+          } catch (error) {
+            console.error('❌ [VOICE] Error en function:', error);
+          }
         }
       };
       
-      recorder.onstop = () => processAudio();
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
       
-      recorder.start();
-      setIsRecording(true);
-      setStatus('Grabando... Suelta para enviar');
-      console.log('▶️ [VOICE] Grabando');
-      
-    } catch (error) {
-      console.error('❌ [VOICE] Error:', error);
-      setStatus('Error: Micrófono no disponible');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      console.log('🛑 [VOICE] Detenido');
-    }
-  };
-
-  const processAudio = async () => {
-    if (audioChunksRef.current.length === 0) return;
-    
-    try {
-      setIsProcessing(true);
-      setStatus('Procesando...');
-      
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      audioChunksRef.current = [];
-      
-      // Validar que el audio sea suficiente
-      if (audioBlob.size < 2000) {
-        console.log('⚠️ [VOICE] Audio muy corto, ignorando');
-        setStatus('Audio muy corto - Habla más tiempo');
-        setTimeout(() => setStatus('Mantén presionado para hablar'), 2000);
-        setIsProcessing(false);
-        return;
-      }
-      
-      // Detener stream
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(t => t.stop());
-        mediaStreamRef.current = null;
-      }
-      
-      console.log('📤 [VOICE] Enviando:', audioBlob.size, 'bytes');
-      
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'voice.webm');
-      
-      const token = await user.getIdToken();
-      
-      console.log('🔍 [VOICE] Conversation ID actual:', currentConversationId);
-      
-      // Usar conversationId si existe, sino crear temporal
-      const convId = currentConversationId || `temp_${Date.now()}`;
-      formData.append('conversationId', convId);
-      
-      // Llamar al backend que USA openAI.js
-      const response = await fetch(`${API_URL}/api/voice-assistant/chat`, {
+      const sdp = await fetch(`https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+        body: offer.sdp,
+        headers: {
+          'Authorization': `Bearer ${KEY}`,
+          'Content-Type': 'application/sdp'
+        }
       });
       
-      if (!response.ok) throw new Error('Error al procesar');
-      
-      const data = await response.json();
-      console.log('✅ [VOICE] Transcripción:', data.transcription);
-      console.log('✅ [VOICE] Respuesta:', data.response.substring(0, 100) + '...');
-      
-      // Actualizar conversationId si es nuevo
-      if (data.conversationId && (!currentConversationId || currentConversationId.startsWith('temp_'))) {
-        console.log('🔄 [VOICE] Actualizando conversationId:', data.conversationId);
-        setCurrentConversationId(data.conversationId);
-      }
-      
-      // Agregar mensajes al chat
-      if (setChatMessages) {
-        setChatMessages(prev => [...prev, {
-          id: Date.now(),
-          text: data.transcription,
-          sender: 'user',
-          isVoice: true
-        }]);
-        
-        setChatMessages(prev => [...prev, {
-          id: Date.now() + 1,
-          text: data.response,
-          sender: 'bot',
-          isVoice: true
-        }]);
-      }
-      
-      // Reproducir audio
-      if (data.audio) {
-        setStatus('Reproduciendo...');
-        const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`);
-        
-        await new Promise((resolve) => {
-          audio.onended = resolve;
-          audio.onerror = resolve;
-          audio.play();
-        });
-        
-        console.log('✅ [VOICE] Completado');
-      }
-      
-      setStatus('Mantén presionado para hablar');
+      await pc.setRemoteDescription({ type: 'answer', sdp: await sdp.text() });
+      console.log('✅ [VOICE] WebRTC establecido');
       
     } catch (error) {
       console.error('❌ [VOICE] Error:', error);
-      setStatus('Error al procesar');
-    } finally {
-      setIsProcessing(false);
+      setStatus('Error: ' + error.message);
     }
+  };
+
+  const cleanup = () => {
+    if (pcRef.current) {
+      pcRef.current.getSenders().forEach(s => s.track?.stop());
+      pcRef.current.close();
+      pcRef.current = null;
+    }
+    
+    if (dcRef.current) {
+      dcRef.current.close();
+      dcRef.current = null;
+    }
+    
+    if (audioElRef.current) {
+      if (audioElRef.current.srcObject) {
+        audioElRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
+      audioElRef.current = null;
+    }
+    
+    setIsActive(false);
+    console.log('✅ [VOICE] Limpio');
   };
 
   if (!isOpen) return null;
@@ -175,7 +213,6 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
       padding: '40px'
     }}>
       
-      {/* Círculo negro */}
       <div style={{
         width: '200px',
         height: '200px',
@@ -184,13 +221,12 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        animation: isRecording ? 'pulse 1.5s infinite' : 'none',
+        animation: isActive ? 'pulse 1.5s infinite' : 'none',
         marginBottom: '80px'
       }}>
-        {isRecording && <Mic size={48} color="#ffffff" />}
+        {isActive && <Mic size={48} color="#fff" />}
       </div>
 
-      {/* Texto */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -199,7 +235,7 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
         color: '#666',
         fontSize: '14px',
         textAlign: 'center',
-        maxWidth: '400px'
+        maxWidth: '500px'
       }}>
         <span style={{
           width: '16px',
@@ -216,43 +252,7 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
         <span>{status}</span>
       </div>
 
-      {/* Botones */}
-      <div style={{ display: 'flex', gap: '20px' }}>
-        
-        {/* Botón micrófono */}
-        <button
-          onMouseDown={startRecording}
-          onMouseUp={stopRecording}
-          onTouchStart={startRecording}
-          onTouchEnd={stopRecording}
-          disabled={isProcessing}
-          style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            border: 'none',
-            backgroundColor: isRecording ? '#ff4444' : '#000000',
-            cursor: isProcessing ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: isRecording ? '0 0 20px rgba(255,68,68,0.5)' : '0 2px 8px rgba(0,0,0,0.2)',
-            opacity: isProcessing ? 0.5 : 1,
-            transform: isRecording ? 'scale(1.1)' : 'scale(1)',
-            transition: 'all 0.2s'
-          }}
-        >
-          {isRecording ? (
-            <MicOff size={32} color="#fff" strokeWidth={2} />
-          ) : (
-            <Mic size={32} color="#fff" strokeWidth={2} />
-          )}
-        </button>
-
-        {/* Botón cerrar */}
-        <button
-          onClick={onClose}
-          style={{
+      <button onClick={() => { cleanup(); onClose(); }} style={{
             width: '64px',
             height: '64px',
             borderRadius: '50%',
@@ -262,12 +262,10 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}
-        >
-          <X size={24} color="#333" />
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <X size={24} color="#333" />
         </button>
-      </div>
 
       <style>{`
         @keyframes pulse {

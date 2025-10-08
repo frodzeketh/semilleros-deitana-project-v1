@@ -1064,5 +1064,6 @@ async function searchMapaERPInfo(query) {
 }
 
 module.exports = {
-    processQueryStream
+    processQueryStream,
+    searchRelevantInfo
 };
