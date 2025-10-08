@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Mic } from 'lucide-react';
 
 let globalActive = false;
@@ -11,21 +11,30 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
   const dcRef = useRef(null);
   const audioElRef = useRef(null);
 
-  useEffect(() => {
-    if (!isOpen || globalActive) return;
+  const cleanup = useCallback(() => {
+    if (pcRef.current) {
+      pcRef.current.getSenders().forEach(s => s.track?.stop());
+      pcRef.current.close();
+      pcRef.current = null;
+    }
     
-    globalActive = true;
-    console.log('🚀 [VOICE] Iniciando Realtime API');
-    init();
+    if (dcRef.current) {
+      dcRef.current.close();
+      dcRef.current = null;
+    }
+    
+    if (audioElRef.current) {
+      if (audioElRef.current.srcObject) {
+        audioElRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
+      audioElRef.current = null;
+    }
+    
+    setIsActive(false);
+    console.log('✅ [VOICE] Limpio');
+  }, []);
 
-    return () => {
-      console.log('🧹 [VOICE] Cleanup');
-      cleanup();
-      globalActive = false;
-    };
-  }, [isOpen]);
-
-  const init = async () => {
+  const init = useCallback(async () => {
     try {
       if (pcRef.current) return;
       
@@ -79,7 +88,7 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
             session: {
               modalities: ['text', 'audio'],
               instructions: contextData.instructions || `Eres un asistente de Semilleros Deitana, S.L. Responde de manera natural, amigable y profesional con emojis. Usa la información de la empresa cuando sea relevante.`,
-              voice: 'alloy',
+              voice: 'shimmer', // Voz femenina
               input_audio_format: 'pcm16',
               output_audio_format: 'pcm16',
               input_audio_transcription: { model: 'whisper-1' },
@@ -113,13 +122,27 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
       dc.onmessage = async (e) => {
         const event = JSON.parse(e.data);
         
+        // Log de eventos importantes
+        if (event.type === 'response.done') {
+          console.log('✅ [VOICE] Respuesta completada');
+        }
+        
+        if (event.type === 'conversation.item.input_audio_transcription.completed') {
+          console.log('📝 [VOICE] Transcripción:', event.transcript);
+        }
+        
         // Manejar function calling
         if (event.type === 'response.function_call_arguments.done') {
-          console.log('🔧 [VOICE] Function call:', event.name, event.arguments);
+          console.log('🔧 [VOICE] Function call detectada:', event.name);
+          console.log('🔍 [VOICE] Arguments:', event.arguments);
+          
+          setStatus('Consultando información...');
           
           try {
             const args = JSON.parse(event.arguments);
             const token = await user.getIdToken();
+            
+            console.log('📤 [VOICE] Enviando al backend:', args.query);
             
             const res = await fetch(`${API_URL}/api/chat/process-voice`, {
               method: 'POST',
@@ -132,7 +155,9 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
             
             const data = await res.json();
             
-            // Devolver resultado
+            console.log('✅ [VOICE] Respuesta del backend:', data.response.substring(0, 100) + '...');
+            
+            // Devolver resultado a Realtime API
             dc.send(JSON.stringify({
               type: 'conversation.item.create',
               item: {
@@ -142,11 +167,14 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
               }
             }));
             
+            // Solicitar que genere la respuesta con el resultado
             dc.send(JSON.stringify({ type: 'response.create' }));
             
-            console.log('✅ [VOICE] Function ejecutada');
+            setStatus('Habla cuando quieras');
+            console.log('✅ [VOICE] Function completada - esperando respuesta de voz');
           } catch (error) {
             console.error('❌ [VOICE] Error en function:', error);
+            setStatus('Error - Habla de nuevo');
           }
         }
       };
@@ -165,35 +193,27 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL }) => {
       
       await pc.setRemoteDescription({ type: 'answer', sdp: await sdp.text() });
       console.log('✅ [VOICE] WebRTC establecido');
-      
-    } catch (error) {
+        
+      } catch (error) {
       console.error('❌ [VOICE] Error:', error);
       setStatus('Error: ' + error.message);
     }
-  };
+  }, [user, API_URL]);
 
-  const cleanup = () => {
-    if (pcRef.current) {
-      pcRef.current.getSenders().forEach(s => s.track?.stop());
-      pcRef.current.close();
-      pcRef.current = null;
-    }
+  useEffect(() => {
+    if (!isOpen || globalActive) return;
     
-    if (dcRef.current) {
-      dcRef.current.close();
-      dcRef.current = null;
-    }
+    globalActive = true;
+    console.log('🚀 [VOICE] Iniciando Realtime API');
+    init();
     
-    if (audioElRef.current) {
-      if (audioElRef.current.srcObject) {
-        audioElRef.current.srcObject.getTracks().forEach(t => t.stop());
-      }
-      audioElRef.current = null;
-    }
-    
-    setIsActive(false);
-    console.log('✅ [VOICE] Limpio');
-  };
+    return () => {
+      console.log('🧹 [VOICE] Cleanup');
+        cleanup();
+      globalActive = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
