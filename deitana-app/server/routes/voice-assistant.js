@@ -34,6 +34,46 @@ const openai = new OpenAI({
 });
 
 /**
+ * Endpoint para obtener sesión de Realtime API
+ * POST /api/voice-assistant/session
+ */
+router.post('/session', async (req, res) => {
+  try {
+    console.log('🔑 [SESSION] Generando ephemeral token para Realtime API...');
+    
+    const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-realtime-preview-2024-12-17',
+        voice: 'alloy'
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('❌ [SESSION] Error:', error);
+      throw new Error('No se pudo crear sesión');
+    }
+    
+    const data = await response.json();
+    console.log('✅ [SESSION] Token generado');
+    
+    res.json(data);
+    
+  } catch (error) {
+    console.error('❌ [SESSION] Error:', error);
+    res.status(500).json({ 
+      error: 'Error al crear sesión',
+      details: error.message
+    });
+  }
+});
+
+/**
  * Endpoint para convertir texto a voz usando OpenAI TTS con voz Alloy
  * POST /api/voice-assistant/tts
  */
@@ -102,14 +142,11 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
   const startTime = Date.now();
   
   try {
-    const { conversationId, image } = req.body;
-    const userId = req.user.uid;
     const audioFile = req.file;
+    const conversationId = req.body.conversationId; // ← RECIBIR conversationId
     
     console.log('🎙️ [VOICE-CHAT] Iniciando asistente de voz...');
-    console.log('🎙️ [VOICE-CHAT] Usuario:', userId);
-    console.log('🎙️ [VOICE-CHAT] Conversación ID:', conversationId);
-    console.log('🎙️ [VOICE-CHAT] Tiene imagen:', !!image);
+    console.log('🔍 [VOICE-CHAT] Conversation ID:', conversationId);
     
     if (!audioFile) {
       return res.status(400).json({ 
@@ -154,60 +191,11 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
     console.log('✅ [VOICE-CHAT] Transcripción:', transcription);
     
     // ========================================
-    // PASO 2: Procesar con el sistema actual
+    // PASO 2: Procesar con el sistema actual (MEMORIA RAM)
     // ========================================
-    let currentConversationId = conversationId;
     
-    // Crear nueva conversación si es necesario
-    if (!currentConversationId || currentConversationId.startsWith('temp_')) {
-      currentConversationId = await chatManager.createConversation(userId, transcription);
-      console.log('🆕 [VOICE-CHAT] Nueva conversación creada:', currentConversationId);
-    }
-    
-    // Verificar propiedad de la conversación
-    try {
-      await chatManager.verifyChatOwnership(userId, currentConversationId);
-    } catch (error) {
-      return res.status(404).json({
-        error: 'Conversación no encontrada'
-      });
-    }
-    
-    // Procesar imagen si existe
-    let processedMessage = transcription;
-    if (image) {
-      console.log('🖼️ [VOICE-CHAT] Procesando imagen con OCR...');
-      try {
-        const { processImageWithOCR } = require('../admin/core/openAI');
-        const extractedText = await processImageWithOCR(image);
-        
-        if (extractedText) {
-          const partidaMatch = extractedText.match(/(?:partida|Partida)[:\s]*(\d+)|Número de partida[:\s]*(\d+)|(\d{8,})/i);
-          if (partidaMatch) {
-            const numeroPartida = partidaMatch[1] || partidaMatch[2] || partidaMatch[3];
-            processedMessage = `De quien es esta partida ${numeroPartida}`;
-          } else {
-            processedMessage = `${transcription}\n\n📷 Información de la imagen:\n${extractedText}`;
-          }
-        }
-      } catch (error) {
-        console.error('❌ [VOICE-CHAT] Error procesando imagen:', error);
-      }
-    }
-    
-    // Guardar mensaje del usuario
-    const userMessage = {
-      role: 'user',
-      content: processedMessage,
-      timestamp: new Date().toISOString(),
-      hasImage: !!image,
-      isVoice: true
-    };
-    
-    await chatManager.addMessageToConversation(userId, currentConversationId, userMessage);
-    
-    // Procesar consulta y obtener respuesta
-    console.log('🤖 [VOICE-CHAT] Procesando consulta con el sistema actual...');
+    // Procesar consulta y obtener respuesta usando MEMORIA RAM
+    console.log('🤖 [VOICE-CHAT] Procesando consulta con memoria RAM...');
     
     let fullResponse = '';
     let hasError = false;
@@ -223,13 +211,11 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
         
         // Métodos requeridos por Express/Node.js HTTP response
         writeHead: (statusCode, headers) => {
-          console.log('📋 [VOICE-CHAT] writeHead llamado:', statusCode);
           mockResponse.statusCode = statusCode;
           return mockResponse;
         },
         
         setHeader: (name, value) => {
-          console.log('📋 [VOICE-CHAT] setHeader:', name);
           return mockResponse;
         },
         
@@ -244,45 +230,22 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
         write: (chunk) => {
           // Capturar los chunks que se van escribiendo
           const data = chunk.toString();
-          console.log('📦 [VOICE-CHAT] Chunk recibido:', data.substring(0, 100));
           
           try {
             // Intentar parsear como JSON directamente
             const jsonData = JSON.parse(data);
-            console.log('📋 [VOICE-CHAT] Chunk parseado:', jsonData.type);
             
             // Capturar diferentes tipos de chunks
             if (jsonData.type === 'chunk' && jsonData.content) {
               // Chunks de contenido parcial
               fullResponse += jsonData.content;
-              console.log('✅ [VOICE-CHAT] Chunk agregado. Total acumulado:', fullResponse.length, 'chars');
-            } else if (jsonData.type === 'content' && jsonData.text) {
-              // Chunks de contenido (formato alternativo)
-              fullResponse += jsonData.text;
-              console.log('✅ [VOICE-CHAT] Texto agregado. Total acumulado:', fullResponse.length, 'chars');
-            } else if (jsonData.type === 'end' && jsonData.fullResponse) {
-              // Chunk final con la respuesta completa
-              fullResponse = jsonData.fullResponse;
-              console.log('✅ [VOICE-CHAT] Respuesta completa recibida:', fullResponse.length, 'chars');
             } else if (jsonData.type === 'error') {
               hasError = true;
               errorMessage = jsonData.message || 'Error desconocido';
               console.error('❌ [VOICE-CHAT] Error en chunk:', errorMessage);
-            } else {
-              console.log('ℹ️ [VOICE-CHAT] Chunk de tipo:', jsonData.type, '(ignorado)');
             }
           } catch (e) {
-            // Si no es JSON válido, intentar con formato SSE
-            if (data.startsWith('data: ')) {
-              try {
-                const jsonData = JSON.parse(data.substring(6));
-                if (jsonData.type === 'content' && jsonData.text) {
-                  fullResponse += jsonData.text;
-                }
-              } catch (e2) {
-                console.log('📝 [VOICE-CHAT] Chunk no es JSON válido, ignorando');
-              }
-            }
+            // Ignorar chunks no parseables
           }
           return true;
         },
@@ -302,7 +265,6 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
         
         // Métodos adicionales que podrían ser necesarios
         json: (data) => {
-          console.log('📋 [VOICE-CHAT] json() llamado');
           return mockResponse;
         },
         
@@ -312,16 +274,14 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
         },
         
         send: (data) => {
-          console.log('📋 [VOICE-CHAT] send() llamado');
           return mockResponse;
         }
       };
       
-      // Usar el sistema actual de procesamiento con el response mock
+      // Usar el sistema actual de procesamiento con conversationId
       await processQueryStream({
-        message: processedMessage,
-        userId,
-        conversationId: currentConversationId,
+        message: transcription,
+        conversationId: conversationId || `temp_${Date.now()}`, // ← PASAR conversationId
         response: mockResponse
       });
       
@@ -373,14 +333,12 @@ router.post('/chat', upload.single('audio'), async (req, res) => {
       audioSize: audioBuffer.length
     });
     
-    // Nota: No guardamos el mensaje del asistente aquí porque processQueryStream ya lo guarda
-    
-    // Responder con JSON que incluye todo
+    // Responder con JSON que incluye todo + conversationId
     res.json({
-      conversationId: currentConversationId,
       transcription: transcription,
       response: fullResponse,
       audio: audioBuffer.toString('base64'), // Audio en base64
+      conversationId: conversationId || `temp_${Date.now()}`, // ← DEVOLVER conversationId
       duration: duration
     });
     

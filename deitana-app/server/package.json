@@ -31,7 +31,8 @@
     "rehype-raw": "^7.0.0",
     "remark-emoji": "^5.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"
