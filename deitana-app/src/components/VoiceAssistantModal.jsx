@@ -26,7 +26,9 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
       
       mediaStreamRef.current = stream;
       
-      const recorder = new MediaRecorder(stream);
+      // Configuración optimizada para Whisper
+      const options = { mimeType: 'audio/webm;codecs=opus' };
+      const recorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
       
@@ -66,6 +68,15 @@ const VoiceAssistantModal = ({ isOpen, onClose, user, API_URL, currentConversati
       
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       audioChunksRef.current = [];
+      
+      // Validar que el audio sea suficiente
+      if (audioBlob.size < 2000) {
+        console.log('⚠️ [VOICE] Audio muy corto, ignorando');
+        setStatus('Audio muy corto - Habla más tiempo');
+        setTimeout(() => setStatus('Mantén presionado para hablar'), 2000);
+        setIsProcessing(false);
+        return;
+      }
       
       // Detener stream
       if (mediaStreamRef.current) {
