@@ -817,7 +817,7 @@ ${mapaERPInfo}
 
         // UNA SOLA LLAMADA - STREAMING CON FUNCTION CALLING
         const stream = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4o', // GPT-4o - Modelo optimizado y rápido
             messages: messages,
             tools: [
                 {
@@ -840,7 +840,7 @@ ${mapaERPInfo}
             ],
             tool_choice: 'auto',
             stream: true,
-            max_tokens: 2000
+            max_tokens: 5000
         });
 
         // 6. STREAMING CON DETECCIÓN DE FUNCTION CALLS
@@ -895,8 +895,14 @@ ${mapaERPInfo}
                 console.log('⚡ [SQL] Ejecutando SQL:', sqlQuery);
                 
                 // Ejecutar SQL
-                const sqlResults = await query(sqlQuery);
+                let sqlResults = await query(sqlQuery);
                 console.log('📊 [SQL] Resultados obtenidos:', sqlResults.length, 'filas');
+                
+                // Limitar resultados para no exceder el contexto (máximo 50 filas)
+                if (sqlResults.length > 50) {
+                    console.log('⚠️ [SQL] Limitando resultados de', sqlResults.length, 'a 50 filas');
+                    sqlResults = sqlResults.slice(0, 50);
+                }
                 
                 // Continuar la conversación con los resultados SQL para que el modelo responda inteligentemente
                 const continuationMessages = [
@@ -910,10 +916,10 @@ ${mapaERPInfo}
                 
                 // Segunda llamada para que el modelo responda con los datos
                 const continuationStream = await openai.chat.completions.create({
-                    model: 'gpt-4o',
+                    model: 'gpt-4o', // GPT-4o - Modelo optimizado y rápido
                     messages: continuationMessages,
                     stream: true,
-                    max_tokens: 1000
+                    max_tokens: 5000
                 });
                 
                 // Stream de la respuesta inteligente del modelo
