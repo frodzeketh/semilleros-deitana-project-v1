@@ -1,4 +1,5 @@
 const { OpenAI } = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 const { Pinecone } = require('@pinecone-database/pinecone');
 const { addMessage, getHistory } = require('../../utils/ramMemory');
 const { query } = require('../../db-bridge');
@@ -8,12 +9,17 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
+const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY
+});
+
 // Configurar Pinecone
 const pinecone = new Pinecone({
     apiKey: 'pcsk_ctXEB_EytPZdg6HJhk2HPbfvEfknyuM671AZUmwz82YSMVgjYfGfR3QfsLMXC8BcRjUvY'
 });
 
-const index = pinecone.index('deitana-knowledge');
+const indexKnowledge = pinecone.index('deitana-knowledge'); // Para RAG de información
+const indexDatabase = pinecone.index('deitana-database'); // Para estructura de base de datos
 
 // Función para buscar información relevante en Pinecone (MEJORADA)
 async function searchRelevantInfo(query) {
@@ -51,7 +57,7 @@ async function searchRelevantInfo(query) {
         const queryEmbedding = embeddingResponse.data[0].embedding;
         
         // Buscar en Pinecone con más resultados
-        const searchResponse = await index.query({
+        const searchResponse = await indexKnowledge.query({
             vector: queryEmbedding,
             topK: 25,  // AUMENTADO: Más resultados para encontrar información relacionada
             includeMetadata: true
@@ -68,7 +74,7 @@ async function searchRelevantInfo(query) {
                 familias: metadata.familias,
                 tiene_tarifa: metadata.tiene_tarifa
             });
-            return {
+    return {
                 text: metadata.text || metadata.content || '',
                 score: match.score,
                 metadata: metadata
@@ -793,11 +799,48 @@ El propósito último es que **CADA USUARIO QUEDE CONFORME CON LA EXPERIENCIA DE
 
 IMPORTANTE: La información de arriba es específica de Semilleros Deitana. Úsala para dar respuestas precisas sobre la empresa.. 
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨🚨🚨 INSTRUCCIONES CRÍTICAS PARA SQL - OBLIGATORIO SEGUIR 🚨🚨🚨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⛔ PROHIBIDO ABSOLUTAMENTE:
+- NO uses tablas que NO aparezcan en "ESTRUCTURA DE LA BASE DE DATOS" arriba
+- NO uses columnas que NO aparezcan listadas arriba
+- NO inventes nombres de tablas (ej: si no ves "tarifas" arriba, NO LA USES)
+- NO traduzcas nombres (si dice "familias_fm_rngt" NO uses "rangos_tarifas")
+
+✅ OBLIGATORIO:
+1. **LEE LA SECCIÓN "ESTRUCTURA DE LA BASE DE DATOS"** arriba
+2. **USA SOLO** las tablas y columnas que aparecen ahí
+3. **SI NO EXISTE LA TABLA**, di "No tengo acceso a esa información"
+4. **MANTÉN EL CONTEXTO**: Si en mensajes anteriores mostraste datos, úsalos
+5. **USA JOINS** cuando sea posible:
+   \`\`\`sql
+   SELECT a.id, a.ACCO_DENO, a.ACCO_FEC, 
+          c.CL_DENO as cliente_nombre,
+          v.VD_DENO as vendedor_nombre,
+          n.C0 as observacion
+   FROM acciones_com a
+   LEFT JOIN clientes c ON a.ACCO_CDCL = c.id
+   LEFT JOIN vendedores v ON a.ACCO_CDVD = v.id
+   LEFT JOIN acciones_com_acco_not n ON a.id = n.id
+   LIMIT 5
+\`\`\`
+6. **FORMATO DE FECHAS**: VARCHAR 'YYYY-MM-DD'
+   - Filtrar por año: \`WHERE fecha LIKE '2024%'\`
+   - NO uses YEAR(), DATE()
+
+⚠️ EJEMPLO DE LO QUE NO DEBES HACER:
+❌ INCORRECTO: \`FROM tarifas t\` (si "tarifas" NO está en la estructura arriba)
+✅ CORRECTO: Usa SOLO las tablas que ves en la estructura arriba
+
 INFORMACIÓN ESPECÍFICA DE LA EMPRESA:
 ${relevantInfo}
 
 ESTRUCTURA DE LA BASE DE DATOS (MAPERP):
 ${mapaERPInfo}
+
+
 
 `;
 
@@ -808,147 +851,248 @@ ${mapaERPInfo}
             { role: 'user', content: message }
         ];
 
-        console.log(`💬 [RAM] Enviando ${messages.length} mensajes a GPT-4o con function calling`);
-        console.log(`🔍 [DEBUG] SystemPrompt length: ${systemPrompt.length} caracteres`);
-        console.log(`🔍 [DEBUG] SystemPrompt starts with: "${systemPrompt.substring(0, 100)}..."`);
-        console.log(`🔍 [DEBUG] SystemPrompt contains emojis: ${systemPrompt.includes('🎯') || systemPrompt.includes('🧠') || systemPrompt.includes('✅')}`);
-        console.log(`🔍 [DEBUG] SystemPrompt contains "amigable": ${systemPrompt.includes('amigable')}`);
-        console.log(`🔍 [DEBUG] SystemPrompt contains "emojis": ${systemPrompt.includes('emojis')}`);
+        // Preparar mensajes para Claude (system separado)
+        const claudeMessages = history.map(msg => ({
+                                    role: msg.role,
+                                    content: msg.content
+        }));
+        claudeMessages.push({ role: 'user', content: message });
 
-        // UNA SOLA LLAMADA - STREAMING CON FUNCTION CALLING
-        const stream = await openai.chat.completions.create({
-            model: 'gpt-4o', // GPT-4o - Modelo optimizado y rápido
-            messages: messages,
+        console.log(`💬 [RAM] Enviando ${claudeMessages.length} mensajes a Claude Sonnet 4.5 con tool use`);
+        console.log(`🔍 [DEBUG] SystemPrompt length: ${systemPrompt.length} caracteres`);
+
+        // STREAMING CON CLAUDE SONNET 4.5
+        const stream = await anthropic.messages.stream({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 5000,
+            system: systemPrompt, // System prompt separado en Claude
+            messages: claudeMessages,
             tools: [
                 {
-                    type: 'function',
-                    function: {
-                        name: 'execute_sql',
-                        description: 'Ejecuta una consulta SQL en la base de datos de Semilleros Deitana',
-                        parameters: {
-                            type: 'object',
-                            properties: {
-                                query: {
-                                    type: 'string',
-                                    description: 'La consulta SQL a ejecutar'
-                                }
-                            },
-                            required: ['query']
-                        }
+                    name: 'execute_sql',
+                    description: `Ejecuta consultas SQL en la base de datos MySQL de Semilleros Deitana.
+
+IMPORTANTE: Puedes ejecutar MÚLTIPLES consultas en UNA SOLA llamada separándolas con punto y coma (;)
+
+Ejemplo para "rangos de tarifas de tomate muchamiel":
+SELECT AR_FAM FROM articulos WHERE AR_DENO LIKE '%MUCHAMIEL%'; SELECT * FROM familias_fm_rngt WHERE id IN (SELECT AR_FAM FROM articulos WHERE AR_DENO LIKE '%MUCHAMIEL%');
+
+La herramienta ejecutará TODAS las consultas y devolverá TODOS los resultados juntos.`,
+                    input_schema: {
+                        type: 'object',
+                        properties: {
+                            query: {
+                                type: 'string',
+                                description: 'Una o más consultas SQL separadas por punto y coma (;). Usa la información de estructura de base de datos del contexto.'
+                            }
+                        },
+                        required: ['query']
                     }
                 }
-            ],
-            tool_choice: 'auto',
-            stream: true,
-            max_tokens: 5000
+            ]
         });
 
-        // 6. STREAMING CON DETECCIÓN DE FUNCTION CALLS
+        // 6. MANEJO DE STREAMING DE CLAUDE
         let assistantResponse = '';
-        let functionName = null;
-        let functionArguments = '';
-        let toolCallId = null;
+        let toolUses = [];
         
-        for await (const chunk of stream) {
-            const delta = chunk.choices[0]?.delta;
-            
-            // Manejar contenido de texto
-            if (delta?.content) {
-                assistantResponse += delta.content;
-                const jsonChunk = JSON.stringify({ type: 'chunk', content: delta.content }) + '\n';
-                response.write(jsonChunk);
-            }
-            
-            // Manejar llamadas a funciones
-            if (delta?.tool_calls) {
-                for (const toolCall of delta.tool_calls) {
-                    if (toolCall.function) {
-                        if (toolCall.function.name) {
-                            functionName = toolCall.function.name;
-                            console.log('🔧 [FUNCTION] Función detectada:', functionName);
-                        }
-                        if (toolCall.function.arguments) {
-                            functionArguments += toolCall.function.arguments;
-                        }
-                        if (toolCall.id) {
-                            toolCallId = toolCall.id;
-                        }
-                    }
-                }
-            }
-        }
+        stream.on('text', (text) => {
+            assistantResponse += text;
+            const jsonChunk = JSON.stringify({ type: 'chunk', content: text }) + '\n';
+            response.write(jsonChunk);
+        });
+        
+        stream.on('tool_use', (toolUse) => {
+            console.log(`🔧 [CLAUDE TOOL] Detectada:`, toolUse.name);
+            toolUses.push(toolUse);
+        });
+        
+        // Esperar a que termine el stream
+        const finalMessage = await stream.finalMessage();
+        
+        // Extraer tool uses del mensaje final
+        const toolUsesFromMessage = finalMessage.content.filter(block => block.type === 'tool_use');
+        toolUses = [...toolUses, ...toolUsesFromMessage];
 
-        // 7. EJECUTAR SQL SI SE DETECTÓ
-        console.log('🔍 [DEBUG] functionName:', functionName);
-        console.log('🔍 [DEBUG] functionArguments:', functionArguments);
-        console.log('🔍 [DEBUG] toolCallId:', toolCallId);
+        console.log(`🔍 [DEBUG] Total tool uses detectados: ${toolUses.length}`);
         
-        if (functionName === 'execute_sql' && functionArguments) {
+        if (toolUses.length > 0 && toolUses.some(tu => tu.name === 'execute_sql')) {
             try {
-                console.log('🔍 [DEBUG] Argumentos completos:', functionArguments);
-                const args = JSON.parse(functionArguments);
-                let sqlQuery = args.query;
+                // Ejecutar TODOS los SQL
+                const allResults = [];
+                const toolResults = [];
                 
-                // Arreglar comillas dobles por simples para MySQL
-                sqlQuery = sqlQuery.replace(/"/g, '`');
-                
-                console.log('⚡ [SQL] Ejecutando SQL:', sqlQuery);
-                
-                // Ejecutar SQL
-                let sqlResults = await query(sqlQuery);
-                console.log('📊 [SQL] Resultados obtenidos:', sqlResults.length, 'filas');
-                
-                // Limitar resultados para no exceder el contexto (máximo 50 filas)
-                if (sqlResults.length > 50) {
-                    console.log('⚠️ [SQL] Limitando resultados de', sqlResults.length, 'a 50 filas');
-                    sqlResults = sqlResults.slice(0, 50);
+                for (let i = 0; i < toolUses.length; i++) {
+                    const toolUse = toolUses[i];
+                    
+                    if (toolUse.name !== 'execute_sql') continue;
+                    
+                    console.log(`🔍 [CLAUDE ${i+1}] Tool input:`, toolUse.input);
+                    
+                    let sqlQuery = toolUse.input.query;
+                    
+                    // Arreglar comillas
+                    sqlQuery = sqlQuery.replace(/"/g, '`');
+
+                    // Dividir por punto y coma si hay múltiples queries
+                    const queries = sqlQuery.split(';').map(q => q.trim()).filter(q => q.length > 0);
+                    
+                    console.log(`⚡ [SQL ${i+1}/${toolUses.length}] Detectadas ${queries.length} consulta(s)`);
+
+                    // Ejecutar cada query
+                    const multiResults = [];
+                    for (let j = 0; j < queries.length; j++) {
+                        const singleQuery = queries[j];
+                        console.log(`  ⚡ [SQL ${i+1}.${j+1}]`, singleQuery);
+                        
+                        let sqlResults = await query(singleQuery);
+                        console.log(`  📊 [SQL ${i+1}.${j+1}] ${sqlResults.length} filas`);
+
+                        // Limitar
+                        if (sqlResults.length > 50) {
+                            sqlResults = sqlResults.slice(0, 50);
+                        }
+                        
+                        multiResults.push(sqlResults);
+                    }
+                    
+                    // Agregar todos los resultados
+                    allResults.push(...multiResults);
+                    
+                    // Devolver TODOS los resultados a Claude
+                    toolResults.push({
+                        type: 'tool_result',
+                        tool_use_id: toolUse.id,
+                        content: JSON.stringify(multiResults)
+                    });
                 }
-                
-                // Continuar la conversación con los resultados SQL para que el modelo responda inteligentemente
-                const continuationMessages = [
-                    { role: 'system', content: systemPrompt }, // Incluir system prompt en la segunda llamada
-                    ...messages,
-                    { role: 'assistant', content: assistantResponse, tool_calls: [{ type: 'function', function: { name: functionName, arguments: functionArguments }, id: toolCallId }] },
-                    { role: 'tool', content: JSON.stringify(sqlResults), tool_call_id: toolCallId }
-                ];
-                
-                console.log('🔄 [CONTINUATION] Enviando resultados SQL al modelo para respuesta inteligente');
-                
-                // Segunda llamada para que el modelo responda con los datos
-                const continuationStream = await openai.chat.completions.create({
-                    model: 'gpt-4o', // GPT-4o - Modelo optimizado y rápido
-                    messages: continuationMessages,
-                    stream: true,
-                    max_tokens: 5000
+
+                console.log(`🔄 [CONTINUATION] Procesando ${allResults.length} consultas SQL con Claude`);
+
+                // Continuar la conversación con Claude
+                claudeMessages.push({
+                    role: 'assistant',
+                    content: finalMessage.content
                 });
                 
-                // Stream de la respuesta inteligente del modelo
-                for await (const chunk of continuationStream) {
-                    const content = chunk.choices[0]?.delta?.content || '';
-                if (content) {
-                        assistantResponse += content;
-                        const jsonChunk = JSON.stringify({ type: 'chunk', content }) + '\n';
-                        response.write(jsonChunk);
+                claudeMessages.push({
+                    role: 'user',
+                    content: toolResults
+                });
+
+                // Segunda llamada a Claude con los resultados
+                const continuationStream = await anthropic.messages.stream({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 5000,
+                    system: systemPrompt,
+                    messages: claudeMessages
+                });
+
+                // Stream respuesta y detectar si pide más tools
+                let moreToolUses = [];
+                continuationStream.on('text', (text) => {
+                    assistantResponse += text;
+                    const jsonChunk = JSON.stringify({ type: 'chunk', content: text }) + '\n';
+                    response.write(jsonChunk);
+                });
+                
+                continuationStream.on('tool_use', (toolUse) => {
+                    console.log(`🔧 [CLAUDE CONTINUATION] Nueva tool detectada:`, toolUse.name);
+                    moreToolUses.push(toolUse);
+                });
+                
+                const continuationMessage = await continuationStream.finalMessage();
+                
+                // Verificar si hay MÁS tool uses en el mensaje de continuación
+                const moreToolUsesFromMessage = continuationMessage.content.filter(block => block.type === 'tool_use');
+                moreToolUses = [...moreToolUses, ...moreToolUsesFromMessage];
+                
+                // Si hay MÁS consultas SQL, ejecutarlas (máximo 3 iteraciones para evitar loops)
+                let iterations = 0;
+                const MAX_ITERATIONS = 3;
+                
+                while (moreToolUses.length > 0 && iterations < MAX_ITERATIONS) {
+                    iterations++;
+                    console.log(`🔄 [RECURSION ${iterations}] Claude quiere hacer ${moreToolUses.length} consultas más...`);
+                    
+                    const recursiveResults = [];
+                    
+                    for (const toolUse of moreToolUses) {
+                        if (toolUse.name !== 'execute_sql') continue;
+                        
+                        let sqlQuery = toolUse.input.query.replace(/"/g, '`');
+                        console.log(`⚡ [SQL RECURSIVO]`, sqlQuery);
+                        
+                        const sqlResults = await query(sqlQuery);
+                        console.log(`📊 [SQL RECURSIVO] ${sqlResults.length} filas`);
+                        
+                        if (sqlResults.length > 50) sqlResults = sqlResults.slice(0, 50);
+                        
+                        recursiveResults.push({
+                            type: 'tool_result',
+                            tool_use_id: toolUse.id,
+                            content: JSON.stringify(sqlResults)
+                        });
                     }
+                    
+                    // Agregar resultados y continuar
+                    claudeMessages.push({
+                        role: 'assistant',
+                        content: continuationMessage.content
+                    });
+                    
+                    claudeMessages.push({
+                        role: 'user',
+                        content: recursiveResults
+                    });
+                    
+                    // Nueva llamada
+                    const recursiveStream = await anthropic.messages.stream({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 5000,
+                        system: systemPrompt,
+                        messages: claudeMessages
+                    });
+                    
+                    moreToolUses = [];
+                    
+                    recursiveStream.on('text', (text) => {
+                        assistantResponse += text;
+                        const jsonChunk = JSON.stringify({ type: 'chunk', content: text }) + '\n';
+                        response.write(jsonChunk);
+                    });
+                    
+                    recursiveStream.on('tool_use', (toolUse) => {
+                        console.log(`🔧 [RECURSION ${iterations}] Tool detectada:`, toolUse.name);
+                        moreToolUses.push(toolUse);
+                    });
+                    
+                    const recursiveMessage = await recursiveStream.finalMessage();
+                    const recursiveToolUses = recursiveMessage.content.filter(block => block.type === 'tool_use');
+                    moreToolUses = [...moreToolUses, ...recursiveToolUses];
+                    
+                    // Actualizar para próxima iteración
+                    continuationMessage.content = recursiveMessage.content;
                 }
                 
-                console.log('✅ [SQL] Function calling completado - modelo respondió inteligentemente');
-                
-                // Guardar respuesta en memoria
+                if (iterations >= MAX_ITERATIONS) {
+                    console.log(`⚠️ [RECURSION] Límite de ${MAX_ITERATIONS} iteraciones alcanzado`);
+                }
+
+                console.log('✅ [SQL] Completado');
+
+                // Guardar
                 addMessage(conversationIdFinal, 'assistant', assistantResponse);
-                console.log('💾 [RAM] Respuesta SQL formateada guardada en memoria');
-                
-                // Enviar mensaje de finalización
+
+                // Finalizar
                 const endChunk = JSON.stringify({ type: 'end', conversationId: conversationIdFinal }) + '\n';
                 response.write(endChunk);
-                console.log('🔚 [END] Enviando mensaje de finalización');
-                
                 response.end();
                 return;
-                
-                } catch (error) {
-                console.error('❌ [SQL] Error en function calling:', error);
-                const errorChunk = JSON.stringify({ type: 'chunk', content: `Error al ejecutar la consulta: ${error.message}` }) + '\n';
+        
+    } catch (error) {
+                console.error('❌ [SQL] Error:', error);
+                const errorChunk = JSON.stringify({ type: 'chunk', content: `Error: ${error.message}` }) + '\n';
                 response.write(errorChunk);
                 response.end();
                 return;
@@ -971,8 +1115,8 @@ ${mapaERPInfo}
         console.log('🔚 [END] Enviando mensaje de finalización');
 
             response.end();
-            
-                } catch (error) {
+        
+    } catch (error) {
         console.error('Error:', error);
         if (!response.headersSent) {
             response.status(500).json({ error: 'Error al procesar la consulta' });
@@ -980,86 +1124,77 @@ ${mapaERPInfo}
     }
 }
 
-// Función para buscar información relevante del mapaERP
+// Función para buscar información relevante del mapaERP usando Pinecone
 async function searchMapaERPInfo(query) {
     try {
-        const mapaERP = require('./mapaERP.js');
+        console.log(`🔍 [MAPERP] Buscando tablas para: "${query}"`);
         
-        // Convertir el mapaERP a texto para búsqueda semántica
-        const mapaERPText = JSON.stringify(mapaERP, null, 2);
+        // Crear embedding de la consulta
+        const embeddingResponse = await openai.embeddings.create({
+            model: 'text-embedding-3-small',
+            input: query,
+            dimensions: 512
+        });
         
-        // Buscar términos relevantes en el query
-        const queryLower = query.toLowerCase();
-        const relevantTables = [];
+        const queryEmbedding = embeddingResponse.data[0].embedding;
         
-        // Buscar tablas relevantes basándose en palabras clave
-        for (const [tableName, tableInfo] of Object.entries(mapaERP)) {
-            const tableNameLower = tableName.toLowerCase();
-            const description = tableInfo.descripcion ? tableInfo.descripcion.toLowerCase() : '';
-            
-            // Si el query menciona la tabla o palabras relacionadas
-            if (queryLower.includes(tableNameLower) || 
-                queryLower.includes(tableNameLower.replace('_', ' ')) ||
-                description.includes(queryLower.split(' ')[0])) {
-                relevantTables.push({ tableName, tableInfo });
-            }
+        // Buscar en Pinecone índice 'deitana-database'
+        const searchResponse = await indexDatabase.query({
+            vector: queryEmbedding,
+            topK: 5, // Top 5 tablas más relevantes
+            includeMetadata: true
+        });
+        
+        console.log(`🗺️ [MAPERP] Encontradas ${searchResponse.matches?.length || 0} tablas`);
+        
+        // DEBUG: Ver qué está devolviendo Pinecone
+        if (searchResponse.matches && searchResponse.matches.length > 0) {
+            console.log(`🔍 [DEBUG] Contenido del primer match:`);
+            console.log(`   - tableName: ${searchResponse.matches[0].metadata?.tableName}`);
+            console.log(`   - sectionName: ${searchResponse.matches[0].metadata?.sectionName}`);
+            console.log(`   - content length: ${searchResponse.matches[0].metadata?.content?.length || 0}`);
+            console.log(`   - content preview: ${searchResponse.matches[0].metadata?.content?.substring(0, 200)}...`);
         }
         
-        // Si no encontramos tablas específicas, buscar por palabras clave comunes
-        if (relevantTables.length === 0) {
-            const keywords = {
-                'clientes': ['cliente', 'clientes', 'customer', 'customers'],
-                'articulos': ['artículo', 'artículos', 'producto', 'productos', 'item', 'items'],
-                'vendedores': ['vendedor', 'vendedores', 'sales', 'seller'],
-                'partidas': ['partida', 'partidas', 'order', 'orders'],
-                'facturas': ['factura', 'facturas', 'invoice', 'invoices']
-            };
-            
-            for (const [tableName, tableInfo] of Object.entries(mapaERP)) {
-                for (const [key, words] of Object.entries(keywords)) {
-                    if (tableName.includes(key) || words.some(word => queryLower.includes(word))) {
-                        relevantTables.push({ tableName, tableInfo });
-                    break;
-                }
-            }
+        if (!searchResponse.matches || searchResponse.matches.length === 0) {
+            return 'No se encontró información de tablas para esta consulta.';
         }
-    }
-    
-        // Limitar a las 3 tablas más relevantes para no sobrecargar el contexto
-        const topTables = relevantTables.slice(0, 3);
         
-        // Formatear la información relevante
+        // Formatear información DIRECTAMENTE de lo que devuelve Pinecone
         let relevantInfo = '';
-        for (const { tableName, tableInfo } of topTables) {
-            relevantInfo += `\n=== TABLA: ${tableName.toUpperCase()} ===\n`;
-            relevantInfo += `Descripción: ${tableInfo.descripcion || 'Sin descripción'}\n`;
+        
+        console.log(`🔍 [DEBUG] Scores de matches:`, searchResponse.matches?.map(m => `${m.metadata?.sectionName}(${m.score.toFixed(3)})`).join(', '));
+        
+        for (const match of searchResponse.matches) {
+            if (match.score < 0.2) continue; // Reducido threshold de 0.3 a 0.2
             
-            if (tableInfo.columnas) {
-                relevantInfo += `Columnas:\n`;
-                for (const [colName, colDesc] of Object.entries(tableInfo.columnas)) {
-                    relevantInfo += `- ${colName}: ${colDesc}\n`;
-                }
+            const sectionName = match.metadata.sectionName || match.metadata.tableName || 'unknown';
+            const content = match.metadata.content || '';
+            
+            console.log(`   📊 ${sectionName} (${(match.score * 100).toFixed(1)}%)`);
+            
+            if (!content) {
+                console.log(`   ⚠️ Sin contenido en metadata`);
+                continue;
             }
             
-            if (tableInfo.relaciones && tableInfo.relaciones.length > 0) {
-                relevantInfo += `Relaciones:\n`;
-                for (const rel of tableInfo.relaciones) {
-                    relevantInfo += `- ${rel.tablaDestino} (${rel.campoOrigen} -> ${rel.campoDestino})\n`;
-                }
-            }
-            
-            if (tableInfo.ejemplos && tableInfo.ejemplos.length > 0) {
-                relevantInfo += `Ejemplo de consulta:\n${tableInfo.ejemplos[0].query}\n`;
-            }
-            
-            relevantInfo += '\n';
+            relevantInfo += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            relevantInfo += `SECCIÓN: ${sectionName.toUpperCase()}\n`;
+            relevantInfo += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            relevantInfo += content;
+            relevantInfo += `\n\n`;
         }
         
-        return relevantInfo || 'No se encontró información relevante del mapaERP para esta consulta.';
+        console.log(`\n📤 [MAPERP] Enviando ${relevantInfo.length} caracteres al modelo`);
+        console.log(`🔍 [DEBUG MAPERP] Contenido completo que se envía:`);
+        console.log(relevantInfo.substring(0, 500));
+        console.log(`... (${relevantInfo.length} caracteres totales)\n`);
+        
+        return relevantInfo || 'No se encontró información de tablas.';
         
     } catch (error) {
-        console.error('Error buscando información del mapaERP:', error);
-        return 'Error al acceder al mapaERP.';
+        console.error('❌ [MAPERP] Error:', error);
+        return 'Error al buscar información de base de datos.';
     }
 }
 

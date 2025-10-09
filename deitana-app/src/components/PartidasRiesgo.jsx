@@ -757,7 +757,7 @@ const PartidasRiesgo = () => {
                     <div className="ds-familia-articulos">
                       <span className="ds-articulos-count">{formaPago.numeroVencimientos}</span>
                       <span className="ds-articulos-label">vencimientos</span>
-                  </div>
+                    </div>
                   </div>
 
                   {/* Información de la forma de pago */}
@@ -767,15 +767,15 @@ const PartidasRiesgo = () => {
                       <div className="ds-tarifa-item">
                         <span className="ds-tarifa-label">Tipo Pago:</span>
                         <span className="ds-tarifa-value">{formaPago.tipoPago} ({formaPago.tipoPagoCodigo})</span>
-                    </div>
+                      </div>
                       <div className="ds-tarifa-item">
                         <span className="ds-tarifa-label">A Cartera:</span>
                         <span className="ds-tarifa-value">{formaPago.aCartera}</span>
-                  </div>
+                      </div>
                       <div className="ds-tarifa-item">
                         <span className="ds-tarifa-label">Referencia Web:</span>
                         <span className="ds-tarifa-value">{formaPago.referenciaWeb}</span>
-                    </div>
+                      </div>
                     </div>
                   </div>
 
@@ -784,8 +784,8 @@ const PartidasRiesgo = () => {
                     <h4 className="ds-seccion-titulo">Vencimientos</h4>
                     <div className="ds-teorias-content">
                       <p className="ds-teorias-texto">{formaPago.vencimientosDias}</p>
-                      </div>
                     </div>
+                  </div>
                 </div>
               </div>
               ))
