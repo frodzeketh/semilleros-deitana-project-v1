@@ -246,7 +246,10 @@ class PineconeLoaderInteligente {
             return response.data.map((embedding, index) => ({
                 id: chunks[index].id,
                 values: embedding.embedding,
-                metadata: chunks[index].metadata
+                metadata: {
+                    ...chunks[index].metadata,
+                    text: chunks[index].text  // ✅ AGREGAR EL TEXTO A LOS METADATOS
+                }
             }));
         } catch (error) {
             console.error('❌ Error creando embeddings:', error);
