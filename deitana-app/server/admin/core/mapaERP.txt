@@ -1,96 +1,171 @@
-Tabla de la base de datos: acciones_com.
+tabla: encargos
 
-Descripción: Las acciones comerciales clientes son todas aquellas actividades planificadas y ejecutadas por nuestra empresa para establecer, mantener o fortalecer la relación con sus clientes. Incluyen visitas, llamadas, seguimientos, ofertas, asesoramientos y cualquier otra interacción orientada a impulsar ventas, fidelizar clientes y mejorar el servicio ofrecido. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Acciones Comerciales.
+Alias: Encargos de siembra, pedidos de un cliente, siembra que ha realizado un cliente 
 
-Columnas y su descripción:
+Descripcion: En esta seccion estan los encargos, se pueden realizar un encargo normal, es decir plantas comunes o un injerto. 
 
-id: Identificador único de la acción comercial.
+id: "Número de encargo (Clave Primaria)",
+ENG_CCL: "Código del cliente. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+ENG_ALM: "Código del almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+ENG_FEC: "Fecha que se realizo el encargo",
+ENG_VD: "Vendedor que gestionó el encargo. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+ENG_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+ENG_EST: "Estado del encargo ('C': Cerrado).",
+ENG_USUG: "Usuario que gestionó el encargo.",
+ENG_TP: TIPO DE TARIFA
+ENG_CLFRA: Cliente de Facturación, tiene relacion con la tabla clientes, un cliente puede realizar un encargo, pero se le puede facturar a otro tipo de empresa, que contiene otro tipo de tarifa. Es importante si este campo tiene cliente de facturación por que afecta al precio final de tarifa. Tiene relacion con la tabla tarifas para saber la denominacion "TP_DENO"
 
-ACCO_DENO: Denominación o tipo de acción comercial.
+Relacion de tabla muy importante:
 
-ACCO_CDCL: Código del cliente.
+tabla: partidas: 
 
-ACCO_CDVD: Código del vendedor.
+Descripcion: Cuando un encargo es realizado, en la tabla partidas se almacenara lo que el cliente ha solicitado. (Partidas de Siembra Asociadas al Encargo). (relación uno a muchos).
 
-ACCO_FEC: Fecha de la acción.
 
-ACCO_HOR: Hora de la acción.
+id: ID de la partida.
+PAR_FEC: Fecha que se registro la partida.
+PAR_ENC: Numero de encargo asociado al encargo de siembra, un encargo de siembra puede tener multiples partidas que se relacionan entre si, ya se por partida tipo injerto o el cliente quiere cultivar varias plantas o simplemente en diferentes partidas. Pero un mismo encargo puede tener multiples partidas.
+PAR_ENCL: Significa si el cliente trajo semillas o no, es decir, trajo sus propias semillas o la empresa se encarga de conseguirlas, esto modificara el precio. Solo Existe N (No entrega semilla) y D (Trajo semillas y hay que generar un deposito.)
+PAR_TIPO: Tipo de partida, muy importante. N - Normal, I - Injerto, C - Componente Injerto, R - Reserva, L - Libre, H - Hidroponica, E - Ecológica, D - Descopada, O - Comprada otro semillero, X - Componente Externo
+PAR_SEM: Semilla, planta, injerto a sembrar. El codigo que esta aqui, tiene relacion con la tabla articulos, a traves de id y AR_DENO para saber la denominacion. 
+PAR_CCL: Codigo de cliente tiene relacion con la tabla clientes atraves de id y CL_DENO para la denominacion
+PAR_CAS: Casa Comercial. Es cuando el cliente no trae semillas y la tenemos que conseguir, tiene relacion con la tabla casas_com a traves de id y CC_DENO pasa saber la denominacion de casa comercial.
+PAR_LOTE: Lote sobre de semilla
+PAR_PGER: % Germinacion
+PAR_TSI: Tipo de siembra, tiene relacion con la tabla t-siembres a traves de id y TSI_DENO para saber la denominacion
+PAR_SSI: Bandeja tiene relacion con la tabla bandejas atraves de id y BN_DENO para saber la denominacion
+PAR_ALVP1: alveolos
+PAR_PPA1: Plantas por alveolos
+PAR_PPB1: Plantas por bandejas
+PAR_SUST: Sustrato tiene relacion con la tabla sustratos atraves de id y para saber la denominacion SUS_DENO
+PAR_EST:  Significa el estado de partida, si tiene "T" Es una partida terminada
+PAR_ALVS: Alveolos solicitados
+PAR_PLAS: Plantas Solicitadas
+PAR_PLAP: Plantas aproximadas
+PAR_PLS: Semillas a sembrar
+PAR_BASI: Bandejas Siembra
+PAR_FECS: Fecha de siembra
+PAR_DIASS: Dias de siembra
+PAR_FECE: Fecha de entrega
+PAR_DIASG: Dias de Germinacion
+PAR_TBAC: Tipo de bandeja actual, situacion actual de bandeja, tiene relacion con la tabla bandejas atraves de id y BN_DENO para saber la denominacion
+PAR_STAC: Sustrato actual, situacion actual de sustrato, Sustrato tiene relacion con la tabla sustratos atraves de id y para saber la denominacion SUS_DENO
+PAR_NACB: Numero de bandejas actual
+PAR_APBA: Numero de Alveolos por bandeja actual
+PAR_NACA: Numero alveolos actual por bandeja
+PAR_PPAA: Numero de plantas por alveolo actual
+PAR_NACP: Numero actual Plantas
+PAR_PREV: Plantas revisadas
+PAR_PDEF: Plantas Defectuosas
+PAR_PGAC: % de germinacion actual
+PAR_NMCL: Nombre de cliente
+PAR_NMSM: Nombre de Semilla
+PAR_FERS: Fecha Real de Siembra
+PAR_ECOL: Es Ecologica? S es SI, N es NO
+PAR_BIOL: Ecologica? S es SI, N es NO
+PAR_SEMB: Sembrado? 
+PAR_DENO: Nombre asignado a Partidas
+PAR_FECES: Significa si el cliente quiere que sembremos enseguida o una fecha especifica, E significa que el cliente la quiere para una fecha especifica, S significa el quiere quiere que lo quiere rapido.
+PAR_TPINJ: Tipo de injerto, solo esta PUA o APROX
+
+
+
+Tabla de la base de datos: partidas_par_esta.
+
+Alias: Estados de Partidas
+
+Descripción: Controla y registra todos los estados por los que pasa una partida durante su ciclo de producción. Cada partida puede tener múltiples estados simultáneos con diferentes cantidades de bandejas, alveolos y plantas. El sistema permite un seguimiento detallado del flujo de plantas en cada etapa del proceso productivo.
+
+id: Código de la partida (relacionado con tabla partidas).
+id2: Código del estado (1-13).
+C0: Cantidad de bandejas en este estado.
+C1: Cantidad de alveolos en este estado.
+C2: Cantidad de plantas en este estado.
+
+Estados de Partidas (id2):
+1: 01. REQUERIDO PRODUCCIÓN - Plantas que se necesitan producir.
+2: 02. DISPONIBLE CLIENTE - Plantas listas para el cliente.
+3: 03. RETIRADO CLIENTE - Plantas ya retiradas por el cliente.
+4: 04. PTE. RETIRAR CLIENTE - Plantas pendientes de retirar por el cliente.
+5: 05. TIRADAS - Plantas desechadas o perdidas.
+6: 06. A VENTA - Plantas disponibles para venta libre, plantas a la venta, plantas libres.
+7: 07. SEMBRADO/INJERTADO - Plantas sembradas o injertadas exitosamente.
+8: 08. VENDIDO TOTAL - Total de plantas vendidas.
+9: 09. ACTUALES - Estado actual de plantas.
+10: 10. DESCUADRE ACTUAL - Diferencias negativas en el inventario.
+11: 11. VENTA + DESCUADRE - Combinación de ventas y descuadres.
+12: 12. EN RECUPERACIÓN - Plantas en proceso de recuperación.
+13: 13. RESERVAS - Plantas reservadas para futuros pedidos.
+
+Notas Importantes:
+Valores negativos: Los estados 10 (DESCUADRE ACTUAL) y 11 (VENTA + DESCUADRE) pueden tener valores negativos indicando descuadres o pérdidas.
+Múltiples estados: Una partida puede tener simultáneamente varios estados con diferentes cantidades.
+Seguimiento flujo: Permite rastrear el movimiento de plantas desde siembra hasta entrega final.
+
+
+Tabla de la base de datos: partidas_par_ubic.
+
+Descripción: Registra la ubicación física de las partidas de siembra, permitiendo un seguimiento detallado. Contiene información sobre el invernadero, sector, fila y número de bandeja para cada partida.
+
+id: ID de la partida, clave foránea a la tabla 'partidas'.
+id2: Identificador secundario que aumenta si una partida se divide en varias ubicaciones.
+C0: Invernadero. Ejemplo: 'A1'.
+C1: Sector dentro del invernadero.
+C2: Fila.
+C4: Bandejas que quedan.
+
+Relación: partidas.
+Tabla Relacionada: partidas.
+Tipo de Relación: Uno a muchos.
+Campo de Enlace Local: id.
+Campo de Enlace Externo: id.
+Descripción: Vincula la ubicación con la partida de siembra a la que pertenece.
+
+Ejemplos de Consulta:
+consulta_ubicacion_por_partida: Obtener la ubicación de una partida específica usando su 'id'.
+filtrar_por_invernadero: Listar todas las partidas ubicadas en un invernadero específico (filtrando por C0).
+buscar_ubicacion_especifica: Encontrar la partida que se encuentra en una ubicación exacta (ej. Invernadero 'A1', Sector 'B', Fila '3', Bandeja '10').
+actualizar_ubicacion_partida: Mover una partida a una nueva ubicación, actualizando los campos C0, C1, C2 y C3.
 
 Relaciones importantes:
 
-Se relaciona con la tabla clientes por el campo ACCO_CDCL. Uso: Para obtener información detallada del cliente asociado a la acción comercial.
-Tabla de la base de datos: clientes.
+tabla: clientes
 
 CL_DENO: Nombre del cliente.
-
 CL_DOM: Dirección.
-
 CL_POB: Población.
-
 CL_PROV: Provincia.
-
-CL_CDP: Código postal.
-
 CL_TEL: Teléfono.
-
-CL_CIF: CIF.
-
-CL_PAIS: País.
-
 CL_ZONA: Zona al que pertenece el cliente.
-
 CL_TARI: Tarifa de precios asociada al cliente.
-
 CL_FPAG: Forma de pago asociada al cliente.
 
-Se relaciona con la tabla vendedores por el campo ACCO_CDVD. Uso: Para conocer el vendedor responsable de la acción.
-Tabla de la base de datos: vendedores.
+Tabla de la base de datos: almacenes.
 
-id: Código único que identifica a cada vendedor/usuario.
-
-VD_DENO: Denominación o nombre completo del vendedor/usuario.
-
-VD_DOM: Domicilio del vendedor/usuario.
-
-VD_POB: Población de residencia.
-
-VD_PROV: Provincia de residencia.
-
-VD_PDA: Número técnico asociado (clave foránea a tabla tecnicos).
-
-Se relaciona con la tabla acciones_com_acco_not por el campo id. Uso: Para obtener las observaciones asociadas a la acción comercial.
-Tabla de la base de datos: acciones_com_acco_not.
-
-Descripción: Tabla que registra información detallada sobre observaciones, incidencias y feedback. Almacena notas asociadas a cada acción en acciones_com, divididas en filas según el id2.
+Descripción: Representa las delegaciones o almacenes físicos y operativos de la empresa. Sirve como referencia para identificar la ubicación asociada a una acción en el ERP y vincular recursos financieros por defecto.
 
 Columnas y su descripción:
+id: Código único de la delegación o almacén (Clave Primaria).
+AM_DENO: Denominación o nombre de la delegación/almacén (Ej: 'GARDEN').
 
-id: Identificador de la acción comercial a la que se refiere la observación.
+Tabla de la base de datos: vendedores.
 
-id2: Identificador secuencial de la parte del texto de la observación.
+Descripción: La tabla 'vendedores' del sistema ERP de Semilleros Deitana constituye el repositorio centralizado para la gestión de la información de los usuarios internos que desempeñan funciones de venta o que simplemente tienen acceso al sistema como usuarios.
 
-C0: Texto de la observación o nota.
+Columnas y su descripción:
+id: Código único que identifica a cada vendedor/usuario.
+VD_DENO: Denominación o nombre completo del vendedor/usuario.
 
+Tabla de la base de datos: fpago (Formas de pago/cobro).
 
+id: Código único de la forma de pago/cobro (Clave Primaria).
+FP_DENO: Denominación o descripción de la forma de pago (ej: 'RECIBO 90 DIAS F.F.').
+FP_NVT: Número de vencimientos asociados.
 
-============================================================================================
+Tabla de la base de datos: tarifas.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+id: Código de tarifa (Ejemplo: "A").
+TP_DENO: Denominación de tarifa.
 
 
 Tabla de la base de datos: articulos.
@@ -111,239 +186,28 @@ AR_PGE: Porcentaje de germinación.
 AR_DCG: Tiempo de germinacion en dias en camara.
 Relaciones importantes:
 
-Proveedores: Se relaciona con la tabla proveedores. Tipo: Muchos a uno (un proveedor puede proveer muchos artículos). Campo local: AR_PRV. Campo externo: id. Uso: Permite identificar qué proveedor principal suministra cada artículo. Si el campo 'AR_PRV' está vacío en un registro de artículo, significa que el proveedor principal no está registrado para ese artículo en este sistema.
+Tabla de la base de datos: casas_com.
 
-Tabla de la base de datos: proveedores.
-
-id: Código único que identifica a cada proveedor.
-PR_DENO: Nombre del proveedor.
-PR_DOM: Domicilio del proveedor.
-PR_POB: Población.
-PR_PROV: Provincia.
-PR_CDP: Código postal del proveedor.
-PR_TEL: Número(s) de teléfono del proveedor.
-PR_FAX: Número de FAX del proveedor.
-PR_CIF: Código de Identificación Fiscal (CIF) del proveedor.
-PR_EMA: Dirección de correo electrónico del proveedor.
-PR_WEB: Dirección de la página web del proveedor.
-PR_DOMEN: Domicilio o detalles para el envío de facturas.
-PR_PAIS: País de residencia del proveedor.
-PR_FPG: Forma de pago preferida del proveedor tiene relacion con la tabla referencia a la tabla fpago.
-PR_IBAN: Número de cuenta bancaria en formato IBAN del proveedor.
-
-Familias: Se relaciona con la tabla familias. Tipo: Muchos a uno (varios artículos pueden pertenecer a la misma familia). Campo local: AR_FAM. Campo externo: id. Uso: Vincula el artículo con su familia correspondiente, permitiendo agrupar y filtrar artículos por familia.
-Tabla de la base de datos: familias.
-id: Código único de la familia (Clave Primaria).
-FM_DENO: Nombre del Grupo/Familia.
-FM_NLAT: Nombre en Latín.
-FM_PGER: Porcentaje de germinación.
-
-Tabla de la base de datos: familias_fm_rngt.
-Alias: Rangos de Tarifas por Familia.
-Descripción: Define los rangos de cantidad para tarifas según la familia del artículo. Cada familia tiene múltiples rangos (subrangos) que determinan la tarifa aplicable según la cantidad de plantas solicitadas. Los rangos son progresivos: D (1-25000), C (25001-500000), B (500001-2000000), A (2000001+). Se utiliza para calcular el precio final según el volumen de pedido.
-Columnas y su descripción:
-id: Código de la familia (relacionado con tabla articulos campo AR_FAM).
-id2: Número de rango o subrango (1, 2, 3, 4...).
-C0: Cantidad mínima del rango (desde).
-C1: Cantidad máxima del rango (hasta, 0 significa ilimitado).
-C2: Código de tarifa aplicable (D, C, B, A).
-
-Lógica de Tarifas:
-Tarifa D: Rango más bajo (1-25,000 plantas) - Tarifa más alta.
-Tarifa C: Rango medio-bajo (25,001-500,000 plantas).
-Tarifa B: Rango medio-alto (500,001-2,000,000 plantas).
-Tarifa A: Rango más alto (2,000,001+ plantas) - Tarifa más baja (mayor descuento).
-
-
-
-============================================================================================
-
-
-Tabla de la base de datos: clientes.
-
-Alias: Clientes.
-
-Descripción: Los clientes son las personas o empresas con las que Semilleros Deitana comercializa sus productos. La información de los clientes incluye sus datos de contacto, ubicación y detalles comerciales relevantes para establecer y mantener informacion del mismo. Es fundamental tener un registro completo para la gestión de partidas, seguimiento y comunicación. Cada cliente tiene un código único que lo identifica en nuestra base de datos. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Clientes.
+Descripción: Gestión y almacenamiento de información de las casas comerciales con las que Semilleros Deitana interactúa. Es fundamental para mantener un registro organizado de socios comerciales y sus datos clave.
 
 Columnas y su descripción:
-CL_DENO: Nombre del cliente.
-CL_DOM: Dirección.
-CL_POB: Población.
-CL_PROV: Provincia.
-CL_CDP: Código postal.
-CL_TEL: Teléfono.
-CL_CIF: CIF.
-CL_PAIS: País.
-CL_ZONA: Zona al que pertenece el cliente.
-CL_TARI: Tarifa de precios asociada al cliente.
-CL_FPAG: Forma de pago asociada al cliente.
+id: Identificador único de la casa comercial (Clave Primaria).
+CC_DENO: Denominación casa comercial 
+CC_POB: Población.
 
-Relaciones importantes:
+Tabla de la base de datos: t-siembras.
 
-Almacenes: Se relaciona con la tabla zonas. Tipo: Muchos a uno (varios clientes pueden pertenecer a la misma zona de almacén). Campo local: CL_ZONA. Campo externo: id. Uso: Vincula el cliente con la zona a la que pertenece, permitiendo agrupar y filtrar clientes por su zona.
-
-Tabla de la base de datos: zonas.
-
-id: Código único de la zona (Clave Primaria).
-ZN_DENO: Denominación o nombre descriptivo de la zona (Ej: Garden, ZONA).
-ZN_SUB: Subzona o código de agrupación secundaria (Puede estar vacío).
-ZN_RUTA: Campo asociado a una ruta (Puede estar vacío).
-
-Tabla de la base de datos: fpago (Formas de pago/cobro).
-
-id: Código único de la forma de pago/cobro (Clave Primaria).
-FP_DENO: Denominación o descripción de la forma de pago (ej: 'RECIBO 90 DIAS F.F.').
-FP_NVT: Número de vencimientos asociados.
-FP_CART: Indica si se gestiona en cartera de cobros/pagos.
-FP_RW: Referencia relacionada con la web (propósito no especificado).
-
-
-
-=========================================================================
-
-
-
-Tabla de la base de datos: familias.
-
-Descripción: Catálogo de familias y grupos, incluyendo su denominación, nombre en latín y porcentaje de germinación. Permite registrar observaciones sobre cambios o notas relevantes para cada familia. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Familias y Grupos.
+Descripción: Cataloga los diferentes tipos de siembra utilizados en la empresa, detallando las características clave como la bandeja, el sustrato, el número de alveolos y la densidad de plantas. También se vincula a los procesos y observaciones específicas de cada tipo de siembra.
 
 Columnas y su descripción:
-id: Código único de la familia (Clave Primaria).
-FM_DENO: Nombre del Grupo/Familia.
-FM_NLAT: Nombre en Latín.
-FM_PGER: Porcentaje de germinación.
-
-Relaciones importantes:
-
-familias_fm_obs: Se relaciona con la tabla familias_fm_obs. Tipo: Uno a muchos (una familia puede tener múltiples observaciones). Campo local: id. Campo externo: id. Uso: Tabla de observaciones para cada familia, registrando cambios o notas relevantes. La tabla relacionada tiene la siguiente estructura: id (ID de la familia), id2 (Identificador secuencial de la observación), C0 (Contenido de la observación).
+id: Identificador único del tipo de siembra (Clave Primaria).
+TSI_DENO: Denominación del tipo de siembra.
 
 
+Tabla de la base de datos: sustratos.
 
-========================================================
-
-Tabla de la base de datos: fpago.
-
-Alias: Formas de pago/cobro.
-
-Descripción: La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Formas de pago/cobro.
+Descripción: Gestión y registro de materiales o mezclas utilizados como medio de cultivo. Esencial para control de costes, precios y planificación de materiales en la producción.
 
 Columnas y su descripción:
-id: Código único de la forma de pago/cobro (Clave Primaria).
-FP_DENO: Denominación o descripción de la forma de pago (ej: 'RECIBO 90 DIAS F.F.').
-FP_NVT: Número de vencimientos asociados.
-FP_CART: Indica si se gestiona en cartera de cobros/pagos.
-FP_RW: Referencia relacionada con la web (propósito no especificado).
-
-Relaciones importantes:
-
-referenciada_por: Esta tabla es referenciada por numerosas tablas de transacciones y documentos para especificar la forma de pago/cobro utilizada. Las tablas que la referencian son: Encargos de siembra, Albarenes compra, Pedidos a Proveedor, Registro de Facturas Recibidas, Albaran Venta Ornamental, Cartera de cobros, Cartera de pagos. Tipo: Uno a muchos (una forma de pago puede estar en muchos registros de otras tablas). Campo externo: id. Campo local ejemplos: [*_FP]. Uso: Esta tabla es referenciada por numerosas tablas de transacciones y documentos para especificar la forma de pago/cobro utilizada.
-
-fpago_fp_dias: Se relaciona con la tabla fpago_fp_dias para saber los vencimientos cuando una forma de pago tiene vencimientos. Campo local: id (mismo id que la forma de pago). Campo externo: id. La tabla relacionada tiene la siguiente estructura: id (mismo id que la forma de pago), id2 (aumenta según cantidad de vencimientos), C0 (días de vencimiento).
-
-Ejemplos de Uso:
-consulta_fpago_por_id: Obtener los detalles de una forma de pago/cobro específica usando su 'id'.
-consulta_fpago_por_denominacion: Buscar una forma de pago/cobro por su denominación (FP_DENO).
-consultar_transacciones_por_fpago: Listar todas las transacciones (pedidos, facturas, etc.) que utilizan una forma de pago específica (requiere consultar las tablas que referencian a fpago).
-
-
-=============================================
-
-Tabla de la base de datos: bancos.
-
-Alias: Nuestros bancos.
-
-Descripción: Gestión centralizada de información de las entidades bancarias con las que opera Semilleros Deitana ('Nuestros bancos'). Sirve para la correcta ejecución de operaciones financieras, pagos y cobros. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Nuestros bancos.
-
-Columnas y su descripción:
-id: Código único del banco (Clave Primaria).
-BA_DENO: Denominación o nombre del banco.
-BA_DOM: Domicilio del banco.
-BA_POB: Población del banco.
-BA_PROV: Provincia del banco.
-BA_CDP: Código postal del banco.
-BA_TEL: Número(s) de teléfono del banco.
-BA_FAX: Número de FAX del banco.
-BA_EMA: Dirección de correo electrónico del banco.
-BA_IBAN: Número de cuenta bancaria en formato IBAN.
-BA_COD: Código de la entidad bancaria.
-BA_OFI: Código de la oficina bancaria.
-BA_CUEN: Número de cuenta bancaria tradicional.
-BA_SWI: Código SWIFT/BIC.
-BA_RIES: Nivel de riesgo interno.
-BA_TIPO: Tipo de banco (clasificación interna).
-BA_OBS: Observaciones o comentarios internos.
-Nota: También se pueden registrar Contactos bancarios (Contacto, Cargo, Teléfono, Email) asociados a cada entidad, aunque no están detallados como campos directos aquí.
-
-Relaciones importantes:
-
-No se especifican relaciones explícitas con otras tablas en el texto proporcionado.
-
-Ejemplos de Uso:
-consulta_filtrada: Buscar bancos por denominación (BA_DENO), código postal (BA_CDP) o código SWIFT (BA_SWI).
-consulta_completa: Obtener todos los datos cargados (BA_DENO, BA_DOM, BA_IBAN, BA_SWI, etc.) de un banco específico. Si un campo no tiene información, se indicará (ej: 'Código SWIFT: No hay información disponible').
-consulta_contactos: Consultar la información de los contactos bancarios asociados a una entidad (Contacto, Cargo, Teléfono, Email).
-
-=========================================================================
-
-Tabla de la base de datos: proveedores.
-
-Descripción: La tabla 'proveedores' dentro del sistema ERP centraliza la información detallada de todos los proveedores con los que opera Semilleros Deitana. Cada registro representa un proveedor único, identificado mediante un código (id). Esta tabla almacena datos cruciales que abarcan información fiscal, detalles de contacto, datos bancarios y aspectos administrativos, incluyendo domicilio, provincia, CIF, y registros de la última compra, entre otros. Disponer de esta información completa y organizada es esencial para la gestión eficiente de la cadena de suministro y las relaciones con los proveedores.
-
-Columnas y su descripción:
-id: Código único que identifica a cada proveedor.
-PR_DENO: Nombre del proveedor.
-PR_DOM: Domicilio del proveedor.
-PR_POB: Población.
-PR_PROV: Provincia.
-PR_CDP: Código postal del proveedor.
-PR_TEL: Número(s) de teléfono del proveedor.
-PR_FAX: Número de FAX del proveedor.
-PR_CIF: Código de Identificación Fiscal (CIF) del proveedor.
-PR_EMA: Dirección de correo electrónico del proveedor.
-PR_WEB: Dirección de la página web del proveedor.
-PR_DOMEN: Domicilio o detalles para el envío de facturas.
-PR_PAIS: País de residencia del proveedor.
-PR_FPG: Forma de pago preferida del proveedor tiene relacion con la tabla referencia a la tabla fpago.
-PR_IBAN: Número de cuenta bancaria en formato IBAN del proveedor.
-Nota sobre campos vacíos: Si un campo no tiene información, se asume 'No hay información disponible'.
-
-Relaciones importantes:
-
-fpago: Se relaciona con la tabla fpago. Tipo: Muchos a uno (varios proveedores pueden tener la misma forma de pago preferida). Campo local: PR_FPG. Campo externo: id. Uso: Vincula el proveedor con su forma de pago preferida, permitiendo identificar cómo se gestionan los pagos a cada proveedor.
-
-Descripción: La sección Formas de Pago/Cobro (identificada como fpago en la base de datos) es crucial para definir y gestionar todas las modalidades de pago y cobro que se utilizan en las transacciones comerciales. Funciona como un catálogo maestro, permitiendo estandarizar las operaciones financieras, vincular transacciones específicas a una forma de pago definida y gestionar los vencimientos de manera eficiente. Esta información se encuentra en el ERP en la sección del menú inferior Archivos – Generales – Formas de pago/cobro.
-
-id: Código único de la forma de pago/cobro (Clave Primaria).
-FP_DENO: Denominación o descripción de la forma de pago (ej: 'RECIBO 90 DIAS F.F.').
-FP_NVT: Número de vencimientos asociados.
-FP_CART: Indica si se gestiona en cartera de cobros/pagos.
-FP_RW: Referencia relacionada con la web (propósito no especificado).
-
-=============================================================================
-
-
-Tabla de la base de datos: vendedores.
-
-Descripción: La tabla 'vendedores' del sistema ERP de Semilleros Deitana constituye el repositorio centralizado para la gestión de la información de los usuarios internos que desempeñan funciones de venta o que simplemente tienen acceso al sistema como usuarios.
-
-Columnas y su descripción:
-id: Código único que identifica a cada vendedor/usuario.
-VD_DENO: Denominación o nombre completo del vendedor/usuario.
-VD_DOM: Domicilio del vendedor/usuario.
-VD_POB: Población de residencia.
-VD_PROV: Provincia de residencia.
-VD_PDA: Número técnico asociado (clave foránea a tabla tecnicos).
-
-Relaciones importantes:
-
-Tabla de la base de datos: tecnicos.
-
-Descripción: Información de los técnicos de la empresa, incluyendo su nombre, teléfono, email y otros datos relevantes, así como su historial laboral y contractual.
-
-id: Código identificador único del técnico (Clave Primaria).
-TN_DENO: Nombre completo del técnico.
-TN_TEL: Número de teléfono del técnico.
-TN_DOM: Domicilio del técnico.
-TN_POB: Población del técnico.
-TN_CDP: Código postal del técnico.
-TN_CIF: Número de identificación fiscal del técnico.
+id: Código único del sustrato (Clave Primaria).
+SUS_DENO: Denominación o nombre descriptivo del sustrato (Ej: PERLITA PELIGRAM, SUST.ESPECIAL).
