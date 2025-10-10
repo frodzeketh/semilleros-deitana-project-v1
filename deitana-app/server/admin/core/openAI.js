@@ -123,7 +123,7 @@ async function searchRelevantInfo(query) {
     }
 }
 
-async function processQueryStream({ message, conversationId, response }) {
+async function processQueryStream({ message, conversationId, response, userId }) {
     try {
         console.log('🚀 [OPENAI] Procesando con memoria RAM y function calling');
         
@@ -142,10 +142,58 @@ async function processQueryStream({ message, conversationId, response }) {
         console.log(`🗺️ [MAPERP] Información del mapa ERP encontrada: ${mapaERPInfo.length} caracteres`);
         console.log(`📊 [RAG] Información RAG encontrada: ${relevantInfo.length} caracteres`);
         
-        // 4. CREAR PROMPT CON CONTEXTO DE LA EMPRESA
+        // 4. OBTENER FECHA Y HORA ACTUAL (Murcia, España)
+        const now = new Date();
+        const murciaTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+        const fechaActual = murciaTime.toLocaleDateString('es-ES', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        const horaActual = murciaTime.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit'
+        });
+        
+        // 4.1. OBTENER NOMBRE DEL USUARIO (si está autenticado)
+        let nombreUsuario = 'Usuario';
+        if (userId) {
+            try {
+                const admin = require('../../firebase-admin');
+                const userRecord = await admin.auth().getUser(userId);
+                nombreUsuario = userRecord.displayName || userRecord.email?.split('@')[0] || 'Usuario';
+                console.log(`👤 [USER] Usuario identificado: ${nombreUsuario}`);
+            } catch (error) {
+                console.log(`⚠️ [USER] No se pudo obtener nombre del usuario: ${error.message}`);
+                nombreUsuario = 'Usuario';
+            }
+        }
+        
+        // 5. CREAR PROMPT CON CONTEXTO DE LA EMPRESA
         const systemPrompt = ` Eres Deitana IA, una compañera de trabajo, trabajas para los usuarios, ellos siempre tendran la razon, adaptate a ellos, eres impulsado por todo el conocimiento agricola y trabajas con los datos de un ERP que utiliza la empresa Semilleros Deitana, debes sastifacer las necesidades de los usuarios, aplica todos los conocimientos, por ejemplo diferenciar porta injertos, cabezas, pie de tomate, entiendes el sistema, facilitales la informacion a los usuarios de buena manera y con compañerismo.
 
         Eres capaz de comprender todos los procedimientos de la empresa.
+        
+        👤 USUARIO ACTUAL: ${nombreUsuario}
+        
+        📅 FECHA Y HORA ACTUAL (Murcia, España):
+        - Fecha: ${fechaActual}
+        - Hora: ${horaActual}
+        
+        🇪🇸 DIALECTO Y EXPRESIONES (ESPAÑOL DE ESPAÑA):
+        - USA "vosotros" en lugar de "ustedes" (ej: "¿Necesitáis ayuda?" en vez de "¿Necesitan ayuda?")
+        - USA expresiones españolas: "vale", "¿qué tal?", "tío/tía" (informal), "majo/maja", "guay"
+        - USA conjugaciones de España: "habéis", "tenéis", "podéis", "queréis"
+        - Ejemplos correctos:
+          ✅ "Vale, os lo explico ahora"
+          ✅ "Si tenéis dudas, preguntadme"
+          ✅ "¿Qué tal va eso?"
+          ✅ "Esto es muy sencillo, ¿vale?"
+        - Ejemplos INCORRECTOS (no usar):
+          ❌ "Está bien, se lo explico ahora" (muy formal)
+          ❌ "Si tienen dudas, pregúntenme" (latinoamericano)
+          ❌ "¿Cómo va eso?" (neutro, falta personalidad)
         
         🚨 INSTRUCCIONES CRÍTICAS - DEBES SEGUIR ESTAS REGLAS OBLIGATORIAMENTE:
 

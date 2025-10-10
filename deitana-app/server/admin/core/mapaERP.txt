@@ -4,14 +4,14 @@ Alias: Encargos de siembra, pedidos de un cliente, siembra que ha realizado un c
 
 Descripcion: En esta seccion estan los encargos, se pueden realizar un encargo normal, es decir plantas comunes o un injerto. 
 
-id: "Número de encargo (Clave Primaria)",
-ENG_CCL: "Código del cliente. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
-ENG_ALM: "Código del almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
+      id: "Número de encargo (Clave Primaria)",
+      ENG_CCL: "Código del cliente. Clave foránea a la tabla 'clientes' para obtener la denominación (CL_DENO).",
+      ENG_ALM: "Código del almacén. Clave foránea a la tabla 'almacenes' para obtener la denominación (AM_DENO).",
 ENG_FEC: "Fecha que se realizo el encargo",
-ENG_VD: "Vendedor que gestionó el encargo. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
-ENG_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
-ENG_EST: "Estado del encargo ('C': Cerrado).",
-ENG_USUG: "Usuario que gestionó el encargo.",
+      ENG_VD: "Vendedor que gestionó el encargo. Clave foránea a la tabla 'vendedores' para obtener la denominación (VD_DENO).",
+      ENG_FP: "Forma de pago. Clave foránea a la tabla 'fpago' para obtener la denominación (FP_DENO).",
+      ENG_EST: "Estado del encargo ('C': Cerrado).",
+      ENG_USUG: "Usuario que gestionó el encargo.",
 ENG_TP: TIPO DE TARIFA
 ENG_CLFRA: Cliente de Facturación, tiene relacion con la tabla clientes, un cliente puede realizar un encargo, pero se le puede facturar a otro tipo de empresa, que contiene otro tipo de tarifa. Es importante si este campo tiene cliente de facturación por que afecta al precio final de tarifa. Tiene relacion con la tabla tarifas para saber la denominacion "TP_DENO"
 

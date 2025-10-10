@@ -43,10 +43,14 @@ router.post('/process-voice', async (req, res) => {
             send: () => mockResponse
         };
 
+        // Obtener userId del token
+        const userId = req.user?.uid;
+
         // Procesar con openAI.js (RAG + SQL)
         await processQueryStream({ 
             message, 
             conversationId: `voice_${Date.now()}`,
+            userId,  // 🔥 Pasar userId para obtener nombre
             response: mockResponse
         });
 
@@ -105,10 +109,15 @@ router.post('/stream', async (req, res) => {
             return res.status(400).json({ error: 'Mensaje requerido' });
         }
 
-        // Respuesta con memoria RAM
+        // Obtener userId del token (verifyToken ya lo adjuntó)
+        const userId = req.user?.uid;
+        console.log(`👤 [CHAT] Usuario autenticado: ${userId || 'anónimo'}`);
+
+        // Respuesta con memoria RAM + nombre del usuario
         await processQueryStream({ 
             message, 
             conversationId: req.body.conversationId || `temp_${Date.now()}`,
+            userId,  // 🔥 Pasar userId para obtener nombre
             response: res 
         });
         
